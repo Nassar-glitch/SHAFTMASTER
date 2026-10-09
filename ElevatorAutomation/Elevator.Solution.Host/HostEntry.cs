@@ -39,65 +39,11 @@ namespace Elevator.Solution.Host
                 var db = doc.Database;
                 if (mode == "generate")
                 {
-                    var generated = new ProjectDrawingService(doc).GenerateProjectDrawings(
-                        project,
-                        new GenerationOptions { Views = request.Options.Views, ArrangeViews = request.Options.ArrangeViews });
-                    response.DesignJson = Wire.Json(generated.Design);
-                    response.Validation = generated.Design.Validation;
-                    response.LayoutStatus = generated.Design.LayoutStatus.ToString();
-                    response.WrapAngleStatus = generated.Design.WrapAngleStatus.ToString();
-                    response.CodeDiameterRatioStatus = generated.Design.CodeDiameterRatioStatus.ToString();
-                    using (var tr = db.TransactionManager.StartTransaction())
-                    {
-                        response.Context = ReadContext(db, tr, project, request.Options.Views);
-                        if ((request.Options.Views & ~DrawingViews.Plan) != 0)
-                            MachineRoomGeometryAudit.Run(MachineRoomDrawing.Read(db, tr), generated.Design.Plan);
-                        if ((request.Options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
-                        {
-                            MachineRoomSectionGeometryAudit.Run(
-                                                            MachineRoomSectionDrawing.Read(db, tr),
-                                                            generated.Design.Plan,
-                                                            MachineRoomDrawing.Read(db, tr));
-                        }
-                        if ((request.Options.Views & DrawingViews.SectionAA) != 0)
-                            SectionAADrawing.Audit(db, tr);
-                        // Dependency views have served their calculation purpose. Only the user's selections are published.
-                        foreach (var pair in Groups(db, tr).Where(g => (request.Options.Views & g.Key) == 0))
-                        {
-                            foreach (var e in pair.Value)
-                            {
-                                e.UpgradeOpen();
-                                e.Erase();
-                            }
-                        }
-                        tr.Commit();
-                    }
-                    // Store the exact versioned snapshot too, so reopen proves there was no transport mutation.
-                    using (var tr = db.TransactionManager.StartTransaction())
-                    {
-                        ProjectDataStorage.Write(db, tr, "SolutionInputSnapshot", request.ProjectJson);
-                        tr.Commit();
-                    }
-                    doc.Editor.Regen();
-                    Inspect(db, request, response);
-                    response.OutputPath = Path.Combine(job, "generated.dwg");
-                    db.SaveAs(response.OutputPath, DwgVersion.AC1032);
+                    GenerateOutput(job, request, response, project, doc, db);
                 }
                 else if (mode == "verify")
                 {
-                    using (var tr = db.TransactionManager.StartTransaction())
-                    {
-                        string exact = ProjectDataStorage.Read<string>(db, tr, "SolutionInputSnapshot");
-                        if (exact != request.ProjectJson)
-                            throw new InvalidDataException("DWG input snapshot differs from desktop input.");
-                        var actual = UnifiedProjectStorage.Read(db, tr);
-                        File.WriteAllText(Path.Combine(job, "reopened-project.elevator.json"), ProjectJson.Serialize(actual));
-                        if (ProjectJson.Serialize(actual) != ProjectJson.Serialize(project))
-                            throw new InvalidDataException("Unified project changed after save/reopen.");
-                        if (request.Options.Views == DrawingViews.All)
-                            SectionAADrawing.Audit(db, tr);
-                    }
-                    Inspect(db, request, response);
+                    VerifyOutput(job, request, response, project, db);
                 }
                 else
                     throw new ArgumentException("Unsupported host operation.");
@@ -109,6 +55,76 @@ namespace Elevator.Solution.Host
                 response.Success = false;
             }
             Wire.Write(Path.Combine(job, mode == "verify" ? "verified.json" : "response.json"), response);
+        }
+
+        private void GenerateOutput(
+            string job,
+            GenerationRequest request,
+            GenerationResponse response,
+            ElevatorProject project,
+            Document doc,
+            Database db)
+        {
+            var generated = new ProjectDrawingService(doc).GenerateProjectDrawings(
+                                    project,
+                                    new GenerationOptions { Views = request.Options.Views, ArrangeViews = request.Options.ArrangeViews });
+            response.DesignJson = Wire.Json(generated.Design);
+            response.Validation = generated.Design.Validation;
+            response.LayoutStatus = generated.Design.LayoutStatus.ToString();
+            response.WrapAngleStatus = generated.Design.WrapAngleStatus.ToString();
+            response.CodeDiameterRatioStatus = generated.Design.CodeDiameterRatioStatus.ToString();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                response.Context = ReadContext(db, tr, project, request.Options.Views);
+                if ((request.Options.Views & ~DrawingViews.Plan) != 0)
+                    MachineRoomGeometryAudit.Run(MachineRoomDrawing.Read(db, tr), generated.Design.Plan);
+                if ((request.Options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
+                {
+                    MachineRoomSectionGeometryAudit.Run(
+                                                    MachineRoomSectionDrawing.Read(db, tr),
+                                                    generated.Design.Plan,
+                                                    MachineRoomDrawing.Read(db, tr));
+                }
+                if ((request.Options.Views & DrawingViews.SectionAA) != 0)
+                    SectionAADrawing.Audit(db, tr);
+                // Dependency views have served their calculation purpose. Only the user's selections are published.
+                foreach (var pair in Groups(db, tr).Where(g => (request.Options.Views & g.Key) == 0))
+                {
+                    foreach (var e in pair.Value)
+                    {
+                        e.UpgradeOpen();
+                        e.Erase();
+                    }
+                }
+                tr.Commit();
+            }
+            // Store the exact versioned snapshot too, so reopen proves there was no transport mutation.
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                ProjectDataStorage.Write(db, tr, "SolutionInputSnapshot", request.ProjectJson);
+                tr.Commit();
+            }
+            doc.Editor.Regen();
+            Inspect(db, request, response);
+            response.OutputPath = Path.Combine(job, "generated.dwg");
+            db.SaveAs(response.OutputPath, DwgVersion.AC1032);
+        }
+
+        private void VerifyOutput(string job, GenerationRequest request, GenerationResponse response, ElevatorProject project, Database db)
+        {
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                string exact = ProjectDataStorage.Read<string>(db, tr, "SolutionInputSnapshot");
+                if (exact != request.ProjectJson)
+                    throw new InvalidDataException("DWG input snapshot differs from desktop input.");
+                var actual = UnifiedProjectStorage.Read(db, tr);
+                File.WriteAllText(Path.Combine(job, "reopened-project.elevator.json"), ProjectJson.Serialize(actual));
+                if (ProjectJson.Serialize(actual) != ProjectJson.Serialize(project))
+                    throw new InvalidDataException("Unified project changed after save/reopen.");
+                if (request.Options.Views == DrawingViews.All)
+                    SectionAADrawing.Audit(db, tr);
+            }
+            Inspect(db, request, response);
         }
 
         public static void PrepareRoofMetadata(ElevatorProject project, DrawingViews views)
