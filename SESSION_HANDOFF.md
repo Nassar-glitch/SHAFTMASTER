@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete, awaiting Planner (2026-10-09): ARCHITECTURE-PLAN P6 "Adapters clean-up" on branch `refactor/p6-adapters` (from `main` `a165029`, after P5 was merged as `08a4382`). Not merged, not pushed.
+- **Status:** Complete, awaiting Planner (2026-10-09): ARCHITECTURE-PLAN P6 "Adapters clean-up" on branch `refactor/p6-adapters` (from `main` `a165029`, after P5 was merged as `08a4382`). Merged into `main` with --no-ff as `780e1a5` after a passing pre-merge tier 1 (`artifacts/test-results/20261009-215108`, 602 s). Not pushed.
 - **Goal:** P6: the P5 standard for Elevator.AutoCAD, Host, Bridge and StepExport; AutoCAD organised by output; one file per Bridge contract and an explicit contract version checked by the host. No behaviour change.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; P5 merge, then P6)
 - **Completed:**
