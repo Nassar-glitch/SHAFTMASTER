@@ -74,3 +74,13 @@ Figure SVG depends on the fonts installed (text is measured with ISOCPEUR, Arial
 - `native-golden`: `NativeGoldenTests` generates the golden fixture `new-project-q630` (presets applied) as all four native views through the AutoCAD host and compares `tests/golden/approved-native/new-project-q630/entity-counts.txt` (generated and reopened entity counts per view) and `reopened-project.elevator.json` (project JSON read back from the saved DWG, member order normalised). `-ApproveNative` creates the initial baseline only.
 
 `tools/test.ps1 -Tier 3` adds `presets-native` (`PresetsNativeTests`) and `sheet-word-render`: the calculation-sheet suite with `-WordRender`, which renders every sheet through Word to PDF, rasterises the pages and checks the pagination. The Word render is off by default and runs in tier 3 only.
+
+## Basic UI flake (fixed 2026-10-09)
+
+**Symptom.** `BasicUiTests` occasionally ended inside a full suite run with exit code 1, no `basic-ui-tests.json`, no `ui-error.json` / `ui-crash.json` and no Application-log event, at a different point each time (before the first screenshot in `output/presets-heavy-20261009/final`; after screenshot `02b` in `output/presets-20261008/final2`). It always passed when run alone.
+
+**Root cause.** The test window is an ordinary top-level window that is activated (takes the keyboard focus) when it opens, and the test runs it in smoke mode, which skips the unsaved-changes prompt on close. Any close request (the title-bar X, Alt+F4, the taskbar, a `WM_CLOSE`), for example input meant for another window on a desktop in use, closes it at once. `app.Run` then returns while the test is still awaiting inside its `Loaded` handler, so neither the result nor an error is written and `Main` returns 1. Reproduced exactly by posting `WM_CLOSE` to the running test window (lifecycle trace: `Window.WmClose` → Closed → `app.Run` returned, exit 1; the same files and messages as the failures). Without an external close, 15 runs with the in-suite predecessor (calculation UI) all passed.
+
+**Fix (test harness, no product change).** The test owns its window: a close request it did not make is refused and logged (`ui-trace.log`, with the call stack), the window opens without activation (`ShowActivated = false`), and only the test's own `finally` closes it after writing the result. With the fix, the same injected `WM_CLOSE` is refused and the run passes.
+
+**Proof.** 20 consecutive runs after the fix: 20 PASS (22–23 s each). Log: [docs/evidence/basic-ui-flake-proof-20261009.txt](evidence/basic-ui-flake-proof-20261009.txt).
