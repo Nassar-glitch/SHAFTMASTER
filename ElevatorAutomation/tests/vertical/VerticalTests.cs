@@ -1,18 +1,22 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.PlottingServices;
-using Elevator.AutoCAD;
-using Elevator.Core.Shaft;
-using Elevator.Core.Project;
-using Elevator.Core.Presets;
-using Elevator.Core.MachineRoom;
+using Autodesk.AutoCAD.Runtime;
+using Elevator.AutoCAD.Common;
+using Elevator.AutoCAD.MachineRoom;
+using Elevator.AutoCAD.Plan;
+using Elevator.AutoCAD.SectionBB;
+using Elevator.AutoCAD.Vertical;
 using Elevator.Core.Geometry;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Presets;
+using Elevator.Core.Project;
+using Elevator.Core.Shaft;
 public sealed class VerticalTests
 {
     static List<object> results=new List<object>();
