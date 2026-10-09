@@ -12,10 +12,19 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P0 "Safety net" on branch `refactor/p0-safety-net` (not merged, not pushed). Builds default to `artifacts/bin` with a release-folder guard; tier-1 golden master (36 fixtures, 566 approved files) and tier-3 native golden; tier runner `tools/test.ps1`; Basic UI flake root cause found and fixed. Final run: tiers 1, 2 and 3 all PASS. No product behaviour change.
-- **Goal:** P0: safety net before the refactor (build hazard, golden-master tests, tier-3 golden, Basic UI flake, test tiers).
-- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P0)
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P1 "Build system" on branch `refactor/p1-build` (not merged, not pushed). P0 was closed first: tier 1 PASS on its branch, merged into `main` (`ac9fdcc`, --no-ff), Planner files committed (`ee898b6`). P1: SDK-style projects, Directory.Build.props, one solution, `tools/build.ps1`; same 26-file output as the csc build; tiers 1, 2 and 3 PASS on the new build with the golden files unchanged. No source-code behaviour change.
+- **Goal:** P1: SDK-style projects and an incremental `dotnet build` with the same output as the csc scripts.
+- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P1)
 - **Completed:**
+  - ARCHITECTURE-PLAN P1 "Build system" (2026-10-09), branch `refactor/p1-build` from `main` `ee898b6`:
+    - **Projects:** the six projects (Core, AutoCAD, Bridge, Host, StepExport, Desktop) are Microsoft.NET.Sdk projects (net48, `Microsoft.NETFramework.ReferenceAssemblies` 1.0.3 from nuget.org), plus `tools/BrandIconBuilder` and the test programs the csc scripts built into the output (`tests/projects/`: RuleTests, MachineRoomRuleTests, ReevingTests, Elevator.Automation.Tests, StepExportTests). One `ElevatorAutomation.sln` (classic format).
+    - **Settings** (`ElevatorAutomation/Directory.Build.props`): C# 5 (`LangVersion` 5, as csc v4.0), deterministic, warnings as before (no analyzers, not errors), no generated assembly info and no `TargetFrameworkAttribute` (the csc assemblies had none; it would change runtime compatibility switches), no pdb, no supportedRuntime / binding-redirect config, no 32-bit preference, all output in `artifacts/bin`, intermediates in `artifacts/obj/<project>`, project references not copied again (one shared folder).
+    - **AutoCAD / SOLIDWORKS:** AcDbMgd / AcCoreMgd / AcMgd through `$(AutoCADDir)` (Private=false); SOLIDWORKS interop through `$(SolidWorksDir)`, copied next to the worker as before.
+    - **Desktop:** WinExe, x64, UseWPF, `app.manifest`, icon and embedded brand resources as before: target `BrandAssets` copies `Assets/` to `<output>/brand-assets` and runs BrandIconBuilder (incremental). Desktop does not reference StepExport: a solution dependency builds the worker (and the icon tool) first into the same folder, and target `CheckStepExportWorker` fails a solution build if the worker is missing. Data and documents copied as before.
+    - **tools/build.ps1:** `dotnet build ElevatorAutomation.sln -c Release` into `artifacts/bin` (-Bin), -AutoCADDir / -SolidWorksDir, the P0 -Release guard, then the pure rule tests and the STEP-input tests (as the csc scripts). `build.ps1` and `build-solution.ps1` are thin wrappers; `build-section-aa.ps1` builds through it. Runners, `tools/test.ps1`, `run-golden.ps1`, `run-tests.ps1`, the project / vertical scripts and the phase-1 isolated copies call `tools/build.ps1`. README, ElevatorAutomation/README.md, README-section-aa.md, SHAFTMASTER-UI-RESULTS.md and TESTING.md updated.
+    - **Parity** (old csc build in `artifacts/bin-old` vs new build): the same 26 files. Data files, `brand-assets` (generated icon and mark included) and `ShaftMaster.exe.config` byte-identical. Every binary keeps its identity, version, PE kind (x64 for ShaftMaster, StepExport, StepExportTests; AnyCPU otherwise), runtime and referenced assemblies; ShaftMaster.exe has the same embedded resources, manifest and icon. The binaries differ as expected from a different compiler: Roslyn's compiler-generated types, and a `DebuggableAttribute(IgnoreSymbolStoreSequencePoints)` (Release keeps `Optimize=true`, so the JIT optimises as for the csc assemblies; `Optimize=false` would disable JIT optimisation).
+    - **Build timings:** old csc build 8 s; new clean build 6.3 s (incl. restore, rule and STEP-input tests); no-op build 2.1 s (nothing recompiled); one-line Desktop change 2.4 s (Desktop recompiled, Core not).
+    - **Note:** the first `dotnet` run on this machine (SDK first-run experience) created a local, untrusted ASP.NET Core HTTPS development certificate.
   - ARCHITECTURE-PLAN P0 "Safety net" (2026-10-09), branch `refactor/p0-safety-net` from `main` `1125152`. Details: `ElevatorAutomation/docs/TESTING.md`.
     - **Build hazard:** `build.ps1` and `build-solution.ps1` default to `ElevatorAutomation/artifacts/bin` (ignored) and refuse a `bin-shaftmaster-v*` folder unless `-Release` is given (tested with a non-existent `bin-shaftmaster-v99`: both refuse, nothing written). README / docs updated.
     - **Needed consequence (product code, behaviour unchanged for releases):** the desktop (`MainWindow`), `Elevator.AutoCAD.Configuration.Root` and three test programs took the parent of the binary folder as the root (config/, Templates/). For `artifacts/bin` that was wrong, so the root is now the nearest ancestor with `config/` and `Templates/`; for a release folder that is still the parent.
@@ -344,6 +353,11 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Missing/invalid input makes the forces unavailable, never zero, and does not block P1–P7 or drawing generation.
   - The FF input is excluded from the chassis and safety/pit fingerprints.
   - The implementation still reports scalar FF1/FF2 only. Since the audit, the UI and result details display the approved interpretation text. No calculation changed, and there is no certification claim.
+- **Changed files (P1 build system, 2026-10-09; branch `refactor/p1-build`):**
+  - New: `ElevatorAutomation/Directory.Build.props`, `ElevatorAutomation/tools/build.ps1`, `ElevatorAutomation/tools/BrandIconBuilder/BrandIconBuilder.csproj`, `ElevatorAutomation/tests/projects/*/` (5 test projects).
+  - Rewritten: the six `.csproj` files, `ElevatorAutomation/ElevatorAutomation.sln`, `build.ps1`, `build-solution.ps1` (wrappers), `build-section-aa.ps1`.
+  - Updated references: `tests/solution/run-basic-ui.ps1`, `run-calculation-ui.ps1`, `run-car-guide-force-core.ps1`, `run-safety-pit-ui.ps1`, `generated-run-phase1.ps1`; `tests/run-tests.ps1`, `tests/project/build-project-tests.ps1`, `tests/project/run-phase1.ps1`, `tests/vertical/build-vertical.ps1`; `tools/test.ps1`, `tools/run-golden.ps1`; docs `README.md`, `ElevatorAutomation/README.md`, `README-section-aa.md`, `docs/SHAFTMASTER-UI-RESULTS.md`, `docs/TESTING.md`; `SESSION_HANDOFF.md`.
+  - No source (`.cs`) file changed.
 - **Changed files (P0 safety net, 2026-10-09; branch `refactor/p0-safety-net`):**
   - Build: `.gitignore` (`ElevatorAutomation/artifacts/`), `ElevatorAutomation/build.ps1`, `ElevatorAutomation/build-solution.ps1`; docs `README.md`, `ElevatorAutomation/README.md`, `ElevatorAutomation/docs/SHAFTMASTER-UI-RESULTS.md`.
   - Product (refactor only): `Elevator.Solution.Desktop/DocxWriter.cs` (`ReportClock`), `CalculationSheet.cs`, `CalculationSheetExport.cs`, `RopeTractionPage.cs` (clock); `Elevator.Solution.Desktop/App.cs`, `Elevator.AutoCAD/Drawing/Configuration.cs` (root lookup).
@@ -618,6 +632,12 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Docs: `docs/CAR-GUIDE-FORCES.md`.
   - Outputs: `bin-shaftmaster-ff-candidate/`, `output/ff-ui-20261006/`, `output/ff-source-review-20261006/`.
 - **Checks:**
+  - P1 build system (2026-10-09), run `ElevatorAutomation/artifacts/test-results/20261009-060258` on the new build, all PASS, golden files unchanged:
+    - build 2 s (incremental); tier 1 (228 s): golden 566, presets 160, rope 60, sheet 8285, FF 131, safety/pit 117;
+    - tier 2 (648 s): presets UI 59, rope UI 33, sheet UI 63, calculation UI 54, Basic 67, safety/pit 152, draft 117, FF UI 126. The time was machine load: presets UI took 400 s in this run, and 55 s on both the new and the old build when rerun alone;
+    - tier 3 (139 s): integration (affected regressions, FF integration 22, STEP input 7, native golden 2 files compared), presets native 6, sheet Word render PASS.
+    - Wrappers: `build-solution.ps1` builds; `build.ps1 -BinDirectory bin-shaftmaster-v99` is refused.
+    - Not run: the phase-1 runners, `tests/run-tests.ps1` (AutoCAD script suites), `build-section-aa.ps1`, `tests/vertical/build-vertical.ps1` and `tests/project/build-project-tests.ps1` after their reference updates; SOLIDWORKS STEP export; manual dialogs.
   - P0 safety net (2026-10-09), final run `ElevatorAutomation/artifacts/test-results/20261009-053328` (local, ignored), all PASS:
     - build 8 s;
     - tier 1 (204 s): golden 566 files, presets core 160, rope core 60 + hand check, sheet core 8285, FF core 131, safety/pit core 117;
@@ -921,6 +941,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-09: Executor closed P0 (merged into main `ac9fdcc`, Planner files `ee898b6`) and completed P1 on branch `refactor/p1-build` (not merged, not pushed): SDK-style projects, Directory.Build.props, one solution, tools/build.ps1; same 26-file output; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor completed ARCHITECTURE-PLAN P0 on branch `refactor/p0-safety-net` (not merged, not pushed): artifacts/ build default with release guard, golden master (566 files) and native golden, tools/test.ps1 tiers, Basic UI flake fixed (external close of the test window). Tiers 1–3 PASS. Awaiting Planner.
 - 2026-10-09: Executor released v03 (`bin-shaftmaster-v03`, `9CFD5FAB…`) and cleaned the repository: one clean commit on `main`, standards / third-party / inspection files and root drawings out of Git (kept on disk), legacy plugin under `legacy/`. Not pushed. Awaiting Planner.
 - 2026-10-09: Executor finished the heavy-load selection (joint β / q / Dt search, heavier car masses, 2:1 recommendation). Candidate `9CFD5FAB…`, `final2` all PASS. Awaiting Planner.
