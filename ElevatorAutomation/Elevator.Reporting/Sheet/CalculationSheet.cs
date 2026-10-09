@@ -833,6 +833,37 @@ namespace Elevator.Reporting.Sheet
                 + "selected upper longitudinal members, simply supported on the transverse members, to the bearing seats. Rope tensions "
                 + "use g = 9.81 m/s² with equal tension in each rope.");
             d.Paragraph("Chassis model data", "Heading2");
+            AddChassisModelTable(d, c);
+            d.Paragraph("Loads on the chassis", "Heading2");
+            d.Paragraph(
+                "Positions in mm, forces in N and couples in N·mm on the machine-room axes (+X right, +Y entrance → rear, +Z above slab).",
+                "Small",
+                null,
+                true);
+            d.Table(
+                new[] { "Load", "Position (mm)", "Force Fx, Fy, Fz (N)", "Couple Mx, My, Mz (N·mm)" },
+                r.Loads.Select(l => new[] { LoadName(l.Id), Pt(l.PositionMm), Pt(l.ForceN), Pt(l.CoupleNmm) }).ToList(),
+                new[] { 2638, 2200, 2300, 2500 },
+                new HashSet<int> { 0 });
+            if (r.Transfers.Count > 0)
+            {
+                d.Paragraph("Member transfers", "Heading2");
+                d.Table(new[] { "Load", "Member", "Front (N)", "Rear (N)" }, r.Transfers
+                    .Select(t => new[] { LoadName(t.LoadId), Member(t.MemberId), N(t.FrontDownwardN), N(t.RearDownwardN) })
+                    .ToList(), new[] { 2838, 2600, 2100, 2100 }, new HashSet<int> { 0 });
+                d.Paragraph("Positive member transfers act downwards on the supporting members; negative values act upwards.", "Small");
+            }
+            d.Paragraph("Bearing positions", "Heading2");
+            d.Table(new[] { "Bearing", "Location", "X (mm)", "Y (mm)", "Z (mm)" }, r.Reactions
+                .OrderBy(b => b.Id)
+                .Select(b => new[] { b.Id, Bearing(b.Id), L(b.PositionMm.X), L(b.PositionMm.Y), L(b.PositionMm.Z) })
+                .ToList(), new[] { 1500, 3638, 1500, 1500, 1500 }, new HashSet<int> { 0 });
+            AddFigure(d, () => CalculationFigures.ChassisPlan(r, false));
+            Reactions(d);
+        }
+
+        private void AddChassisModelTable(DocxDocument d, ChassisCalculationInputs c)
+        {
             var rows = new List<string[]>();
             if (Finite(c.MachineCgOffsetXMm) && Finite(c.MachineCgOffsetYMm) && Finite(c.MachineCgOffsetZMm))
             {
@@ -881,32 +912,6 @@ namespace Elevator.Reporting.Sheet
             if (c.IncludeHangerAssemblyWeight == true && Positive(c.HangerAssemblyMassKg))
                 rows.Add(new[] { "Hanger assembly mass", L(c.HangerAssemblyMassKg.Value) + " kg" });
             d.Table(new[] { "Item", "Value" }, rows, TwoCol, new HashSet<int> { 0 });
-            d.Paragraph("Loads on the chassis", "Heading2");
-            d.Paragraph(
-                "Positions in mm, forces in N and couples in N·mm on the machine-room axes (+X right, +Y entrance → rear, +Z above slab).",
-                "Small",
-                null,
-                true);
-            d.Table(
-                new[] { "Load", "Position (mm)", "Force Fx, Fy, Fz (N)", "Couple Mx, My, Mz (N·mm)" },
-                r.Loads.Select(l => new[] { LoadName(l.Id), Pt(l.PositionMm), Pt(l.ForceN), Pt(l.CoupleNmm) }).ToList(),
-                new[] { 2638, 2200, 2300, 2500 },
-                new HashSet<int> { 0 });
-            if (r.Transfers.Count > 0)
-            {
-                d.Paragraph("Member transfers", "Heading2");
-                d.Table(new[] { "Load", "Member", "Front (N)", "Rear (N)" }, r.Transfers
-                    .Select(t => new[] { LoadName(t.LoadId), Member(t.MemberId), N(t.FrontDownwardN), N(t.RearDownwardN) })
-                    .ToList(), new[] { 2838, 2600, 2100, 2100 }, new HashSet<int> { 0 });
-                d.Paragraph("Positive member transfers act downwards on the supporting members; negative values act upwards.", "Small");
-            }
-            d.Paragraph("Bearing positions", "Heading2");
-            d.Table(new[] { "Bearing", "Location", "X (mm)", "Y (mm)", "Z (mm)" }, r.Reactions
-                .OrderBy(b => b.Id)
-                .Select(b => new[] { b.Id, Bearing(b.Id), L(b.PositionMm.X), L(b.PositionMm.Y), L(b.PositionMm.Z) })
-                .ToList(), new[] { 1500, 3638, 1500, 1500, 1500 }, new HashSet<int> { 0 });
-            AddFigure(d, () => CalculationFigures.ChassisPlan(r, false));
-            Reactions(d);
         }
 
         void RopeTensions(DocxDocument d, int n)

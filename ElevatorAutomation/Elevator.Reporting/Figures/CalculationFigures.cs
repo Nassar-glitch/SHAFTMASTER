@@ -1157,6 +1157,22 @@ namespace Elevator.Reporting.Figures
                 "rail-count",
                 n.ToString(System.Globalization.CultureInfo.InvariantCulture));
             // Plan detail: the jaws grip both side faces of the blade.
+            DrawJawDetail(rail, f, beam);
+            var note = f.Text(
+                "Rail section " + rail.Designation + " with the safety gear gripping the blade side faces",
+                Pt(4, beam + 26),
+                "start",
+                FigureLayer.Text,
+                2.5,
+                false,
+                "rail-note",
+                rail.Designation);
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawJawDetail(IRailSection rail, Figure f, double beam)
+        {
             double cx = 142, cy = 48, s = 24 / Math.Max(rail.BaseWidthMm, rail.HeightMm);
             f.Line(Pt(118, 4), Pt(118, beam + 20), FigureLayer.Thin, "view-split");
             f.Text("Plan detail", Pt(cx, 8), "middle", FigureLayer.Text, 3.5, false, null, null, true);
@@ -1181,17 +1197,6 @@ namespace Elevator.Reporting.Figures
             }
             f.Text("jaws", Pt(cx + k + 10, bt + 6), "start");
             f.Text("blade", Pt(cx, bt - 4), "middle");
-            var note = f.Text(
-                "Rail section " + rail.Designation + " with the safety gear gripping the blade side faces",
-                Pt(4, beam + 26),
-                "start",
-                FigureLayer.Text,
-                2.5,
-                false,
-                "rail-note",
-                rail.Designation);
-            Finish(f, note.At.Y);
-            return f;
         }
 
         // ---------- F9 pit buffers (P6 / P7) ----------
