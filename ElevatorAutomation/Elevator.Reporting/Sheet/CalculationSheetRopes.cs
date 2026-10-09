@@ -178,6 +178,26 @@ namespace Elevator.Reporting.Sheet
                 + (g.DeflectorPresent ? "with deflector sheave" : "without deflector sheave")
                 + " (EN 81-20:2014 5.5; EN 81-50:2014 5.11 and 5.12).", null, null, true);
             // Geometry used by the checks.
+            AddGeometryTable(d, r, g);
+            // Rope checks.
+            d.Paragraph("Rope checks", "Heading2");
+            var lines = new List<string>();
+            AddRopeCheckEquations(r, x, g, lines);
+            var term = r.Checks.FirstOrDefault(c => c.Id == "termination");
+            if (term != null)
+                lines.Add("Ftermination ≥ 0.8 × MBL = " + term.Substitution);
+            if (lines.Count > 0)
+                d.Equations(true, lines);
+            AddRopeCheckTable(d, r, x, term);
+            // Traction.
+            AddTractionCases(d, r);
+            d.Flow = false;
+            if (x.GrooveType != null && (r.Traction.Count > 0 || r.TmaxN.HasValue))
+                AddFigure(d, () => CalculationFigures.TractionSheave(r));
+        }
+
+        private void AddGeometryTable(DocxDocument d, RopeTractionResult r, RopeTractionGeometry g)
+        {
             var geo = new List<string[]>();
             if (r.TravelM.HasValue)
                 geo.Add(new[] { "Travel height", "Htr", L(r.TravelM.Value) + " m" });
@@ -191,9 +211,10 @@ namespace Elevator.Reporting.Sheet
                 geo.Add(new[] { "Reduced mass of the deflector sheave (m/2)", "mDP", L(r.MdpKg.Value) + " kg" });
             if (geo.Count > 0)
                 d.Table(new[] { "Quantity", "Symbol", "Value" }, geo, new[] { 5200, 1400, 3038 }, new HashSet<int> { 0 });
-            // Rope checks.
-            d.Paragraph("Rope checks", "Heading2");
-            var lines = new List<string>();
+        }
+
+        private void AddRopeCheckEquations(RopeTractionResult r, RopeTractionEffectiveInputs x, RopeTractionGeometry g, List<string> lines)
+        {
             if (r.TmaxN.HasValue)
             {
                 lines.Add("Tmax = ((P + Q) / n + H · w) · gn = (("
@@ -243,15 +264,14 @@ namespace Elevator.Reporting.Sheet
                     + L(r.Sf8150.Value));
                 lines.Add("Sf required = max(" + L(r.SfMinimum8120.Value) + "; " + L(r.Sf8150.Value) + ") = " + L(r.SfRequired.Value));
             }
-            var term = r.Checks.FirstOrDefault(c => c.Id == "termination");
-            if (term != null)
-                lines.Add("Ftermination ≥ 0.8 × MBL = " + term.Substitution);
-            if (lines.Count > 0)
-                d.Equations(true, lines);
+        }
+
+        private void AddRopeCheckTable(DocxDocument d, RopeTractionResult r, RopeTractionEffectiveInputs x, RopeCheck term)
+        {
             var rows = r.Checks
-                .Where(c => c.Id != "termination")
-                .Select(c => new[] { c.Title, c.Clause, c.Equation, c.Required, c.Actual, Res(c.Ok) })
-                .ToList();
+                            .Where(c => c.Id != "termination")
+                            .Select(c => new[] { c.Title, c.Clause, c.Equation, c.Required, c.Actual, Res(c.Ok) })
+                            .ToList();
             if (term != null)
             {
                 rows.Add(new[]
@@ -269,7 +289,10 @@ namespace Elevator.Reporting.Sheet
                 rows,
                 new[] { 1900, 1550, 2000, 1400, 1400, 1388 },
                 new HashSet<int> { 0, 5 });
-            // Traction.
+        }
+
+        private void AddTractionCases(DocxDocument d, RopeTractionResult r)
+        {
             if (r.Traction.Count > 0)
             {
                 d.Paragraph("Traction", "Heading2");
@@ -315,9 +338,6 @@ namespace Elevator.Reporting.Sheet
                             .ToList(), new[] { 3438, 1300, 1300, 1100, 1300, 1200 }, new HashSet<int> { 0, 5 });
                 }
             }
-            d.Flow = false;
-            if (x.GrooveType != null && (r.Traction.Count > 0 || r.TmaxN.HasValue))
-                AddFigure(d, () => CalculationFigures.TractionSheave(r));
         }
     }
 }
