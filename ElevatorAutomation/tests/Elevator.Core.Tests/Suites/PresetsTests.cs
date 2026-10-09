@@ -25,7 +25,7 @@ namespace Elevator.Core.Tests
     // DESIGN-FLOW stage 2 ("Flow foundation"), Core level: loader validation, capacity-table interpolation, CW = P + q·Q,
     // rope ladder, safety-gear / buffer rules, a new project computed with no input, lock / follow / Reset, rope auto-upsize,
     // older projects and "Fill blanks", and identical numbers for identical inputs. Shipped presets.json and reviewed context.
-    public class PresetsTests
+    public class PresetsTests : IClassFixture<SuiteFlush>
     {
         static string bin, output; static DesignContext ctx; static PresetLibrary lib;
         static int count; static readonly List<string> names = new List<string>();

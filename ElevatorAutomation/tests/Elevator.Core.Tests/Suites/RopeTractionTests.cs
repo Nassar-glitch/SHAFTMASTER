@@ -67,7 +67,7 @@ namespace Elevator.Core.Tests
         // The engine inputs and outputs of the fixtures, for the independent Python re-computation (verify_rope_traction.py, run by tools/test.ps1).
         public sealed class HandCheckFiles : IDisposable
         {
-            public void Dispose() { Wire.Write(Path.Combine(TestData.Folder("rope-core"), "hand-check-fixtures.json"), fixtures); }
+            public void Dispose() { Suite.Flush(); Wire.Write(Path.Combine(TestData.Folder("rope-core"), "hand-check-fixtures.json"), fixtures); }
         }
         static void Section(Action section, int expected)
         {

@@ -16,7 +16,7 @@ using Elevator.Reporting.Figures;
 namespace Elevator.Core.Tests
 {
     // Synthetic fixtures only. These values are never inserted into project defaults.
-    public class SafetyPitTests
+    public class SafetyPitTests : IClassFixture<SuiteFlush>
     {
      // Source root (config/ and Templates/): the parent of the binary folder, or an ancestor for artifacts/bin.
      static string Root(string bin){var parent=Directory.GetParent(bin.TrimEnd(Path.DirectorySeparatorChar));for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;return parent.FullName;}

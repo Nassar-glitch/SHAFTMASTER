@@ -18,7 +18,7 @@ namespace Elevator.Core.Tests
 {
     // Independent numeric fixtures, never project defaults. Live tests use geometry
     // issued by the shared design engine rather than stamping arbitrary dimensions.
-    public class CarGuideForceTests
+    public class CarGuideForceTests : IClassFixture<SuiteFlush>
     {
         static int assertions;
         static void Check(bool condition,string name){if(!condition)throw new Exception(name);assertions++;Suite.Count("ff-core");}

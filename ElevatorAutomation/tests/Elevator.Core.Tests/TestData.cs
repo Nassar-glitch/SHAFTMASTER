@@ -15,18 +15,24 @@ namespace Elevator.Core.Tests
         public static int Main(string[] args) { return 0; }
     }
 
+    // Class fixture of the converted suites: writes the counted checks when the class's tests are done.
+    public sealed class SuiteFlush : IDisposable
+    {
+        public void Dispose() { Suite.Flush(); }
+    }
+
     // Counts the checks made inside the converted suites and writes them at the end of the run (checks-<framework>.json in the
     // output root); tools/test.ps1 adds them to the xUnit test count.
     public static class Suite
     {
         static readonly object gate = new object();
         static readonly System.Collections.Generic.SortedDictionary<string, int> counts = new System.Collections.Generic.SortedDictionary<string, int>();
-        static Suite() { AppDomain.CurrentDomain.ProcessExit += (sender, e) => Write(); }
         public static void Count(string suite)
         {
             lock (gate) { int n; counts.TryGetValue(suite, out n); counts[suite] = n + 1; }
         }
-        static void Write()
+        // Called when a converted suite's tests are done (SuiteFlush): the last call has every suite's checks.
+        public static void Flush()
         {
             lock (gate)
             {
