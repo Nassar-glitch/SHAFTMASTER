@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test program built with the solution into the output folder, as the csc build did. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>MachineRoomRuleTests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\MachineRoomRuleTests.cs" />
+    <Reference Include="System.Web.Extensions" />
+    <ProjectReference Include="..\..\..\Elevator.Core\Elevator.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -11,7 +11,7 @@ The agreed design flow, presets and build stages are in [DESIGN-FLOW.md](DESIGN-
 
 ## Prerequisites
 
-- Windows x64 with .NET Framework 4.8 (the build uses the framework's `csc.exe`; no Visual Studio is needed).
+- Windows x64 with .NET Framework 4.8 and the .NET SDK (10 or later) for `dotnet build`; no Visual Studio is needed. The first build restores `Microsoft.NETFramework.ReferenceAssemblies` from nuget.org.
 - AutoCAD 2023: needed to build (its managed assemblies are referenced) and to generate native drawings.
 - SOLIDWORKS (licensed): its interop assemblies are needed to build the STEP worker, and SOLIDWORKS itself for STEP export.
 - Python 3 with `python-docx` and Word: only for the rendered calculation-sheet checks in the test suites.
@@ -24,11 +24,11 @@ The build goes to `ElevatorAutomation/artifacts/bin` by default (ignored by Git)
 
 ```powershell
 cd ElevatorAutomation
-./build-solution.ps1
+./tools/build.ps1
 ./artifacts/bin/ShaftMaster.exe
 ```
 
-Use `-AutoCADDirectory` and `-SolidWorksDirectory` when they are not installed in the default folders. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
+`tools/build.ps1` runs `dotnet build ElevatorAutomation.sln -c Release` (SDK-style projects, shared settings in `ElevatorAutomation/Directory.Build.props`, incremental), then the pure rule tests and the STEP-input tests. Use `-AutoCADDir` and `-SolidWorksDir` when they are not installed in the default folders. `build.ps1` and `build-solution.ps1` remain as thin wrappers. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
 
 Tests run by tier (see [ElevatorAutomation/docs/TESTING.md](ElevatorAutomation/docs/TESTING.md)):
 

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test program built with the solution into the output folder, as the csc build did. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>StepExportTests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\step-export\StepExportTests.cs" />
+    <Reference Include="System.Web.Extensions" />
+    <ProjectReference Include="..\..\..\Elevator.Core\Elevator.Core.csproj" />
+    <ProjectReference Include="..\..\..\Elevator.Solution.Bridge\Elevator.Solution.Bridge.csproj" />
+  </ItemGroup>
+</Project>

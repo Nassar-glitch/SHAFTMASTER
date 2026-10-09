@@ -4,7 +4,7 @@ $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bin=Join-Path $root $CandidateBin;$out=Join-Path $root $EvidenceDirectory
 if($CandidateBin -in @('bin-shaftmaster-v01','bin-shaftmaster-basic-candidate','bin-shaftmaster-calculations-candidate','bin-shaftmaster-safety-pit-candidate')){throw 'Use a separate FF candidate folder.'}
 New-Item -ItemType Directory -Force -Path $out | Out-Null
-if(!$SkipBuild){& (Join-Path $root 'build-solution.ps1') -BinDirectory $CandidateBin}
+if(!$SkipBuild){& (Join-Path $root 'tools/build.ps1') -Bin $CandidateBin}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $refs=@('/reference:System.Web.Extensions.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')))
 $sources=@('tests/solution/CarGuideForceTests.cs','Elevator.Solution.Desktop/CalculationWorkspace.cs','Elevator.Solution.Desktop/ProjectSession.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName}

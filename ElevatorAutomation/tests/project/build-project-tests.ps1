@@ -2,7 +2,7 @@ param([string]$BinDirectory='bin-phase1')
 $ErrorActionPreference='Stop'
 $projectTestDirectory=$PSScriptRoot
 $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-& (Join-Path $root 'build.ps1') -BinDirectory $BinDirectory
+& (Join-Path $root 'tools/build.ps1') -Bin $BinDirectory
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $bin=Join-Path $root $BinDirectory
 $core=Join-Path $bin 'Elevator.Core.dll'

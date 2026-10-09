@@ -5,8 +5,8 @@ $workspaceRoot=Split-Path $sourceRoot -Parent
 $isolation=Join-Path $sourceRoot 'output/phase1/regression'
 $isolatedRoot=Join-Path $isolation 'ElevatorAutomation'
 New-Item -ItemType Directory -Force $isolatedRoot,(Join-Path $isolation 'legacy/ElevatorPlanGenerator/tests'),(Join-Path $isolation 'legacy/ElevatorPlanGenerator/templates'),(Join-Path $isolation 'legacy/ElevatorPlanGenerator/output') | Out-Null
-foreach($dir in @('Elevator.Core','Elevator.AutoCAD','config','Templates','tests','examples')){Copy-Item -LiteralPath (Join-Path $sourceRoot $dir) -Destination $isolatedRoot -Recurse -Force}
-Copy-Item -LiteralPath (Join-Path $sourceRoot 'build.ps1') -Destination $isolatedRoot -Force
+foreach($dir in @('Elevator.Core','Elevator.AutoCAD','Elevator.Solution.Bridge','Elevator.Solution.Host','Elevator.Solution.StepExport','Elevator.Solution.Desktop','config','Templates','tests','examples','tools','docs')){Copy-Item -LiteralPath (Join-Path $sourceRoot $dir) -Destination $isolatedRoot -Recurse -Force}
+foreach($file in @('build.ps1','ElevatorAutomation.sln','Directory.Build.props')){Copy-Item -LiteralPath (Join-Path $sourceRoot $file) -Destination $isolatedRoot -Force}
 Copy-Item -LiteralPath (Join-Path $workspaceRoot 'legacy/ElevatorPlanGenerator/tests/cad-test-results.json') -Destination (Join-Path $isolation 'legacy/ElevatorPlanGenerator/tests') -Force
 Copy-Item -LiteralPath (Join-Path $workspaceRoot 'legacy/ElevatorPlanGenerator/templates/plan codex.dwg') -Destination (Join-Path $isolation 'legacy/ElevatorPlanGenerator/templates') -Force
 $goldens=Get-Content (Join-Path $workspaceRoot 'legacy/ElevatorPlanGenerator/tests/cad-test-results.json') -Raw|ConvertFrom-Json

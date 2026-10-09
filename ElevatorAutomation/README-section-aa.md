@@ -2,4 +2,4 @@ Section A-A experimental native-template automation is implemented separately fr
 
 [Implementation evidence, commands, tests, limitations and drawings](<D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/ElevatorAutomation/output/section-aa/IMPLEMENTATION_EVIDENCE.md>)
 
-Build using `powershell -File build-section-aa.ps1`; load `bin-section-aa/Elevator.AutoCAD.dll` in a fresh AutoCAD 2023 session.
+Build using `powershell -File build-section-aa.ps1` (the solution build through `tools/build.ps1`, then the Section A-A test libraries); load `bin-section-aa/Elevator.AutoCAD.dll` in a fresh AutoCAD 2023 session.

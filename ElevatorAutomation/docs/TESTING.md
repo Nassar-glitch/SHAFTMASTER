@@ -8,7 +8,7 @@ cd ElevatorAutomation
 ./tools/test.ps1 -Tier 1,2,3      # end of a phase / before a release
 ```
 
-`tools/test.ps1` first builds into `artifacts/bin` (`build-solution.ps1`; `-NoBuild` skips it, `-Bin` chooses another non-release folder), then runs the suites of each requested tier. Every run writes into a fresh folder `artifacts/test-results/<yyyyMMdd-HHmmss>/`: one subfolder per suite (`tier<N>/<suite>/`), one log per suite, `build.log`, and `summary.json` / `summary.md` with the result, the assertion count and the time of every suite and the time per tier. A failing suite fails the run. Tests never run in, or build into, a release folder (`bin-shaftmaster-v*`).
+`tools/test.ps1` first builds into `artifacts/bin` (`tools/build.ps1`; `-NoBuild` skips it, `-Bin` chooses another non-release folder), then runs the suites of each requested tier. Every run writes into a fresh folder `artifacts/test-results/<yyyyMMdd-HHmmss>/`: one subfolder per suite (`tier<N>/<suite>/`), one log per suite, `build.log`, and `summary.json` / `summary.md` with the result, the assertion count and the time of every suite and the time per tier. A failing suite fails the run. Tests never run in, or build into, a release folder (`bin-shaftmaster-v*`).
 
 | Tier | Suites | Needs |
 |---|---|---|

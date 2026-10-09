@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test program built with the solution into the output folder, as the csc build did. -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Elevator.Automation.Tests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\*.cs" Exclude="..\..\RuleTests.cs;..\..\MachineRoomRuleTests.cs;..\..\ReevingTests.cs;..\..\SolutionRoofRegression.cs" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="AcDbMgd"><HintPath>$(AutoCADDir)\AcDbMgd.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="AcCoreMgd"><HintPath>$(AutoCADDir)\AcCoreMgd.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="AcMgd"><HintPath>$(AutoCADDir)\AcMgd.dll</HintPath><Private>false</Private></Reference>
+    <ProjectReference Include="..\..\..\Elevator.Core\Elevator.Core.csproj" />
+    <ProjectReference Include="..\..\..\Elevator.AutoCAD\Elevator.AutoCAD.csproj" />
+  </ItemGroup>
+</Project>

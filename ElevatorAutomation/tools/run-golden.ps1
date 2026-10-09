@@ -1,13 +1,13 @@
 param([string]$Bin='artifacts/bin',[string]$OutDir='',[switch]$Approve,[switch]$MakeFixtures)
 # Tier-1 golden-master suite (tests/golden). Compiles tests/golden/GoldenTests.cs with the report sources of the desktop
-# application against the Core and Bridge of -Bin (default artifacts/bin; build it first with build-solution.ps1), runs it
+# application against the Core and Bridge of -Bin (default artifacts/bin; build it first with tools/build.ps1), runs it
 # into a fresh folder and compares every captured file with tests/golden/approved. On a mismatch the received file and a
 # readable diff are written under <OutDir>/mismatch and the run fails.
 # -Approve writes the initial baseline only (the approved folder must be empty). -MakeFixtures writes the fixture set once.
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $binPath=Join-Path $root $Bin
-if(-not (Test-Path -LiteralPath (Join-Path $binPath 'Elevator.Core.dll'))){throw "No build in $binPath. Run build-solution.ps1 first."}
+if(-not (Test-Path -LiteralPath (Join-Path $binPath 'Elevator.Core.dll'))){throw "No build in $binPath. Run tools/build.ps1 first."}
 if(-not $OutDir){$OutDir=Join-Path 'artifacts/test-results' ((Get-Date -Format 'yyyyMMdd-HHmmss')+'/golden')}
 $out=Join-Path $root $OutDir
 if((Test-Path -LiteralPath $out) -and @(Get-ChildItem -LiteralPath $out -Force).Count){throw "Output folder is not empty: $out"}
