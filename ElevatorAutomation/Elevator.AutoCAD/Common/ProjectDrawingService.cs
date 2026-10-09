@@ -39,78 +39,21 @@ namespace Elevator.AutoCAD.Common
             if (document == null)
                 throw new ArgumentNullException("document");
             options = options ?? new GenerationOptions();
-            var failures = ProjectValidator.Validate(project, options.Views).Where(v => v.BlocksGeneration).ToArray();
-            if (failures.Length > 0)
-                throw new ArgumentException(String.Join("; ", failures.Select(v => v.Field + ": " + v.Message)));
-            if (options.Views == 0 || (options.Views & ~DrawingViews.All) != 0)
-                throw new ArgumentException("Select supported drawing views.");
-            if (!document.Database.TileMode)
-                throw new InvalidOperationException("Generation requires model space.");
-            if (!String.IsNullOrWhiteSpace(options.OutputPath) && File.Exists(options.OutputPath))
-                throw new IOException("Output already exists; choose a new project filename.");
+            ValidateRequest(document, project, options);
             var db = document.Database;
             var result = new DrawingGenerationResult();
             bool imported = false;
             // Imports are confined to the requested project document. Existing source DWGs are read-only.
             using (document.LockDocument())
             {
-                using (var tr = db.TransactionManager.StartTransaction())
-                {
-                    LegacyMigration.Ensure(db, tr);
-                    var plan = DrawingReader.Read(db, tr);
-                    if (ComponentBinding.ReadManifest(db, tr).TemplateId != project.Elevator.TemplateId)
-                        throw new ArgumentException("Project/template mismatch.");
-                    bool room = (options.Views & ~DrawingViews.Plan) != 0;
-                    bool section = (options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0;
-                    if (room && !MachineRoomDrawing.IsPresent(db, tr))
-                    {
-                        MachineRoomDrawing.Import(
-                            db,
-                            Path.Combine(Configuration.Root, "Templates", "MachineRoom_Master.dwg"),
-                            plan.Frame.Origin,
-                            plan.Frame.XAxis);
-                        imported = true;
-                    }
-                    if (section && !MachineRoomSectionDrawing.IsPresent(db, tr))
-                    {
-                        MachineRoomSectionDrawing.Import(
-                            db,
-                            Path.Combine(Configuration.Root, "Templates", "MachineRoomSection_Master.dwg"),
-                            plan.Frame.Origin,
-                            plan.Frame.XAxis);
-                        imported = true;
-                    }
-                    tr.Commit();
-                }
+                ImportTemplates(project, options, db, ref imported);
                 // Existing adapter handles obsolete native dimension associations in AutoCAD context.
                 if ((options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
                     MachineRoomSectionDrawing.DetachSourceDimensionAssociations(document);
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     var plan = DrawingReader.Read(db, tr);
-                    var context = new DesignContext
-                    {
-                        Equipment = Configuration.Read<EquipmentProfile>(ElevatorProjectCommand.Family(
-                        LegacyProjectAdapter.ToLegacy(project)).ProfileFile),
-                        CounterweightDepthMm = plan.ElevatorParameters.CwDepth
-                    };
-                    if ((options.Views & ~DrawingViews.Plan) != 0)
-                    {
-                        var mr = MachineRoomDrawing.Read(db, tr);
-                        MachineRoomDependencies.Prepare(db, tr, mr);
-                        context.RoomExtensions = mr.Extensions;
-                        context.ChassisEvidence = ChassisCalculationGeometryReader.Read(mr);
-                        if ((options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
-                        {
-                            context.SectionReference = MachineRoomSectionDrawing.Read(db, tr).Manifest.Reference;
-                            context.FrontSupportDepthMm = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P2")
-                                + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P4")) / 2;
-                            context.RearSupportOffsetMm = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P1")
-                                + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P3")) / 2;
-                            context.RetainedDeflectorPitchMm = mr.PitchProjection;
-                            context.RetainedDeflectorVisible = mr.Entities[MachineRoomDrawing.Pitch].Visible;
-                        }
-                    }
+                    DesignContext context = BuildContext(project, options, db, tr, plan);
                     result.Design = new ElevatorDesignEngine().Calculate(project, context, options.Views);
                     if (!result.Design.CanGenerate)
                     {
@@ -121,24 +64,7 @@ namespace Elevator.AutoCAD.Common
                     }
                     UnifiedProjectStorage.Save(db, tr, project);
                     // Dependencies are updated in order even if only a dependent view was selected.
-                    new PlanUpdater().Update(db, tr, result.Design.Plan);
-                    if ((options.Views & ~DrawingViews.Plan) != 0)
-                        new MachineRoomUpdater().Update(db, tr, result.Design.Plan);
-                    if ((options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
-                        new MachineRoomSectionUpdater().Update(db, tr, result.Design.Plan);
-                    if ((options.Views & DrawingViews.SectionAA) != 0)
-                    {
-                        bool exists = SectionAADrawing.Find(db, tr).Count > 0;
-                        if (!exists)
-                        {
-                            SectionAADrawing.ImportLibrary(db);
-                            imported = true;
-                        }
-                        SectionAADrawing.Rebuild(
-                            db,
-                            LegacyProjectAdapter.ToSectionAA(project),
-                            exists ? (Point3d?)null : plan.Frame.Origin);
-                    }
+                    UpdateViews(project, options, db, result, ref imported, tr, plan);
                     if (options.ArrangeViews || imported)
                         Arrange(db, tr, project.Drawing.ViewMarginMm);
                     foreach (var group in Entities(db, tr))
@@ -153,6 +79,113 @@ namespace Elevator.AutoCAD.Common
                 }
             }
             return result;
+        }
+
+        private void ValidateRequest(Document document, ElevatorProject project, GenerationOptions options)
+        {
+            var failures = ProjectValidator.Validate(project, options.Views).Where(v => v.BlocksGeneration).ToArray();
+            if (failures.Length > 0)
+                throw new ArgumentException(String.Join("; ", failures.Select(v => v.Field + ": " + v.Message)));
+            if (options.Views == 0 || (options.Views & ~DrawingViews.All) != 0)
+                throw new ArgumentException("Select supported drawing views.");
+            if (!document.Database.TileMode)
+                throw new InvalidOperationException("Generation requires model space.");
+            if (!String.IsNullOrWhiteSpace(options.OutputPath) && File.Exists(options.OutputPath))
+                throw new IOException("Output already exists; choose a new project filename.");
+        }
+
+        private void ImportTemplates(ElevatorProject project, GenerationOptions options, Database db, ref bool imported)
+        {
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                LegacyMigration.Ensure(db, tr);
+                var plan = DrawingReader.Read(db, tr);
+                if (ComponentBinding.ReadManifest(db, tr).TemplateId != project.Elevator.TemplateId)
+                    throw new ArgumentException("Project/template mismatch.");
+                bool room = (options.Views & ~DrawingViews.Plan) != 0;
+                bool section = (options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0;
+                if (room && !MachineRoomDrawing.IsPresent(db, tr))
+                {
+                    MachineRoomDrawing.Import(
+                        db,
+                        Path.Combine(Configuration.Root, "Templates", "MachineRoom_Master.dwg"),
+                        plan.Frame.Origin,
+                        plan.Frame.XAxis);
+                    imported = true;
+                }
+                if (section && !MachineRoomSectionDrawing.IsPresent(db, tr))
+                {
+                    MachineRoomSectionDrawing.Import(
+                        db,
+                        Path.Combine(Configuration.Root, "Templates", "MachineRoomSection_Master.dwg"),
+                        plan.Frame.Origin,
+                        plan.Frame.XAxis);
+                    imported = true;
+                }
+                tr.Commit();
+            }
+        }
+
+        private DesignContext BuildContext(
+            ElevatorProject project,
+            GenerationOptions options,
+            Database db,
+            Transaction tr,
+            DrawingSnapshot plan)
+        {
+            var context = new DesignContext
+            {
+                Equipment = Configuration.Read<EquipmentProfile>(ElevatorProjectCommand.Family(
+                                    LegacyProjectAdapter.ToLegacy(project)).ProfileFile),
+                CounterweightDepthMm = plan.ElevatorParameters.CwDepth
+            };
+            if ((options.Views & ~DrawingViews.Plan) != 0)
+            {
+                var mr = MachineRoomDrawing.Read(db, tr);
+                MachineRoomDependencies.Prepare(db, tr, mr);
+                context.RoomExtensions = mr.Extensions;
+                context.ChassisEvidence = ChassisCalculationGeometryReader.Read(mr);
+                if ((options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
+                {
+                    context.SectionReference = MachineRoomSectionDrawing.Read(db, tr).Manifest.Reference;
+                    context.FrontSupportDepthMm = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P2")
+                        + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P4")) / 2;
+                    context.RearSupportOffsetMm = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P1")
+                        + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P3")) / 2;
+                    context.RetainedDeflectorPitchMm = mr.PitchProjection;
+                    context.RetainedDeflectorVisible = mr.Entities[MachineRoomDrawing.Pitch].Visible;
+                }
+            }
+            return context;
+        }
+
+        private void UpdateViews(
+            ElevatorProject project,
+            GenerationOptions options,
+            Database db,
+            DrawingGenerationResult result,
+            ref bool imported,
+            Transaction tr,
+            DrawingSnapshot plan)
+        {
+            new PlanUpdater().Update(db, tr, result.Design.Plan);
+            if ((options.Views & ~DrawingViews.Plan) != 0)
+                new MachineRoomUpdater().Update(db, tr, result.Design.Plan);
+            if ((options.Views & (DrawingViews.SectionAA | DrawingViews.SectionBB)) != 0)
+                new MachineRoomSectionUpdater().Update(db, tr, result.Design.Plan);
+            if ((options.Views & DrawingViews.SectionAA) != 0)
+            {
+                bool exists = SectionAADrawing.Find(db, tr).Count > 0;
+                if (!exists)
+                {
+                    SectionAADrawing.ImportLibrary(db);
+                    imported = true;
+                }
+                SectionAADrawing.Rebuild(
+                    db,
+                    LegacyProjectAdapter.ToSectionAA(project),
+                    exists ? (Point3d?)null : plan.Frame.Origin);
+            }
         }
 
         static Dictionary<DrawingViews, List<Entity>> Entities(Database db, Transaction tr)
