@@ -540,14 +540,6 @@ namespace Elevator.Reporting.Docx
              + "</w:styles>";
         }
 
-        static string Field(string instruction)
-        {
-            return "<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText xml:space=\"preserve\"> "
-                + instruction
-                + " </w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar "
-                + "w:fldCharType=\"end\"/></w:r>";
-        }
-
         static void WritePart(Package package, Uri uri, string contentType, string xml)
         {
             var part = package.CreatePart(uri, contentType, CompressionOption.Normal);
