@@ -20,9 +20,6 @@ using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
 
-// ProjectPresets keeps a static selection cache: the tests run one after another.
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elevator.Core.Tests
 {
     // The Core-level golden captures of tests/golden/GoldenTests.cs (round-trip project JSON, results, fingerprints, new

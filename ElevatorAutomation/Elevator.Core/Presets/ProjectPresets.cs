@@ -612,9 +612,11 @@ return m==null?(double?)null:m.MachineMassKg;
         // The first combination whose checks are all OK (rope diameter and count, Sf, sheave D/d, every traction case) is taken.
         // Otherwise the ladder / preset values stay, the checks stay NOT OK and the outcome is NoPass with the limiting check named.
         // Locked values never change. No equation is involved: every trial is the rope / traction engine.
-        static string cacheKey;
-        static RopeSizing cacheValue;
-        static DesignContext cacheContext;
+        // Selections already searched, by canonical project fingerprint; an entry is used only with the same context object.
+        // Bounded and locked: the application, the golden fixtures and the parallel tests share it.
+        const int CacheLimit = 256;
+        static readonly object cacheGate = new object();
+        static readonly Dictionary<string, KeyValuePair<DesignContext, RopeSizing>> cache = new Dictionary<string, KeyValuePair<DesignContext, RopeSizing>>();
         public static readonly string[] RopeChecks = { "rope-diameter", "rope-count", "dd-sheave", "safety-factor" };
 
         /// <summary>
@@ -656,8 +658,15 @@ return m==null?(double?)null:m.MachineMassKg;
                 betaFree,
                 qFree
             });
-            if (key != null && key == cacheKey && cacheValue != null && Object.ReferenceEquals(ctx, cacheContext))
-                return Finish(p, lib, cacheValue.Copy(), betaFree, qFree);
+            RopeSizing cached = null;
+            lock (cacheGate)
+            {
+                KeyValuePair<DesignContext, RopeSizing> entry;
+                if (key != null && cache.TryGetValue(key, out entry) && Object.ReferenceEquals(ctx, entry.Key))
+                    cached = entry.Value.Copy();
+            }
+            if (cached != null)
+                return Finish(p, lib, cached, betaFree, qFree);
             var clock = System.Diagnostics.Stopwatch.StartNew();
             int n0 = p.Suspension.RopeCount.Value;
             double? s0 = p.Machine.TractionSheavePitchDiameterMm;
@@ -705,9 +714,13 @@ return m==null?(double?)null:m.MachineMassKg;
                 }
             }
             outcome.Milliseconds = clock.ElapsedMilliseconds;
-            cacheKey = key;
-            cacheValue = outcome.Copy();
-            cacheContext = ctx;
+            lock (cacheGate)
+            {
+                if (cache.Count >= CacheLimit)
+                    cache.Clear();
+                if (key != null)
+                    cache[key] = new KeyValuePair<DesignContext, RopeSizing>(ctx, outcome.Copy());
+            }
             return Finish(p, lib, outcome, betaFree, qFree);
         }
 

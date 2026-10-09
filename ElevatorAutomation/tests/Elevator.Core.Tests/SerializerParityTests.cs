@@ -147,8 +147,7 @@ namespace Elevator.Core.Tests
             string path = Path.Combine(TestData.Root, "tests", "golden", "fixtures", name + ".elevator.json");
             object[] viaJss = Results(path, ctx, lib);
             object[] viaCompat;
-            try { CoreJson.Override = () => new JavaScriptCompatibleJson(); viaCompat = Results(path, ctx, PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"))); }
-            finally { CoreJson.Override = null; }
+            using (CoreJson.UseScoped(() => new JavaScriptCompatibleJson())) { viaCompat = Results(path, ctx, PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"))); }
             for (int i = 0; i < viaJss.Length; i++)
             {
                 Same(viaJss[i], name + " result " + i);
