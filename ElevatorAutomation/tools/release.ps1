@@ -52,7 +52,7 @@ else{
  Step 'Tiers 1, 2 and 3'
  & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'test.ps1') -Tier 1,2,3 -Bin $buildRel
  if($LASTEXITCODE){throw 'Tests failed; no release is written'}
- $latest=Get-ChildItem (Join-Path $root 'artifacts/test-results') -Directory|Sort-Object Name|Select-Object -Last 1
+ $latest=Get-ChildItem (Join-Path $root 'artifacts/test-results') -Directory|Where-Object{$_.Name -match '^[0-9]{8}-[0-9]{6}$' -and (Test-Path -LiteralPath (Join-Path $_.FullName 'summary.json'))}|Sort-Object Name|Select-Object -Last 1
  $testSummary=Get-Content -LiteralPath (Join-Path $latest.FullName 'summary.json') -Raw|ConvertFrom-Json
 }
 
