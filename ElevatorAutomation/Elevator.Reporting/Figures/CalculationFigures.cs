@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Elevator.Core.Geometry;
 using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
@@ -945,11 +946,7 @@ namespace Elevator.Reporting.Figures
             var T = Pt(tx, ys);
             var D = Pt(wd - ds, dy);
             // Machine-room slab with rope openings.
-            double[] cuts = { cd, wd };
-            HatchedBand(f, 14, slab, cd - 3, slab + 4, "slab");
-            HatchedBand(f, cd + 3, slab, wd - 3, slab + 4);
-            HatchedBand(f, wd + 3, slab, 152, slab + 4);
-            f.Text("machine room", Pt(16, slab - 2), "start");
+            DrawSlab(f, cd, slab, wd);
             // Traction machine: sheave on its stand.
             f.Circle(T, R, FigureLayer.Outline, false, "traction-sheave");
             f.Circle(T, 1.2, FigureLayer.Secondary);
@@ -996,8 +993,29 @@ namespace Elevator.Reporting.Figures
             f.Text("CW", Pt(wd, cwTop + 15), "middle");
             f.Poly(new[] { Pt(wd, cwTop), Pt(wd - 2, cwTop + 2), Pt(wd + 2, cwTop + 2) }, true, FigureLayer.Secondary, "cw-hitch", true);
             // Rope tensions as arrows beside the rope runs (all ropes; per rope when the count is known).
+            DrawRopeTensions(r, ropeCount, f, cd, slab, wd);
+            // Roping and sheave labels from the project.
+            DrawRopingLabels(ropeCount, ropingRatio, sheavePitchMm, f, cd, ys, R, tx);
+            var note = f.Text("Static tensions under rated load acting on the rope runs", Pt(14, carTop + 38), "start");
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawSlab(Figure f, double cd, double slab, double wd)
+        {
+            HatchedBand(f, 14, slab, cd - 3, slab + 4, "slab");
+            HatchedBand(f, cd + 3, slab, wd - 3, slab + 4);
+            HatchedBand(f, wd + 3, slab, 152, slab + 4);
+            f.Text("machine room", Pt(16, slab - 2), "start");
+        }
+
+        private static void DrawRopeTensions(ChassisCalculationResult r, int? ropeCount, Figure f, double cd, double slab, double wd)
+        {
             bool perRope =
-                ropeCount.HasValue && ropeCount.Value > 0 && r.CarPerRopeTensionN.HasValue && r.CounterweightPerRopeTensionN.HasValue;
+                            ropeCount.HasValue
+                                && ropeCount.Value > 0
+                                && r.CarPerRopeTensionN.HasValue
+                                && r.CounterweightPerRopeTensionN.HasValue;
             double ay0 = slab + 7, ay1 = slab + 17;
             f.Load(
                 Pt(cd - 3, ay0),
@@ -1036,10 +1054,21 @@ namespace Elevator.Reporting.Figures
                     "tension-cwt-rope",
                     Figure.Num(r.CounterweightPerRopeTensionN.Value / 1000, "0.###"));
             }
-            // Roping and sheave labels from the project.
+        }
+
+        private static void DrawRopingLabels(
+            int? ropeCount,
+            double? ropingRatio,
+            double? sheavePitchMm,
+            Figure f,
+            double cd,
+            double ys,
+            double R,
+            double tx)
+        {
             string ratio = Ratio(ropingRatio), label = (ropeCount.HasValue && ropeCount.Value > 0 ? "n = "
-                + ropeCount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                + (ropeCount.Value == 1 ? " rope" : " ropes") : null);
+                            + ropeCount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                            + (ropeCount.Value == 1 ? " rope" : " ropes") : null);
             string roping = label == null ? ratio : (ratio == null ? label : label + ", " + ratio);
             if (roping != null)
                 f.Text(roping, Pt(tx, ys - R - 3), "middle", FigureLayer.Text, 2.5, false, "roping", roping);
@@ -1056,9 +1085,6 @@ namespace Elevator.Reporting.Figures
                                     "sheave-pitch",
                                     Figure.Mm(sheavePitchMm.Value));
             }
-            var note = f.Text("Static tensions under rated load acting on the rope runs", Pt(14, carTop + 38), "start");
-            Finish(f, note.At.Y);
-            return f;
         }
 
         // ---------- F8 progressive safety gear (P5) ----------
