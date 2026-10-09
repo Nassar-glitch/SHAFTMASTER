@@ -13,7 +13,7 @@ cd ElevatorAutomation
 | Tier | Suites | Needs |
 |---|---|---|
 | 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core`, `xunit-core` (tests/Elevator.Core.Tests) and `xunit-reporting` (tests/Elevator.Reporting.Tests), each on net8.0 and net48 | .NET Framework, .NET 8 runtime, Python 3 |
-| 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui` | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
+| 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui`. They drive the real window through its internal test facade `TestAutomation` (`Elevator.Solution.Desktop/Shell`, `InternalsVisibleTo` the test programs) by the handle names the suites used before P4 | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
 | 3 | `integration` (tests/integration/run-tier3.ps1: affected regressions, FF native / STEP integration, STEP input, native golden), `presets-native`, `sheet-word-render` | AutoCAD 2023, Microsoft Word, Python with PyMuPDF and python-docx, the local evidence folder `output/calculation-phase1` and the release `bin-shaftmaster-v01` (read only) |
 
 Reference run (2026-10-09, `artifacts/test-results/20261009-053328`, all PASS): build 8 s, tier 1 204 s, tier 2 215 s, tier 3 229 s (the Word render of 23 sheets, 169 pages, takes 185 s of it). The golden suite takes about 70–85 s, most of it the rope selection of the heavy-Q fixtures.
@@ -74,6 +74,7 @@ Figure SVG depends on the fonts installed (text is measured with ISOCPEUR, Arial
 - **GoldenCoreTests:** the Core-level golden captures of `tests/golden/GoldenTests.cs` for all 36 fixtures plus the new project (round-trip project JSON, `results.json`, `fingerprints.json`), compared with the same approved files in `tests/golden/approved`. The calculation-sheet, Design Notes and figure captures need the WPF report code and stay in the console golden suite.
 - **ConsoleSuiteTests:** the rope / traction (60), FF (131) and safety / pit (117) console suites run unchanged inside xUnit; presets (160) on both since P3 (the Design Notes are in Elevator.Reporting). The console runners stay until P7.
 - **SerializerParityTests** (net48): the evidence for the serializer decision below.
+- **ApplicationServicesTests** (ARCHITECTURE-PLAN P4): the UI-free application services of `Elevator.Core.Application` — project session (new / save / open / dirty state, floor edits), preset flow (lock on edit, follow while unlocked, Reset, Fill blanks, persons) and live calculation (what an input change makes outdated, recalculation of only outdated results, invalid text, resets).
 
 CI (`.github/workflows/ci.yml`, not pushed yet): ubuntu-latest builds `Elevator.Core` for netstandard2.0 and runs the tests on net8.0; windows-latest builds Core and Bridge.
 
