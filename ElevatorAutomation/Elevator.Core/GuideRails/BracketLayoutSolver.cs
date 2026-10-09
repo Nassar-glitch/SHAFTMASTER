@@ -33,12 +33,15 @@ namespace Elevator.Core.GuideRails
                 if (f.FflZ > bottom && f.FflZ < top)
                     anchors.Add(f.FflZ);
                 if (f.Served)
+                {
                     r.Observations.Add(f.FloorId
-                        + ": landing opening "
-                        + f.FflZ.ToString("R", CultureInfo.InvariantCulture)
-                        + ".."
-                        + (f.FflZ + openingHeight).ToString("R", CultureInfo.InvariantCulture)
-                        + "; brackets are on Plan side-guide supports, not the entrance wall. Fixing capacity/exclusions unverified.");
+                                            + ": landing opening "
+                                            + f.FflZ.ToString("R", CultureInfo.InvariantCulture)
+                                            + ".."
+                                            + (f.FflZ + openingHeight).ToString("R", CultureInfo.InvariantCulture)
+                                            + "; brackets are on Plan side-guide supports, not the entrance wall. Fixing "
+                                            + "capacity/exclusions unverified.");
+                }
             }
             double[] a = anchors.ToArray();
             r.Elevations.Add(a[0]);

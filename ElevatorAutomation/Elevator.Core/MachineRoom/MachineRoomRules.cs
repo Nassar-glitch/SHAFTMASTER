@@ -44,15 +44,22 @@ namespace Elevator.Core.MachineRoom
                 input.MachineRoomRearExtension };
             double[] measured = { extensions.Left, extensions.Right, extensions.Front, extensions.Rear };
             for (int i = 0; i < requested.Length; i++)
+            {
                 if (requested[i].HasValue && (Double.IsNaN(requested[i].Value)
-                    || Double.IsInfinity(requested[i].Value)
-                    || Math.Abs(requested[i].Value - measured[i]) > .02))
+                                    || Double.IsInfinity(requested[i].Value)
+                                    || Math.Abs(requested[i].Value - measured[i]) > .02))
+                {
                     throw new ArgumentException(
-                        "Machine-room extensions must match the measured reference in this version; changing them requires "
-                        + "template/engineering review.");
+                                            "Machine-room extensions must match the measured reference in this version; changing them "
+                                            + "requires "
+                                            + "template/engineering review.");
+                }
+            }
             foreach (double? v in new[] { input.SuspensionRopeDiameterMm, input.TractionSheavePitchDiameterMm })
+            {
                 if (v.HasValue && (Double.IsNaN(v.Value) || Double.IsInfinity(v.Value) || v.Value <= 0))
                     throw new ArgumentException("Supplied rope/sheave diameters must be finite and positive.");
+            }
             // Extensions are measured from the supplied view, not newly selected room dimensions.
             var result = new MachineRoomParameters
             {

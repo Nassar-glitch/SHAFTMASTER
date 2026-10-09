@@ -8,13 +8,15 @@ namespace Elevator.Core.Shaft
         {
             g.Line("Pit.FinishedFloor", "Structure", -s.Plan.SD, g.PitFloorZ, 0, g.PitFloorZ);
             if (s.GovernorProjectedAxisX.HasValue)
+            {
                 g.Line(
-                    "Governor.ProjectedAxisOnly",
-                    "Datum",
-                    s.GovernorProjectedAxisX.Value,
-                    g.PitFloorZ,
-                    s.GovernorProjectedAxisX.Value,
-                    g.MRSlabUndersideZ);
+                                    "Governor.ProjectedAxisOnly",
+                                    "Datum",
+                                    s.GovernorProjectedAxisX.Value,
+                                    g.PitFloorZ,
+                                    s.GovernorProjectedAxisX.Value,
+                                    g.MRSlabUndersideZ);
+            }
             g.Note(
                 "Pit.Review",
                 "PIT EQUIPMENT / BUFFERS / GOVERNOR TENSION DEVICE\\PVERTICAL COMPONENT DATA REQUIRED",

@@ -62,8 +62,10 @@ namespace Elevator.Core.Suspension
                 g.TravelMm = served.Last().ElevationMm - served.First().ElevationMm;
                 var design = new ElevatorDesignEngine().Calculate(p, c, DrawingViews.MachineRoomPlan | DrawingViews.SectionBB);
                 if (design.Plan == null || design.Plan.MachineRoom == null || design.Plan.MachineRoomSection == null)
+                {
                     throw new ArgumentException(design.Validation.Where(v => v.BlocksGeneration).Select(v => v.Message).FirstOrDefault()
-                        ?? "Shared machine-room geometry unavailable.");
+                                            ?? "Shared machine-room geometry unavailable.");
+                }
                 g.TzMm = design.Plan.TZ;
                 g.CarWidthMm = design.Plan.CarWidth;
                 g.CarDepthMm = design.Plan.CarDepth;
@@ -202,8 +204,10 @@ namespace Elevator.Core.Suspension
             if (x >= t[n - 1, 0])
                 return t[n - 1, 1];
             for (int i = 0; i + 1 < n; i++)
+            {
                 if (x <= t[i + 1, 0])
                     return t[i, 1] + (t[i + 1, 1] - t[i, 1]) * (x - t[i, 0]) / (t[i + 1, 0] - t[i, 0]);
+            }
             return t[n - 1, 1];
         }
 
@@ -310,6 +314,7 @@ namespace Elevator.Core.Suspension
             double? dt = Positive(x.SheavePitchDiameterMm) ? x.SheavePitchDiameterMm : null;
             // EN 81-20 5.5.1.2 a) nominal rope diameter.
             if (d.HasValue)
+            {
                 r.Checks.Add(new RopeCheck
                 {
                     Id = "rope-diameter",
@@ -324,10 +329,12 @@ namespace Elevator.Core.Suspension
                     Unit = "mm",
                     Ok = d.Value >= 8 - 1e-9
                 });
+            }
             else
                 Omit(r, "Nominal rope diameter", "MISSING_INPUT", "Rope diameter not provided.");
             // EN 81-20 5.5.1.3 number of ropes.
             if (n.HasValue)
+            {
                 r.Checks.Add(new RopeCheck
                 {
                     Id = "rope-count",
@@ -341,6 +348,7 @@ namespace Elevator.Core.Suspension
                     ActualValue = n.Value,
                     Ok = n.Value >= 2
                 });
+            }
             else
                 Omit(r, "Number of ropes", "MISSING_INPUT", "Rope count not provided.");
             // EN 81-20 5.5.2.1 D/d ≥ 40 for the traction sheave (a check). The deflector D/d is a value only (DESIGN-FLOW 11a).
@@ -362,20 +370,26 @@ namespace Elevator.Core.Suspension
                 });
             }
             else
+            {
                 Omit(
-                    r,
-                    "Traction sheave D/d",
-                    "MISSING_INPUT",
-                    dt.HasValue ? "Rope diameter not provided." : "Traction sheave pitch diameter not provided.");
+                                    r,
+                                    "Traction sheave D/d",
+                                    "MISSING_INPUT",
+                                    dt.HasValue ? "Rope diameter not provided." : "Traction sheave pitch diameter not provided.");
+            }
             bool deflectorKnown = g.Available && (!g.DeflectorPresent || g.DeflectorPitchMm.HasValue);
             if (!g.Available)
                 Omit(r, "Safety factor and traction", "MISSING_INPUT", "Shared geometry unavailable: " + g.Problem);
             else if (g.DeflectorPresent && !g.DeflectorPitchMm.HasValue)
+            {
                 Omit(
-                    r,
-                    "EN 81-50 safety factor",
-                    "INVALID_GEOMETRY",
-                    "TZ " + F(g.TzMm ?? 0) + " mm is outside the deflector selection range; no deflector size is selected.");
+                                    r,
+                                    "EN 81-50 safety factor",
+                                    "INVALID_GEOMETRY",
+                                    "TZ "
+                                        + F(g.TzMm ?? 0)
+                                        + " mm is outside the deflector selection range; no deflector size is selected.");
+            }
             if (g.Available && g.DeflectorPresent && g.DeflectorPitchMm.HasValue)
             {
                 if (d.HasValue)
@@ -462,6 +476,7 @@ namespace Elevator.Core.Suspension
             }
             // EN 81-20 5.5.2.3 terminations: computed requirement.
             if (mbl.HasValue)
+            {
                 r.Checks.Add(new RopeCheck
                 {
                     Id = "termination",
@@ -475,6 +490,7 @@ namespace Elevator.Core.Suspension
                     Unit = "kN",
                     Ok = null
                 });
+            }
             else
                 Omit(r, "Rope termination strength", "MISSING_INPUT", "Rope MBL not provided.");
             Traction(r, g, x, P, Q, M, w, n, grooveProblem);
@@ -669,11 +685,13 @@ namespace Elevator.Core.Suspension
             }
             // 3) Stalled: counterweight on its buffers, empty car at the highest position (5.11.2.2.3; Annex D). Only with rope slip.
             if (x.TractionLimitingMethod == TractionLimitingMethods.ElectricSafetyDevice)
+            {
                 Omit(
-                    r,
-                    "Car stalled (counterweight on buffers)",
-                    "NOT_APPLICABLE",
-                    "Traction limiting by an electric safety device (EN 81-20 5.5.3 c) 2)).");
+                                    r,
+                                    "Car stalled (counterweight on buffers)",
+                                    "NOT_APPLICABLE",
+                                    "Traction limiting by an electric safety device (EN 81-20 5.5.3 c) 2)).");
+            }
             else if (x.TractionLimitingMethod == null)
                 Omit(r, "Car stalled (counterweight on buffers)", "MISSING_INPUT", "Traction limiting method not provided.");
             else

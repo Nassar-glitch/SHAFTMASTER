@@ -43,9 +43,14 @@ namespace Elevator.Core.Car
             if (ratedLoadKg > 2500)
                 return 5.00 + 0.16 * (ratedLoadKg - 2500) / 100;
             for (int i = 0; i + 1 < n; i++)
+            {
                 if (ratedLoadKg <= Table6[i + 1, 0])
+                {
                     return Table6[i, 1]
-                        + (Table6[i + 1, 1] - Table6[i, 1]) * (ratedLoadKg - Table6[i, 0]) / (Table6[i + 1, 0] - Table6[i, 0]);
+                                            + (Table6[i + 1, 1] - Table6[i, 1]) * (ratedLoadKg - Table6[i, 0])
+                                                / (Table6[i + 1, 0] - Table6[i, 0]);
+                }
+            }
             return Table6[n - 1, 1];
         }
 
@@ -65,11 +70,13 @@ namespace Elevator.Core.Car
             {
                 q = Table6[n - 1, 0];
                 for (int i = 0; i + 1 < n; i++)
+                {
                     if (areaM2 <= Table6[i + 1, 1])
                     {
                         q = Table6[i, 0] + (Table6[i + 1, 0] - Table6[i, 0]) * (areaM2 - Table6[i, 1]) / (Table6[i + 1, 1] - Table6[i, 1]);
                         break;
                     }
+                }
             }
             return Math.Ceiling(q - 1e-6);
         }

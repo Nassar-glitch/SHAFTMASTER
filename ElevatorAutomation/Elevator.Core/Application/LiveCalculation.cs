@@ -189,8 +189,11 @@ namespace Elevator.Core.Application
                     && ChassisReactionSolver.Finite(value))
                     parsed = value;
                 else
+                {
                     CarGuideForceDraftError =
-                        label + ": invalid text; enter a finite positive number. Malformed text is not a missing value.";
+                                            label
+                                                + ": invalid text; enter a finite positive number. Malformed text is not a missing value.";
+                }
             }
             return parsed;
         }
@@ -228,6 +231,7 @@ namespace Elevator.Core.Application
             var c = project.Calculations;
             var s = c == null ? null : c.SafetyPit;
             if (s != null)
+            {
                 foreach (var pair in SafetyPitDraftErrors)
                 {
                     bool car = pair.Key.EndsWith("CarEventAdditionalMassPercent");
@@ -237,6 +241,7 @@ namespace Elevator.Core.Application
                             && c.CounterweightSideAdditionalSuspendedMassKg > 0)
                         errors[pair.Key] = pair.Value;
                 }
+            }
             return errors;
         }
 

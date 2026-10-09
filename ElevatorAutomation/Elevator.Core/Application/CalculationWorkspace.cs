@@ -74,9 +74,11 @@ namespace Elevator.Core.Application
                         Result.Issues.AddRange(SourceDesign.ChassisGeometry.Issues);
                 }
                 if (Result.Issues.Count == 0)
+                {
                     Result.Issues.Add(new CalculationIssue(
-                        "Geometry",
-                        "Shared engine could not produce source-bound chassis geometry for the current context."));
+                                            "Geometry",
+                                            "Shared engine could not produce source-bound chassis geometry for the current context."));
+                }
             }
             else if (CalculationModes.Resolve(project.Calculations) == "Basic")
                 Result = new SimplifiedCalculationEngine().Calculate(project, Geometry, context);

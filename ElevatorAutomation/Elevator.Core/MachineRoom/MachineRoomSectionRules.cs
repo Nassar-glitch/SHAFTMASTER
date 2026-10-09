@@ -21,8 +21,11 @@ namespace Elevator.Core.MachineRoom
                 throw new ArgumentException("Section requires stored Capacity (kg). Run ELEVATORREEVINGDATA once.");
             SuspensionProjectRules.Validate(input.SuspensionRopeDiameterMm, input.NumberOfSuspensionRopes);
             if (input.TractionSheavePitchDiameterMm.HasValue && Math.Abs(input.TractionSheavePitchDiameterMm.Value - 520) > .02)
+            {
                 throw new ArgumentException(
-                    "The coordinated native machine has a 520 mm traction projection; another machine requires a reviewed template.");
+                                    "The coordinated native machine has a 520 mm traction projection; another machine requires a reviewed "
+                                    + "template.");
+            }
             var m = shared.MachineRoom;
             var p = new MachineRoomSectionParameters
             {

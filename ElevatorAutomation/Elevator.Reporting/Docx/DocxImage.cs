@@ -54,6 +54,7 @@ namespace Elevator.Reporting.Docx
                 && d[13] == 'H'
                 && d[14] == 'D'
                 && d[15] == 'R')
+            {
                 return Checked(new DocxImage
                 {
                     Data = d,
@@ -62,6 +63,7 @@ namespace Elevator.Reporting.Docx
                     PixelWidth = BigEndian(d, 16),
                     PixelHeight = BigEndian(d, 20)
                 });
+            }
             if (d.Length >= 4 && d[0] == 0xFF && d[1] == 0xD8)
             {
                 int i = 2;
@@ -85,6 +87,7 @@ namespace Elevator.Reporting.Docx
                     }
                     int length = (d[i + 2] << 8) | d[i + 3];
                     if (marker >= 0xC0 && marker <= 0xCF && marker != 0xC4 && marker != 0xC8 && marker != 0xCC)
+                    {
                         return Checked(new DocxImage
                         {
                             Data = d,
@@ -93,6 +96,7 @@ namespace Elevator.Reporting.Docx
                             PixelHeight = (d[i + 5] << 8) | d[i + 6],
                             PixelWidth = (d[i + 7] << 8) | d[i + 8]
                         });
+                    }
                     if (length < 2)
                         break;
                     i += 2 + length;

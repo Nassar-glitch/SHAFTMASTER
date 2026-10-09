@@ -176,9 +176,11 @@ namespace Elevator.Core.MachineRoom
                 if (r.Transfers
                     .GroupBy(v => v.MemberId)
                     .Any(a => a.Sum(v => v.FrontDownwardN) < -scale * 1e-9 || a.Sum(v => v.RearDownwardN) < -scale * 1e-9))
+                {
                     r.Issues.Add(new CalculationIssue(
-                        "MemberTransfers",
-                        "Net tensile member transfer requires mechanical review; no connection adequacy is claimed."));
+                                            "MemberTransfers",
+                                            "Net tensile member transfer requires mechanical review; no connection adequacy is claimed."));
+                }
                 r.Assumptions.Add(
                     "Two selected upper longitudinal members, simple/released ends on front/rear transverse members; transverse members "
                     + "simply supported at actual P contact centroids.");

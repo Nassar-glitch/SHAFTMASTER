@@ -39,8 +39,10 @@ namespace Elevator.Core.MachineRoom
                 P.CwDropX - P.CwOpeningWidth / 2,
                 P.CwDropX + P.CwOpeningWidth / 2 };
             for (int i = 0; i < old.Length; i++)
+            {
                 if (Math.Abs(x - old[i]) < 2)
                     return next[i];
+            }
             if (Math.Abs(x + R.SourceCarRow) < 2)
                 return P.CarDropX;
             if (Math.Abs(x + R.SourceCwRow) < 2)
@@ -77,9 +79,11 @@ namespace Elevator.Core.MachineRoom
                     x = SupportX(x);
                     y = p.Y > (R.SourceSteelBottomZ + R.SourceSteelTopZ) / 2 ? P.SteelTopZ : P.SteelBottomZ;
                     if (role == "steelDetail")
+                    {
                         y = p.Y > (R.SourceSteelBottomZ + R.SourceSteelTopZ) / 2
-                            ? P.SteelTopZ + (p.Y - R.SourceSteelTopZ)
-                            : P.SteelBottomZ + (p.Y - R.SourceSteelBottomZ);
+                                                    ? P.SteelTopZ + (p.Y - R.SourceSteelTopZ)
+                                                    : P.SteelBottomZ + (p.Y - R.SourceSteelBottomZ);
+                    }
                     break;
                 case "concrete":
                     x += x < -R.SourceSD / 2 ? R.SourceSD - Design.SD : 0;

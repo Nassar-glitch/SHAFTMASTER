@@ -107,9 +107,11 @@ namespace Elevator.Reporting.Figures
                         .Append("\" stroke-linejoin=\"round\" stroke-linecap=\"butt\"");
                     var dash = Dash(p.Layer);
                     if (dash != null)
+                    {
                         b.Append(" stroke-dasharray=\"")
-                            .Append(String.Join(" ", dash.Split(' ').Select(x => U(Double.Parse(x, Inv)))))
-                            .Append("\"");
+                                                    .Append(String.Join(" ", dash.Split(' ').Select(x => U(Double.Parse(x, Inv)))))
+                                                    .Append("\"");
+                    }
                     b.Append("/>");
                     continue;
                 }

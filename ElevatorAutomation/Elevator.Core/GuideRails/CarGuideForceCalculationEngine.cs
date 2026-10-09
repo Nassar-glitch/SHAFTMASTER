@@ -74,8 +74,12 @@ namespace Elevator.Core.GuideRails
             if (p.Elevator.SystemId != "traction-geared"
                 || p.Elevator.LegacyFamily != ElevatorType.ExistingPlan
                 || p.Elevator.TemplateId != "existing-plan-v1")
+            {
                 issues.Add(
-                    new CalculationIssue("Elevator.TemplateId", "No registered shared cabin geometry recipe for this system/template."));
+                                    new CalculationIssue(
+                                        "Elevator.TemplateId",
+                                        "No registered shared cabin geometry recipe for this system/template."));
+            }
             if (p.Standards.RuleSetId != "accepted-project-rules-v1")
                 issues.Add(new CalculationIssue("Standards.RuleSetId", "Unregistered cabin geometry rule set."));
             if (c == null || c.Equipment == null)
@@ -85,22 +89,32 @@ namespace Elevator.Core.GuideRails
                 return issues;
             }
             if (!Positive(c.CounterweightDepthMm))
+            {
                 issues.Add(new CalculationIssue(
-                    "DesignContext.CounterweightDepthMm",
-                    "Finite positive depth required by the shared plan recipe."));
+                                    "DesignContext.CounterweightDepthMm",
+                                    "Finite positive depth required by the shared plan recipe."));
+            }
             foreach (var f in typeof(EquipmentProfile).GetProperties().Where(f => f.PropertyType == typeof(double)))
             {
                 var v = (double)f.GetValue(c.Equipment, null);
                 if (!ChassisReactionSolver.Finite(v) || v < 0)
+                {
                     issues.Add(
-                        new CalculationIssue("DesignContext.Equipment." + f.Name, "Profile distance must be finite nonnegative mm."));
+                                            new CalculationIssue(
+                                                "DesignContext.Equipment." + f.Name,
+                                                "Profile distance must be finite nonnegative mm."));
+                }
             }
             foreach (var f in typeof(EquipmentProfile).GetProperties().Where(f => f.PropertyType == typeof(double[])))
             {
                 var values = (double[])f.GetValue(c.Equipment, null);
                 if (values == null || values.Length == 0 || values.Any(v => !Positive(v)))
+                {
                     issues.Add(
-                        new CalculationIssue("DesignContext.Equipment." + f.Name, "Shared plan size choices must be finite positive mm."));
+                                            new CalculationIssue(
+                                                "DesignContext.Equipment." + f.Name,
+                                                "Shared plan size choices must be finite positive mm."));
+                }
             }
             return issues;
         }

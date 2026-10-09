@@ -63,11 +63,13 @@ namespace Elevator.Core.Project
             if (p.Suspension.RopingRatio.HasValue && p.Suspension.RopingRatio.Value != 1)
                 fail("Suspension.RopingRatio", "Only the accepted 1:1 configuration is supported.", true);
             if (!chassisGeometryOnly)
+            {
                 try
                 {
                     SuspensionProjectRules.Validate(p.Suspension.RopeDiameterMm, p.Suspension.RopeCount);
                 }
                 catch (ArgumentException e) { fail("Suspension", e.Message, true); }
+            }
             if (!p.Suspension.RopeDiameterMm.HasValue)
                 fail("Suspension.RopeDiameterMm", "NOT PROVIDED; component validation incomplete.", false);
             if (!p.Suspension.RopeCount.HasValue)
@@ -92,6 +94,7 @@ namespace Elevator.Core.Project
                 catch (ArgumentException e) { fail("Building", e.Message, true); }
                 if (p.Building.Floors.Any(
                     f => f.LandingDoor != null && (f.LandingDoor.Type != null || f.LandingDoor.EntranceConfiguration != null)))
+                {
                     issues.Add(new ValidationIssue
                     {
                         Code = "LANDING_METADATA",
@@ -99,6 +102,7 @@ namespace Elevator.Core.Project
                         Status = ValidationStatus.REVIEW_REQUIRED,
                         Message = "Per-floor door configuration is stored metadata; native V1 uses the approved single door module."
                     });
+                }
             }
             return issues;
         }

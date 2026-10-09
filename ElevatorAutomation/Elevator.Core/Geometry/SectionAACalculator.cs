@@ -28,8 +28,10 @@ namespace Elevator.Core.Geometry
             if (served.Length < 2 || Math.Abs(n[0].FflZ) > 1e-8)
                 throw new ArgumentException("At least two served floors; lowest modeled FFL must be zero.");
             for (int i = 1; i < n.Length; i++)
+            {
                 if (n[i].FflZ <= n[i - 1].FflZ || (n[i - 1].Served && n[i].FflZ - n[i - 1].FflZ < 2410))
                     throw new ArgumentException("Floor interval conflicts with 2160 opening plus 250 slab.");
+            }
             var car = served.SingleOrDefault(f => f.FloorId == d.DisplayFloorId);
             if (car == null)
                 throw new ArgumentException("Displayed car FloorId must be served.");

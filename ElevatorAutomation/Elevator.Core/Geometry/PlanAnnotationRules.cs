@@ -15,8 +15,10 @@ namespace Elevator.Core.Geometry
             values["PlanTitle"] = String.IsNullOrWhiteSpace(input.PlanTitle) ? "SHAFT AND CAR" : input.PlanTitle;
             values["ElevatorType"] = input.ElevatorType.ToString();
             foreach (var field in typeof(ElevatorParameters).GetFields())
+            {
                 if (field.FieldType == typeof(double))
                     values[field.Name] = Number((double)field.GetValue(p));
+            }
             // Accept the conventional capitalized DBG spelling as well as model property names.
             values["CarDBG"] = values["CarDbg"];
             values["CWDBG"] = values["CwDbg"];

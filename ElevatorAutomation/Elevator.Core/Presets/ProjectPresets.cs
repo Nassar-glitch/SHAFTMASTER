@@ -398,8 +398,10 @@ namespace Elevator.Core.Presets
             {
                 p.FollowsPresets = true;
                 foreach (var f in Fields)
+                {
                     if (!p.UserEditedFields.Contains(f.Key))
                         p.UserEditedFields.Add(f.Key);
+                }
             }
             foreach (var k in keys)
                 p.UserEditedFields.Remove(k);
@@ -450,8 +452,14 @@ namespace Elevator.Core.Presets
         {
             int stops = lib.NewProject.Stops.Value;
             for (int i = 0; i < stops; i++)
+            {
                 p.Building.Floors.Add(
-                    new FloorDefinition { Name = FloorName(i), HeightToNextMm = i < stops - 1 ? lib.NewProject.FloorHeightMm : null });
+                                    new FloorDefinition
+                                    {
+                                        Name = FloorName(i),
+                                        HeightToNextMm = i < stops - 1 ? lib.NewProject.FloorHeightMm : null
+                                    });
+            }
         }
 
         public static double? NewFloorHeight(PresetLibrary lib)
@@ -466,8 +474,10 @@ namespace Elevator.Core.Presets
                 return null;
             var c = new PresetContext { Project = p, Library = lib };
             foreach (var f in Fields)
+            {
                 if (!f.IsEdited(p))
                     f.Store(p, f.Preset(c));
+            }
             return SizeRopes(p, lib, ctx);
         }
 
@@ -533,9 +543,13 @@ namespace Elevator.Core.Presets
                     floors.Add(new FloorDefinition { Name = UniqueName(floors) });
                 }
                 else
+                {
                     for (int i = 0; i < floors.Count - 1; i++)
+                    {
                         if (floors[i] != null && !floors[i].HeightToNextMm.HasValue)
                             floors[i].HeightToNextMm = lib.NewProject.FloorHeightMm;
+                    }
+                }
                 if (p.Car == null)
                     p.Car = new CarConfiguration();
                 if (p.Car.DisplayFloorId == null || !floors.Any(f => f.FloorId == p.Car.DisplayFloorId))
@@ -726,12 +740,14 @@ namespace Elevator.Core.Presets
                             bool dOnly = r.Checks.Any(k => (k.Id == "rope-diameter" || k.Id == "dd-sheave") && k.Ok == false);
                             // Limiting check of the search: what fails in the candidates that meet the minimum diameter and sheave D/d.
                             if (!dOnly)
+                            {
                                 foreach (var f in Failures(r))
                                 {
                                     int c;
                                     failures.TryGetValue(f, out c);
                                     failures[f] = c + 1;
                                 }
+                            }
                             if (r.Traction.Any(t => !t.Ok))
                             {
                                 tractionFailed = true;
@@ -805,9 +821,13 @@ namespace Elevator.Core.Presets
                     p.Machine.TractionSheavePitchDiameterMm = o.SheaveMm;
                 // The preset β / q need no stored selection; a stepped value is kept as the selection.
                 if (betaFree)
+                {
                     SelectBeta(p, o.UndercutAngleDeg.HasValue
-                        && o.StartUndercutAngleDeg.HasValue
-                        && Math.Abs(o.UndercutAngleDeg.Value - o.StartUndercutAngleDeg.Value) > 1e-9 ? o.UndercutAngleDeg : null);
+                                            && o.StartUndercutAngleDeg.HasValue
+                                            && Math.Abs(o.UndercutAngleDeg.Value - o.StartUndercutAngleDeg.Value) > 1e-9
+                                                ? o.UndercutAngleDeg
+                                                : null);
+                }
                 if (qFree)
                     SetBalance(p, lib, o.BalanceFactor);
             }
@@ -865,8 +885,10 @@ namespace Elevator.Core.Presets
             var copy = ProjectJson.Clone(p);
             var c = new PresetContext { Project = copy, Library = lib };
             foreach (var f in Fields)
+            {
                 if (!f.IsEdited(copy))
                     f.Store(copy, f.Preset(c));
+            }
             return SizeRopes(copy, lib, ctx);
         }
     }

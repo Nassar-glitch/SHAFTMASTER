@@ -110,8 +110,10 @@ namespace Elevator.Core.Serialization
                 return;
             }
             if (inUse.ContainsKey(o))
+            {
                 throw new InvalidOperationException(
-                    "A circular reference was detected while serializing an object of type '" + type.FullName + "'.");
+                                    "A circular reference was detected while serializing an object of type '" + type.FullName + "'.");
+            }
             inUse.Add(o, null);
             try
             {
@@ -124,9 +126,12 @@ namespace Elevator.Core.Serialization
                     {
                         var key = e.Key as string;
                         if (key == null)
+                        {
                             throw new ArgumentException("Type '"
-                                + type.FullName
-                                + "' is not supported for serialization/deserialization of a dictionary, keys must be strings or objects.");
+                                                            + type.FullName
+                                                            + "' is not supported for serialization/deserialization of a dictionary, keys "
+                                                            + "must be strings or objects.");
+                        }
                         if (!first)
                             b.Append(',');
                         first = false;
@@ -592,8 +597,13 @@ namespace Elevator.Core.Serialization
             {
                 var args = dictType.GetGenericArguments();
                 if (args[0] != typeof(string) && args[0] != typeof(object))
+                {
                     throw new InvalidOperationException(
-                        "Type '" + type + "' is not supported for deserialization of a dictionary; keys must be strings or objects.");
+                                            "Type '"
+                                                + type
+                                                + "' is not supported for deserialization of a dictionary; keys must be strings or "
+                                                + "objects.");
+                }
                 var target = (IDictionary)Activator.CreateInstance(type.IsInterface ? typeof(Dictionary<,>).MakeGenericType(args) : type);
                 foreach (var e in d)
                     target[e.Key] = Convert(e.Value, args[1]);
@@ -633,8 +643,10 @@ namespace Elevator.Core.Serialization
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 return type;
             foreach (var i in type.GetInterfaces())
+            {
                 if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     return i;
+            }
             return null;
         }
 
@@ -663,12 +675,16 @@ namespace Elevator.Core.Serialization
                 || type.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
                 element2 = type.GetGenericArguments()[0];
             else
+            {
                 foreach (var i in type.GetInterfaces())
+                {
                     if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>))
                     {
                         element2 = i.GetGenericArguments()[0];
                         break;
                     }
+                }
+            }
             if (element2 == null)
                 throw new InvalidOperationException("Type '" + type + "' is not supported for deserialization of an array.");
             var target = (IList)Activator.CreateInstance(type.IsInterface ? typeof(List<>).MakeGenericType(element2) : type);

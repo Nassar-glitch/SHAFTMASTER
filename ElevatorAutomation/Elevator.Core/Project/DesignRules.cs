@@ -36,8 +36,10 @@ namespace Elevator.Core.Project
             n.JambWidth = p.DoorJambWidthMm;
             n.DoorWidth = DoorRules.SelectWidth(sw, n.CarWidth, n.JambWidth, p);
             if (n.DoorWidth <= 0)
+            {
                 throw new ArgumentException(
-                    "No preferred door fits. The smallest door needs at least 1150 mm shaft width with this profile.");
+                                    "No preferred door fits. The smallest door needs at least 1150 mm shaft width with this profile.");
+            }
             if (n.CwDepth <= 0
                 || n.CwWidth <= 0
                 || n.CwRear > sd + 1e-6

@@ -99,6 +99,7 @@ namespace Elevator.Reporting.Sheet
                 }
             }
             if (!SafetyPitCalculationEngine.IsCurrent(s.SafetyPit, project))
+            {
                 foreach (var load in s.Loads)
                 {
                     load.Status = "UNVERIFIED";
@@ -106,6 +107,7 @@ namespace Elevator.Reporting.Sheet
                     load.PerComponentLoadN = null;
                     load.Issues.Add(new CalculationIssue("Currency", "Result could not be verified current."));
                 }
+            }
             // FF1/FF2: independent workflow.
             var geometry = new ElevatorDesignEngine().CalculateCarGuideForceGeometry(project, context);
             s.CarGuideForces = new CarGuideForceCalculationEngine().Calculate(project, geometry, context);
@@ -142,11 +144,13 @@ namespace Elevator.Reporting.Sheet
                     && Positive(project.Shaft.WidthMm)
                     && Positive(project.Shaft.DepthMm)
                     && Positive(context.CounterweightDepthMm))
+                {
                     s.Plan = DesignRules.Calculate(
-                        project.Shaft.WidthMm,
-                        project.Shaft.DepthMm,
-                        context.Equipment,
-                        context.CounterweightDepthMm);
+                                            project.Shaft.WidthMm,
+                                            project.Shaft.DepthMm,
+                                            context.Equipment,
+                                            context.CounterweightDepthMm);
+                }
             }
             catch (ArgumentException) { s.Plan = null; }
             if (s.Plan != null && s.CarGuideForcesAvailable && (Math.Abs(s.Plan.CarWidth - s.CarGuideForces.InternalWidthMm.Value) > 1e-6
@@ -158,8 +162,10 @@ namespace Elevator.Reporting.Sheet
             if (!s.ChassisAvailable)
                 s.Omit("P1–P4 machine-room bearing reactions and rope tensions (" + s.Mode + ")", s.Chassis.Issues);
             foreach (var load in s.Loads)
+            {
                 if (!Available(load))
                     s.Omit(LoadTitle(load), load.Issues);
+            }
             if (!s.CarGuideForcesAvailable)
                 s.Omit("FF1 / FF2 car guide-rail forces", s.CarGuideForces.Issues);
             s.BuildRopeTraction(context);
@@ -502,24 +508,32 @@ namespace Elevator.Reporting.Sheet
             d.Heading(n + "  Calculation summary", 1);
             var rows = new List<string[]>();
             if (ChassisAvailable)
+            {
                 rows.Add(new[] { "P1–P4 machine-room bearing reactions",
                     String.Join("; ", Chassis.Reactions.OrderBy(b => b.Id).Select(b => b.Id + " " + KN(b.UpwardN) + " kN")) });
+            }
             if (RopeTensionsAvailable)
+            {
                 rows.Add(new[] { "Suspension rope tensions", "Car side "
                     + KN(Chassis.CarBundleTensionN)
                     + " kN; counterweight side "
                     + KN(Chassis.CounterweightBundleTensionN)
                     + " kN" });
+            }
             if (RopeTractionAvailable)
                 rows.Add(new[] { RopeTractionSectionTitle, RopeSummary() });
             foreach (var load in Loads.Where(Available))
+            {
                 rows.Add(new[] { LoadTitle(load), load.Id == "P5"
                     ? KN(load.PerComponentLoadN) + " kN per car guide rail"
                     : KN(load.PerComponentLoadN) + " kN per buffer; " + KN(load.GroupLoadN) + " kN total" });
+            }
             var f = CarGuideForces;
             if (CarGuideForcesAvailable)
+            {
                 rows.Add(new[] { "FF1 / FF2 car guide-rail forces",
                     "FF1 " + KN(f.FF1DesignN) + " kN; FF2 " + KN(f.FF2DesignN) + " kN (design, per guide rail)" });
+            }
             d.Table(new[] { "Calculation", "Key result" }, rows, new[] { 3900, 5738 }, new HashSet<int> { 0 });
         }
 
@@ -554,11 +568,13 @@ namespace Elevator.Reporting.Sheet
             if (chassis || carEvent)
                 add("Car-side additional mass", "Calculations.CarSideAdditionalSuspendedMassKg", c.CarSideAdditionalSuspendedMassKg, "kg");
             if (chassis || cwEvent)
+            {
                 add(
-                    "Counterweight-side additional mass",
-                    "Calculations.CounterweightSideAdditionalSuspendedMassKg",
-                    c.CounterweightSideAdditionalSuspendedMassKg,
-                    "kg");
+                                    "Counterweight-side additional mass",
+                                    "Calculations.CounterweightSideAdditionalSuspendedMassKg",
+                                    c.CounterweightSideAdditionalSuspendedMassKg,
+                                    "kg");
+            }
             if (chassis && c.IncludeChassisSelfWeight == true)
                 add("Chassis assembly mass", "Calculations.ChassisMassKg", c.ChassisMassKg, "kg");
             if (chassis && c.IncludeHangerAssemblyWeight == true)
@@ -722,6 +738,7 @@ namespace Elevator.Reporting.Sheet
             d.Paragraph("Chassis model data", "Heading2");
             var rows = new List<string[]>();
             if (Finite(c.MachineCgOffsetXMm) && Finite(c.MachineCgOffsetYMm) && Finite(c.MachineCgOffsetZMm))
+            {
                 rows.Add(new[] { "Machine centre of gravity from traction-sheave centre", "ΔX "
                     + L(c.MachineCgOffsetXMm.Value)
                     + " mm · ΔY "
@@ -729,18 +746,24 @@ namespace Elevator.Reporting.Sheet
                     + " mm · ΔZ "
                     + L(c.MachineCgOffsetZMm.Value)
                     + " mm" });
+            }
             if (!String.IsNullOrWhiteSpace(c.MachineCgSource))
                 rows.Add(new[] { "Machine centre of gravity basis", c.MachineCgSource.Trim() });
             if (!String.IsNullOrWhiteSpace(c.LeftCarryingMemberId))
+            {
                 rows.Add(
-                    new[] { "Carrying members (left / right)", Member(c.LeftCarryingMemberId) + " / " + Member(c.RightCarryingMemberId) });
+                                    new[] { "Carrying members (left / right)",
+                                        Member(c.LeftCarryingMemberId) + " / " + Member(c.RightCarryingMemberId) });
+            }
             rows.Add(new[] { "Load transfer",
                 "Upper members simply supported on front and rear transverse members, rigid spreader to the bearing seats" });
             if (!String.IsNullOrWhiteSpace(c.TransferAssumptionSource))
                 rows.Add(new[] { "Load transfer basis", c.TransferAssumptionSource.Trim() });
             if (Finite(c.HangerAttachmentOffsetXMm) && Finite(c.HangerAttachmentOffsetYMm))
+            {
                 rows.Add(new[] { "Hanger attachment from deflector centre",
                     "ΔX " + L(c.HangerAttachmentOffsetXMm.Value) + " mm · ΔY " + L(c.HangerAttachmentOffsetYMm.Value) + " mm" });
+            }
             if (!String.IsNullOrWhiteSpace(c.HangerAttachmentSource))
                 rows.Add(new[] { "Hanger attachment basis", c.HangerAttachmentSource.Trim() });
             if (c.IncludeChassisSelfWeight == true && Positive(c.ChassisMassKg))
@@ -823,25 +846,31 @@ namespace Elevator.Reporting.Sheet
             }
             d.Equations(true, lines);
             if (perRope)
+            {
                 d.Table(new[] { "Rope tension", "All ropes (N)", "All ropes (kN)", "Per rope (N)" }, new List<string[]>{
     new[]{"Car side",N(r.CarBundleTensionN),KN(r.CarBundleTensionN),N(r.CarPerRopeTensionN)},
     new[]{"Counterweight side",N(r.CounterweightBundleTensionN),KN(r.CounterweightBundleTensionN),N(r.CounterweightPerRopeTensionN)}},
-        new[] { 2638, 2400, 2200, 2400 },
-        new HashSet<int> { 0 });
+                        new[] { 2638, 2400, 2200, 2400 },
+                        new HashSet<int> { 0 });
+            }
             else
+            {
                 d.Table(new[] { "Rope tension", "All ropes (N)", "All ropes (kN)" }, new List<string[]>{
     new[]{"Car side",N(r.CarBundleTensionN),KN(r.CarBundleTensionN)},
     new[]{"Counterweight side",N(r.CounterweightBundleTensionN),KN(r.CounterweightBundleTensionN)}},
-        new[] { 3638, 3000, 3000 },
-        new HashSet<int> { 0 });
+                        new[] { 3638, 3000, 3000 },
+                        new HashSet<int> { 0 });
+            }
             // F7 needs the shared plan geometry (TZ selects the deflector); without it the figure is left out.
             if (Plan != null)
+            {
                 AddFigure(d, () => CalculationFigures.Suspension(
-                    r,
-                    p.Suspension.RopeCount,
-                    p.Suspension.RopingRatio,
-                    p.Machine == null ? null : p.Machine.TractionSheavePitchDiameterMm,
-                    MachineRoomRules.SelectDeflector(Plan.TZ).IsRequired));
+                                    r,
+                                    p.Suspension.RopeCount,
+                                    p.Suspension.RopingRatio,
+                                    p.Machine == null ? null : p.Machine.TractionSheavePitchDiameterMm,
+                                    MachineRoomRules.SelectDeflector(Plan.TZ).IsRequired));
+            }
         }
 
         // Event-mass terms rebuilt from the inputs; used only when they reproduce the engine's mass exactly.
@@ -867,9 +896,11 @@ namespace Elevator.Reporting.Sheet
                     ? 1
                     : allocation == "FractionParticipates" && percent.HasValue ? percent.Value / 100 : 0;
                 if (share > 0)
+                {
                     terms.Add(new KeyValuePair<string, double>(share == 1
-                        ? (car ? "M(car add.)" : "M(cwt add.)")
-                        : L(share * 100) + " % × " + (car ? "M(car add.)" : "M(cwt add.)"), extra.Value * share));
+                                            ? (car ? "M(car add.)" : "M(cwt add.)")
+                                            : L(share * 100) + " % × " + (car ? "M(car add.)" : "M(cwt add.)"), extra.Value * share));
+                }
             }
             return Math.Abs(terms.Sum(t => t.Value) - load.ParticipatingMassKg.Value) < 1e-6 ? terms : null;
         }
@@ -911,24 +942,28 @@ namespace Elevator.Reporting.Sheet
                      true);
                 var lines = new List<string>();
                 if (terms != null && terms.Count > 1)
+                {
                     lines.Add(massSymbol
-                        + " = "
-                        + String.Join(" + ", terms.Select(t => t.Key))
-                        + " = "
-                        + String.Join(" + ", terms.Select(t => L(t.Value)))
-                        + " = "
-                        + L(m)
-                        + " kg");
+                                            + " = "
+                                            + String.Join(" + ", terms.Select(t => t.Key))
+                                            + " = "
+                                            + String.Join(" + ", terms.Select(t => L(t.Value)))
+                                            + " = "
+                                            + L(m)
+                                            + " kg");
+                }
                 else
                     lines.Add(massSymbol + " = " + L(m) + " kg");
                 if (p5)
+                {
                     lines.Add("P5 = "
-                        + massSymbol
-                        + " × 10 N/kg = "
-                        + L(m)
-                        + " kg × 10 N/kg = "
-                        + N(load.PerComponentLoadN)
-                        + " N per car guide rail");
+                                            + massSymbol
+                                            + " × 10 N/kg = "
+                                            + L(m)
+                                            + " kg × 10 N/kg = "
+                                            + N(load.PerComponentLoadN)
+                                            + " N per car guide rail");
+                }
                 else
                 {
                     lines.Add(load.Id
@@ -967,10 +1002,12 @@ namespace Elevator.Reporting.Sheet
                     AddFigure(d, () => CalculationFigures.SafetyGear(load, CarRail));
             }
             if (Available(SafetyPit.P6) || Available(SafetyPit.P7))
+            {
                 AddFigure(d, () => CalculationFigures.PitBuffers(
-                    Available(SafetyPit.P6) ? SafetyPit.P6 : null,
-                    Available(SafetyPit.P7) ? SafetyPit.P7 : null,
-                    Project.Shaft == null ? null : Project.Shaft.PitDepthMm));
+                                    Available(SafetyPit.P6) ? SafetyPit.P6 : null,
+                                    Available(SafetyPit.P7) ? SafetyPit.P7 : null,
+                                    Project.Shaft == null ? null : Project.Shaft.PitDepthMm));
+            }
         }
 
         void ForcesSection(DocxDocument d, int n)

@@ -98,8 +98,10 @@ namespace Elevator.Core.MachineRoom
             Action<string, double?, bool> number = (name, v, positive) =>
             {
                 if (!v.HasValue)
+                {
                     r.Issues.Add(
-                new CalculationIssue(name, "NOT PROVIDED (no assumed zero)."));
+                                    new CalculationIssue(name, "NOT PROVIDED (no assumed zero)."));
+                }
                 else if (!ChassisReactionSolver.Finite(
                 v.Value) || (positive ? v.Value <= 0 : v.Value < 0))
                 {
@@ -114,8 +116,10 @@ namespace Elevator.Core.MachineRoom
                     if (!v.HasValue || !ChassisReactionSolver.Finite(v.Value))
                     {
                         if (v.HasValue)
+                        {
                             invalid =
-                true;
+                                            true;
+                        }
                         r.Issues.Add(
                     new CalculationIssue(name, "Explicit finite location offset in mm required; zero may be supplied deliberately."));
                     }
@@ -123,17 +127,26 @@ namespace Elevator.Core.MachineRoom
             Action<string, string> source = (name, v) =>
             {
                 if (!HasText(v))
+                {
                     r.Issues.Add(
-                new CalculationIssue(name, "Engineering source or explicitly identified editable assumption required."));
+                                    new CalculationIssue(
+                                        name,
+                                        "Engineering source or explicitly identified editable assumption required."));
+                }
             };
             if (c.LoadCase != "StaticRatedLoad1To1")
+            {
                 r.Issues.Add(new CalculationIssue(
-                    "Calculations.LoadCase",
-                    "Select StaticRatedLoad1To1; acceleration, emergency and alternative topology cases are not implemented."));
+                                    "Calculations.LoadCase",
+                                    "Select StaticRatedLoad1To1; acceleration, emergency and alternative topology cases are not "
+                                    + "implemented."));
+            }
             if (!p.Suspension.RopingRatio.HasValue || p.Suspension.RopingRatio.Value != 1)
+            {
                 r.Issues.Add(new CalculationIssue(
-                    "Suspension.RopingRatio",
-                    "Explicit 1:1 topology required; note 2:1 example is a separate fixture."));
+                                    "Suspension.RopingRatio",
+                                    "Explicit 1:1 topology required; note 2:1 example is a separate fixture."));
+            }
             if (!p.Suspension.RopeCount.HasValue || p.Suspension.RopeCount.Value <= 0)
                 r.Issues.Add(new CalculationIssue("Suspension.RopeCount", "Positive rope count required for per-rope results."));
             number("Elevator.CapacityKg", p.Elevator.CapacityKg, true);
@@ -150,9 +163,11 @@ namespace Elevator.Core.MachineRoom
             source("Calculations.RightCarryingMemberId", c.RightCarryingMemberId);
             source("Calculations.TransferAssumptionSource", c.TransferAssumptionSource);
             if (c.TransferModel != ChassisReactionSolver.Model)
+            {
                 r.Issues.Add(new CalculationIssue(
-                    "Calculations.TransferModel",
-                    "Explicit selection of " + ChassisReactionSolver.Model + " required."));
+                                    "Calculations.TransferModel",
+                                    "Explicit selection of " + ChassisReactionSolver.Model + " required."));
+            }
             if (g == null)
                 r.Issues.Add(new CalculationIssue("Geometry", "Calculated native geometry unavailable."));
             else
@@ -163,10 +178,13 @@ namespace Elevator.Core.MachineRoom
                     || g.Section.Arrangement == null
                     || g.Section.Arrangement.Reeving == null
                     || g.Section.Arrangement.Reeving.GeometryStatus != "PASS")
+                {
                     r.Issues.Add(new CalculationIssue(
-                        "Geometry.Reeving",
-                        "A supported calculated 1:1 deflector path is required; direct routing has no verified force-path model in this "
-                        + "phase."));
+                                            "Geometry.Reeving",
+                                            "A supported calculated 1:1 deflector path is required; direct routing has no verified "
+                                            + "force-path model in this "
+                                            + "phase."));
+                }
                 if (g.Section != null && g.Section.DeflectorVisible)
                 {
                     offset("Calculations.HangerAttachmentOffsetXMm", c.HangerAttachmentOffsetXMm);
@@ -175,8 +193,12 @@ namespace Elevator.Core.MachineRoom
                 }
             }
             if (!c.IncludeChassisSelfWeight.HasValue)
+            {
                 r.Issues.Add(
-                    new CalculationIssue("Calculations.IncludeChassisSelfWeight", "Explicit inclusion or documented exclusion required."));
+                                    new CalculationIssue(
+                                        "Calculations.IncludeChassisSelfWeight",
+                                        "Explicit inclusion or documented exclusion required."));
+            }
             source("Calculations.ChassisWeightSourceOrExclusionReason", c.ChassisWeightSourceOrExclusionReason);
             if (c.IncludeChassisSelfWeight == true)
             {
@@ -186,9 +208,11 @@ namespace Elevator.Core.MachineRoom
                 offset("Calculations.ChassisCgOffsetZMm", c.ChassisCgOffsetZMm);
             }
             if (!c.IncludeHangerAssemblyWeight.HasValue)
+            {
                 r.Issues.Add(new CalculationIssue(
-                    "Calculations.IncludeHangerAssemblyWeight",
-                    "Explicit inclusion or documented exclusion required."));
+                                    "Calculations.IncludeHangerAssemblyWeight",
+                                    "Explicit inclusion or documented exclusion required."));
+            }
             source("Calculations.HangerWeightSourceOrExclusionReason", c.HangerWeightSourceOrExclusionReason);
             if (c.IncludeHangerAssemblyWeight == true)
             {
@@ -294,14 +318,16 @@ namespace Elevator.Core.MachineRoom
                 Source = c.HangerAttachmentSource + "; full force/couple shifted from deflector centre"
             });
             if (c.IncludeChassisSelfWeight == true)
+            {
                 r.Loads.Add(Weight("ChassisWeight", Add(
-                    new LocalPoint(
-                        g.TractionCentre.X,
-                        (g.Bearings.Single(v => v.Id == "P4").Centre.Y + g.Bearings.Single(v => v.Id == "P3").Centre.Y) / 2,
-                        g.BearingPlaneZMm),
-                    new LocalPoint(c.ChassisCgOffsetXMm.Value, c.ChassisCgOffsetYMm.Value, c.ChassisCgOffsetZMm.Value)),
-                        c.ChassisMassKg.Value,
-                        c.ChassisWeightSourceOrExclusionReason));
+                                    new LocalPoint(
+                                        g.TractionCentre.X,
+                                        (g.Bearings.Single(v => v.Id == "P4").Centre.Y + g.Bearings.Single(v => v.Id == "P3").Centre.Y) / 2,
+                                        g.BearingPlaneZMm),
+                                    new LocalPoint(c.ChassisCgOffsetXMm.Value, c.ChassisCgOffsetYMm.Value, c.ChassisCgOffsetZMm.Value)),
+                                        c.ChassisMassKg.Value,
+                                        c.ChassisWeightSourceOrExclusionReason));
+            }
             if (c.IncludeHangerAssemblyWeight == true)
             {
                 var weight = Weight(
@@ -333,9 +359,12 @@ namespace Elevator.Core.MachineRoom
                 + "; hanger assembly weight: "
                 + c.HangerWeightSourceOrExclusionReason);
             if (c.IncludeChassisSelfWeight == true)
+            {
                 solved.Assumptions.Add(
-                    "Chassis self-weight lumped at declared total CG through the same ideal upper-member spreading path; member-by-member "
-                    + "dead-load distribution is not represented and requires engineering acceptance.");
+                                    "Chassis self-weight lumped at declared total CG through the same ideal upper-member spreading path; "
+                                    + "member-by-member "
+                                    + "dead-load distribution is not represented and requires engineering acceptance.");
+            }
             return solved;
         }
 

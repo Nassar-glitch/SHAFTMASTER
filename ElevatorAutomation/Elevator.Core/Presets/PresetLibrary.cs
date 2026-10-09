@@ -77,8 +77,10 @@ namespace Elevator.Core.Presets
                 if (String.IsNullOrWhiteSpace(Ropes.Designation))
                     p.Add("Ropes.Designation is required");
                 foreach (var r in Ropes.Table)
+                {
                     if (r == null || !Positive(r.DiameterMm) || !Positive(r.MinimumBreakingLoadKn) || !Positive(r.MassKgPerM))
                         p.Add("Ropes.Table rows need positive DiameterMm, MinimumBreakingLoadKn and MassKgPerM");
+                }
                 if (Ropes.Table.Where(r => r != null).GroupBy(r => r.DiameterMm).Any(g => g.Count() > 1))
                     p.Add("Ropes.Table diameters must be unique");
             }
@@ -254,6 +256,7 @@ namespace Elevator.Core.Presets
             if (q >= top.CapacityKg)
                 return new CapacityPresetRow { CapacityKg = q, CarMassKg = top.CarMassKg, MachineMassKg = top.MachineMassKg };
             for (int i = 0; i + 1 < rows.Count; i++)
+            {
                 if (q <= rows[i + 1].CapacityKg)
                 {
                     var a = rows[i];
@@ -266,6 +269,7 @@ namespace Elevator.Core.Presets
                         MachineMassKg = a.MachineMassKg + (b.MachineMassKg - a.MachineMassKg) * t
                     };
                 }
+            }
             return null;
         }
 
@@ -315,12 +319,14 @@ namespace Elevator.Core.Presets
             if (x >= rows[rows.Count - 1].PitchDiameterMm)
                 return rows[rows.Count - 1].MassKg;
             for (int i = 0; i + 1 < rows.Count; i++)
+            {
                 if (x <= rows[i + 1].PitchDiameterMm)
                 {
                     var a = rows[i];
                     var b = rows[i + 1];
                     return a.MassKg + (b.MassKg - a.MassKg) * (x - a.PitchDiameterMm) / (b.PitchDiameterMm - a.PitchDiameterMm);
                 }
+            }
             return null;
         }
     }

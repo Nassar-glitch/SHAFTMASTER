@@ -94,22 +94,41 @@ namespace Elevator.Core.MachineRoom
             var vertical = new List<Segment>();
             var horizontal = new List<Segment>();
             foreach (var c in contours.Where(c => c.Straight && c.Id.StartsWith("MachineRoom.Support." + id + ".")))
+            {
                 for (int i = 1; i < c.Points.Length; i++)
                 {
                     var a = c.Points[i - 1];
                     var b = c.Points[i];
                     double dx = Math.Abs(a.X - b.X), dy = Math.Abs(a.Y - b.Y);
                     if (dx < Tol && dy > Tol)
+                    {
                         vertical.Add(
-                            new Segment { Id = c.Id, Fixed = (a.X + b.X) / 2, Low = Math.Min(a.Y, b.Y), High = Math.Max(a.Y, b.Y) });
+                                                    new Segment
+                                                    {
+                                                        Id = c.Id,
+                                                        Fixed = (a.X + b.X) / 2,
+                                                        Low = Math.Min(a.Y, b.Y),
+                                                        High = Math.Max(a.Y, b.Y)
+                                                    });
+                    }
                     if (dy < Tol && dx > Tol)
+                    {
                         horizontal.Add(
-                            new Segment { Id = c.Id, Fixed = (a.Y + b.Y) / 2, Low = Math.Min(a.X, b.X), High = Math.Max(a.X, b.X) });
+                                                    new Segment
+                                                    {
+                                                        Id = c.Id,
+                                                        Fixed = (a.Y + b.Y) / 2,
+                                                        Low = Math.Min(a.X, b.X),
+                                                        High = Math.Max(a.X, b.X)
+                                                    });
+                    }
                 }
+            }
             // Reviewed exploded dashed contact perimeter; diagonal contours and hole axes excluded.
             var vs = Edges(vertical).Where(e => e.Segments.Count >= 4 && e.Coverage > (e.High - e.Low) * .6).ToArray();
             var candidates = new List<BearingSeat>();
             for (int i = 0; i < vs.Length; i++)
+            {
                 for (int j = i + 1; j < vs.Length; j++)
                 {
                     double left = vs[i].Fixed, right = vs[j].Fixed, width = right - left;
@@ -141,6 +160,7 @@ namespace Elevator.Core.MachineRoom
                             vs[i].Segments.Concat(vs[j].Segments).Concat(hs.SelectMany(e => e.Segments)).Select(s => s.Id).Distinct())
                     });
                 }
+            }
             if (candidates.Count != 1)
                 throw new ArgumentException(id + ": contact perimeter missing/ambiguous; no bounding-box fallback.");
             return candidates[0];

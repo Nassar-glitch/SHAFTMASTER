@@ -54,8 +54,10 @@ namespace Elevator.Core.Application
             {
                 var c = new PresetContext { Project = project, Library = Library };
                 foreach (var f in ProjectPresets.Fields)
+                {
                     if (!f.IsEdited(project))
                         f.Store(project, f.Preset(c));
+                }
             }
             return true;
         }

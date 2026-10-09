@@ -39,8 +39,10 @@ namespace Elevator.Core.Suspension
                 WrapAngleStatus = "NOT YET EVALUABLE"
             };
             foreach (double v in new[] { traction.X, traction.Y, deflector.X, deflector.Y, tractionDiameter, deflectorDiameter, target })
+            {
                 if (!Finite(v))
                     throw new ArgumentException("Reeving inputs must be finite.");
+            }
             if (tractionDiameter <= 0 || deflectorDiameter <= 0 || target <= 0 || target >= 180)
                 throw new ArgumentException("Positive pitch diameters and a target between zero and 180 degrees are required.");
             double dx = deflector.X - traction.X, dy =
@@ -99,8 +101,10 @@ namespace Elevator.Core.Suspension
                 p.MinConcreteHeightMm,
                 p.MaxConcreteHeightMm,
                 p.TargetWrapAngleDeg })
+            {
                 if (!Finite(value))
                     throw new ArgumentException("Vertical arrangement inputs must be finite.");
+            }
             if (!p.AdjustableDeflectorHangerConfirmed)
             {
                 result.Status = "SUPPORT DEPENDENCY CONFIRMATION REQUIRED";
@@ -153,9 +157,11 @@ namespace Elevator.Core.Suspension
                 v - p.MachineCenterAboveSteelMm - p.HangerTopBelowSteelTopMm - p.HangerBottomAboveDeflectorCenterMm;
             result.DeflectorToSlabClearanceMm = result.RequiredDeflectorCenterZ - s;
             if (p.MinimumDeflectorSlabClearanceMm.HasValue)
+            {
                 result.DeflectorSlabClearanceStatus = result.DeflectorToSlabClearanceMm + 1e-8 >= p.MinimumDeflectorSlabClearanceMm
-                    ? "PASS - SUPPLIED GEOMETRIC MINIMUM"
-                    : "FAIL";
+                                    ? "PASS - SUPPLIED GEOMETRIC MINIMUM"
+                                    : "FAIL";
+            }
             result.Reeving = Calculate(
                 new LocalPoint(tx, result.RequiredTractionSheaveCenterZ.Value, 0),
                 new LocalPoint(dx, result.RequiredDeflectorCenterZ.Value, 0),

@@ -213,25 +213,29 @@ namespace Elevator.Reporting.Figures
             // Text that does not fit between the arrows goes beyond the right-hand end.
             double room = Math.Abs(b.X - a.X) - 6;
             if (Measure(text, 2.5) <= room)
+            {
                 Text(
-                    text,
-                    new FigurePoint((a.X + b.X) / 2, yDim - 0.8),
-                    "middle",
-                    FigureLayer.Text,
-                    2.5,
-                    false,
-                    tag == null ? null : tag + "-text",
-                    value);
+                                    text,
+                                    new FigurePoint((a.X + b.X) / 2, yDim - 0.8),
+                                    "middle",
+                                    FigureLayer.Text,
+                                    2.5,
+                                    false,
+                                    tag == null ? null : tag + "-text",
+                                    value);
+            }
             else
+            {
                 Text(
-                    text,
-                    new FigurePoint(Math.Max(a.X, b.X) + 1.5, yDim - 0.8),
-                    "start",
-                    FigureLayer.Text,
-                    2.5,
-                    false,
-                    tag == null ? null : tag + "-text",
-                    value);
+                                    text,
+                                    new FigurePoint(Math.Max(a.X, b.X) + 1.5, yDim - 0.8),
+                                    "start",
+                                    FigureLayer.Text,
+                                    2.5,
+                                    false,
+                                    tag == null ? null : tag + "-text",
+                                    value);
+            }
         }
 
         // Vertical dimension between p1 and p2 with its line at xDim; text reads upwards on the left of the line.
@@ -253,25 +257,29 @@ namespace Elevator.Reporting.Figures
             Arrowhead(b, b - a, FigureLayer.Dimension);
             double room = Math.Abs(b.Y - a.Y) - 6;
             if (Measure(text, 2.5) <= room)
+            {
                 Text(
-                    text,
-                    new FigurePoint(xDim - 0.8, (a.Y + b.Y) / 2),
-                    "middle",
-                    FigureLayer.Text,
-                    2.5,
-                    true,
-                    tag == null ? null : tag + "-text",
-                    value);
+                                    text,
+                                    new FigurePoint(xDim - 0.8, (a.Y + b.Y) / 2),
+                                    "middle",
+                                    FigureLayer.Text,
+                                    2.5,
+                                    true,
+                                    tag == null ? null : tag + "-text",
+                                    value);
+            }
             else
+            {
                 Text(
-                    text,
-                    new FigurePoint(xDim - 0.8, Math.Min(a.Y, b.Y) - 1.5),
-                    "start",
-                    FigureLayer.Text,
-                    2.5,
-                    true,
-                    tag == null ? null : tag + "-text",
-                    value);
+                                    text,
+                                    new FigurePoint(xDim - 0.8, Math.Min(a.Y, b.Y) - 1.5),
+                                    "start",
+                                    FigureLayer.Text,
+                                    2.5,
+                                    true,
+                                    tag == null ? null : tag + "-text",
+                                    value);
+            }
         }
 
         // Load arrow from tail to tip in the accent colour, label near the tail.

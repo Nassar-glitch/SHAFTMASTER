@@ -178,15 +178,19 @@ namespace Elevator.Core.SafetyGear
                 return;
             }
             if (sharing != "EqualSharing")
+            {
                 Issue(
-                    load,
-                    "SafetyPit." + side + "BufferSharing",
-                    "For multiple buffers this phase supports only explicitly assumed equal sharing.",
-                    "UNSUPPORTED_CONFIGURATION");
+                                    load,
+                                    "SafetyPit." + side + "BufferSharing",
+                                    "For multiple buffers this phase supports only explicitly assumed equal sharing.",
+                                    "UNSUPPORTED_CONFIGURATION");
+            }
             else
+            {
                 load.Details.Add("Explicit ideal equal-sharing assumption across "
-                    + count
-                    + " physical buffers; not established by the note or verified stiffness/contact distribution.");
+                                    + count
+                                    + " physical buffers; not established by the note or verified stiffness/contact distribution.");
+            }
         }
 
         public SafetyPitCalculationResult Calculate(ElevatorProject project)
@@ -248,25 +252,31 @@ namespace Elevator.Core.SafetyGear
             if (s.SafetyGearType == null)
                 Issue(r.P5, "SafetyPit.SafetyGearType", "Select the physical car safety-gear type.", "MISSING_INPUT");
             else if (s.SafetyGearType != "Progressive")
+            {
                 Issue(
-                    r.P5,
-                    "SafetyPit.SafetyGearType",
-                    "Only the note's progressive car safety gear is supported.",
-                    "UNSUPPORTED_CONFIGURATION");
+                                    r.P5,
+                                    "SafetyPit.SafetyGearType",
+                                    "Only the note's progressive car safety gear is supported.",
+                                    "UNSUPPORTED_CONFIGURATION");
+            }
             if (!s.CarGuideCount.HasValue)
+            {
                 Issue(
-                    r.P5,
-                    "SafetyPit.CarGuideCount",
-                    "Confirm physical car-guide quantity; CAD line count is not physical quantity.",
-                    "MISSING_INPUT");
+                                    r.P5,
+                                    "SafetyPit.CarGuideCount",
+                                    "Confirm physical car-guide quantity; CAD line count is not physical quantity.",
+                                    "MISSING_INPUT");
+            }
             else if (s.CarGuideCount <= 0)
                 Issue(r.P5, "SafetyPit.CarGuideCount", "Positive physical guide count required.", "INVALID_INPUT");
             else if (s.CarGuideCount != 2)
+            {
                 Issue(
-                    r.P5,
-                    "SafetyPit.CarGuideCount",
-                    "Only the confirmed two-car-guide arrangement is supported.",
-                    "UNSUPPORTED_CONFIGURATION");
+                                    r.P5,
+                                    "SafetyPit.CarGuideCount",
+                                    "Only the confirmed two-car-guide arrangement is supported.",
+                                    "UNSUPPORTED_CONFIGURATION");
+            }
             r.P5.ComponentCount = s.CarGuideCount;
             Buffers(r.P6, s.CarBufferCount, s.CarBufferSharing);
             Buffers(r.P7, s.CounterweightBufferCount, s.CounterweightBufferSharing);

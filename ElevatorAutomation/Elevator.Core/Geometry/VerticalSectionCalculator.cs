@@ -53,8 +53,10 @@ namespace Elevator.Core.Geometry
             if (served.Length < 2)
                 throw new ArgumentException("At least two served landings required.");
             for (int i = 1; i < normal.Length; i++)
+            {
                 if (normal[i].FflZ <= normal[i - 1].FflZ)
                     throw new ArgumentException("Normal FFL elevations must increase.");
+            }
             var car = normal.SingleOrDefault(f => f.FloorId == d.CarReferenceFloorId);
             if (car == null || !car.Served)
                 throw new ArgumentException("Select a served car reference landing.");
@@ -89,12 +91,14 @@ namespace Elevator.Core.Geometry
                 g.ReviewItems.Add("Displayed car/CW envelope intersects shaft vertical limits.");
             }
             for (int i = 0; i < normal.Length; i++)
+            {
                 if (normal[i].Served && normal[i].FflZ + d.DoorOpeningHeightMm
-                    > (i + 1 < normal.Length ? normal[i + 1].FflZ - d.LandingSlabGraphicalThicknessMm : g.MRSlabUndersideZ))
+                                    > (i + 1 < normal.Length ? normal[i + 1].FflZ - d.LandingSlabGraphicalThicknessMm : g.MRSlabUndersideZ))
                 {
                     g.LayoutStatus = "WARNING";
                     g.ReviewItems.Add(normal[i].Name + ": opening intersects next slab/ceiling.");
                 }
+            }
             g.Brackets = BracketLayoutSolver.Solve(
                 g.PitFloorZ,
                 g.MRSlabUndersideZ,

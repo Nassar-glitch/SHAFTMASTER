@@ -76,12 +76,16 @@ namespace Elevator.Core.Calculations
                     if (!value.HasValue)
                     {
                         if (required)
+                        {
                             r.Issues.Add(new CalculationIssue(
-                field,
-                "NOT PROVIDED; mass in kg required."));
+                                            field,
+                                            "NOT PROVIDED; mass in kg required."));
+                        }
                         else
+                        {
                             masses[label + " (not included)"] =
-                    0;
+                                                0;
+                        }
                         return;
                     }
                     if (!ChassisReactionSolver.Finite(

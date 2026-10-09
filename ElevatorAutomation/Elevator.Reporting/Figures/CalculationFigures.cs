@@ -186,13 +186,15 @@ namespace Elevator.Reporting.Figures
                 Figure.Mm(p.CarDbg));
             f.DimH(v.P(0, 0), v.P(p.SW, 0), front + 21, "SW " + Figure.Mm(p.SW), "dim-SW", Figure.Mm(p.SW));
             if (cwRail != null)
+            {
                 f.DimH(
-                    v.P(p.X("cwRailLeft"), p.CwRow),
-                    v.P(p.X("cwRailRight"), p.CwRow),
-                    rear - 6,
-                    "CW DBG " + Figure.Mm(p.CwDbg),
-                    "dim-CWDBG",
-                    Figure.Mm(p.CwDbg));
+                                    v.P(p.X("cwRailLeft"), p.CwRow),
+                                    v.P(p.X("cwRailRight"), p.CwRow),
+                                    rear - 6,
+                                    "CW DBG " + Figure.Mm(p.CwDbg),
+                                    "dim-CWDBG",
+                                    Figure.Mm(p.CwDbg));
+            }
             f.DimV(v.P(cl, p.CarFront), v.P(cl, p.CarRear), left - 7, "D " + Figure.Mm(p.CarDepth), "dim-D", Figure.Mm(p.CarDepth));
             f.DimV(v.P(0, 0), v.P(0, p.SD), left - 14, "SD " + Figure.Mm(p.SD), "dim-SD", Figure.Mm(p.SD));
             Axes(f, Pt(v.P(p.SW + Wall, 0).X + 8, front + 21));
@@ -518,36 +520,42 @@ namespace Elevator.Reporting.Figures
                 }
                 double top = v.P(0, D / 2).Y, bottom = v.P(0, -D / 2).Y;
                 if (ff1)
+                {
                     f.DimH(
-                        v.P(Math.Min(0, s1 * W / 4), D / 2 + 80),
-                        v.P(Math.Max(0, s1 * W / 4), D / 2),
-                        top - 4,
-                        "W/4 " + Figure.Mm(W / 4),
-                        "dim-W4",
-                        Figure.Mm(W / 4));
+                                            v.P(Math.Min(0, s1 * W / 4), D / 2 + 80),
+                                            v.P(Math.Max(0, s1 * W / 4), D / 2),
+                                            top - 4,
+                                            "W/4 " + Figure.Mm(W / 4),
+                                            "dim-W4",
+                                            Figure.Mm(W / 4));
+                }
                 else
+                {
                     f.DimV(
-                        v.P(W / 2 + 80, Math.Min(0, s2 * D / 4)),
-                        v.P(W / 2 + 80, Math.Max(0, s2 * D / 4)),
-                        v.P(maxX, 0).X + 3,
-                        "D/4 " + Figure.Mm(D / 4),
-                        "dim-D4",
-                        Figure.Mm(D / 4));
+                                            v.P(W / 2 + 80, Math.Min(0, s2 * D / 4)),
+                                            v.P(W / 2 + 80, Math.Max(0, s2 * D / 4)),
+                                            v.P(maxX, 0).X + 3,
+                                            "D/4 " + Figure.Mm(D / 4),
+                                            "dim-D4",
+                                            Figure.Mm(D / 4));
+                }
                 if (ff1)
                     f.Line(v.P(s1 * W / 4, 0), v.P(s1 * W / 4, D / 2 + 80), FigureLayer.Centre);
                 else
                     f.Line(v.P(0, s2 * D / 4), v.P(W / 2 + 80, s2 * D / 4), FigureLayer.Centre);
                 f.DimH(v.P(-W / 2, -D / 2), v.P(W / 2, -D / 2), bottom + 8, "W " + Figure.Mm(W), ff1 ? "dim-W" : "dim-W-2", Figure.Mm(W));
                 if (!ff1)
+                {
                     f.Text(
-                        "forces reverse at the lower level",
-                        Pt(left + 41.25, bottom + 15),
-                        "middle",
-                        FigureLayer.LoadText,
-                        2.5,
-                        false,
-                        "ff2-reverse-note",
-                        null);
+                                            "forces reverse at the lower level",
+                                            Pt(left + 41.25, bottom + 15),
+                                            "middle",
+                                            FigureLayer.LoadText,
+                                            2.5,
+                                            false,
+                                            "ff2-reverse-note",
+                                            null);
+                }
             }
             double noteY = f.Entities.OfType<FigurePolyline>().SelectMany(e => e.Points).Max(q => q.Y) + 8.5;
             f.Text("Hatched: rated load on half the car floor", Pt(4, noteY), "start");
@@ -897,15 +905,17 @@ namespace Elevator.Reporting.Figures
                 f.Text(roping, Pt(tx, ys - R - 3), "middle", FigureLayer.Text, 2.5, false, "roping", roping);
             f.Text("traction sheave", Pt(cd - 3, ys - 1), "end");
             if (sheavePitchMm.HasValue && sheavePitchMm.Value > 0)
+            {
                 f.Text(
-                    "pitch diameter " + Figure.Mm(sheavePitchMm.Value),
-                    Pt(cd - 3, ys + 3),
-                    "end",
-                    FigureLayer.Text,
-                    2.5,
-                    false,
-                    "sheave-pitch",
-                    Figure.Mm(sheavePitchMm.Value));
+                                    "pitch diameter " + Figure.Mm(sheavePitchMm.Value),
+                                    Pt(cd - 3, ys + 3),
+                                    "end",
+                                    FigureLayer.Text,
+                                    2.5,
+                                    false,
+                                    "sheave-pitch",
+                                    Figure.Mm(sheavePitchMm.Value));
+            }
             var note = f.Text("Static tensions under rated load acting on the rope runs", Pt(14, carTop + 38), "start");
             Finish(f, note.At.Y);
             return f;

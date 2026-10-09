@@ -172,10 +172,12 @@ namespace Elevator.Core.MachineRoom
             if (g.Recipe == "Basic")
             {
                 if (g.Section == null || g.Section.Reference == null || !ChassisReactionSolver.Finite(g.TractionCentre))
+                {
                     reject(
-                        "INVALID_GEOMETRY_OR_LOAD",
-                        "Geometry.MachineDatum",
-                        "Calculated native traction datum/reference is unavailable.");
+                                            "INVALID_GEOMETRY_OR_LOAD",
+                                            "Geometry.MachineDatum",
+                                            "Calculated native traction datum/reference is unavailable.");
+                }
                 return result; // Basic does not use rope tangencies or deflector actions.
             }
             if (g.Section == null

@@ -50,15 +50,17 @@ namespace Elevator.Reporting.Sheet
             foreach (var c in RopeTraction.Checks.Where(c => c.Ok == false))
                 NotOk.Add(c.Title + ": " + c.Actual + " (required " + c.Required + ")");
             foreach (var t in RopeTraction.Traction.Where(t => !t.Ok))
+            {
                 NotOk.Add("Traction, "
-                    + (t.Title.Substring(0, 1).ToLowerInvariant() + t.Title.Substring(1))
-                    + ": T1/T2 "
-                    + t.Ratio.ToString("0.###", Inv)
-                    + " (required "
-                    + t.Condition
-                    + " "
-                    + t.EFAlpha.ToString("0.###", Inv)
-                    + ")");
+                                    + (t.Title.Substring(0, 1).ToLowerInvariant() + t.Title.Substring(1))
+                                    + ": T1/T2 "
+                                    + t.Ratio.ToString("0.###", Inv)
+                                    + " (required "
+                                    + t.Condition
+                                    + " "
+                                    + t.EFAlpha.ToString("0.###", Inv)
+                                    + ")");
+            }
             var omitted = RopeTraction.Omissions.Where(o => o.Kind != "NOT_APPLICABLE").ToList();
             if (omitted.Count > 0)
             {
@@ -90,8 +92,15 @@ namespace Elevator.Reporting.Sheet
             var parts = new List<string>();
             var sf = r.Checks.FirstOrDefault(c => c.Id == "safety-factor");
             if (sf != null)
+            {
                 parts.Add(
-                    "Rope Sf " + L(sf.ActualValue.Value) + (sf.Ok == true ? " ≥ " : " < ") + L(sf.RequiredValue.Value) + " " + Res(sf.Ok));
+                                    "Rope Sf "
+                                        + L(sf.ActualValue.Value)
+                                        + (sf.Ok == true ? " ≥ " : " < ")
+                                        + L(sf.RequiredValue.Value)
+                                        + " "
+                                        + Res(sf.Ok));
+            }
             var dd = r.Checks.Where(c => c.Id.StartsWith("dd-")).ToList();
             if (dd.Count > 0)
                 parts.Add("D/d " + (dd.All(c => c.Ok == true) ? "OK" : "NOT OK"));
@@ -208,16 +217,18 @@ namespace Elevator.Reporting.Sheet
                         ? ", β = " + L(x.UndercutAngleDeg.Value) + "°"
                         : ", γ = " + L(x.GrooveAngleDeg.Value) + "°") + ")");
                 if (g.DeflectorPresent)
+                {
                     lines.Add("Kp = (Dt / Dp)^4 = ("
-                        + L(x.SheavePitchDiameterMm.Value)
-                        + " / "
-                        + L(g.DeflectorPitchMm.Value)
-                        + ")^4 = "
-                        + r.Kp.Value.ToString("0.####", Inv)
-                        + ";   Nequiv(p) = Kp · (Nps + 4 · Npr) = "
-                        + r.Kp.Value.ToString("0.####", Inv)
-                        + " × (1 + 4 × 0) = "
-                        + r.NequivP.Value.ToString("0.####", Inv));
+                                            + L(x.SheavePitchDiameterMm.Value)
+                                            + " / "
+                                            + L(g.DeflectorPitchMm.Value)
+                                            + ")^4 = "
+                                            + r.Kp.Value.ToString("0.####", Inv)
+                                            + ";   Nequiv(p) = Kp · (Nps + 4 · Npr) = "
+                                            + r.Kp.Value.ToString("0.####", Inv)
+                                            + " × (1 + 4 × 0) = "
+                                            + r.NequivP.Value.ToString("0.####", Inv));
+                }
                 lines.Add("Nequiv = Nequiv(t) + Nequiv(p) = " + r.Nequiv.Value.ToString("0.####", Inv));
                 lines.Add("Sf(EN 81-50) = 10^(2.6834 − log(695.85·10⁶ · Nequiv / (Dt/d)^8.567) / log(77.09 · (Dt/d)^−2.894)), Dt/d = "
                     + L(r.DtOverDr.Value)
@@ -235,12 +246,14 @@ namespace Elevator.Reporting.Sheet
                 .Select(c => new[] { c.Title, c.Clause, c.Equation, c.Required, c.Actual, Res(c.Ok) })
                 .ToList();
             if (term != null)
+            {
                 rows.Add(new[] { term.Title,
                     term.Clause,
                     term.Equation,
                     "0.8 × MBL = " + L(term.RequiredValue.Value) + " kN",
                     "MBL = " + L(x.MinimumBreakingLoadKn.Value) + " kN",
                     "Required strength" });
+            }
             d.Table(
                 new[] { "Check", "Clause", "Equation", "Required", "Actual", "Result" },
                 rows,

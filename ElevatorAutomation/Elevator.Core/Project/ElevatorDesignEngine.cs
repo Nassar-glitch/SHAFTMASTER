@@ -86,6 +86,7 @@ namespace Elevator.Core.Project
                     }
                     result.WrapAngleStatus = Status(result.Plan.MachineRoom.Reeving.WrapAngleStatus);
                     foreach (var rule in result.Plan.MachineRoom.Rules)
+                    {
                         result.Validation.Add(new ValidationIssue
                         {
                             Code = rule.RuleId,
@@ -94,6 +95,7 @@ namespace Elevator.Core.Project
                             Message = rule.Status + ": " + rule.EngineeringNote,
                             BlocksGeneration = false
                         });
+                    }
                 }
                 result.Floors = basicGeometry ? new List<FloorElevation>() : ProjectFloors.Elevations(project.Building);
                 if ((views & DrawingViews.SectionAA) != 0)

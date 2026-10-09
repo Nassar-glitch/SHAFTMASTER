@@ -19,9 +19,11 @@ namespace Elevator.Core.Project
             p.Elevator.LegacyFamily = old.ElevatorType;
             p.Elevator.TemplateId = old.TemplateId;
             if (retained == null)
+            {
                 p.Elevator.SystemId = old.ElevatorType == ElevatorType.ExistingPlan || old.ElevatorType == ElevatorType.Gearbox
-                    ? "traction-geared"
-                    : "legacy-" + old.ElevatorType;
+                                    ? "traction-geared"
+                                    : "legacy-" + old.ElevatorType;
+            }
             p.Elevator.CapacityKg = old.Capacity;
             p.Elevator.SpeedMetresPerSecond = old.Speed;
             p.Shaft.WidthMm = old.SW;

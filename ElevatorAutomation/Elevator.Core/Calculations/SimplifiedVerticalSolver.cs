@@ -102,9 +102,12 @@ namespace Elevator.Core.Calculations
                         "Numerical overflow or force/moment equilibrium failure.");
                 r.Status = r.Reactions.Any(v => v.UpwardN < -force * 1e-9) ? "UPLIFT_REVIEW_REQUIRED" : "CALCULATED_UNDER_ASSUMPTIONS";
                 if (r.Status == "UPLIFT_REVIEW_REQUIRED")
+                {
                     r.Issues.Add(new CalculationIssue(
-                        "Bearings",
-                        "Negative reactions retained; compression-only bearing seats require uplift/restraint review."));
+                                            "Bearings",
+                                            "Negative reactions retained; compression-only bearing seats require uplift/restraint "
+                                            + "review."));
+                }
                 r.Assumptions.Add("Simplified static vertical distribution at the assumed machine load reference.");
                 r.Assumptions.Add(
                     "Total vertical load applied once at native traction-sheave centre. Not a measured machine CG. No separate rope/sheave "

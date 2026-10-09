@@ -425,13 +425,15 @@ namespace Elevator.Reporting.Docx
             if (headers != null)
                 Row(headers, widths, true, "DCE6F0", null, true);
             for (int i = 0; i < rows.Count; i++)
+            {
                 Row(
-                    rows[i],
-                    widths,
-                    false,
-                    rowFills != null && i < rowFills.Count ? rowFills[i] : null,
-                    boldColumns,
-                    together && i < rows.Count - 1);
+                                    rows[i],
+                                    widths,
+                                    false,
+                                    rowFills != null && i < rowFills.Count ? rowFills[i] : null,
+                                    boldColumns,
+                                    together && i < rows.Count - 1);
+            }
             body.Append("</w:tbl>");
             Paragraph("", "TableGap");
             rowHeight = 0;
@@ -648,17 +650,21 @@ namespace Elevator.Reporting.Docx
                         using (var stream = svgPart.GetStream(FileMode.Create, FileAccess.Write))
                             stream.Write(image.SvgData, 0, image.SvgData.Length);
                         if (documentImages.TryGetValue(image, out id))
+                        {
                             document.CreateRelationship(
-                                new Uri("media/" + svg, UriKind.Relative),
-                                TargetMode.Internal,
-                                R + "/image",
-                                id + "s");
+                                                            new Uri("media/" + svg, UriKind.Relative),
+                                                            TargetMode.Internal,
+                                                            R + "/image",
+                                                            id + "s");
+                        }
                         if (headerImages.TryGetValue(image, out id))
+                        {
                             header.CreateRelationship(
-                                new Uri("media/" + svg, UriKind.Relative),
-                                TargetMode.Internal,
-                                R + "/image",
-                                id + "s");
+                                                            new Uri("media/" + svg, UriKind.Relative),
+                                                            TargetMode.Internal,
+                                                            R + "/image",
+                                                            id + "s");
+                        }
                     }
                 }
                 WritePart(
