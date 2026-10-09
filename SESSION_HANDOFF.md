@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P4 "Desktop structure" and the clean-up, on branch `refactor/p4-desktop` (not merged, not pushed). P3 was merged into `main` first (`723f32d`). ShaftMaster stays one application with no user-visible change; golden files unchanged; tiers 1, 2 and 3 PASS; release hashes unchanged.
+- **Status:** Complete (2026-10-09): P4 "Desktop structure" and the clean-up merged into `main` (`da8335e`, tier 1 PASS on the branch, `artifacts/test-results/20261009-154637`); Planner ARCHITECTURE-PLAN change committed (`426f306`). Not pushed.
 - **Goal:** P4: UI-free application services in Elevator.Core.Application, MainWindow split into a shell and page views with small view-models, a test facade for the UI suites, xUnit for the services; then the clean-up of unnecessary tracked files and a disk clean-up proposal.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P4 and clean-up)
 - **Completed:**
@@ -998,7 +998,7 @@ This file is the shared status channel between the user's Planner chat and Execu
        - Proposal: the stalled check covers only the counterweight-on-buffers case (μ = 0.2 is given for "counterweight stalled"; EN 81-50 5.11.2.2.3 also mentions the lowest position). It applies only where EN 81-20 5.5.3 c) 1) traction limiting is used, not the 5.5.3 c) 2) electric safety device.
   1. Release target is the user's decision: keep FF as a separate candidate, combine it with the safety/pit candidate, or replace `bin-shaftmaster-v01`. This applies to release promotion and does not block planning or implementing the next calculation in a separate candidate.
   2. ~~Open FF engineering questions~~: resolved by the user decision on 2026-10-07 (user-approved interpretation; see `CAR-GUIDE-FORCES.md`).
-- **Next step:** Awaiting Planner
+- **Next step:** ARCHITECTURE-PLAN P5 "Core clean-up", to be done by a NEW Executor chat (this chat stops here; P5 not started).
 
 ## Decisions and constraints
 
@@ -1023,6 +1023,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-09: Executor merged P4 into main (`da8335e`) and committed the Planner ARCHITECTURE-PLAN change (`426f306`). Not pushed. Next: P5 in a new Executor chat.
 - 2026-10-09: Executor completed P4 "Desktop structure" and the clean-up on branch `refactor/p4-desktop` (not merged, not pushed): Core.Application services (session, preset flow, live calculation) with 19 xUnit tests, MainWindow split into Shell / Pages / Common with view-models and a test facade, UI counts unchanged, 57 of 58 screenshots identical, unused code / obsolete scripts / superseded docs removed, disk proposal written (nothing deleted). Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor merged P3 into main (`723f32d`; tier 1 PASS on the branch, 552 s). Not pushed. P4 and the clean-up started on `refactor/p4-desktop`.
 - 2026-10-09: Executor merged P2 into main (`a1fff15`), committed Planner section 4a (`f94d4d5`) and completed P3 on branch `refactor/p3-reporting` (not merged, not pushed): report code in the internal DLL Elevator.Reporting (netstandard2.0, net48), WPF rasterizer in Desktop, Elevator.Reporting.Tests 145 / 145, presets xUnit on net8.0. Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
