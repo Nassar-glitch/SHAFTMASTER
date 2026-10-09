@@ -14,65 +14,164 @@ namespace Elevator.AutoCAD
     public static class Commands
     {
         public static ElevatorParameters LastElevatorParameters;
-        public static string LastOutput,LastError;
-        public static Dictionary<string,double> LastDimensions;
-        public static void Run(string command,IEnumerable<IViewUpdater> views)
+        public static string LastOutput;
+        public static string LastError;
+        public static Dictionary<string, double> LastDimensions;
+
+        public static void Run(string command, IEnumerable<IViewUpdater> views)
         {
-            var doc=Application.DocumentManager.MdiActiveDocument;var ed=doc.Editor;
-            LastError=null;LastOutput=null;LastElevatorParameters=null;LastDimensions=null;
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            LastError = null;
+            LastOutput = null;
+            LastElevatorParameters = null;
+            LastDimensions = null;
             try
             {
-                if(!doc.Database.TileMode) throw new InvalidOperationException("Switch to the Model tab before updating.");
-                if(views.Any(v=>v.ViewId=="MachineRoomSection"))MachineRoomSectionDrawing.DetachSourceDimensionAssociations(doc);
+                if (!doc.Database.TileMode)
+                    throw new InvalidOperationException("Switch to the Model tab before updating.");
+                if (views.Any(v => v.ViewId == "MachineRoomSection"))
+                    MachineRoomSectionDrawing.DetachSourceDimensionAssociations(doc);
                 ProjectInput input;
-                using(var tr=doc.Database.TransactionManager.StartTransaction()) input=ProjectDataStorage.ReadProject(doc.Database,tr);
-                if(input==null && !ElevatorProjectCommand.Edit(doc)) return;
-                string dir=Path.Combine(Configuration.Root,"output");Directory.CreateDirectory(dir);
-                ElevatorParameters design;ViewUpdateResult plan=null;EquipmentProfile profile;
-                using(var tr=doc.Database.TransactionManager.StartTransaction())
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
+                    input = ProjectDataStorage.ReadProject(doc.Database, tr);
+                if (input == null && !ElevatorProjectCommand.Edit(doc))
+                    return;
+                string dir = Path.Combine(Configuration.Root, "output");
+                Directory.CreateDirectory(dir);
+                ElevatorParameters design;
+                ViewUpdateResult plan = null;
+                EquipmentProfile profile;
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
                 {
-                    input=ProjectDataStorage.ReadProject(doc.Database,tr);
-                    var family=ElevatorProjectCommand.Family(input);CommonRules.ValidateProject(input,family);
-                    var manifest=ComponentBinding.ReadManifest(doc.Database,tr);
-                    if(manifest.TemplateId!=input.TemplateId) throw new InvalidOperationException("Project data and template identifiers differ.");
-                    profile=Configuration.Read<EquipmentProfile>(family.ProfileFile);
-                    var snapshot=DrawingReader.Read(doc.Database,tr);
-                    design=DesignRules.Calculate(input.SW,input.SD,profile,snapshot.ElevatorParameters.CwDepth);
-                    if(views.Any(v=>v.ViewId=="MachineRoom"))
+                    input = ProjectDataStorage.ReadProject(doc.Database, tr);
+                    var family = ElevatorProjectCommand.Family(input);
+                    CommonRules.ValidateProject(input, family);
+                    var manifest = ComponentBinding.ReadManifest(doc.Database, tr);
+                    if (manifest.TemplateId != input.TemplateId)
+                        throw new InvalidOperationException("Project data and template identifiers differ.");
+                    profile = Configuration.Read<EquipmentProfile>(family.ProfileFile);
+                    var snapshot = DrawingReader.Read(doc.Database, tr);
+                    design = DesignRules.Calculate(input.SW, input.SD, profile, snapshot.ElevatorParameters.CwDepth);
+                    if (views.Any(v => v.ViewId == "MachineRoom"))
                     {
-                        var mr=MachineRoomDrawing.Read(doc.Database,tr);
-                        design.MachineRoom=MachineRoomRules.Calculate(input,design,mr.Extensions);
-                        if(views.Any(v=>v.ViewId=="MachineRoomSection"))
+                        var mr = MachineRoomDrawing.Read(doc.Database, tr);
+                        design.MachineRoom = MachineRoomRules.Calculate(input, design, mr.Extensions);
+                        if (views.Any(v => v.ViewId == "MachineRoomSection"))
                         {
-                            MachineRoomDependencies.Prepare(doc.Database,tr,mr);
-                            var section=MachineRoomSectionDrawing.Read(doc.Database,tr);
-                            double front=(MachineRoomSectionGeometryAudit.SupportOffset(mr,"P2")+MachineRoomSectionGeometryAudit.SupportOffset(mr,"P4"))/2;
-                            double rear=(MachineRoomSectionGeometryAudit.SupportOffset(mr,"P1")+MachineRoomSectionGeometryAudit.SupportOffset(mr,"P3"))/2;
-                            design.MachineRoomSection=MachineRoomSectionRules.Calculate(input,design,section.Manifest.Reference,front,rear,mr.PitchProjection,mr.Entities[MachineRoomDrawing.Pitch].Visible);
+                            MachineRoomDependencies.Prepare(doc.Database, tr, mr);
+                            var section = MachineRoomSectionDrawing.Read(doc.Database, tr);
+                            double front = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P2")
+                                + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P4")) / 2;
+                            double rear = (MachineRoomSectionGeometryAudit.SupportOffset(mr, "P1")
+                                + MachineRoomSectionGeometryAudit.SupportOffset(mr, "P3")) / 2;
+                            design.MachineRoomSection = MachineRoomSectionRules.Calculate(
+                                input,
+                                design,
+                                section.Manifest.Reference,
+                                front,
+                                rear,
+                                mr.PitchProjection,
+                                mr.Entities[MachineRoomDrawing.Pitch].Visible);
                         }
                     }
-                    foreach(var view in views) {var result=view.Update(doc.Database,tr,design);if(view.ViewId=="Plan") plan=result;}
-                    if(plan==null) throw new InvalidOperationException("No plan updater registered.");
+                    foreach (var view in views)
+                    {
+                        var result = view.Update(doc.Database, tr, design);
+                        if (view.ViewId == "Plan")
+                            plan = result;
+                    }
+                    if (plan == null)
+                        throw new InvalidOperationException("No plan updater registered.");
                     tr.Commit();
                 }
                 ed.Regen();
-                using(var tr=doc.Database.TransactionManager.StartTransaction()) {
-                    var updated=DrawingReader.Read(doc.Database,tr);
-                    DrawingUpdater.Validate(updated,design,plan.Dimensions);
-                    PlanAnnotations.Validate(updated,plan.Annotations);
-                    if(design.MachineRoom!=null)MachineRoomUpdater.Validate(MachineRoomDrawing.Read(doc.Database,tr),design);
-                    if(design.MachineRoomSection!=null)MachineRoomSectionGeometryAudit.Run(MachineRoomSectionDrawing.Read(doc.Database,tr),design,MachineRoomDrawing.Read(doc.Database,tr));
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    var updated = DrawingReader.Read(doc.Database, tr);
+                    DrawingUpdater.Validate(updated, design, plan.Dimensions);
+                    PlanAnnotations.Validate(updated, plan.Annotations);
+                    if (design.MachineRoom != null)
+                        MachineRoomUpdater.Validate(MachineRoomDrawing.Read(doc.Database, tr), design);
+                    if (design.MachineRoomSection != null)
+                    {
+                        MachineRoomSectionGeometryAudit.Run(
+                                                    MachineRoomSectionDrawing.Read(doc.Database, tr),
+                                                    design,
+                                                    MachineRoomDrawing.Read(doc.Database, tr));
+                    }
                 }
-                string name="Elevator_SW"+input.SW.ToString("0.###",CultureInfo.InvariantCulture)+"_SD"+input.SD.ToString("0.###",CultureInfo.InvariantCulture)+"_"+DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")+"_"+Guid.NewGuid().ToString("N").Substring(0,6)+".dwg";
-                string output=Path.Combine(dir,name);
-                doc.Database.SaveAs(output,DwgVersion.AC1032);
-                LastElevatorParameters=design;LastDimensions=plan.Dimensions;LastOutput=output;
-                if(design.MachineRoom!=null)ed.WriteMessage("\nMACHINE ROOM: "+design.MachineRoom.Deflector.SelectionStatus+". LayoutStatus="+design.MachineRoom.LayoutStatus+"; WrapAngleStatus="+design.MachineRoom.Reeving.WrapAngleStatus+"; CodeDiameterRatioStatus="+design.MachineRoom.CodeDiameterRatioStatus+". Engineering review required. See embedded MachineRoomValidation, MachineRoomEngineeringRules and the output JSON.\n");
-                Configuration.WriteJson(Path.ChangeExtension(output,".json"),new {command=command,profile=profile.Version,input=input,calculated=design,clearances=plan.Clearances,dimensionChecks=plan.Dimensions,annotations=plan.Annotations,coverage=plan.Coverage,output=output});
-                if(plan.Coverage.UnboundEntities>0)ed.WriteMessage("\nPlan coverage: "+plan.Coverage.UnboundEntities+" unbound model entities preserved but NOT automated. Run ELEVATORPLANAUDIT to review.\n");
-                ed.WriteMessage("\n"+command+" complete. Car: "+design.CarWidth+" x "+design.CarDepth+"; Car DBG: "+design.CarDbg+"; CW DBG: "+design.CwDbg+"; Door: "+design.DoorWidth+"; TZ: "+design.TZ+" mm.\nSaved separate DWG: "+output+"\n");
+                string name = "Elevator_SW"
+                    + input.SW.ToString("0.###", CultureInfo.InvariantCulture)
+                    + "_SD"
+                    + input.SD.ToString("0.###", CultureInfo.InvariantCulture)
+                    + "_"
+                    + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")
+                    + "_"
+                    + Guid.NewGuid().ToString("N").Substring(0, 6)
+                    + ".dwg";
+                string output = Path.Combine(dir, name);
+                doc.Database.SaveAs(output, DwgVersion.AC1032);
+                LastElevatorParameters = design;
+                LastDimensions = plan.Dimensions;
+                LastOutput = output;
+                if (design.MachineRoom != null)
+                {
+                    ed.WriteMessage("\nMACHINE ROOM: "
+                                            + design.MachineRoom.Deflector.SelectionStatus
+                                            + ". LayoutStatus="
+                                            + design.MachineRoom.LayoutStatus
+                                            + "; WrapAngleStatus="
+                                            + design.MachineRoom.Reeving.WrapAngleStatus
+                                            + "; CodeDiameterRatioStatus="
+                                            + design.MachineRoom.CodeDiameterRatioStatus
+                                            + ". Engineering review required. See embedded MachineRoomValidation, "
+                                            + "MachineRoomEngineeringRules and the output "
+                                            + "JSON.\n");
+                }
+                Configuration.WriteJson(
+                    Path.ChangeExtension(output, ".json"),
+                    new
+                    {
+                        command = command,
+                        profile = profile.Version,
+                        input = input,
+                        calculated = design,
+                        clearances = plan.Clearances,
+                        dimensionChecks = plan.Dimensions,
+                        annotations = plan.Annotations,
+                        coverage = plan.Coverage,
+                        output = output
+                    });
+                if (plan.Coverage.UnboundEntities > 0)
+                {
+                    ed.WriteMessage("\nPlan coverage: "
+                                            + plan.Coverage.UnboundEntities
+                                            + " unbound model entities preserved but NOT automated. Run ELEVATORPLANAUDIT to review.\n");
+                }
+                ed.WriteMessage("\n"
+                    + command
+                    + " complete. Car: "
+                    + design.CarWidth
+                    + " x "
+                    + design.CarDepth
+                    + "; Car DBG: "
+                    + design.CarDbg
+                    + "; CW DBG: "
+                    + design.CwDbg
+                    + "; Door: "
+                    + design.DoorWidth
+                    + "; TZ: "
+                    + design.TZ
+                    + " mm.\nSaved separate DWG: "
+                    + output
+                    + "\n");
             }
-            catch(System.Exception ex) {LastError=ex.Message;ed.WriteMessage("\n"+command+" stopped: "+ex.Message+"\n");}
+            catch (System.Exception ex)
+            {
+                LastError = ex.Message;
+                ed.WriteMessage("\n" + command + " stopped: " + ex.Message + "\n");
+            }
         }
     }
 }
