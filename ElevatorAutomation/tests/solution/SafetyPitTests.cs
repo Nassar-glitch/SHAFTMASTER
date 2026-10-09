@@ -9,6 +9,8 @@ using Elevator.Solution.Desktop;
 // Synthetic fixtures only. These values are never inserted into project defaults.
 public static class SafetyPitTests
 {
+ // Source root (config/ and Templates/): the parent of the binary folder, or an ancestor for artifacts/bin.
+ static string Root(string bin){var parent=Directory.GetParent(bin.TrimEnd(Path.DirectorySeparatorChar));for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;return parent.FullName;}
     static int assertions;
     static void Check(bool condition,string name){if(!condition)throw new Exception(name);assertions++;}
     static void Near(double? actual,double expected,string name){Check(actual.HasValue&&Math.Abs(actual.Value-expected)<Math.Max(1,Math.Abs(expected))*1e-9,name);}
@@ -26,7 +28,7 @@ public static class SafetyPitTests
     public static int Main(string[] args){try{Run(args);return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;}}
     static void Run(string[] args)
     {
-        string bin=args[0],outDir=args[1],automationRoot=args.Length>2?args[2]:Directory.GetParent(bin.TrimEnd(Path.DirectorySeparatorChar)).FullName;Directory.CreateDirectory(outDir);
+        string bin=args[0],outDir=args[1],automationRoot=args.Length>2?args[2]:Root(bin);Directory.CreateDirectory(outDir);
         var fresh=new ElevatorProject();Check(fresh.Calculations.SafetyPit==null,"No invented safety/pit defaults");
         fresh.Calculations.SafetyPit=new SafetyPitInputs();Check(CalculationModes.Resolve(fresh.Calculations)=="Basic","Safety-only data preserves empty legacy Basic resolution");
         foreach(var f in typeof(SafetyPitInputs).GetFields())Check(f.GetValue(fresh.Calculations.SafetyPit)==null,"Missing default "+f.Name);

@@ -12,7 +12,15 @@ namespace Elevator.AutoCAD
 {
     public static class Configuration
     {
-        public static readonly string Root=Directory.GetParent(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).FullName;
+        // The folder with config/ and Templates/: the parent of the binary folder for a release (bin-shaftmaster-vNN), an
+        // ancestor for a build in artifacts/bin.
+        public static readonly string Root=FindRoot(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+        public static string FindRoot(string binary)
+        {
+            var parent=Directory.GetParent(binary.TrimEnd(Path.DirectorySeparatorChar));
+            for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;
+            return parent.FullName;
+        }
         public static T Read<T>(string file) { return new JavaScriptSerializer().Deserialize<T>(File.ReadAllText(Path.Combine(Root,"config",file))); }
         public static void WriteJson(string file, object value) { var s=new JavaScriptSerializer();s.MaxJsonLength=Int32.MaxValue;File.WriteAllText(file,s.Serialize(value)); }
     }
