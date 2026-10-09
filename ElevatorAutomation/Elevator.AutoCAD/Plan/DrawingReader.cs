@@ -43,17 +43,7 @@ namespace Elevator.AutoCAD.Plan
             s.Entities = new Dictionary<string, Entity>();
             s.Bindings = manifest.Entities.ToDictionary(b => b.Key);
             s.ModelEntityCount = count;
-            foreach (Binding b in manifest.Entities)
-            {
-                Entity e;
-                if (!byKey.TryGetValue(b.Key, out e))
-                    throw new InvalidOperationException("Template component missing: " + b.Key + ".");
-                if (e.GetRXClass().DxfName != b.Type)
-                    throw new InvalidOperationException("Template component signature changed: " + b.Key + ". Expected " + b.Type + ".");
-                if (e is Polyline && (((Polyline)e).Normal - Vector3d.ZAxis).Length > 1e-6)
-                    throw new InvalidOperationException("Tilted/mirrored polyline planes are not supported by this template version.");
-                s.Entities.Add(b.Key, e);
-            }
+            BindEntities(manifest, byKey, s);
             Polyline shaft = s.Get<Polyline>("Plan.Shaft.InnerOutline.EntranceDatum");
             if (shaft.NumberOfVertices != 6)
                 throw new InvalidOperationException("The shaft outline topology has changed; expected its original six vertices.");
@@ -73,6 +63,28 @@ namespace Elevator.AutoCAD.Plan
                 throw new InvalidOperationException(
                                     "The shaft must be a plan in the XY plane; in-plane translation and rotation are supported.");
             }
+            ElevatorParameters l = ReadParameters(s, shaft, xv, yv);
+            s.ElevatorParameters = l;
+            return s;
+        }
+
+        private static void BindEntities(BindingFile manifest, Dictionary<string, Entity> byKey, DrawingSnapshot s)
+        {
+            foreach (Binding b in manifest.Entities)
+            {
+                Entity e;
+                if (!byKey.TryGetValue(b.Key, out e))
+                    throw new InvalidOperationException("Template component missing: " + b.Key + ".");
+                if (e.GetRXClass().DxfName != b.Type)
+                    throw new InvalidOperationException("Template component signature changed: " + b.Key + ". Expected " + b.Type + ".");
+                if (e is Polyline && (((Polyline)e).Normal - Vector3d.ZAxis).Length > 1e-6)
+                    throw new InvalidOperationException("Tilted/mirrored polyline planes are not supported by this template version.");
+                s.Entities.Add(b.Key, e);
+            }
+        }
+
+        private static ElevatorParameters ReadParameters(DrawingSnapshot s, Polyline shaft, Vector3d xv, Vector3d yv)
+        {
             var f = s.Frame;
             var l = new ElevatorParameters();
             l.SW = xv.Length;
@@ -103,8 +115,7 @@ namespace Elevator.AutoCAD.Plan
             l.TZ = l.CwRow - l.CarRow;
             if (Math.Abs((left + right) / 2 - l.Center) > 0.01 || l.CarWidth <= 0 || l.CwWidth <= 0 || l.JambWidth <= 0)
                 throw new InvalidOperationException("The current drawing no longer matches the centered template geometry.");
-            s.ElevatorParameters = l;
-            return s;
+            return l;
         }
     }
 }

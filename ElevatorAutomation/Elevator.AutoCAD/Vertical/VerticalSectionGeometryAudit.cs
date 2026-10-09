@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Geometry;
 using Elevator.AutoCAD.Common;
 using Elevator.AutoCAD.MachineRoom;
 using Elevator.AutoCAD.Plan;
@@ -99,48 +100,11 @@ namespace Elevator.AutoCAD.Vertical
                     throw new InvalidOperationException("Missing: " + p.Id);
                 using (var expected = VerticalExperimentDrawing.Create(p, db, f))
                     Compare(all[p.Id], expected, f, p.Id);
-                if (p.Kind == "Dimension")
-                {
-                    dims++;
-                    Near(((Dimension)all[p.Id]).Measurement, Math.Abs(p.Points[3] - p.Points[1]), p.Id);
-                }
-                if (p.Kind == "Box"
-                    && (p.Layer == "Concrete" || p.Layer == "Envelope")
-                    && Math.Abs((p.Points[2] - p.Points[0]) * (p.Points[3] - p.Points[1])) > .001)
-                {
-                    string id = p.Id + ".Hatch";
-                    expectedKeys.Add(id);
-                    if (!all.ContainsKey(id) || !(all[id] is Hatch))
-                        throw new InvalidOperationException("Missing hatch: " + id);
-                    var h = (Hatch)all[id];
-                    if (h.NumberOfLoops != 1)
-                        throw new InvalidOperationException("Hatch loop mismatch: " + id);
-                    var loop = h.GetLoopAt(0);
-                    var poly = (Polyline)all[p.Id];
-                    if (!loop.IsPolyline || loop.Polyline.Count != 5)
-                        throw new InvalidOperationException("Hatch boundary topology: " + id);
-                    for (int i = 0; i <= 4; i++)
-                    {
-                        Near(loop.Polyline[i].Vertex.X, poly.GetPoint2dAt(i % 4).X, id);
-                        Near(loop.Polyline[i].Vertex.Y, poly.GetPoint2dAt(i % 4).Y, id);
-                    }
-                }
+                CheckDimensionAndHatch(all, expectedKeys, ref dims, p);
             }
             var pose = VerticalExperimentDrawing.SectionPose(section, f, g.RoofZ);
             int mrCount = 0;
-            foreach (var b in section.Manifest.Entities.Where(VerticalExperimentDrawing.CloneInFullSection))
-            {
-                string id = VerticalExperimentDrawing.Prefix + "MR." + b.Key;
-                expectedKeys.Add(id);
-                if (!all.ContainsKey(id))
-                    throw new InvalidOperationException("Missing coordinated MR component: " + id);
-                using (var expected = VerticalExperimentDrawing.CloneCoordinatedEntity(section.Entities[b.Key]))
-                {
-                    expected.TransformBy(pose);
-                    Compare(all[id], expected, f, id);
-                }
-                mrCount++;
-            }
+            CheckCoordinatedComponents(section, all, f, expectedKeys, pose, ref mrCount);
             if (!expectedKeys.SetEquals(all.Keys))
                 throw new InvalidOperationException("Unexpected experimental geometry.");
             if (g.Brackets.ConsecutiveSpacings.Any(v => v > data.RequestedBracketMaxSpacingMm + 1e-7))
@@ -167,6 +131,63 @@ namespace Elevator.AutoCAD.Vertical
                 DeflectorSlabClearanceStatus = source.Section.Arrangement.DeflectorSlabClearanceStatus,
                 DeflectorToSlabClearanceMm = source.Section.Arrangement.DeflectorToSlabClearanceMm
             };
+        }
+
+        private static void CheckDimensionAndHatch(
+            Dictionary<string, Entity> all,
+            HashSet<string> expectedKeys,
+            ref int dims,
+            VerticalPrimitive p)
+        {
+            if (p.Kind == "Dimension")
+            {
+                dims++;
+                Near(((Dimension)all[p.Id]).Measurement, Math.Abs(p.Points[3] - p.Points[1]), p.Id);
+            }
+            if (p.Kind == "Box"
+                && (p.Layer == "Concrete" || p.Layer == "Envelope")
+                && Math.Abs((p.Points[2] - p.Points[0]) * (p.Points[3] - p.Points[1])) > .001)
+            {
+                string id = p.Id + ".Hatch";
+                expectedKeys.Add(id);
+                if (!all.ContainsKey(id) || !(all[id] is Hatch))
+                    throw new InvalidOperationException("Missing hatch: " + id);
+                var h = (Hatch)all[id];
+                if (h.NumberOfLoops != 1)
+                    throw new InvalidOperationException("Hatch loop mismatch: " + id);
+                var loop = h.GetLoopAt(0);
+                var poly = (Polyline)all[p.Id];
+                if (!loop.IsPolyline || loop.Polyline.Count != 5)
+                    throw new InvalidOperationException("Hatch boundary topology: " + id);
+                for (int i = 0; i <= 4; i++)
+                {
+                    Near(loop.Polyline[i].Vertex.X, poly.GetPoint2dAt(i % 4).X, id);
+                    Near(loop.Polyline[i].Vertex.Y, poly.GetPoint2dAt(i % 4).Y, id);
+                }
+            }
+        }
+
+        private static void CheckCoordinatedComponents(
+            SectionSnapshot section,
+            Dictionary<string, Entity> all,
+            ShaftFrame f,
+            HashSet<string> expectedKeys,
+            Matrix3d pose,
+            ref int mrCount)
+        {
+            foreach (var b in section.Manifest.Entities.Where(VerticalExperimentDrawing.CloneInFullSection))
+            {
+                string id = VerticalExperimentDrawing.Prefix + "MR." + b.Key;
+                expectedKeys.Add(id);
+                if (!all.ContainsKey(id))
+                    throw new InvalidOperationException("Missing coordinated MR component: " + id);
+                using (var expected = VerticalExperimentDrawing.CloneCoordinatedEntity(section.Entities[b.Key]))
+                {
+                    expected.TransformBy(pose);
+                    Compare(all[id], expected, f, id);
+                }
+                mrCount++;
+            }
         }
     }
 }
