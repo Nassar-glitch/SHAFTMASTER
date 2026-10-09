@@ -1,4 +1,5 @@
 using System;using System.IO;using System.Linq;using System.Reflection;using System.Collections.Generic;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core.Project;using Elevator.Core.Calculations;using Elevator.Solution.Desktop;using Elevator.Solution.Bridge;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;

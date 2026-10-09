@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Elevator.Core.Application;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
-using Elevator.Solution.Desktop;
 public static class SolutionTests
 {
     static List<object> results=new List<object>();static string output;

@@ -1,5 +1,6 @@
 using System;using System.IO;using System.Linq;using System.Collections.Generic;
-using Elevator.Core;using Elevator.Core.Project;using Elevator.Core.Calculations;using Elevator.Solution.Bridge;using Elevator.Solution.Desktop;
+using Elevator.Core.Application;
+using Elevator.Core;using Elevator.Core.Project;using Elevator.Core.Calculations;using Elevator.Solution.Bridge;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;

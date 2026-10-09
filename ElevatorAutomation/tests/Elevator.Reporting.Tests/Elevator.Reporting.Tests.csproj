@@ -21,9 +21,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
     <ProjectReference Include="..\..\Elevator.Core\Elevator.Core.csproj" Private="true" />
     <ProjectReference Include="..\..\Elevator.Reporting\Elevator.Reporting.csproj" Private="true" />
-    <!-- Paths and data shared with the Core tests; the project session (WPF-free) of the application. -->
+    <!-- Paths and data shared with the Core tests. -->
     <Compile Include="..\Elevator.Core.Tests\TestData.cs" Link="Linked\TestData.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\ProjectSession.cs" Link="Linked\ProjectSession.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="WindowsBase" />

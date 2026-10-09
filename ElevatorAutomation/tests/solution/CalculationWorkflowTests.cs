@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Application;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
-using Elevator.Solution.Desktop;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;

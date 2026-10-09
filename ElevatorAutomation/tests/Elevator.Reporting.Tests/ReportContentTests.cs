@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
+using Elevator.Core.Application;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Serialization;
@@ -16,7 +17,9 @@ using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
 using Elevator.Reporting.Sheet;
+#if NETFRAMEWORK
 using Elevator.Solution.Desktop;
+#endif
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]

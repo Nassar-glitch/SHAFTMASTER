@@ -4,8 +4,9 @@ using System.Linq;
 using System.ComponentModel;
 using System.Globalization;
 using Elevator.Core.Project;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Core.Application
 {
+    // Project session (ARCHITECTURE-PLAN P4): the open project, its file, the unsaved-changes state and the drawing options.
     public sealed class ProjectSession
     {
         public ElevatorProject Project;
@@ -14,6 +15,13 @@ namespace Elevator.Solution.Desktop
         public DrawingViews Views=DrawingViews.All;
         public bool Arrange=true;
         public ProjectSession(ElevatorProject project){Project=project;}
+        // A new project opens complete from config/presets.json (DESIGN-FLOW stage 2); every unlocked value follows the presets.
+        // The audited counterweight reference pose and bracket source are kept from the reviewed example (seedPath).
+        public static ElevatorProject NewProject(string seedPath,PresetLibrary presets,DesignContext context)
+        {
+            var seed=ProjectJson.Deserialize(File.ReadAllText(seedPath));
+            return ProjectPresets.CreateNew(presets,context,seed.Counterweight,seed.Rails.BracketSource);
+        }
         public void Save(string path){path=Path.GetFullPath(path);string temporary=path+"."+Guid.NewGuid().ToString("N")+".tmp";try{File.WriteAllText(temporary,ProjectJson.Serialize(Project));if(File.Exists(path))File.Replace(temporary,path,null);else File.Move(temporary,path);}finally{if(File.Exists(temporary))File.Delete(temporary);}FilePath=path;Dirty=false;}
         public void Open(string path){var p=ProjectJson.Deserialize(File.ReadAllText(path));var errors=ProjectValidator.Validate(p,DrawingViews.Plan);if(errors.Any(e=>e.Message=="Required project group is missing."))throw new ArgumentException("Incomplete project structure.");Project=p;FilePath=path;Dirty=false;}
         public void MoveIntermediate(string id,int delta)

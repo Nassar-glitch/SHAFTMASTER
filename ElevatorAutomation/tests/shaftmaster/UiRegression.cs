@@ -1,4 +1,5 @@
 using System;using System.IO;using System.Linq;using System.Collections.Generic;using System.Reflection;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core.Project;using Elevator.Solution.Bridge;using Elevator.Solution.Desktop;
 // In-process tests of the compiled packaged WPF application, not OS input automation.
 public static class UiRegression

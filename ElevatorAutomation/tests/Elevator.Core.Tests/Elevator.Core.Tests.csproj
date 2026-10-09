@@ -26,9 +26,7 @@
     <ProjectReference Include="..\..\Elevator.Reporting\Elevator.Reporting.csproj" Private="true" />
   </ItemGroup>
   <ItemGroup>
-    <!-- WPF-free application source used by the Core suites (CalculationWorkspace is in Elevator.Reporting), and the golden
-         JSON member sort. -->
-    <Compile Include="..\..\Elevator.Solution.Desktop\ProjectSession.cs" Link="Linked\ProjectSession.cs" />
+    <!-- The golden JSON member sort. -->
     <Compile Include="..\golden\JsonMembers.cs" Link="Linked\JsonMembers.cs" />
     <!-- The console suites, run unchanged inside xUnit (the console runners stay until P7). -->
     <Compile Include="..\solution\RopeTractionTests.cs" Link="Suites\RopeTractionTests.cs" />
