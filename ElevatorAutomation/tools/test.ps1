@@ -1,4 +1,4 @@
-param([int[]]$Tier=@(1),[string]$Bin='artifacts/bin',[switch]$NoBuild)
+param([string[]]$Tier=@('1'),[string]$Bin='artifacts/bin',[switch]$NoBuild)
 # Test entry point (ARCHITECTURE-PLAN section 3; skeleton for P7). Calls the existing runners by tier:
 #   1  golden master, presets / rope / calculation-sheet / FF / safety-pit core suites (no AutoCAD, no Word);
 #   2  programmatic WPF suites;
@@ -39,7 +39,9 @@ if(-not $NoBuild){
  if($LASTEXITCODE){throw "Build failed; see $run/build.log"}
  $times['build']=[int]((Get-Date)-$t).TotalSeconds;Write-Output ("  build {0}s" -f $times['build'])
 }
-foreach($n in ($Tier | Sort-Object -Unique)){
+# -Tier 1,2,3 arrives as one string through powershell -File: split on commas.
+$tiers=@($Tier | ForEach-Object {$_ -split ','} | Where-Object {$_.Trim()} | ForEach-Object {[int]$_.Trim()} | Sort-Object -Unique)
+foreach($n in $tiers){
  $t=Get-Date;Write-Output "Tier $n"
  switch($n){
   1{
