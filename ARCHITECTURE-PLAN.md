@@ -79,6 +79,15 @@ Names: assembly and namespace names stay `Elevator.*` during the refactor, becau
 
 Feature work (DESIGN-FLOW stages 3+) resumes after P4. From then on, every feature lands in the new structure with tier-1 tests.
 
+## 4a. Product architecture target (agreed 2026-10-09)
+
+ShaftMaster stays ONE integrated application (one `ShaftMaster.exe`, one install), in the style of professional lift-design suites such as DIGIPARA LiftDesigner. The internal split into assemblies is invisible to the user. Inside Elevator.Core (P4–P5), the domain is organised as professional lift software is:
+
+- **Lift components as modules,** each with its model, presets/catalog, rules, calculations and drawing data: Shaft and pit/headroom, Car and sling, Doors (car and landing), Counterweight, Machine and machine room, Suspension (ropes, sheaves, roping), Guide rails and brackets, Safety gear and governor, Buffers.
+- **Elevator systems as configurations** that assemble components: geared 1:1 today; 2:1, MRL gearless, hydraulic and home lift later. A new system or component is added without touching unrelated ones.
+- **Catalogs:** standard parts (rails, ropes, sheaves, doors, buffers, machines) live in editable data catalogs (presets library), not in code.
+- **One project model, one calculation pipeline, and many outputs** (calculation sheet, Design Notes, native drawings, STEP, later the layout and detailing), all fed from the same project and calculation results.
+
 ## 5. Known risks
 
 - **Serializer change:** double formatting, null handling and dictionary order can change project JSON and fingerprints. Mitigation: P0 golden bytes, then the P2 abstraction is proven before any switch.
