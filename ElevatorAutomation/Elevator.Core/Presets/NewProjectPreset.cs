@@ -1,5 +1,6 @@
 namespace Elevator.Core.Presets
 {
+    /// <summary>Presets of a new project: shaft, floors, rated load and speed.</summary>
     public sealed class NewProjectPreset
     {
         public double? ShaftWidthMm;

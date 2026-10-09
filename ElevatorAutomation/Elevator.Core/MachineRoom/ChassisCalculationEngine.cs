@@ -7,8 +7,12 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>
+    /// P1–P4 in Advanced mode: reactions from the machine weight and the rope forces at the traction sheave and the deflector hanger.
+    /// </summary>
     public sealed class ChassisCalculationEngine
     {
+        /// <summary>Gravity used for rope tensions and weights, m/s².</summary>
         public const double GravityMetresPerSecondSquared = 9.81;
 
         static LocalPoint Add(LocalPoint a, LocalPoint b)
@@ -36,6 +40,7 @@ namespace Elevator.Core.MachineRoom
             return !String.IsNullOrWhiteSpace(s);
         }
 
+        /// <summary>Fingerprint of the inputs and geometry of an Advanced P1–P4 result.</summary>
         public static string Fingerprint(ElevatorProject p, ChassisCalculationGeometry g)
         {
             return CalculationFingerprint.Hash(new
@@ -52,11 +57,13 @@ namespace Elevator.Core.MachineRoom
             });
         }
 
+        /// <summary>True when the Advanced result matches the project, the geometry and the context.</summary>
         public static bool IsCurrent(ChassisCalculationResult r, ElevatorProject p, ChassisCalculationGeometry g)
         {
             return IsCurrent(r, p, g, null);
         }
 
+        /// <summary>True when the Advanced result matches the project, the geometry and the context.</summary>
         public static bool IsCurrent(
             ChassisCalculationResult r,
             ElevatorProject p,
@@ -72,11 +79,13 @@ namespace Elevator.Core.MachineRoom
                 && r.InputFingerprint == Fingerprint(p, g);
         }
 
+        /// <summary>Calculates P1–P4 in Advanced mode.</summary>
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g)
         {
             return Calculate(p, g, null);
         }
 
+        /// <summary>Calculates P1–P4 in Advanced mode.</summary>
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g, DesignContext currentContext)
         {
             var r = new ChassisCalculationResult();

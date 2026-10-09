@@ -5,6 +5,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Calculations
 {
+    /// <summary>P1–P4 in Basic mode: the total mass acts at the traction-sheave centre and is shared over the four bearings.</summary>
     public sealed class SimplifiedCalculationEngine
     {
         static string Fingerprint(ElevatorProject p, ChassisCalculationGeometry g)
@@ -30,6 +31,7 @@ namespace Elevator.Core.Calculations
             });
         }
 
+        /// <summary>True when the result is a Basic result for the current inputs and geometry.</summary>
         public static bool IsCurrent(ChassisCalculationResult r, ElevatorProject p, ChassisCalculationGeometry g, DesignContext ctx)
         {
             return p != null
@@ -43,6 +45,7 @@ namespace Elevator.Core.Calculations
                 && r.InputFingerprint == Fingerprint(p, g);
         }
 
+        /// <summary>Calculates P1–P4 in Basic mode.</summary>
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g, DesignContext ctx)
         {
             var r = new ChassisCalculationResult { Mode = "Basic", ModelVersion = SimplifiedVerticalSolver.Model };

@@ -10,25 +10,32 @@ using Elevator.Core.SafetyGear;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>FF1 and FF2, the car guide-rail forces of the rated load on half the car floor (adopted source-note rule).</summary>
     public sealed class CarGuideForceCalculationEngine
     {
+        /// <summary>Rule version stored in results and fingerprints.</summary>
         public const string RuleVersion = "GearboxNoteCarGuideForces-v1";
+        /// <summary>SHA-256 of the source note.</summary>
         public const string SourceDocumentSha256 = SafetyPitCalculationEngine.SourceDocumentSha256;
+        /// <summary>The adopted force coefficient, N per kg.</summary>
         public const double AdoptedCoefficientNPerKg = 10;
+        /// <summary>The design multiplier applied to the base forces.</summary>
         public const double DesignMultiplier = 2;
 
+        /// <summary>Text of the adopted source rule.</summary>
         public const string RuleBasis =
             "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx, Third: irregular load distribution inside car, zero-based "
             + "descendant paragraphs 77–87. FF1 = Q × 10 × internal width / (4h); FF2 = Q × 10 × internal depth / (8h); design multiplier "
             + "2 applied once. Adopted note rules, not independent standards/manufacturer certification.";
 
+        /// <summary>Definitions shown with the results.</summary>
         public const string Definitions =
             "Q: rated capacity kg; internal cabin width/depth: shared Plan.Cabin.Inner faces in mm; h: the note's Vertical Guide Shoe "
             + "Distance = vertical centre-to-centre distance between the upper and lower car guide shoes in mm (sliding shoes: mid-length "
             + "of the guiding insert; roller guides: roller axle centre). Manual input with no default; the application has no "
             + "car-frame/shoe geometry.";
 
-        // Text only: it changes no equation, coefficient or factor (RuleVersion unchanged).
+        /// <summary>Text only: it changes no equation, coefficient or factor (RuleVersion unchanged).</summary>
         public const string ApprovedInterpretation =
             "User-approved design interpretation (2026-10-07; basis EN 81-50:2014 Annex C.2.1, informative; not certification): FF1 = Fy, "
             + "along the car-rail line (project car-width direction), on the rail blade tip, bending the rail about x-x. FF2 = Fx, "
@@ -124,6 +131,7 @@ namespace Elevator.Core.GuideRails
             return ChassisReactionSolver.Finite(v) && v > 0;
         }
 
+        /// <summary>True when the geometry matches the project and the context.</summary>
         public static bool IsGeometryCurrent(CarGuideForceGeometry g, ElevatorProject p, DesignContext c)
         {
             return g != null
@@ -149,6 +157,7 @@ namespace Elevator.Core.GuideRails
             });
         }
 
+        /// <summary>True when the result matches the project and the context.</summary>
         public static bool IsCurrent(CarGuideForceResult r, ElevatorProject p, DesignContext c)
         {
             return r != null
@@ -158,8 +167,10 @@ namespace Elevator.Core.GuideRails
                 && IsGeometryCurrent(r.Geometry, p, c);
         }
 
-        // Independent scalar rule evaluator for consistent length units and note
-        // fixtures. This creates no provenance and is not the live project workflow.
+        /// <summary>
+        /// Independent scalar rule evaluator for consistent length units and note fixtures. This creates no provenance and is not the live
+        /// project workflow.
+        /// </summary>
         public static double[] EvaluateNoteRule(double capacityKg, double width, double depth, double h)
         {
             if (!Positive(capacityKg) || !Positive(width) || !Positive(depth) || !Positive(h))
@@ -185,6 +196,7 @@ namespace Elevator.Core.GuideRails
             }
         }
 
+        /// <summary>Calculates FF1 and FF2.</summary>
         public CarGuideForceResult Calculate(ElevatorProject p, CarGuideForceGeometry g, DesignContext c)
         {
             var r = new CarGuideForceResult

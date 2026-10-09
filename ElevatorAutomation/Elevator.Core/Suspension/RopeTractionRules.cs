@@ -6,9 +6,12 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Suspension
 {
-    // Connects the rope / traction results to the machine-room code rules (MR-ROPE-MIN-001, MR-ROPE-001, MR-TRACTION-001).
+    /// <summary>
+    /// Connects the rope / traction results to the machine-room code rules (MR-ROPE-MIN-001, MR-ROPE-001, MR-TRACTION-001).
+    /// </summary>
     public static class RopeTractionRules
     {
+        /// <summary>Sets the results of the machine-room rules from the rope and traction results.</summary>
         public static void Apply(IList<EngineeringRule> rules, RopeTractionResult r)
         {
             if (rules == null || r == null)

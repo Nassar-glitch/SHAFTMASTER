@@ -4,13 +4,16 @@ using System.Linq;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Floor operations on a building: elevations, rename, insert and remove.</summary>
     public static class ProjectFloors
     {
+        /// <summary>True for a finite positive number.</summary>
         public static bool FinitePositive(double v)
         {
             return !Double.IsNaN(v) && !Double.IsInfinity(v) && v > 0;
         }
 
+        /// <summary>The elevation of every floor of the building.</summary>
         public static List<FloorElevation> Elevations(BuildingConfiguration building)
         {
             if (building == null || building.Floors == null)
@@ -38,6 +41,7 @@ namespace Elevator.Core.Project
             return result;
         }
 
+        /// <summary>Renames a floor.</summary>
         public static void Rename(BuildingConfiguration b, string id, string name)
         {
             if (String.IsNullOrWhiteSpace(name) || b.Floors.Any(f => f.FloorId != id && f.Name == name))
@@ -45,6 +49,7 @@ namespace Elevator.Core.Project
             b.Floors.Single(f => f.FloorId == id).Name = name;
         }
 
+        /// <summary>Inserts a floor before another floor.</summary>
         public static void InsertBefore(BuildingConfiguration b, string beforeId, FloorDefinition floor, double height)
         {
             int index = b.Floors.FindIndex(f => f.FloorId == beforeId);
@@ -59,6 +64,7 @@ namespace Elevator.Core.Project
             b.Floors.Insert(index, floor);
         }
 
+        /// <summary>Removes a floor.</summary>
         public static void Remove(BuildingConfiguration b, string id)
         {
             int index = b.Floors.FindIndex(f => f.FloorId == id);

@@ -3,6 +3,7 @@ using Elevator.Core.Calculations;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>FF1 and FF2 results with status, issues and calculation details.</summary>
     public sealed class CarGuideForceResult
     {
         public string Status = "MISSING_INPUT";

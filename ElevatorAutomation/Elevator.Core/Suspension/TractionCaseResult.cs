@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>One traction case: friction, e^(f·α), load positions and result.</summary>
     public sealed class TractionCaseResult
     {
         public string Id;

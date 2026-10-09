@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>One machine-room rule with its source, requirement, calculated value and status.</summary>
     public sealed class EngineeringRule
     {
         public string RuleId;

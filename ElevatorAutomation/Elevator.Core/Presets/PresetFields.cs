@@ -7,6 +7,7 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Presets
 {
+    /// <summary>The preset-managed fields of the project.</summary>
     public static class PresetFields
     {
         static RopeTractionInputs Group(ElevatorProject p)
@@ -161,6 +162,7 @@ namespace Elevator.Core.Presets
             DeflectorMass,
             TractionLimitingMethod };
 
+        /// <summary>The field with a key, or null.</summary>
         public static PresetField Find(string key)
         {
             return RopeTraction.FirstOrDefault(f => f.Key == key);

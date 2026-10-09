@@ -6,17 +6,21 @@ using Elevator.Reporting.Docx;
 
 namespace Elevator.Reporting.Figures
 {
-    // SVG (vector) renderer for Figure, and the Word image (PNG fallback from the rasterizer, with the SVG attached).
-    // Text sizes are ISO cap heights; the em size is cap height / 0.72.
+    /// <summary>
+    /// SVG (vector) renderer for Figure, and the Word image (PNG fallback from the rasterizer, with the SVG attached). Text sizes are ISO
+    /// cap heights; the em size is cap height / 0.72.
+    /// </summary>
     public static class FigureRender
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+        /// <summary>Text cap height as a fraction of the font size.</summary>
         public const double CapRatio = 0.72;
 
         // Set by the application before reports are built; without it figures keep the default measure and have no PNG.
         public static IFigureRasterizer Rasterizer;
         static bool initialised;
 
+        /// <summary>Initialises the rasterizer once.</summary>
         public static void Initialise()
         {
             if (initialised)
@@ -31,12 +35,13 @@ namespace Elevator.Reporting.Figures
             return v.ToString("0.###", Inv);
         }
 
+        /// <summary>The dash pattern of the line type of a layer.</summary>
         public static string Dash(FigureLayer l)
         {
             return l.LineType == FigureLineType.Centre ? "6 1.2 0.6 1.2" : l.LineType == FigureLineType.Hidden ? "2.5 1.2" : null;
         }
 
-        // SVG user unit = 0.1 mm: Word's SVG renderer spaces glyphs badly at very small font sizes in user units.
+        /// <summary>SVG user unit = 0.1 mm: Word's SVG renderer spaces glyphs badly at very small font sizes in user units.</summary>
         public const double SvgUnitsPerMm = 10;
 
         static string U(double mm)
@@ -44,6 +49,7 @@ namespace Elevator.Reporting.Figures
             return (mm * SvgUnitsPerMm).ToString("0.##", Inv);
         }
 
+        /// <summary>Renders a figure as SVG.</summary>
         public static string Svg(Figure f)
         {
             var b = new StringBuilder();
@@ -180,6 +186,7 @@ namespace Elevator.Reporting.Figures
             b.Append(">").Append(DocxDocument.Escape(t.Content)).Append("</text>");
         }
 
+        /// <summary>Renders a figure as PNG with the rasterizer.</summary>
         public static byte[] Png(Figure f, double dpi = 300)
         {
             if (Rasterizer == null)
@@ -187,7 +194,7 @@ namespace Elevator.Reporting.Figures
             return Rasterizer.Png(f, dpi);
         }
 
-        // Word image: PNG fallback with the SVG attached (Word 2016+ svgBlip).
+        /// <summary>Word image: PNG fallback with the SVG attached (Word 2016+ svgBlip).</summary>
         public static DocxImage Image(Figure f)
         {
             Initialise();

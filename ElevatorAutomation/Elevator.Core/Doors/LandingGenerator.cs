@@ -3,8 +3,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Doors
 {
+    /// <summary>Adds the landings and landing doors to the vertical section geometry.</summary>
     public static class LandingGenerator
     {
+        /// <summary>Adds the landings and landing doors to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             foreach (var f in g.Floors.Where(f => f.Served && !f.IsRoof))

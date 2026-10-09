@@ -2,8 +2,10 @@ using System.Linq;
 
 namespace Elevator.Core.Calculations
 {
+    /// <summary>Resolves the P1–P4 calculation mode of a project: Basic, or Advanced for projects that carry Advanced data.</summary>
     public static class CalculationModes
     {
+        /// <summary>The calculation mode, Basic or Advanced, of the inputs; Advanced for older projects that carry Advanced data.</summary>
         public static string Resolve(ChassisCalculationInputs c)
         {
             if (c == null)

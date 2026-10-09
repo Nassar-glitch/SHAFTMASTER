@@ -2,6 +2,7 @@ using System;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>The drawing views, combinable as flags.</summary>
     [Flags]
     public enum DrawingViews
     {

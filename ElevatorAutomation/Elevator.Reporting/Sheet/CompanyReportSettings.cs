@@ -5,8 +5,10 @@ using Elevator.Reporting.Docx;
 
 namespace Elevator.Reporting.Sheet
 {
-    // Company-level calculation-sheet settings shared by all projects (never stored in a project file).
-    // Kept under %AppData%\ShaftMaster; the logo is a copy of the user's PNG/JPEG. Every value is optional.
+    /// <summary>
+    /// Company-level calculation-sheet settings shared by all projects (never stored in a project file). Kept under %AppData%\ShaftMaster;
+    /// the logo is a copy of the user's PNG/JPEG. Every value is optional.
+    /// </summary>
     public sealed class CompanyReportSettings
     {
         public string CompanyName;
@@ -24,6 +26,7 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
+        /// <summary>Reads the company settings; defaults when they are missing or unreadable.</summary>
         public static CompanyReportSettings Load()
         {
             try
@@ -43,6 +46,7 @@ namespace Elevator.Reporting.Sheet
             catch (Exception) { return new CompanyReportSettings(); } // unreadable settings never block the application
         }
 
+        /// <summary>Writes the company settings.</summary>
         public void Save()
         {
             Directory.CreateDirectory(SettingsDirectory);
@@ -70,7 +74,7 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
-        // The stored logo, or null when none is set or the file cannot be read as PNG/JPEG.
+        /// <summary>The stored logo, or null when none is set or the file cannot be read as PNG/JPEG.</summary>
         public DocxImage Logo()
         {
             try
@@ -83,7 +87,7 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
-        // Validates the picked file as PNG/JPEG, then copies it into the settings folder.
+        /// <summary>Validates the picked file as PNG/JPEG, then copies it into the settings folder.</summary>
         public void SetLogo(string source)
         {
             var image = DocxImage.FromFile(source);
@@ -96,6 +100,7 @@ namespace Elevator.Reporting.Sheet
                 File.Delete(old);
         }
 
+        /// <summary>Deletes the copied logo.</summary>
         public void RemoveLogo()
         {
             string old = LogoPath;

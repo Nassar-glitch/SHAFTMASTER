@@ -4,6 +4,7 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Machine-room results: governor offset, deflector, reeving and rules.</summary>
     public sealed class MachineRoomParameters
     {
         public MachineRoomExtensions Extensions;

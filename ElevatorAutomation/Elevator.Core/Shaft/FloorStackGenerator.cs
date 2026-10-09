@@ -6,8 +6,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Shaft
 {
+    /// <summary>Creates and checks the floor stack of the vertical section.</summary>
     public static class FloorStackGenerator
     {
+        /// <summary>Creates the modeled floor levels from the floor heights.</summary>
         public static List<VerticalFloor> Create(
             int modeledLevels,
             string convention,
@@ -63,6 +65,7 @@ namespace Elevator.Core.Shaft
             return result;
         }
 
+        /// <summary>True for a finite number.</summary>
         public static bool Finite(double x)
         {
             return !Double.IsNaN(x) && !Double.IsInfinity(x);

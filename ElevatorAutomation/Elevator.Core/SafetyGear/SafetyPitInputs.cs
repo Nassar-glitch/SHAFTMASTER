@@ -1,5 +1,6 @@
 namespace Elevator.Core.SafetyGear
 {
+    /// <summary>Safety-gear and buffer choices for P5–P7.</summary>
     public sealed class SafetyPitInputs
     {
         public string SafetyGearType;

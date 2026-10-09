@@ -2,8 +2,10 @@ using System;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Validation of the legacy project schema and family.</summary>
     public static class CommonRules
     {
+        /// <summary>Checks the schema version and that the family is enabled for the template of the project.</summary>
         public static void ValidateProject(ProjectInput p, FamilyDefinition family)
         {
             if (p == null || p.SchemaVersion != 1)

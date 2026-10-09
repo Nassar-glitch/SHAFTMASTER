@@ -1,5 +1,6 @@
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Machine-room inputs of the project.</summary>
     public sealed class MachineRoomConfiguration
     {
         public double? LeftExtensionMm;

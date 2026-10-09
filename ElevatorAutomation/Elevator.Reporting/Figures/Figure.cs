@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Elevator.Reporting.Figures
 {
+    /// <summary>A figure of the calculation sheet: layers, entities and view; rendered to SVG or PNG.</summary>
     public sealed class Figure
     {
         public string Title;
@@ -34,21 +35,25 @@ namespace Elevator.Reporting.Figures
 
         public static Func<string, double, double> Measure = (text, heightMm) => text.Length * heightMm * 0.62;
 
+        /// <summary>Formats a number with a format string.</summary>
         public static string Num(double v, string format)
         {
             return v.ToString(format, CultureInfo.InvariantCulture);
         }
 
+        /// <summary>Formats newtons as kN.</summary>
         public static string Kn(double newtons)
         {
             return Num(newtons / 1000, "0.###") + " kN";
         }
 
+        /// <summary>Formats a length in mm.</summary>
         public static string Mm(double mm)
         {
             return Num(mm, "0.#");
         }
 
+        /// <summary>Adds a line.</summary>
         public FigurePolyline Line(FigurePoint a, FigurePoint b, FigureLayer layer, string tag = null)
         {
             var l = new FigurePolyline { Layer = layer, Tag = tag };
@@ -58,6 +63,7 @@ namespace Elevator.Reporting.Figures
             return l;
         }
 
+        /// <summary>Adds a polyline or polygon.</summary>
         public FigurePolyline Poly(IEnumerable<FigurePoint> points, bool closed, FigureLayer layer, string tag = null, bool filled = false)
         {
             var l = new FigurePolyline { Layer = layer, Closed = closed, Filled = filled, Tag = tag };
@@ -66,6 +72,7 @@ namespace Elevator.Reporting.Figures
             return l;
         }
 
+        /// <summary>Adds a rectangle.</summary>
         public FigurePolyline Rect(double x0, double y0, double x1, double y1, FigureLayer layer, string tag = null)
         {
             return Poly(
@@ -75,6 +82,7 @@ namespace Elevator.Reporting.Figures
                 tag);
         }
 
+        /// <summary>Adds a circle.</summary>
         public FigureCircle Circle(FigurePoint c, double r, FigureLayer layer, bool filled = false, string tag = null)
         {
             var e = new FigureCircle { Centre = c, Radius = r, Layer = layer, Filled = filled, Tag = tag };
@@ -82,7 +90,7 @@ namespace Elevator.Reporting.Figures
             return e;
         }
 
-        // ANSI31: 45° lines, 1.5 mm pitch, clipped to the (simple) polygon.
+        /// <summary>ANSI31: 45° lines, 1.5 mm pitch, clipped to the (simple) polygon.</summary>
         public void Hatch(IList<FigurePoint> polygon, double pitchMm = 1.5)
         {
             double c = Math.Cos(Math.PI / 4), s = Math.Sin(Math.PI / 4);
@@ -106,7 +114,7 @@ namespace Elevator.Reporting.Figures
             }
         }
 
-        // Filled closed arrowhead with its tip at 'tip', pointing along 'direction'.
+        /// <summary>Filled closed arrowhead with its tip at 'tip', pointing along 'direction'.</summary>
         public void Arrowhead(FigurePoint tip, FigurePoint direction, FigureLayer layer, double lengthMm = 2.5, double halfWidthMm = 0.45)
         {
             var d = direction.Unit;
@@ -129,7 +137,7 @@ namespace Elevator.Reporting.Figures
             return false;
         }
 
-        // Adds text at the first candidate position whose box does not overlap existing text.
+        /// <summary>Adds text at the first candidate position whose box does not overlap existing text.</summary>
         public FigureText Text(
             string content,
             IList<FigurePoint> candidates,
@@ -171,6 +179,7 @@ namespace Elevator.Reporting.Figures
             return t; // reported by the overlap test if no candidate was free
         }
 
+        /// <summary>Adds a text.</summary>
         public FigureText Text(
             string content,
             FigurePoint at,
@@ -192,8 +201,10 @@ namespace Elevator.Reporting.Figures
             return Text(content, candidates, anchor, layer, heightMm, vertical, tag, value, title);
         }
 
-        // Horizontal dimension between p1 and p2 with its line at yDim. Extension lines leave a 0.8 mm gap at the
-        // geometry and overshoot the dimension line by 1.5 mm; filled closed arrows; 2.5 mm text above the line.
+        /// <summary>
+        /// Horizontal dimension between p1 and p2 with its line at yDim. Extension lines leave a 0.8 mm gap at the geometry and overshoot
+        /// the dimension line by 1.5 mm; filled closed arrows; 2.5 mm text above the line.
+        /// </summary>
         public void DimH(FigurePoint p1, FigurePoint p2, double yDim, string text, string tag = null, string value = null)
         {
             foreach (var p in new[] { p1, p2 })
@@ -238,7 +249,7 @@ namespace Elevator.Reporting.Figures
             }
         }
 
-        // Vertical dimension between p1 and p2 with its line at xDim; text reads upwards on the left of the line.
+        /// <summary>Vertical dimension between p1 and p2 with its line at xDim; text reads upwards on the left of the line.</summary>
         public void DimV(FigurePoint p1, FigurePoint p2, double xDim, string text, string tag = null, string value = null)
         {
             foreach (var p in new[] { p1, p2 })
@@ -282,7 +293,7 @@ namespace Elevator.Reporting.Figures
             }
         }
 
-        // Load arrow from tail to tip in the accent colour, label near the tail.
+        /// <summary>Load arrow from tail to tip in the accent colour, label near the tail.</summary>
         public void Load(
             FigurePoint tail,
             FigurePoint tip,

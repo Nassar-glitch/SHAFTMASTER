@@ -6,8 +6,12 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Calculations
 {
+    /// <summary>
+    /// Basic distribution of a vertical load over the four chassis bearings: front and rear rows first, then left and right.
+    /// </summary>
     public static class SimplifiedVerticalSolver
     {
+        /// <summary>Name of the Basic model, stored in results and fingerprints.</summary>
         public const string Model = "TwoStageVerticalMachineDatum-v1";
 
         static void Require(bool ok, string message)
@@ -16,6 +20,7 @@ namespace Elevator.Core.Calculations
                 throw new ArgumentException(message);
         }
 
+        /// <summary>Distributes a vertical load at the traction-sheave centre over the four bearings.</summary>
         public static ChassisCalculationResult Solve(ChassisCalculationGeometry g, double force)
         {
             var r = new ChassisCalculationResult { Mode = "Basic", ModelVersion = Model };

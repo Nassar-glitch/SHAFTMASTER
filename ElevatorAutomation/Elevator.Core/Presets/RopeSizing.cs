@@ -1,5 +1,6 @@
 namespace Elevator.Core.Presets
 {
+    /// <summary>Outcome of the rope selection: start and selected values, status and limiting check.</summary>
     public sealed class RopeSizing
     {
         public string Status; // NotApplicable, NotEvaluable, Selected, NoPass
@@ -17,6 +18,7 @@ namespace Elevator.Core.Presets
         public int Trials;
         public long Milliseconds;
 
+        /// <summary>A copy of the outcome.</summary>
         public RopeSizing Copy()
         {
             return (RopeSizing)MemberwiseClone();

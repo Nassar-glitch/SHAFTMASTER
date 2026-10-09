@@ -5,6 +5,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>The machine-room rules, code checks and project rules, with their evaluation status.</summary>
     public static class MachineRoomRuleRegistry
     {
         private static EngineeringRule Code(string id, string description, string clause, string required, string missing)
@@ -24,6 +25,7 @@ namespace Elevator.Core.MachineRoom
             };
         }
 
+        /// <summary>Evaluates the machine-room rules for a project.</summary>
         public static List<EngineeringRule> Evaluate(ProjectInput input, ElevatorParameters p, MachineRoomParameters mr)
         {
             var rules = new List<EngineeringRule>();

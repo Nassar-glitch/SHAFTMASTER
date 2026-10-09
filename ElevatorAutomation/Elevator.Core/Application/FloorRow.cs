@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Application
 {
+    /// <summary>One row of the floor list of the open project; edits validate and mark the session unsaved.</summary>
     public sealed class FloorRow : INotifyPropertyChanged
     {
         readonly ProjectSession session;
@@ -95,6 +96,7 @@ namespace Elevator.Core.Application
             changed();
         }
 
+        /// <summary>Notifies the view that the elevation of the floor changed.</summary>
         public void Refresh()
         {
             if (PropertyChanged != null)

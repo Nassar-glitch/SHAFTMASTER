@@ -7,6 +7,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Builds the chassis geometry from the native evidence and the shared design.</summary>
     public static class ChassisGeometry
     {
         const double Tol = .02;
@@ -33,6 +34,7 @@ namespace Elevator.Core.MachineRoom
             return !Double.IsNaN(v) && !Double.IsInfinity(v);
         }
 
+        /// <summary>Centroid of a contact polygon.</summary>
         public static LocalPoint ContactCentroid(LocalPoint[] polygon)
         {
             if (polygon == null || polygon.Length < 3)
@@ -89,6 +91,7 @@ namespace Elevator.Core.MachineRoom
             return result;
         }
 
+        /// <summary>Reads the contact perimeter of a bearing from the contours; throws when it is missing or ambiguous.</summary>
         public static BearingSeat ReadContactSeat(string id, IEnumerable<ChassisContour> contours, double bearingZ)
         {
             var vertical = new List<Segment>();
@@ -169,6 +172,7 @@ namespace Elevator.Core.MachineRoom
             return candidates[0];
         }
 
+        /// <summary>Builds the chassis geometry from the evidence and the design; problems are recorded as issues.</summary>
         public static ChassisCalculationGeometry Calculate(ChassisGeometryEvidence evidence, ElevatorParameters design, bool basic = false)
         {
             var g = new ChassisCalculationGeometry { Recipe = basic ? "Basic" : "Advanced" };

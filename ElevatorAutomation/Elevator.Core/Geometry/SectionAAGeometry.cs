@@ -3,6 +3,7 @@ using Elevator.Core.GuideRails;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Result of the A-A calculation: levels, travel and bracket layout.</summary>
     public sealed class SectionAAGeometry
     {
         public double PitZ;

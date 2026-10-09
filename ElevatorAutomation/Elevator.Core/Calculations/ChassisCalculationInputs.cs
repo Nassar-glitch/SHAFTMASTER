@@ -4,7 +4,7 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Calculations
 {
-    // Optional canonical inputs. Null is unavailable; zero is only an explicit supplied value.
+    /// <summary>Optional canonical inputs. Null is unavailable; zero is only an explicit supplied value.</summary>
     public sealed class ChassisCalculationInputs
     {
         public string Mode; // Basic / Advanced. Null legacy projects resolve without discarding data.

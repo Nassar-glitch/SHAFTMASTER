@@ -1,5 +1,6 @@
 namespace Elevator.Core.Suspension
 {
+    /// <summary>A rope or traction check that could not be done, with the reason.</summary>
     public sealed class RopeTractionOmission
     {
         public string Item;

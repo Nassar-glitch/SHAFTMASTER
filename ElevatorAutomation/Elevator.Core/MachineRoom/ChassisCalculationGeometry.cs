@@ -4,6 +4,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Native chassis geometry for P1–P4: bearings, carrying members, sheave centres and the B-B section.</summary>
     public sealed class ChassisCalculationGeometry
     {
         public string Recipe = "Advanced";

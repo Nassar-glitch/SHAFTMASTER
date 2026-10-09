@@ -2,8 +2,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Counterweight
 {
+    /// <summary>Adds the counterweight to the vertical section geometry.</summary>
     public static class CounterweightVerticalGenerator
     {
+        /// <summary>Adds the counterweight to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             g.Box("CW.Envelope", "CW", -s.Plan.CwRear, g.CwBottomZ, -s.Plan.CwFront, g.CwTopZ);

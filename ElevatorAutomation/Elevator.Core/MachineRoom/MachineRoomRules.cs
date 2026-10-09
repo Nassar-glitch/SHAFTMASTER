@@ -5,8 +5,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Governor offset, deflector selection and the plan-level machine-room parameters.</summary>
     public static class MachineRoomRules
     {
+        /// <summary>The governor offset from the car-guide axis selected from TZ.</summary>
         public static GovernorOffsetSelection SelectGovernorOffset(double tz)
         {
             if (Double.IsNaN(tz) || Double.IsInfinity(tz) || tz < 0)
@@ -20,6 +22,7 @@ namespace Elevator.Core.MachineRoom
             };
         }
 
+        /// <summary>The deflector sheave selected from TZ.</summary>
         public static DeflectorSheaveSelection SelectDeflector(double tz)
         {
             if (Double.IsNaN(tz) || Double.IsInfinity(tz) || tz < 0)
@@ -33,6 +36,7 @@ namespace Elevator.Core.MachineRoom
             };
         }
 
+        /// <summary>Calculates the machine-room parameters from the project input and the shared plan.</summary>
         public static MachineRoomParameters Calculate(ProjectInput input, ElevatorParameters shared, MachineRoomExtensions extensions)
         {
             if (extensions == null)

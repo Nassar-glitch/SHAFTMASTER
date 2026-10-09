@@ -2,8 +2,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>Adds the suspension ropes to the vertical section geometry.</summary>
     public static class SuspensionRopeVerticalGenerator
     {
+        /// <summary>Adds the suspension ropes to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             if (!s.Section.HasCalculatedPath)

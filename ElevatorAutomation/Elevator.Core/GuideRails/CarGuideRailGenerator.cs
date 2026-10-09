@@ -2,8 +2,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>Adds the car guide rails to the vertical section geometry.</summary>
     public static class CarGuideRailGenerator
     {
+        /// <summary>Adds the car guide rails to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             Rail(g, s.CarRailProjectedEdges, "CarRails");

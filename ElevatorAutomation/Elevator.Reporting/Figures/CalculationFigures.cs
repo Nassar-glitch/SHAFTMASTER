@@ -9,9 +9,10 @@ using Elevator.Core.SafetyGear;
 
 namespace Elevator.Reporting.Figures
 {
-    // Phase A figures F1–F6, built only from the same plan geometry and results as the calculation sheet.
-    // Shapes, symbols, styles and layout are fixed; every dimension, position, rail location and force value is project data.
-    // See docs/CALCULATION-SHEET-FIGURES.md.
+    /// <summary>
+    /// Phase A figures F1–F6, built only from the same plan geometry and results as the calculation sheet. Shapes, symbols, styles and
+    /// layout are fixed; every dimension, position, rail location and force value is project data. See docs/CALCULATION-SHEET-FIGURES.md.
+    /// </summary>
     public static partial class CalculationFigures
     {
         const double Wall = 200; // symbolic wall band in plan figures (not dimensioned, not a project value)
@@ -47,9 +48,10 @@ namespace Elevator.Reporting.Figures
             return rail.Outline().Select(q => Pt(tipX - dir * (rail.HeightMm - q.Y) * k, lineY + q.X * k)).ToList();
         }
 
-        // True scale, enlarged about the blade tip only when the symbol would be smaller than about 3 mm on paper.
+        /// <summary>True scale, enlarged about the blade tip only when the symbol would be smaller than about 3 mm on paper.</summary>
         public const double MinRailSymbolMm = 3;
 
+        /// <summary>The enlargement of a rail symbol that keeps it visible at a small scale.</summary>
         public static double RailSymbolFactor(IRailSection rail, FigureView v)
         {
             return Math.Max(1, MinRailSymbolMm / (Math.Max(rail.BaseWidthMm, rail.HeightMm) * v.Scale));
@@ -63,6 +65,7 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F1 shaft plan ----------
+        /// <summary>Figure F1: shaft plan with car, counterweight, rails and dimensions.</summary>
         public static Figure ShaftPlan(ElevatorParameters p, IRailSection carRail, IRailSection cwRail)
         {
             var f = new Figure { Id = "F1", Title = "Shaft plan", Schematic = false };
@@ -247,6 +250,7 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F2 chassis plan ----------
+        /// <summary>Figure F2: plan of the chassis bearings with reactions and loads.</summary>
         public static Figure ChassisPlan(ChassisCalculationResult r, bool basic)
         {
             var f = new Figure { Id = "F2", Title = "Machine-room bearing reactions P1–P4 — plan", Schematic = false };
@@ -418,6 +422,7 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F3 chassis elevation / free body (Basic) ----------
+        /// <summary>Figure F3: free body of the chassis (Basic).</summary>
         public static Figure ChassisElevation(ChassisCalculationResult r)
         {
             var f = new Figure { Id = "F3", Title = "Machine-room bearing reactions — free body", Schematic = true };
@@ -475,6 +480,7 @@ namespace Elevator.Reporting.Figures
         // FF1: upper level pushes the rail on the loaded side outward, lower level the opposite rail outward.
         // FF2: upper level pushes both rails towards the loaded side, lower level the other way.
         // The sheet uses +1 / +1 (load towards +X, right, and +Y, rear); tests also build −1.
+        /// <summary>Figure F4: load cases FF1 and FF2 in plan.</summary>
         public static Figure GuideForcePlan(
             ElevatorParameters p,
             CarGuideForceResult ff,
@@ -694,14 +700,22 @@ namespace Elevator.Reporting.Figures
 
         // ---------- F5 guide-shoe forces: (a) front elevation with both rails, (b) side view of one rail (schematic) ----------
         // Every force is drawn ON a rail: the shoe pushes the rail blade (tip in FF1, side face in FF2); none points away from a rail.
+        /// <summary>Upper guide-shoe level of figure F5, paper mm.</summary>
         public const double F5UpperY = 30;
+        /// <summary>Lower guide-shoe level of figure F5, paper mm.</summary>
         public const double F5LowerY = 80;
+        /// <summary>Left rail face of figure F5, paper mm.</summary>
         public const double F5LeftRailFace = 24;
+        /// <summary>Right rail face of figure F5, paper mm.</summary>
         public const double F5RightRailFace = 84;
+        /// <summary>Front rail face of the side view of figure F5, paper mm.</summary>
         public const double F5SideFrontFace = 132;
+        /// <summary>Rear rail face of the side view of figure F5, paper mm.</summary>
         public const double F5SideRearFace = 136;
+        /// <summary>Position of the split between the two views of figure F5, paper mm.</summary>
         public const double F5ViewSplitX = 104;
 
+        /// <summary>Figure F5: guide-shoe forces in front and side elevation.</summary>
         public static Figure GuideForceElevation(CarGuideForceResult ff, int ff1Side = 1, int ff2Side = 1)
         {
             int s1 = Math.Sign(ff1Side) < 0 ? -1 : 1, s2 = Math.Sign(ff2Side) < 0 ? -1 : 1;
@@ -840,6 +854,7 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F6 rail cross-section ----------
+        /// <summary>Figure F6: section of the car guide rail.</summary>
         public static Figure RailSection(IRailSection rail, CarGuideForceResult ff)
         {
             var f = new Figure { Id = "F6", Title = "Car guide rail " + rail.Designation + " — section", Schematic = rail.Proportional };
@@ -949,11 +964,16 @@ namespace Elevator.Reporting.Figures
         // project rule selects one (MachineRoomRules.SelectDeflector(TZ).IsRequired), stands over the counterweight drop
         // (DeflectorX = CwDropX + pitch/2). Without a deflector the counterweight rope drops from the rear pitch edge of the traction
         // sheave.
+        /// <summary>Car drop position of figure F7, paper mm.</summary>
         public const double F7CarDropX = 50;
+        /// <summary>Traction sheave centre height of figure F7, paper mm.</summary>
         public const double F7SheaveY = 28;
+        /// <summary>Traction sheave radius of figure F7, paper mm.</summary>
         public const double F7SheaveR = 9;
+        /// <summary>Machine-room slab level of figure F7, paper mm.</summary>
         public const double F7SlabTop = 42;
 
+        /// <summary>Figure F7: 1:1 roping and rope tensions.</summary>
         public static Figure Suspension(
             ChassisCalculationResult r,
             int? ropeCount,
@@ -1109,6 +1129,7 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F8 progressive safety gear (P5) ----------
+        /// <summary>Figure F8: progressive safety gear and P5 on the car guide rails.</summary>
         public static Figure SafetyGear(SafetyPitLoad p5, IRailSection rail)
         {
             var f = new Figure { Id = "F8", Title = "Progressive safety gear — P5 on the car guide rails", Schematic = true };
@@ -1200,8 +1221,10 @@ namespace Elevator.Reporting.Figures
         }
 
         // ---------- F9 pit buffers (P6 / P7) ----------
+        /// <summary>Pit floor level of figure F9, paper mm.</summary>
         public const double F9Floor = 72;
 
+        /// <summary>Figure F9: pit buffer loads P6 and P7.</summary>
         public static Figure PitBuffers(SafetyPitLoad p6, SafetyPitLoad p7, double? pitDepthMm)
         {
             var f = new Figure { Id = "F9", Title = "Pit buffer loads P6 / P7 — pit section", Schematic = true };

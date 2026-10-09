@@ -1,7 +1,9 @@
 namespace Elevator.Core.Suspension
 {
-    // Geometry shared with the drawings: deflector (MachineRoomRules.SelectDeflector on TZ), reeving path and wrap angle
-    // (MachineRoomSectionRules / ReevingSolver), served travel (ProjectFloors).
+    /// <summary>
+    /// Geometry shared with the drawings: deflector (MachineRoomRules.SelectDeflector on TZ), reeving path and wrap angle
+    /// (MachineRoomSectionRules / ReevingSolver), served travel (ProjectFloors).
+    /// </summary>
     public sealed class RopeTractionGeometry
     {
         public bool Available;

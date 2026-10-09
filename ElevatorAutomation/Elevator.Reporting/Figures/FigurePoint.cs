@@ -2,6 +2,7 @@ using System;
 
 namespace Elevator.Reporting.Figures
 {
+    /// <summary>A point on the paper, in mm.</summary>
     public struct FigurePoint
     {
         public double X;

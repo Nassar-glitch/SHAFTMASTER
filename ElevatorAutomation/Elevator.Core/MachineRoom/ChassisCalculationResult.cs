@@ -4,6 +4,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Result of P1–P4: reactions, loads, member transfers, rope tensions, status and issues.</summary>
     public sealed class ChassisCalculationResult
     {
         public string Mode = "Advanced";

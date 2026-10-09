@@ -7,8 +7,10 @@ using System.Text;
 
 namespace Elevator.Reporting.Docx
 {
-    // Minimal WordprocessingML writer. Produces an editable .docx with System.IO.Packaging only;
-    // Microsoft Word is not required to create the file.
+    /// <summary>
+    /// Minimal WordprocessingML writer. Produces an editable .docx with System.IO.Packaging only; Microsoft Word is not required to create
+    /// the file.
+    /// </summary>
     public sealed class DocxDocument
     {
         const string W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -84,7 +86,7 @@ namespace Elevator.Reporting.Docx
                  + "prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>";
         }
 
-        // Body image fitted into maxWidthMm × maxHeightMm, keeping its aspect ratio. align: left, center or right.
+        /// <summary>Body image fitted into maxWidthMm × maxHeightMm, keeping its aspect ratio. align: left, center or right.</summary>
         public void Image(DocxImage image, double maxWidthMm, double maxHeightMm, string align = "left", bool keepNext = false)
         {
             double w, h;
@@ -98,6 +100,7 @@ namespace Elevator.Reporting.Docx
                 .Append("</w:p>");
         }
 
+        /// <summary>Escapes text for XML.</summary>
         public static string Escape(string text)
         {
             if (text == null)
@@ -137,6 +140,7 @@ namespace Elevator.Reporting.Docx
             return b.ToString();
         }
 
+        /// <summary>Adds a paragraph.</summary>
         public void Paragraph(
             string text,
             string style = null,
@@ -154,7 +158,7 @@ namespace Elevator.Reporting.Docx
             body.Append("</w:pPr>").Append(Runs(text, runProperties)).Append("</w:p>");
         }
 
-        // Label/value runs within one paragraph.
+        /// <summary>Label/value runs within one paragraph.</summary>
         public void Mixed(IEnumerable<KeyValuePair<string, string>> parts, string style = null, bool keepNext = false)
         {
             body.Append("<w:p><w:pPr>");
@@ -168,11 +172,13 @@ namespace Elevator.Reporting.Docx
             body.Append("</w:p>");
         }
 
+        /// <summary>Adds a heading of the given level.</summary>
         public void Heading(string text, int level)
         {
             Paragraph(text, "Heading" + level, null, true);
         }
 
+        /// <summary>Adds a coloured banner line.</summary>
         public void Banner(string text, string fillHex, string colourHex)
         {
             Paragraph(
@@ -193,13 +199,13 @@ namespace Elevator.Reporting.Docx
                 + "\"/>");
         }
 
-        // Equation block: each line kept together with the next so a derivation is not split across pages.
+        /// <summary>Equation block: each line kept together with the next so a derivation is not split across pages.</summary>
         public void Equations(IEnumerable<string> lines)
         {
             Equations(false, lines);
         }
 
-        // keepWithFollowing also keeps the last line with the next block (for example its result table).
+        /// <summary>keepWithFollowing also keeps the last line with the next block (for example its result table).</summary>
         public void Equations(bool keepWithFollowing, IEnumerable<string> lines)
         {
             var list = lines.Where(l => l != null).ToList();
@@ -207,7 +213,7 @@ namespace Elevator.Reporting.Docx
                 Paragraph(list[i], "Equation", null, !Flow && (keepWithFollowing || i < list.Count - 1), "<w:keepLines/>");
         }
 
-        // Figure in a thin bordered frame with a bottom title strip: caption | units | scale note (NTS).
+        /// <summary>Figure in a thin bordered frame with a bottom title strip: caption | units | scale note (NTS).</summary>
         public void FigureFrame(DocxImage image, double widthMm, double heightMm, string caption, string units, string scaleNote)
         {
             int[] w = { 5200, 2838, 1600 };
@@ -390,13 +396,13 @@ namespace Elevator.Reporting.Docx
         // Flow: equation lines and table rows may break across pages (headings still keep with their first line).
         public bool Flow;
 
-        // widths: twentieths of a point (dxa); total ≤ 9638 for A4 with 20 mm margins.
+        /// <summary>widths: twentieths of a point (dxa); total ≤ 9638 for A4 with 20 mm margins.</summary>
         public void Table(string[] headers, IList<string[]> rows, int[] widths, ISet<int> boldColumns = null, IList<string> rowFills = null)
         {
             Table(headers, rows, widths, boldColumns, rowFills, 0);
         }
 
-        // minRowHeightTwips > 0 gives body rows a minimum height (for example space to sign by hand).
+        /// <summary>minRowHeightTwips &gt; 0 gives body rows a minimum height (for example space to sign by hand).</summary>
         public void Table(
             string[] headers,
             IList<string[]> rows,
@@ -552,6 +558,7 @@ namespace Elevator.Reporting.Docx
             }
         }
 
+        /// <summary>Writes the .docx package to a stream.</summary>
         public void Save(Stream output)
         {
             using (var package = Package.Open(output, FileMode.Create, FileAccess.ReadWrite))

@@ -3,6 +3,7 @@ using Elevator.Core.Calculations;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Native chassis drawing evidence: the contours and the dimensions they were read at.</summary>
     public sealed class ChassisGeometryEvidence
     {
         public double SW;

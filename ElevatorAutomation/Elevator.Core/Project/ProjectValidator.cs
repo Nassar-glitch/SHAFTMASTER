@@ -5,8 +5,12 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Validates a project for the requested drawing views.</summary>
     public static class ProjectValidator
     {
+        /// <summary>
+        /// Validates a project for the requested views; chassisGeometryOnly limits the checks to what the chassis geometry needs.
+        /// </summary>
         public static List<ValidationIssue> Validate(ElevatorProject p, DrawingViews views, bool chassisGeometryOnly = false)
         {
             var issues = new IssueList();

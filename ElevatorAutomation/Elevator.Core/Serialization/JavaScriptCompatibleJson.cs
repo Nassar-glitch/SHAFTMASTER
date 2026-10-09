@@ -8,24 +8,25 @@ using System.Text;
 
 namespace Elevator.Core.Serialization
 {
-    // A serializer with the output and the conversions of System.Web.Script.Serialization.JavaScriptSerializer (.NET
-    // Framework 4.x), for runtimes that do not have it (netstandard2.0). Rules reproduced:
-    // - public instance fields, then public readable properties without parameters, in reflection order;
-    // - strings quoted with JavaScriptSerializer's escapes (\uXXXX in lower-case hex for control characters, ' < > &,
-    //   U+0085, U+2028, U+2029);
-    // - double and float in .NET Framework "R" format (15 significant digits if they round-trip, else 17), decimal and
-    //   integers in invariant format, enums as their number, bool as true / false, null as null, '\0' as null,
-    //   DateTime as "\/Date(ms)\/", Guid in "D" format;
-    // - reading: numbers as int, then long, then decimal, then double; objects as Dictionary<string,object>; members
-    //   matched case-insensitively (property with a setter, else field); other conversions through TypeConverter.
-    // ScriptIgnore, type resolvers and custom converters are not supported (not used by this project).
+    /// <summary>
+    /// A serializer with the output and the conversions of System.Web.Script.Serialization.JavaScriptSerializer (.NET Framework 4.x), for
+    /// runtimes that do not have it (netstandard2.0). Rules reproduced: - public instance fields, then public readable properties without
+    /// parameters, in reflection order; - strings quoted with JavaScriptSerializer's escapes (\uXXXX in lower-case hex for control
+    /// characters, ' &lt; &gt; &amp;, U+0085, U+2028, U+2029); - double and float in .NET Framework "R" format (15 significant digits if
+    /// they round-trip, else 17), decimal and integers in invariant format, enums as their number, bool as true / false, null as null, '\0'
+    /// as null, DateTime as "\/Date(ms)\/", Guid in "D" format; - reading: numbers as int, then long, then decimal, then double; objects as
+    /// Dictionary&lt;string,object&gt;; members matched case-insensitively (property with a setter, else field); other conversions through
+    /// TypeConverter. ScriptIgnore, type resolvers and custom converters are not supported (not used by this project).
+    /// </summary>
     public sealed class JavaScriptCompatibleJson : IJsonSerializer
     {
+        /// <summary>Maximum nesting depth.</summary>
         public const int RecursionLimit = 100;
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         static readonly long EpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
 
         // ---------- writing ----------
+        /// <summary>Writes an object as JSON in the format of JavaScriptSerializer.</summary>
         public string Serialize(object value)
         {
             var b = new StringBuilder();
@@ -218,7 +219,9 @@ namespace Elevator.Core.Serialization
             b.Append("\"\\/Date(").Append(((d.ToUniversalTime().Ticks - EpochTicks) / 10000).ToString(Inv)).Append(")\\/\"");
         }
 
-        // .NET Framework "R": 15 significant digits when they round-trip, otherwise 17 (".NET Core" "R" is the shortest form).
+        /// <summary>
+        /// .NET Framework "R": 15 significant digits when they round-trip, otherwise 17 (".NET Core" "R" is the shortest form).
+        /// </summary>
         public static string RoundTrip(double v)
         {
             if (Double.IsNaN(v))
@@ -310,6 +313,7 @@ namespace Elevator.Core.Serialization
             }
         }
 
+        /// <summary>Formats a single-precision number as JavaScriptSerializer does.</summary>
         public static string RoundTrip(float v)
         {
             if (Single.IsNaN(v))
@@ -372,11 +376,13 @@ namespace Elevator.Core.Serialization
         }
 
         // ---------- reading ----------
+        /// <summary>Reads JSON into dictionaries, lists and primitives.</summary>
         public object DeserializeObject(string json)
         {
             return Convert(Parse(json), typeof(object));
         }
 
+        /// <summary>Reads JSON into a typed object.</summary>
         public T Deserialize<T>(string json)
         {
             return (T)Convert(Parse(json), typeof(T));

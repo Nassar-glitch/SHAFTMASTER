@@ -3,8 +3,10 @@ using System.Globalization;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Places the text annotations of the vertical section.</summary>
     public static class AnnotationLayoutEngine
     {
+        /// <summary>Places the text annotations of the vertical section.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             foreach (var f in g.Floors)

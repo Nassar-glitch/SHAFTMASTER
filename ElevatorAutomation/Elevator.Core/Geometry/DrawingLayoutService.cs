@@ -5,9 +5,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Places the drawing views on the sheet from their bounds.</summary>
     public static class DrawingLayoutService
     {
-        // Top row Plan/MR, bottom row AA/BB; measured extents, no engineering WCS coordinates.
+        /// <summary>Top row Plan/MR, bottom row AA/BB; measured extents, no engineering WCS coordinates.</summary>
         public static List<ViewPlacement> Arrange(IEnumerable<ViewBounds> bounds, double margin)
         {
             if (!ProjectFloors.FinitePositive(margin))

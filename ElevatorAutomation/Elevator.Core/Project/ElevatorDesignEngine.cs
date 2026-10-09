@@ -7,8 +7,10 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>The shared design: validates a project and calculates the plan, machine-room, sections and chassis geometry.</summary>
     public sealed class ElevatorDesignEngine
     {
+        /// <summary>Maps a rule status text to a validation status.</summary>
         public static ValidationStatus Status(string text)
         {
             text = (text ?? "").ToUpperInvariant();
@@ -23,21 +25,25 @@ namespace Elevator.Core.Project
             return ValidationStatus.NOT_YET_EVALUABLE;
         }
 
+        /// <summary>Runs the shared design for the requested views.</summary>
         public ElevatorDesignResult Calculate(ElevatorProject project, DesignContext context, DrawingViews views = DrawingViews.All)
         {
             return CalculateInternal(project, context, views, false);
         }
 
-        // Same geometry recipes and authoritative source inputs. Non-geometric rope
-        // metadata/floor summaries are not prerequisites for Basic vertical statics.
+        /// <summary>
+        /// Same geometry recipes and authoritative source inputs. Non-geometric rope metadata/floor summaries are not prerequisites for
+        /// Basic vertical statics.
+        /// </summary>
         public ElevatorDesignResult CalculateBasicChassisGeometry(ElevatorProject project, DesignContext context)
         {
             return CalculateInternal(project, context, DrawingViews.MachineRoomPlan | DrawingViews.SectionBB, true);
         }
 
-        // FF loads need only authoritative internal plan dimensions. Unrelated
-        // masses, safety/pit choices, floors or reeving metadata are not sizing
-        // inputs. Use the SAME plan recipe and bind its sources before it runs.
+        /// <summary>
+        /// FF loads need only authoritative internal plan dimensions. Unrelated masses, safety/pit choices, floors or reeving metadata are
+        /// not sizing inputs. Use the SAME plan recipe and bind its sources before it runs.
+        /// </summary>
         public CarGuideForceGeometry CalculateCarGuideForceGeometry(
             ElevatorProject project,
             DesignContext context)

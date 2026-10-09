@@ -1,5 +1,6 @@
 namespace Elevator.Core.Project
 {
+    /// <summary>General elevator inputs: system, template, rated load and speed.</summary>
     public sealed class ElevatorConfiguration
     {
         public string SystemId = "traction-geared";

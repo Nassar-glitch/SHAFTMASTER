@@ -3,8 +3,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>Adds the guide-rail brackets to the vertical section geometry.</summary>
     public static class GuideRailBracketGenerator
     {
+        /// <summary>Adds the guide-rail brackets to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             foreach (string family in new[] { "Car", "CW" })

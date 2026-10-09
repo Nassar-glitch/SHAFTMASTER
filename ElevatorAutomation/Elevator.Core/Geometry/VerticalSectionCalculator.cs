@@ -12,8 +12,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Calculates the vertical section from the vertical project data and the coordinated plan and B-B results.</summary>
     public static class VerticalSectionCalculator
     {
+        /// <summary>Calculates the vertical section geometry.</summary>
         public static VerticalGeometry Calculate(VerticalProjectData d, VerticalSource s)
         {
             ValidateData(d, s);

@@ -2,6 +2,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Calculations
 {
+    /// <summary>Lever arms and spans of the Basic two-stage load distribution, in mm.</summary>
     public sealed class SimplifiedDistances
     {
         public LocalPoint LoadReference;

@@ -1,5 +1,6 @@
 namespace Elevator.Reporting.Figures
 {
+    /// <summary>A figure layer: colour, weight and line type.</summary>
     public sealed class FigureLayer
     {
         public string Name;

@@ -5,8 +5,12 @@ using Elevator.Core.Presets;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>
+    /// Calculates the shared plan dimensions (car, counterweight, rails, door) from the shaft size and the equipment profile.
+    /// </summary>
     public static class DesignRules
     {
+        /// <summary>Calculates the plan dimensions from the shaft size.</summary>
         public static ElevatorParameters Calculate(double sw, double sd, EquipmentProfile p, double existingCwDepth)
         {
             if (Double.IsNaN(sw) || Double.IsInfinity(sw) || Double.IsNaN(sd) || Double.IsInfinity(sd) || sw <= 0 || sd <= 0)

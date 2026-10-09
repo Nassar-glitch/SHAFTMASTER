@@ -10,8 +10,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Presets
 {
-    // Editable preset library (config/presets.json, shipped beside the application). Company practice changes here,
-    // not in code. Values are design defaults approved in DESIGN-FLOW.md; they are never standard factors.
+    /// <summary>
+    /// Editable preset library (config/presets.json, shipped beside the application). Company practice changes here, not in code. Values
+    /// are design defaults approved in DESIGN-FLOW.md; they are never standard factors.
+    /// </summary>
     public sealed class PresetLibrary
     {
         public int Version;
@@ -39,6 +41,7 @@ namespace Elevator.Core.Presets
         public BufferPreset Buffers;
         public AdvancedPreset Advanced;
 
+        /// <summary>Reads and validates the preset library from a file.</summary>
         public static PresetLibrary Load(string path)
         {
             if (!File.Exists(path))
@@ -46,6 +49,7 @@ namespace Elevator.Core.Presets
             return Parse(File.ReadAllText(path));
         }
 
+        /// <summary>Reads and validates the preset library from JSON text.</summary>
         public static PresetLibrary Parse(string json)
         {
             PresetLibrary library;
@@ -70,6 +74,7 @@ namespace Elevator.Core.Presets
             return !Double.IsNaN(v) && !Double.IsInfinity(v) && v > 0;
         }
 
+        /// <summary>The problems of the library; empty when it is valid.</summary>
         public List<string> Validate()
         {
             var p = new List<string>();
@@ -288,7 +293,7 @@ namespace Elevator.Core.Presets
             }
         }
 
-        // Car and machine mass from the capacity table: linear interpolation, clamped to the end rows.
+        /// <summary>Car and machine mass from the capacity table: linear interpolation, clamped to the end rows.</summary>
         public CapacityPresetRow MassesFor(double? capacityKg)
         {
             if (!capacityKg.HasValue || CapacityTable == null || CapacityTable.Count == 0)
@@ -318,6 +323,7 @@ namespace Elevator.Core.Presets
             return null;
         }
 
+        /// <summary>The rope preset row for a rated load.</summary>
         public RopeLadderRow RopesFor(double? capacityKg)
         {
             if (!capacityKg.HasValue || RopeLadder == null || RopeLadder.Count == 0)
@@ -325,6 +331,7 @@ namespace Elevator.Core.Presets
             return RopeLadder.FirstOrDefault(r => !r.MaxCapacityKg.HasValue || capacityKg.Value <= r.MaxCapacityKg.Value + 1e-9);
         }
 
+        /// <summary>The number of persons for a rated load.</summary>
         public int? PersonsFor(double? capacityKg)
         {
             return capacityKg.HasValue && Positive(PersonMassKg) && capacityKg.Value >= 0
@@ -332,6 +339,7 @@ namespace Elevator.Core.Presets
                 : null;
         }
 
+        /// <summary>The counterweight mass from the car mass and the rated load.</summary>
         public double? CounterweightFor(double? carMassKg, double? capacityKg)
         {
             return carMassKg.HasValue && capacityKg.HasValue && CounterweightBalanceFactor.HasValue
@@ -339,12 +347,13 @@ namespace Elevator.Core.Presets
                 : (double?)null;
         }
 
+        /// <summary>Fingerprint of the library.</summary>
         public string Hash()
         {
             return CalculationFingerprint.Hash(this);
         }
 
-        // Rope data follow the rope diameter by exact table match only; an unlisted diameter has no preset.
+        /// <summary>Rope data follow the rope diameter by exact table match only; an unlisted diameter has no preset.</summary>
         public RopeRow Rope(double? diameterMm)
         {
             if (!diameterMm.HasValue || Ropes == null || Ropes.Table == null)
@@ -352,7 +361,7 @@ namespace Elevator.Core.Presets
             return Ropes.Table.FirstOrDefault(r => Math.Abs(r.DiameterMm - diameterMm.Value) < 1e-9);
         }
 
-        // Linear interpolation in the deflector table; outside the table the nearest end value is used.
+        /// <summary>Linear interpolation in the deflector table; outside the table the nearest end value is used.</summary>
         public double? DeflectorMassFor(double? pitchMm)
         {
             if (!pitchMm.HasValue || DeflectorMass == null || DeflectorMass.Count == 0)

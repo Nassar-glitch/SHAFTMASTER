@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>The legacy project schema of the existing plan workflow.</summary>
     public sealed class ProjectInput
     {
         public int SchemaVersion { get; set; }

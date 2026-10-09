@@ -3,10 +3,15 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Suspension
 {
-    // Ideal rope tension equation only. Ratio 2 supports the independent DOCX fixture;
-    // this does not implement a 2:1 anchorage topology or authorize its live drawings.
+    /// <summary>
+    /// Ideal rope tension equation only. Ratio 2 supports the independent DOCX fixture; this does not implement a 2:1 anchorage topology or
+    /// authorize its live drawings.
+    /// </summary>
     public static class IdealStaticRopeTensions
     {
+        /// <summary>
+        /// Static rope tensions for the car-side and counterweight-side masses, the roping ratio, the rope count and gravity.
+        /// </summary>
         public static StaticRopeTensions Calculate(double carSideMassKg, double cwSideMassKg, int ratio, int ropes, double gravity)
         {
             if (!ChassisReactionSolver.Finite(carSideMassKg)

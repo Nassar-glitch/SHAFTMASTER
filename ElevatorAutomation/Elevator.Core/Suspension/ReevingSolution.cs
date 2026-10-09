@@ -2,6 +2,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>Result of the traction and deflector geometry: tangents, directions and wrap angle.</summary>
     public sealed class ReevingSolution
     {
         public LocalPoint TractionSheaveCenter;

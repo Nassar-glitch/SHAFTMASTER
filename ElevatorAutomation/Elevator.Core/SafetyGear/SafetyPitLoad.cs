@@ -3,6 +3,7 @@ using Elevator.Core.Calculations;
 
 namespace Elevator.Core.SafetyGear
 {
+    /// <summary>One of the loads P5, P6 and P7 with its mass, status, issues and details.</summary>
     public sealed class SafetyPitLoad
     {
         public string Id;

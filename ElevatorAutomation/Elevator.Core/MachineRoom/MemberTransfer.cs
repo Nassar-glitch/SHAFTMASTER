@@ -2,6 +2,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>The load one carrying member passes to the front and rear transverse members.</summary>
     public sealed class MemberTransfer
     {
         public string LoadId;

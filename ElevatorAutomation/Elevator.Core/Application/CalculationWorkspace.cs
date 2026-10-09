@@ -5,7 +5,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Application
 {
-    // In-memory results only. Geometry is issued by the shared engine, never read from JSON.
+    /// <summary>In-memory results only. Geometry is issued by the shared engine, never read from JSON.</summary>
     public sealed class CalculationWorkspace
     {
         public ChassisCalculationGeometry Geometry { get; private set; }
@@ -19,12 +19,14 @@ namespace Elevator.Core.Application
             DisplayStatus = "Calculate to show P1–P4 for the current inputs.";
         }
 
+        /// <summary>Discards the stored result and marks the display state stale.</summary>
         public void Invalidate()
         {
             Result = null;
             DisplayStatus = "STALE — inputs changed; recalculate.";
         }
 
+        /// <summary>True when the stored result still matches the project inputs and the generated geometry.</summary>
         public bool IsCurrent(ElevatorProject project, DesignContext context)
         {
             return CalculationModes.Resolve(project.Calculations) == "Basic"
@@ -32,6 +34,7 @@ namespace Elevator.Core.Application
                 : ChassisCalculationEngine.IsCurrent(Result, project, Geometry, context) && Result.Mode == "Advanced";
         }
 
+        /// <summary>Generates the shared chassis geometry when it is missing or stale; false when it cannot be produced.</summary>
         public bool EnsureGeometry(ElevatorProject project, DesignContext context)
         {
             string mode = CalculationModes.Resolve(project.Calculations);
@@ -51,6 +54,7 @@ namespace Elevator.Core.Application
             return false;
         }
 
+        /// <summary>Calculates P1–P4 in the mode of the project and stores the result.</summary>
         public ChassisCalculationResult Calculate(ElevatorProject project, DesignContext context)
         {
             if (!EnsureGeometry(project, context))

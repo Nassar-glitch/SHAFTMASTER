@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>Guide-rail bracket positions and spacing along the shaft.</summary>
     public sealed class BracketLayout
     {
         public List<double> Elevations = new List<double>();

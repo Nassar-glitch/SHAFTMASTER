@@ -1,5 +1,6 @@
 namespace Elevator.Core.Suspension
 {
+    /// <summary>One load position of a traction case with T1, T2 and their ratio.</summary>
     public sealed class TractionPosition
     {
         public string Name;

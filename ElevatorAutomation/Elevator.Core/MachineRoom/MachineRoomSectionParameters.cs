@@ -1,5 +1,6 @@
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Results of the B-B machine-room section: supports, beam, deflector, reeving arrangement and levels.</summary>
     public sealed class MachineRoomSectionParameters
     {
         public MachineBeamSelection Beam;

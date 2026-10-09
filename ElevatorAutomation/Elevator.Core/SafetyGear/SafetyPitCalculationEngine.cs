@@ -5,20 +5,28 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.SafetyGear
 {
+    /// <summary>P5–P7: safety-gear and buffer loads under the adopted note rules.</summary>
     public sealed class SafetyPitCalculationEngine
     {
+        /// <summary>Rule version stored in results and fingerprints.</summary>
         public const string RuleVersion = "GearboxNoteSafetyPit-v1";
+        /// <summary>SHA-256 of the source note.</summary>
         public const string SourceDocumentSha256 = "ECFD591133F5F97ED923F62A3A3EEA60C2B97A67805E60BCB7131C3DA7FB13DF";
 
+        /// <summary>Text of the adopted source rules.</summary>
         public const string RuleBasis =
             "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx: Progressive Safety Gear p104–106 (equation 439730EB), Car "
             + "Buffer p108–110 (5429655E), Counterweight Buffer p112–114 (3897FF34), zero-based descendant paragraphs / Word paraIds. The "
             + "note supplies no P5–P7 standard clause or manufacturer basis. Adopted note rules, not independent code/manufacturer "
             + "certification.";
 
+        /// <summary>The safety-gear coefficient, N per kg.</summary>
         public const double SafetyGearCoefficientNPerKg = 10.0;
+        /// <summary>The minimum buffer coefficient, N per kg.</summary>
         public const double BufferMinimumCoefficientNPerKg = 40.0;
+        /// <summary>The buffer factor applied to gravity.</summary>
         public const double BufferFactor = 4.0;
+        /// <summary>Gravity used by the buffer coefficient, m/s².</summary>
         public const double GravityMetresPerSecondSquared = 9.81;
 
         public static double BufferCoefficientNPerKg
@@ -59,6 +67,7 @@ namespace Elevator.Core.SafetyGear
             });
         }
 
+        /// <summary>True when the result matches the project.</summary>
         public static bool IsCurrent(SafetyPitCalculationResult result, ElevatorProject project)
         {
             return result != null
@@ -193,6 +202,7 @@ namespace Elevator.Core.SafetyGear
             }
         }
 
+        /// <summary>Calculates P5, P6 and P7.</summary>
         public SafetyPitCalculationResult Calculate(ElevatorProject project)
         {
             var r = new SafetyPitCalculationResult();

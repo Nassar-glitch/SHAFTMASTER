@@ -1,5 +1,6 @@
 namespace Elevator.Core.SafetyGear
 {
+    /// <summary>The P5, P6 and P7 results.</summary>
     public sealed class SafetyPitCalculationResult
     {
         public string RuleVersion = SafetyPitCalculationEngine.RuleVersion;

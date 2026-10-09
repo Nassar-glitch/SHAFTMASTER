@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Result of a drawing generation run.</summary>
     public sealed class DrawingGenerationResult
     {
         public ElevatorDesignResult Design;

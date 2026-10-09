@@ -1,5 +1,6 @@
 namespace Elevator.Core.Project
 {
+    /// <summary>Status of a validation result.</summary>
     public enum ValidationStatus
     {
         PASS,

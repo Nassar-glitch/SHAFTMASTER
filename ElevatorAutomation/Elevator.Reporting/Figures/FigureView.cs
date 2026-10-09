@@ -2,7 +2,7 @@ using System;
 
 namespace Elevator.Reporting.Figures
 {
-    // Model-to-paper transform: model mm, y up → paper mm, y down; uniform scale.
+    /// <summary>Model-to-paper transform: model mm, y up → paper mm, y down; uniform scale.</summary>
     public sealed class FigureView
     {
         public double Scale;
@@ -29,6 +29,7 @@ namespace Elevator.Reporting.Figures
             OffsetY = alignTop ? top : top + (heightMm - (maxY - minY) * Scale) / 2;
         }
 
+        /// <summary>Converts model coordinates to paper coordinates.</summary>
         public FigurePoint P(double x, double y)
         {
             return new FigurePoint(OffsetX + (x - MinX) * Scale, OffsetY + (MaxY - y) * Scale);

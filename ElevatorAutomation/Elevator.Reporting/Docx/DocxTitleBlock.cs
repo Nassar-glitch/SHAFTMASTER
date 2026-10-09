@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Reporting.Docx
 {
-    // Header title block content: logo | company over title | project rows | document rows + Page X of Y.
+    /// <summary>Header title block content: logo | company over title | project rows | document rows + Page X of Y.</summary>
     public sealed class DocxTitleBlock
     {
         public DocxImage Logo;

@@ -1,5 +1,6 @@
 namespace Elevator.Core.Suspension
 {
+    /// <summary>One check of the rope and traction calculation: clause, equation, required and actual values, result.</summary>
     public sealed class RopeCheck
     {
         public string Id;

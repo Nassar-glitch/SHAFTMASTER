@@ -1,5 +1,6 @@
 namespace Elevator.Core.Counterweight
 {
+    /// <summary>Counterweight inputs of the project.</summary>
     public sealed class CounterweightConfiguration
     {
         public string Position;

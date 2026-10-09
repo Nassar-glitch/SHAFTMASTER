@@ -1,5 +1,6 @@
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>The preliminary machine beam selected for a rated capacity and span.</summary>
     public sealed class MachineBeamSelection
     {
         public string SectionDesignation;

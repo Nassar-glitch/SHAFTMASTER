@@ -3,11 +3,13 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Shaft
 {
+    /// <summary>Adds the building floors to the vertical section geometry.</summary>
     public static class BuildingVerticalGenerator
     {
-        // 1000 mm is a drawing crop of the landing beyond the shaft, not building design width.
+        /// <summary>1000 mm is a drawing crop of the landing beyond the shaft, not building design width.</summary>
         public const double LandingDrawingExtent = 1000;
 
+        /// <summary>Adds the building floors to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             foreach (var f in g.Floors.Where(f => !f.IsRoof))

@@ -15,13 +15,15 @@ using Elevator.Reporting.Figures;
 
 namespace Elevator.Reporting.Sheet
 {
-    // Every result is recalculated from the current canonical project at export and checked against its
-    // input fingerprint. Previously displayed UI numbers are never reused. The document contains only
-    // available calculations; unavailable ones are omitted and reported to the user before saving.
-    // Source-note traceability lives in docs/CAR-GUIDE-FORCES.md and docs/CALCULATION-SHEET-EXPORT.md.
+    /// <summary>
+    /// Every result is recalculated from the current canonical project at export and checked against its input fingerprint. Previously
+    /// displayed UI numbers are never reused. The document contains only available calculations; unavailable ones are omitted and reported
+    /// to the user before saving. Source-note traceability lives in docs/CAR-GUIDE-FORCES.md and docs/CALCULATION-SHEET-EXPORT.md.
+    /// </summary>
     public sealed partial class CalculationSheet
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+        /// <summary>The standards line printed on the sheet.</summary>
         public const string DesignBasis = "Design basis: EN 81-20:2014 and EN 81-50:2014.";
 
         public ElevatorProject Project { get; private set; }
@@ -55,6 +57,7 @@ namespace Elevator.Reporting.Sheet
             Omitted = new List<OmittedCalculation>();
         }
 
+        /// <summary>Builds the calculation sheet of a project: runs the calculations and collects what can be shown.</summary>
         public static CalculationSheet Build(ElevatorProject project, DesignContext context, CalculationSheetInputs inputs)
         {
             if (project == null)
@@ -265,6 +268,7 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
+        /// <summary>The suggested file name for a project.</summary>
         public static string SuggestedFileName(string projectName)
         {
             string name = String.IsNullOrWhiteSpace(projectName) ? "Untitled project" : projectName.Trim();
@@ -277,7 +281,7 @@ namespace Elevator.Reporting.Sheet
             return name + " - Calculation Sheet.docx";
         }
 
-        // Write atomically: a failed export never truncates an existing file.
+        /// <summary>Write atomically: a failed export never truncates an existing file.</summary>
         public void Save(string path)
         {
             if (String.IsNullOrWhiteSpace(path))
@@ -466,6 +470,7 @@ namespace Elevator.Reporting.Sheet
         }
 
         // ---------- document ----------
+        /// <summary>Renders the sheet as a document.</summary>
         public DocxDocument Render()
         {
             if (!HasContent)

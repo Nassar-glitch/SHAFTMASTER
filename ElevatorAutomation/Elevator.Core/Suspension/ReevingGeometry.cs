@@ -2,6 +2,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>Reeving geometry of the machine room: sheave diameters, centres, rope directions and wrap angle.</summary>
     public sealed class ReevingGeometry
     {
         public double? TractionSheavePitchDiameterMm;

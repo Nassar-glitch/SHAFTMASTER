@@ -5,8 +5,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Calculates the B-B machine-room section from the shared plan and the reviewed template reference.</summary>
     public static class MachineRoomSectionRules
     {
+        /// <summary>Calculates the B-B machine-room section.</summary>
         public static MachineRoomSectionParameters Calculate(
             ProjectInput input,
             ElevatorParameters shared,

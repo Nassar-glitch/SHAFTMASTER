@@ -2,6 +2,7 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Result of the vertical machine arrangement: levels, concrete height, reeving and status.</summary>
     public sealed class VerticalArrangementResult
     {
         public ReevingSolution Reeving;

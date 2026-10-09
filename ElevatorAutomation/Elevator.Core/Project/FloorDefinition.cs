@@ -3,6 +3,7 @@ using Elevator.Core.Doors;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>One floor of the building: name, height to the next floor, served flag and landing door.</summary>
     public sealed class FloorDefinition
     {
         public string FloorId = Guid.NewGuid().ToString("N");

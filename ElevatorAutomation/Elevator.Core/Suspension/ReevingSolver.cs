@@ -4,6 +4,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>Calculates the rope path between the traction sheave and the deflector, and the vertical machine arrangement.</summary>
     public static class ReevingSolver
     {
         private static double Dot(LocalPoint a, LocalPoint b)
@@ -21,6 +22,7 @@ namespace Elevator.Core.Suspension
             return !Double.IsNaN(n) && !Double.IsInfinity(n);
         }
 
+        /// <summary>The rope path between the traction sheave and the deflector, with the wrap angle.</summary>
         public static ReevingSolution Calculate(
             LocalPoint traction,
             LocalPoint deflector,
@@ -86,6 +88,7 @@ namespace Elevator.Core.Suspension
             return result;
         }
 
+        /// <summary>The vertical machine arrangement: concrete height and sheave levels for the target wrap angle.</summary>
         public static VerticalArrangementResult SolveVertical(VerticalArrangementInput p)
         {
             var result = new VerticalArrangementResult();

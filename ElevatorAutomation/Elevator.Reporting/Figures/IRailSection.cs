@@ -2,8 +2,10 @@ using System.Collections.Generic;
 
 namespace Elevator.Reporting.Figures
 {
-    // Rail cross-section geometry. Today derived proportionally from the designation (only b1, h1, k are known);
-    // a future table (designation → full dimensions) can implement this interface without changing figure code.
+    /// <summary>
+    /// Rail cross-section geometry. Today derived proportionally from the designation (only b1, h1, k are known); a future table
+    /// (designation → full dimensions) can implement this interface without changing figure code.
+    /// </summary>
     public interface IRailSection
     {
         string Designation { get; }

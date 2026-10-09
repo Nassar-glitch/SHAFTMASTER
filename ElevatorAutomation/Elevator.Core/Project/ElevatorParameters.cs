@@ -3,6 +3,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Calculated plan dimensions of the shaft, car, counterweight, rails and door.</summary>
     public sealed class ElevatorParameters
     {
         public MachineRoomParameters MachineRoom { get; set; }
@@ -34,6 +35,7 @@ namespace Elevator.Core.Project
             }
         }
 
+        /// <summary>The X coordinate of a plan anchor.</summary>
         public double X(string anchor)
         {
             switch (anchor)
@@ -73,6 +75,7 @@ namespace Elevator.Core.Project
             }
         }
 
+        /// <summary>The Y coordinate of a plan anchor.</summary>
         public double Y(string anchor)
         {
             switch (anchor)

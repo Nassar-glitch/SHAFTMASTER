@@ -2,8 +2,10 @@ using System;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Preliminary machine beam table by rated capacity and span; no structural check.</summary>
     public sealed class PreliminaryMachineBeamSelector : IMachineBeamSelector
     {
+        /// <summary>Selects the preliminary machine beam for a rated capacity and span; no structural check.</summary>
         public MachineBeamSelection Select(double capacityKg, double spanMm)
         {
             if (Double.IsNaN(capacityKg)

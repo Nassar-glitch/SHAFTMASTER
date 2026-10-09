@@ -6,8 +6,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Application
 {
-    // DESIGN-FLOW stage 2 (ARCHITECTURE-PLAN P4): project fields follow config/presets.json until the user edits them (lock);
-    // Reset unlocks. UI-free: the application refreshes its editors after these calls.
+    /// <summary>
+    /// DESIGN-FLOW stage 2 (ARCHITECTURE-PLAN P4): project fields follow config/presets.json until the user edits them (lock); Reset
+    /// unlocks. UI-free: the application refreshes its editors after these calls.
+    /// </summary>
     public sealed class PresetFlow
     {
         readonly DesignContext context;
@@ -27,6 +29,7 @@ namespace Elevator.Core.Application
             this.context = context;
         }
 
+        /// <summary>Reads the preset library from a file; the flow keeps the error when it cannot be read.</summary>
         public static PresetFlow Load(string path, DesignContext context)
         {
             try
@@ -39,14 +42,16 @@ namespace Elevator.Core.Application
             }
         }
 
-        // The preset-managed field of an editor path, or null.
+        /// <summary>The preset-managed field of an editor path, or null.</summary>
         public static PresetField Managed(string path)
         {
             return ProjectPresets.Fields.FirstOrDefault(f => f.Key == path);
         }
 
-        // Writes the presets of every unlocked field. Rope sizing runs the rope / traction checks, so typing skips it
-        // (sizeRopes false). False when nothing follows (no library, or the project does not follow the presets).
+        /// <summary>
+        /// Writes the presets of every unlocked field. Rope sizing runs the rope / traction checks, so typing skips it (sizeRopes false).
+        /// False when nothing follows (no library, or the project does not follow the presets).
+        /// </summary>
         public bool Apply(ElevatorProject project, bool sizeRopes)
         {
             if (Library == null || !ProjectPresets.Follows(project))
@@ -65,7 +70,7 @@ namespace Elevator.Core.Application
             return true;
         }
 
-        // An edited managed field locks (while the project follows the presets) and the project becomes unsaved.
+        /// <summary>An edited managed field locks (while the project follows the presets) and the project becomes unsaved.</summary>
         public void Edited(ProjectSession session, PresetField field)
         {
             if (ProjectPresets.Follows(session.Project))
@@ -73,25 +78,27 @@ namespace Elevator.Core.Application
             session.Dirty = true;
         }
 
-        // Reset to preset: the field unlocks and follows again.
+        /// <summary>Reset to preset: the field unlocks and follows again.</summary>
         public void Reset(ProjectSession session, PresetField field)
         {
             field.Reset(session.Project);
             session.Dirty = true;
         }
 
-        // True when the page (null: every page) has blank preset fields that Fill blanks would set.
+        /// <summary>True when the page (null: every page) has blank preset fields that Fill blanks would set.</summary>
         public bool CanFillBlanks(ElevatorProject project, string page)
         {
             return Library != null && ProjectPresets.AnyBlank(project, page);
         }
 
+        /// <summary>Throws ArgumentException when the preset library could not be read.</summary>
         public void EnsureLibrary()
         {
             if (Library == null)
                 throw new ArgumentException("The preset library could not be read: " + Error);
         }
 
+        /// <summary>Sets the blank preset fields of a page (null: every page) and starts following the presets.</summary>
         public void FillBlanks(ProjectSession session, string page)
         {
             EnsureLibrary();
@@ -99,12 +106,13 @@ namespace Elevator.Core.Application
             session.Dirty = true;
         }
 
-        // Persons shown next to Q: floor(Q / 75 kg).
+        /// <summary>Persons shown next to Q: floor(Q / 75 kg).</summary>
         public int? PersonsFor(double? capacityKg)
         {
             return Library == null ? null : Library.PersonsFor(capacityKg);
         }
 
+        /// <summary>The preset context of a project.</summary>
         public PresetContext Context(ElevatorProject project)
         {
             return new PresetContext

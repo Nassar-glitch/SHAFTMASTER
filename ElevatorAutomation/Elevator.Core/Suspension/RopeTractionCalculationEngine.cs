@@ -9,9 +9,14 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>
+    /// Rope and traction checks: rope diameter and count, D/d, safety factor and the traction conditions (EN 81-20, EN 81-50).
+    /// </summary>
     public sealed class RopeTractionCalculationEngine
     {
+        /// <summary>Rule version stored in results and fingerprints.</summary>
         public const string RuleVersion = "EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1";
+        /// <summary>Standard acceleration of free fall gn, m/s² (EN 81-50 5.11.3).</summary>
         public const double Gn = 9.81; // EN 81-50:2014 5.11.3: gn standard acceleration of free fall (m/s²)
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
@@ -31,6 +36,7 @@ namespace Elevator.Core.Suspension
         }
 
         // ---------- shared geometry ----------
+        /// <summary>The deflector pitch diameter selected from TZ, or null when there is none.</summary>
         public static double? DeflectorPitch(ElevatorProject p, DesignContext c)
         {
             try
@@ -52,6 +58,7 @@ namespace Elevator.Core.Suspension
             }
         }
 
+        /// <summary>The shared geometry for the rope and traction checks.</summary>
         public static RopeTractionGeometry Geometry(ElevatorProject p, DesignContext c)
         {
             var g = new RopeTractionGeometry();
@@ -102,6 +109,7 @@ namespace Elevator.Core.Suspension
         }
 
         // ---------- effective inputs (presets / locks) ----------
+        /// <summary>The inputs used by the checks: project values with the presets applied.</summary>
         public static RopeTractionEffectiveInputs Effective(ElevatorProject p, PresetLibrary library, double? deflectorPitchMm)
         {
             var ctx = new PresetContext { Project = p, Library = library, DeflectorPitchMm = deflectorPitchMm };
@@ -188,6 +196,7 @@ namespace Elevator.Core.Suspension
             });
         }
 
+        /// <summary>True when the result matches the project, the context and the presets.</summary>
         public static bool IsCurrent(RopeTractionResult r, ElevatorProject p, DesignContext c, PresetLibrary library)
         {
             return r != null
@@ -220,6 +229,7 @@ namespace Elevator.Core.Suspension
             return t[n - 1, 1];
         }
 
+        /// <summary>Nequiv(t) of the groove (EN 81-50 Table 2).</summary>
         public static double NequivTraction(string groove, double? betaDeg, double? gammaDeg)
         {
             if (groove == GrooveTypes.UndercutU)
@@ -233,13 +243,13 @@ namespace Elevator.Core.Suspension
             return Interp(TableV, Math.Min(50, gammaDeg.Value));
         }
 
-        // 5.12.2.3: Nequiv(p) = Kp·(Nps + 4·Npr), Kp = (Dt/Dp)^4.
+        /// <summary>5.12.2.3: Nequiv(p) = Kp·(Nps + 4·Npr), Kp = (Dt/Dp)^4.</summary>
         public static double KpFactor(double dt, double dp)
         {
             return Math.Pow(dt / dp, 4);
         }
 
-        // 5.12.3, formula of Figure 10 (log = log10).
+        /// <summary>5.12.3, formula of Figure 10 (log = log10).</summary>
         public static double SafetyFactor8150(double dtOverDr, double nequiv)
         {
             double num = Math.Log10(695.85e6 * nequiv / Math.Pow(dtOverDr, 8.567));
@@ -248,6 +258,7 @@ namespace Elevator.Core.Suspension
         }
 
         // ---------- EN 81-50:2014 5.11.2.3 friction factor ----------
+        /// <summary>The traction cases of EN 81-50 5.11.2.2: loading, braking and stalled.</summary>
         public enum TractionCase
         {
             Loading,
@@ -255,6 +266,7 @@ namespace Elevator.Core.Suspension
             Stalled
         }
 
+        /// <summary>The groove friction factor f for a traction case (EN 81-50 5.11.2.3.1).</summary>
         public static double FrictionFactor(string groove, TractionCase k, double mu, double? betaDeg, double? gammaDeg)
         {
             double beta = (betaDeg ?? 0) * Math.PI / 180, gamma = (gammaDeg ?? 0) * Math.PI / 180;
@@ -274,7 +286,7 @@ namespace Elevator.Core.Suspension
             return "f = μ · 4 (1 − sin(β/2)) / (π − β − sin β)";
         }
 
-        // 5.11.2.3.2 friction coefficients.
+        /// <summary>5.11.2.3.2 friction coefficients.</summary>
         public static double Mu(TractionCase k, double v)
         {
             return k == TractionCase.Loading ? 0.1 : k == TractionCase.Braking ? 0.1 / (1 + v / 10) : 0.2;
@@ -286,13 +298,16 @@ namespace Elevator.Core.Suspension
             r.Omissions.Add(new RopeTractionOmission { Item = item, Kind = kind, Reason = reason });
         }
 
+        /// <summary>Runs the rope and traction checks.</summary>
         public RopeTractionResult Calculate(ElevatorProject p, DesignContext c, PresetLibrary library)
         {
             return Calculate(p, c, library, null);
         }
 
-        // Same calculation with the shared geometry already computed for this project and context (Geometry(p, c)); used by
-        // the preset selection to avoid recomputing an identical geometry for every rope trial. Null computes it here.
+        /// <summary>
+        /// Same calculation with the shared geometry already computed for this project and context (Geometry(p, c)); used by the preset
+        /// selection to avoid recomputing an identical geometry for every rope trial. Null computes it here.
+        /// </summary>
         public RopeTractionResult Calculate(ElevatorProject p, DesignContext c, PresetLibrary library, RopeTractionGeometry geometry)
         {
             var r = new RopeTractionResult

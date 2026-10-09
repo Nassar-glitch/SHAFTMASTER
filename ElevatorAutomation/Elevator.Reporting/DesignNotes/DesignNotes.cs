@@ -12,12 +12,15 @@ using Elevator.Reporting.Sheet;
 
 namespace Elevator.Reporting.DesignNotes
 {
-    // Design Notes (DESIGN-FLOW principle 7): short advisory notes only, written as an engineer's advice, one or two lines each,
-    // with the clause in brackets. Warnings carry a recommendation computed from the project; recommendations list what is
-    // needed to complete a check. Nothing is written about checks that pass. Same CAD page frame and title block as the sheet.
+    /// <summary>
+    /// Design Notes (DESIGN-FLOW principle 7): short advisory notes only, written as an engineer's advice, one or two lines each, with the
+    /// clause in brackets. Warnings carry a recommendation computed from the project; recommendations list what is needed to complete a
+    /// check. Nothing is written about checks that pass. Same CAD page frame and title block as the sheet.
+    /// </summary>
     public sealed class DesignNotes
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+        /// <summary>Text shown when there is nothing to note.</summary>
         public const string NoNotes = "No design notes for this project.";
 
         public ElevatorProject Project { get; private set; }
@@ -68,6 +71,7 @@ namespace Elevator.Reporting.DesignNotes
             return Clause.TryGetValue(item, out c) ? c : "EN 81-20 5.5; EN 81-50 5.11, 5.12";
         }
 
+        /// <summary>Builds the Design Notes of a project.</summary>
         public static DesignNotes Build(ElevatorProject project, DesignContext context, CalculationSheetInputs inputs)
         {
             if (project == null)
@@ -349,6 +353,7 @@ namespace Elevator.Reporting.DesignNotes
                 : "Use " + String.Join(", or ", options) + ".";
         }
 
+        /// <summary>Renders the Design Notes as a document.</summary>
         public DocxDocument Render()
         {
             var p = Project;
@@ -406,12 +411,14 @@ namespace Elevator.Reporting.DesignNotes
             return d;
         }
 
+        /// <summary>The suggested file name for a project.</summary>
         public static string SuggestedFileName(string projectName)
         {
             var s = CalculationSheet.SuggestedFileName(projectName);
             return s.Replace(" - Calculation Sheet.docx", " - Design Notes.docx");
         }
 
+        /// <summary>Writes the Design Notes document to a file.</summary>
         public void Save(string path)
         {
             if (String.IsNullOrWhiteSpace(path))

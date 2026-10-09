@@ -3,6 +3,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Reads and writes project files (JSON) and clones projects.</summary>
     public static class ProjectJson
     {
         static IJsonSerializer Serializer()
@@ -10,6 +11,7 @@ namespace Elevator.Core.Project
             return CoreJson.Create();
         }
 
+        /// <summary>Writes a project as JSON.</summary>
         public static string Serialize(ElevatorProject project)
         {
             if (project == null)
@@ -17,6 +19,7 @@ namespace Elevator.Core.Project
             return Serializer().Serialize(new ProjectDocument { project = project });
         }
 
+        /// <summary>Reads a project from JSON.</summary>
         public static ElevatorProject Deserialize(string json)
         {
             var raw = Serializer().DeserializeObject(json) as System.Collections.Generic.Dictionary<string, object>;
@@ -28,6 +31,7 @@ namespace Elevator.Core.Project
             return document.project;
         }
 
+        /// <summary>Copies a project through its JSON.</summary>
         public static ElevatorProject Clone(ElevatorProject project)
         {
             return Deserialize(Serialize(project));

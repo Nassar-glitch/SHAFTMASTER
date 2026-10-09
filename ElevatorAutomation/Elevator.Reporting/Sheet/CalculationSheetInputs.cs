@@ -5,6 +5,7 @@ using Elevator.Reporting.Docx;
 
 namespace Elevator.Reporting.Sheet
 {
+    /// <summary>Inputs of the calculation sheet and Design Notes that are not part of the project.</summary>
     public sealed class CalculationSheetInputs
     {
         // Malformed UI text clears the canonical value; it makes the dependent calculation unavailable, never zero.

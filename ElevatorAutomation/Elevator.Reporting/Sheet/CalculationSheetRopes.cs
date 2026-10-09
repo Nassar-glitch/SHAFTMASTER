@@ -10,8 +10,10 @@ using Elevator.Reporting.Figures;
 
 namespace Elevator.Reporting.Sheet
 {
-    // "Suspension rope and traction checks" section (EN 81-20 5.5; EN 81-50 5.11 / 5.12). Clean client format: equation,
-    // substitution, required, actual, OK / NOT OK. Remarks and explanations go to the Design Notes file only.
+    /// <summary>
+    /// "Suspension rope and traction checks" section (EN 81-20 5.5; EN 81-50 5.11 / 5.12). Clean client format: equation, substitution,
+    /// required, actual, OK / NOT OK. Remarks and explanations go to the Design Notes file only.
+    /// </summary>
     public sealed partial class CalculationSheet
     {
         public RopeTractionResult RopeTraction { get; private set; }
@@ -30,8 +32,10 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
+        /// <summary>Title of the rope and traction section.</summary>
         public const string RopeTractionSectionTitle = "Suspension rope and traction checks";
 
+        /// <summary>Reads presets.json from a folder; null reads the one beside the application.</summary>
         public static PresetLibrary LoadPresets(string folder)
         {
             try

@@ -6,8 +6,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Builds the plan annotation values and renders annotation templates.</summary>
     public static class PlanAnnotationRules
     {
+        /// <summary>The plan annotation values from the project input, the plan dimensions and the clearances.</summary>
         public static Dictionary<string, string> Values(ProjectInput input, ElevatorParameters p, Dictionary<string, double> clearances)
         {
             var values = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -31,6 +33,7 @@ namespace Elevator.Core.Geometry
             return values;
         }
 
+        /// <summary>Replaces the placeholders of a template with the values, escaping each value with the given function.</summary>
         public static string Render(string template, Dictionary<string, string> values, Func<string, string> escapeValue)
         {
             if (template == null)

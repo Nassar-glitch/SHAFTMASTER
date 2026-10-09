@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Inputs of the A-A section: floors, pit, overhead and bracket spacing.</summary>
     public sealed class SectionAAProject
     {
         public int SchemaVersion = 1;

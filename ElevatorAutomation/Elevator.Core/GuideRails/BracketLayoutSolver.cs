@@ -7,8 +7,13 @@ using Elevator.Core.Shaft;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>Places the guide-rail brackets along the shaft within the maximum spacing.</summary>
     public static class BracketLayoutSolver
     {
+        /// <summary>
+        /// Places the guide-rail brackets between the bottom and the top within the maximum spacing, given the floors and the slab and
+        /// opening heights.
+        /// </summary>
         public static BracketLayout Solve(
             double bottom,
             double top,

@@ -1,5 +1,6 @@
 namespace Elevator.Core.Geometry
 {
+    /// <summary>One drawing primitive (line, box or note) of the vertical section.</summary>
     public sealed class VerticalPrimitive
     {
         public string Id;

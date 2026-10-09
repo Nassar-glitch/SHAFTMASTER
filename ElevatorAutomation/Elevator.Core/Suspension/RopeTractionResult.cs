@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace Elevator.Core.Suspension
 {
+    /// <summary>Rope and traction results: checks, traction cases, omissions and status.</summary>
     public sealed class RopeTractionResult
     {
         public string Status = "MISSING_INPUT";

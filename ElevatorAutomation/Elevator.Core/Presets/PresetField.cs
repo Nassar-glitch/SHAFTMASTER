@@ -4,6 +4,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Presets
 {
+    /// <summary>A preset-managed project field: key, page, preset value, lock and reset.</summary>
     public sealed class PresetField
     {
         public string Key;
@@ -17,6 +18,7 @@ namespace Elevator.Core.Presets
         public bool Materialized;
         public string Page;
 
+        /// <summary>True when the user has edited the field, which locks it.</summary>
         public bool IsEdited(ElevatorProject p)
         {
             if (p == null)
@@ -26,6 +28,7 @@ namespace Elevator.Core.Presets
             return p.UserEditedFields != null && p.UserEditedFields.Contains(Key);
         }
 
+        /// <summary>True when the field has no value.</summary>
         public bool IsBlank(ElevatorProject p)
         {
             var v = Stored(p);
@@ -38,16 +41,19 @@ namespace Elevator.Core.Presets
             return false;
         }
 
+        /// <summary>The preset value in a context.</summary>
         public object PresetValue(PresetContext c)
         {
             return c == null || c.Library == null ? null : Preset(c);
         }
 
+        /// <summary>The value in effect: the project value when the field is edited, otherwise the preset.</summary>
         public object Effective(PresetContext c)
         {
             return IsEdited(c.Project) ? Stored(c.Project) : PresetValue(c);
         }
 
+        /// <summary>Stores a value typed by the user and locks the field.</summary>
         public void Edit(ElevatorProject p, object value)
         {
             Store(p, value);
@@ -57,7 +63,7 @@ namespace Elevator.Core.Presets
                 p.UserEditedFields.Add(Key);
         }
 
-        // Materialized fields: the caller runs ProjectPresets.Apply afterwards to write the preset.
+        /// <summary>Materialized fields: the caller runs ProjectPresets.Apply afterwards to write the preset.</summary>
         public void Reset(ElevatorProject p)
         {
             if (Materialized)

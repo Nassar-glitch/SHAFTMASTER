@@ -2,6 +2,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>A load applied to the chassis: position, force and couple.</summary>
     public sealed class LoadNode
     {
         public string Id;

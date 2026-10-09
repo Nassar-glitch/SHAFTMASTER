@@ -6,8 +6,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Converts between the project and the legacy project and A-A schemas.</summary>
     public static class LegacyProjectAdapter
     {
+        /// <summary>Builds the project from the legacy input and the A-A data; a retained project keeps its other values.</summary>
         public static ElevatorProject FromLegacy(ProjectInput old, SectionAAProject aa, ElevatorProject retained = null)
         {
             if (old == null || old.SchemaVersion != 1)
@@ -96,6 +98,7 @@ namespace Elevator.Core.Project
             }
         }
 
+        /// <summary>Builds the legacy input from the project.</summary>
         public static ProjectInput ToLegacy(ElevatorProject p, bool includeFloorSummary = true)
         {
             var old = new ProjectInput
@@ -147,6 +150,7 @@ namespace Elevator.Core.Project
             return old;
         }
 
+        /// <summary>Builds the A-A input from the floors of the project.</summary>
         public static SectionAAProject ToSectionAA(ElevatorProject p)
         {
             if (!p.Shaft.PitDepthMm.HasValue

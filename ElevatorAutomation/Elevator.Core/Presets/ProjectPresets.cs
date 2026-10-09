@@ -11,19 +11,29 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Presets
 {
-    // DESIGN-FLOW stage 2 ("Flow foundation"): every remaining project input is a materialized preset field. While the
-    // project follows presets (FollowsPresets = true), each unlocked field holds its preset, which may follow an upstream
-    // driver (Q, P, v). Editing a field locks it; Reset unlocks it. Older projects (FollowsPresets null) are left unchanged
-    // until the user chooses "Fill blanks from presets". No calculation equation is involved here.
+    /// <summary>
+    /// DESIGN-FLOW stage 2 ("Flow foundation"): every remaining project input is a materialized preset field. While the project follows
+    /// presets (FollowsPresets = true), each unlocked field holds its preset, which may follow an upstream driver (Q, P, v). Editing a
+    /// field locks it; Reset unlocks it. Older projects (FollowsPresets null) are left unchanged until the user chooses "Fill blanks from
+    /// presets". No calculation equation is involved here.
+    /// </summary>
     public static class ProjectPresets
     {
+        /// <summary>Key of the rope count field.</summary>
         public const string RopeCountKey = "Suspension.RopeCount";
+        /// <summary>Key of the rope diameter field.</summary>
         public const string RopeDiameterKey = "Suspension.RopeDiameterMm";
+        /// <summary>Key of the traction sheave field.</summary>
         public const string SheaveKey = "Machine.TractionSheavePitchDiameterMm";
+        /// <summary>Safety-gear type: progressive.</summary>
         public const string Progressive = "Progressive";
+        /// <summary>Safety-gear type: instantaneous.</summary>
         public const string Instantaneous = "Instantaneous";
+        /// <summary>Buffer type: energy accumulation.</summary>
         public const string EnergyAccumulation = "EnergyAccumulation";
+        /// <summary>Buffer type: energy dissipation.</summary>
         public const string EnergyDissipation = "EnergyDissipation";
+        /// <summary>Buffer sharing: equal.</summary>
         public const string EqualSharing = "EqualSharing";
         public static readonly string[] Pages = { "GENERAL", "SHAFT", "FLOORS", "MACHINE", "SUSPENSION", "RAILS", "CALCULATIONS" };
 
@@ -390,18 +400,22 @@ return m==null?(double?)null:m.MachineMassKg;
             return c == null || c.SafetyPit == null ? null : get(c.SafetyPit);
         }
 
+        /// <summary>The preset field with a key, or null.</summary>
         public static PresetField Find(string key)
         {
             return Fields.FirstOrDefault(f => f.Key == key) ?? PresetFields.Find(key);
         }
 
+        /// <summary>True when the project follows the presets.</summary>
         public static bool Follows(ElevatorProject p)
         {
             return p != null && p.FollowsPresets == true;
         }
 
-        // An older project is converted on its first unlock: every materialized field is locked first (keeping its value),
-        // then the requested keys are unlocked.
+        /// <summary>
+        /// An older project is converted on its first unlock: every materialized field is locked first (keeping its value), then the
+        /// requested keys are unlocked.
+        /// </summary>
         public static void Unlock(ElevatorProject p, IEnumerable<string> keys)
         {
             if (p.UserEditedFields == null)
@@ -421,6 +435,7 @@ return m==null?(double?)null:m.MachineMassKg;
                 p.UserEditedFields = null;
         }
 
+        /// <summary>Locks a field at its current value.</summary>
         public static void Lock(ElevatorProject p, string key)
         {
             if (p.UserEditedFields == null)
@@ -429,7 +444,7 @@ return m==null?(double?)null:m.MachineMassKg;
                 p.UserEditedFields.Add(key);
         }
 
-        // New project from the presets: survey example shaft, stops, capacity and speed; everything else follows.
+        /// <summary>New project from the presets: survey example shaft, stops, capacity and speed; everything else follows.</summary>
         public static ElevatorProject CreateNew(
             PresetLibrary lib,
             DesignContext ctx,
@@ -455,6 +470,7 @@ return m==null?(double?)null:m.MachineMassKg;
             return p;
         }
 
+        /// <summary>The name of the floor with an index.</summary>
         public static string FloorName(int index)
         {
             return index == 0 ? "G" : index.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -474,12 +490,13 @@ return m==null?(double?)null:m.MachineMassKg;
             }
         }
 
+        /// <summary>The height of a new floor from the library.</summary>
         public static double? NewFloorHeight(PresetLibrary lib)
         {
             return lib == null || lib.NewProject == null ? null : lib.NewProject.FloorHeightMm;
         }
 
-        // Writes every unlocked materialized field's preset into the project, then sizes the ropes.
+        /// <summary>Writes every unlocked materialized field's preset into the project, then sizes the ropes.</summary>
         public static RopeSizing Apply(ElevatorProject p, PresetLibrary lib, DesignContext ctx)
         {
             if (p == null || lib == null || !Follows(p))
@@ -493,6 +510,7 @@ return m==null?(double?)null:m.MachineMassKg;
             return SizeRopes(p, lib, ctx);
         }
 
+        /// <summary>True when a page (null: every page) has blank preset fields.</summary>
         public static bool AnyBlank(ElevatorProject p, string page)
         {
             if (p == null)
@@ -529,7 +547,7 @@ return m==null?(double?)null:m.MachineMassKg;
             return floors == null || floors.Count < 2 || floors.Take(floors.Count - 1).Any(f => f != null && !f.HeightToNextMm.HasValue);
         }
 
-        // "Fill blanks from presets" (one page, or every page when page is null). Non-blank values are kept and locked.
+        /// <summary>"Fill blanks from presets" (one page, or every page when page is null). Non-blank values are kept and locked.</summary>
         public static RopeSizing FillBlanks(ElevatorProject p, PresetLibrary lib, DesignContext ctx, string page)
         {
             if (p == null || lib == null)
@@ -599,6 +617,10 @@ return m==null?(double?)null:m.MachineMassKg;
         static DesignContext cacheContext;
         public static readonly string[] RopeChecks = { "rope-diameter", "rope-count", "dd-sheave", "safety-factor" };
 
+        /// <summary>
+        /// Selects the rope count and diameter, groove angle, balance factor and sheave that pass the rope and traction checks, for the
+        /// fields that are not locked.
+        /// </summary>
         public static RopeSizing SizeRopes(ElevatorProject p, PresetLibrary lib, DesignContext ctx)
         {
             var countField = Find(RopeCountKey);
@@ -878,6 +900,7 @@ return m==null?(double?)null:m.MachineMassKg;
             return TrialStatus.Continue;
         }
 
+        /// <summary>Key of the counterweight mass field.</summary>
         public const string CounterweightKey = "Calculations.CounterweightMassKg";
 
         static void SelectBeta(ElevatorProject p, double? beta)
@@ -946,7 +969,9 @@ return m==null?(double?)null:m.MachineMassKg;
             return o;
         }
 
-        // A combination passes only with complete results: every rope check present and OK, every traction case OK, no omission.
+        /// <summary>
+        /// A combination passes only with complete results: every rope check present and OK, every traction case OK, no omission.
+        /// </summary>
         public static bool Passes(RopeTractionResult r)
         {
             return r != null
@@ -977,7 +1002,7 @@ return m==null?(double?)null:m.MachineMassKg;
             return o == null ? null : o.Item;
         }
 
-        // Outcome for the Design Notes (no project change).
+        /// <summary>Outcome for the Design Notes (no project change).</summary>
         public static RopeSizing Outcome(ElevatorProject p, PresetLibrary lib, DesignContext ctx)
         {
             if (p == null || lib == null || !Follows(p))

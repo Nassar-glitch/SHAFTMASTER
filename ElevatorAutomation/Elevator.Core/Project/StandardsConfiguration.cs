@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Standards inputs of the project.</summary>
     public sealed class StandardsConfiguration
     {
         public string RuleSetId = "accepted-project-rules-v1";

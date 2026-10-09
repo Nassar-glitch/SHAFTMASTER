@@ -3,8 +3,10 @@ using System.IO;
 
 namespace Elevator.Reporting.Docx
 {
-    // PNG or JPEG image for embedding. Pixel size is read from the file header so callers can keep the
-    // aspect ratio without WPF. Reusable for logos now and drawings later.
+    /// <summary>
+    /// PNG or JPEG image for embedding. Pixel size is read from the file header so callers can keep the aspect ratio without WPF. Reusable
+    /// for logos now and drawings later.
+    /// </summary>
     public sealed class DocxImage
     {
         public byte[] Data { get; private set; }
@@ -12,6 +14,7 @@ namespace Elevator.Reporting.Docx
         // Optional vector version (SVG); Data is then its PNG fallback.
         public byte[] SvgData { get; private set; }
 
+        /// <summary>A copy of a PNG image that carries an SVG version.</summary>
         public static DocxImage WithSvg(DocxImage png, byte[] svg)
         {
             if (png == null || png.Extension != "png" || svg == null || svg.Length == 0)
@@ -32,11 +35,13 @@ namespace Elevator.Reporting.Docx
         public int PixelWidth { get; private set; }
         public int PixelHeight { get; private set; }
 
+        /// <summary>Reads an image from a file.</summary>
         public static DocxImage FromFile(string path)
         {
             return FromBytes(File.ReadAllBytes(path));
         }
 
+        /// <summary>Reads an image from its bytes.</summary>
         public static DocxImage FromBytes(byte[] d)
         {
             if (d == null)
@@ -117,7 +122,7 @@ namespace Elevator.Reporting.Docx
             return image;
         }
 
-        // Largest size within the box that keeps the aspect ratio.
+        /// <summary>Largest size within the box that keeps the aspect ratio.</summary>
         public void Fit(double maxWidthMm, double maxHeightMm, out double widthMm, out double heightMm)
         {
             double scale = Math.Min(maxWidthMm / PixelWidth, maxHeightMm / PixelHeight);

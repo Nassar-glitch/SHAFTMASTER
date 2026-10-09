@@ -2,7 +2,7 @@ using System;
 
 namespace Elevator.Core.Application
 {
-    // What a changed project input makes outdated (ARCHITECTURE-PLAN P4).
+    /// <summary>What a changed project input makes outdated (ARCHITECTURE-PLAN P4).</summary>
     [Flags]
     public enum InputEffect
     {

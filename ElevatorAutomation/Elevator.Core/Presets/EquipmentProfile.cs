@@ -1,5 +1,6 @@
 namespace Elevator.Core.Presets
 {
+    /// <summary>The reviewed equipment profile: allowances, preferred widths and rail data used by the plan rules.</summary>
     public sealed class EquipmentProfile
     {
         public string Version { get; set; }

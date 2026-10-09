@@ -1,5 +1,6 @@
 namespace Elevator.Core.Project
 {
+    /// <summary>An elevator family registered with its template and profile files.</summary>
     public sealed class FamilyDefinition
     {
         public ElevatorType ElevatorType { get; set; }

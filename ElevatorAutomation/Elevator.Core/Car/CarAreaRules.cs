@@ -2,8 +2,10 @@ using System;
 
 namespace Elevator.Core.Car
 {
-    // EN 81-20:2014 5.4.2.1, Table 6: rated load and maximum available car area (linear interpolation; beyond 2500 kg add
-    // 0.16 m² per extra 100 kg).
+    /// <summary>
+    /// EN 81-20:2014 5.4.2.1, Table 6: rated load and maximum available car area (linear interpolation; beyond 2500 kg add 0.16 m² per
+    /// extra 100 kg).
+    /// </summary>
     public static class CarAreaRules
     {
         static readonly double[,] Table6 = { { 100, 0.37 },
@@ -35,6 +37,7 @@ namespace Elevator.Core.Car
                 { 2000, 4.20 },
                 { 2500, 5.00 } };
 
+        /// <summary>Maximum available car area in m² for a rated load (EN 81-20 Table 6); null outside the table.</summary>
         public static double? MaximumAvailableAreaM2(double ratedLoadKg)
         {
             if (Double.IsNaN(ratedLoadKg) || ratedLoadKg < 100)
@@ -54,8 +57,10 @@ namespace Elevator.Core.Car
             return Table6[n - 1, 1];
         }
 
-        // Inverse of Table 6: the smallest rated load whose maximum available area is at least the given car area
-        // (same linear interpolation; beyond 5.00 m² the 2500 kg rule). Rounded up to whole kilograms.
+        /// <summary>
+        /// Inverse of Table 6: the smallest rated load whose maximum available area is at least the given car area (same linear
+        /// interpolation; beyond 5.00 m² the 2500 kg rule). Rounded up to whole kilograms.
+        /// </summary>
         public static double? MinimumRatedLoadKg(double areaM2)
         {
             if (Double.IsNaN(areaM2) || areaM2 <= 0)

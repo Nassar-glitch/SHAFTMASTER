@@ -4,14 +4,18 @@ using System.Linq;
 
 namespace Elevator.Core.Suspension
 {
-    // Traction sheave groove types of EN 81-50:2014 5.11.2.3.1.
+    /// <summary>Traction sheave groove types of EN 81-50:2014 5.11.2.3.1.</summary>
     public static class GrooveTypes
     {
+        /// <summary>Groove type: U groove with undercut.</summary>
         public const string UndercutU = "UndercutU";
+        /// <summary>Groove type: hardened V groove.</summary>
         public const string VHardened = "VHardened";
+        /// <summary>Groove type: unhardened V groove.</summary>
         public const string VUnhardened = "VUnhardened";
         public static readonly string[] All = { UndercutU, VHardened, VUnhardened };
 
+        /// <summary>The display name of a groove type.</summary>
         public static string Label(string type)
         {
             return type == UndercutU
@@ -19,17 +23,19 @@ namespace Elevator.Core.Suspension
                 : type == VHardened ? "V-groove, hardened" : type == VUnhardened ? "V-groove, unhardened" : type;
         }
 
+        /// <summary>True when the groove type has an undercut angle.</summary>
         public static bool NeedsUndercut(string type)
         {
             return type == UndercutU || type == VUnhardened;
         }
 
+        /// <summary>True when the groove type has a groove angle.</summary>
         public static bool NeedsGrooveAngle(string type)
         {
             return type == UndercutU || type == VHardened || type == VUnhardened;
         }
 
-        // Limits of EN 81-50:2014 5.11.2.3.1: β ≤ 105°; semi-circular γ ≥ 25°; V-groove γ ≥ 35° for lifts.
+        /// <summary>Limits of EN 81-50:2014 5.11.2.3.1: β ≤ 105°; semi-circular γ ≥ 25°; V-groove γ ≥ 35° for lifts.</summary>
         public static string AngleProblem(string type, double? beta, double? gamma)
         {
             if (!All.Contains(type))

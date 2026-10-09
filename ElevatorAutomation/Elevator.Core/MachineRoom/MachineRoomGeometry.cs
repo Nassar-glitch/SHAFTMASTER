@@ -5,7 +5,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.MachineRoom
 {
-    // Every target axis is read from the single shared design; no SW/SD/TZ sizing formulas here.
+    /// <summary>Every target axis is read from the single shared design; no SW/SD/TZ sizing formulas here.</summary>
     public sealed class MachineRoomGeometry
     {
         public readonly ElevatorParameters Design;
@@ -41,6 +41,7 @@ namespace Elevator.Core.MachineRoom
             GovernorOffset = design.MachineRoom.Governor.OffsetFromCarGuideAxisMm ?? oldGovernorOffset;
         }
 
+        /// <summary>Maps an X value from the reference design to the current design.</summary>
         public double MapX(double value)
         {
             double[] old = { 0, OldSW / 2, OldSW, -Extensions.Left, OldSW + Extensions.Right };
@@ -49,6 +50,7 @@ namespace Elevator.Core.MachineRoom
             return value + next[i] - old[i];
         }
 
+        /// <summary>Maps a Y value from the reference design to the current design.</summary>
         public double MapY(double value)
         {
             double[] old = { 0, OldCarRow, OldCwRow, OldSD, -Extensions.Front, OldSD + Extensions.Rear };
@@ -65,6 +67,7 @@ namespace Elevator.Core.MachineRoom
             return value + next[i] - old[i];
         }
 
+        /// <summary>Moves a point of the given role from the reference design to the current design.</summary>
         public LocalPoint Move(LocalPoint p, string role)
         {
             double dx = Design.Center - OldSW / 2, dy = Design.CarRow - OldCarRow;
@@ -123,6 +126,7 @@ namespace Elevator.Core.MachineRoom
             return new LocalPoint(p.X + dx, p.Y + dy, p.Z);
         }
 
+        /// <summary>True when the role stretches with the design instead of moving.</summary>
         public bool Flexible(string role)
         {
             return new[]

@@ -1,6 +1,6 @@
 namespace Elevator.Core.Project
 {
-    // All fields optional, no defaults; blank means not shown on the calculation sheet.
+    /// <summary>All fields optional, no defaults; blank means not shown on the calculation sheet.</summary>
     public sealed class ProjectReportDetails
     {
         public string ClientName;

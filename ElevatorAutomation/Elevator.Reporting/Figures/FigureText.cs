@@ -1,5 +1,6 @@
 namespace Elevator.Reporting.Figures
 {
+    /// <summary>A text of a figure.</summary>
     public sealed class FigureText : FigureEntity
     {
         public FigurePoint At;
@@ -10,7 +11,7 @@ namespace Elevator.Reporting.Figures
         public bool Title;
         public double WidthMm; // measured with the figure font
 
-        // Axis-aligned box in paper mm; At is on the baseline.
+        /// <summary>Axis-aligned box in paper mm; At is on the baseline.</summary>
         public void Box(out double x0, out double y0, out double x1, out double y1)
         {
             double ascent = HeightMm * 1.05, descent = HeightMm * 0.3;

@@ -3,6 +3,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>The coordinated plan and B-B results that feed the vertical section.</summary>
     public sealed class VerticalSource
     {
         public ElevatorParameters Plan;

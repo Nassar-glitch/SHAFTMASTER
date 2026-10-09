@@ -1,5 +1,6 @@
 namespace Elevator.Core.Project
 {
+    /// <summary>A validation result for one field.</summary>
     public sealed class ValidationIssue
     {
         public string Code;

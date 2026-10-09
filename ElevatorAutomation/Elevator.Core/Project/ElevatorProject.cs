@@ -10,7 +10,7 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Project
 {
-    // Authoritative inputs; measured template data and calculated geometry live in context/results.
+    /// <summary>Authoritative inputs; measured template data and calculated geometry live in context/results.</summary>
     public sealed class ElevatorProject
     {
         public ProjectInfo Info = new ProjectInfo();

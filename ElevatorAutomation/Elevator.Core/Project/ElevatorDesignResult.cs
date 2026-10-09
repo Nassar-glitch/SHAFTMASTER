@@ -5,6 +5,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Project
 {
+    /// <summary>Result of the shared design: validation, plan, sections, chassis geometry and calculation.</summary>
     public sealed class ElevatorDesignResult
     {
         public ElevatorParameters Plan;

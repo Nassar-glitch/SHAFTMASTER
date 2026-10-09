@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.GuideRails
 {
+    /// <summary>Source-bound internal cabin dimensions for FF1 and FF2.</summary>
     public sealed class CarGuideForceGeometry
     {
         public double? InternalWidthMm { get; private set; }

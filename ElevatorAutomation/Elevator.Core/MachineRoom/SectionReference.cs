@@ -1,5 +1,6 @@
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Reviewed B-B template reference values: source rows, levels and hanger offsets.</summary>
     public sealed class SectionReference
     {
         public double SourceCarRow;

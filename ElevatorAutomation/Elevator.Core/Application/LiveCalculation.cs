@@ -11,11 +11,14 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Application
 {
-    // Live calculation (ARCHITECTURE-PLAN P4): the current results, the text of invalid entries, and what is recalculated
-    // when an input changes. UI-free: the application schedules Recalculate (a 300 ms timer) and shows the results.
-    // Invalid entries keep their field message and the dependent result shows nothing.
+    /// <summary>
+    /// Live calculation (ARCHITECTURE-PLAN P4): the current results, the text of invalid entries, and what is recalculated when an input
+    /// changes. UI-free: the application schedules Recalculate (a 300 ms timer) and shows the results. Invalid entries keep their field
+    /// message and the dependent result shows nothing.
+    /// </summary>
     public sealed class LiveCalculation
     {
+        /// <summary>Editor path of the guide-shoe spacing field.</summary>
         public const string GuideShoeSpacingKey = "Calculations.CarGuideForces.GuideShoeSpacingMm";
         readonly DesignContext context;
         readonly PresetFlow presets;
@@ -49,6 +52,7 @@ namespace Elevator.Core.Application
         public bool Running { get; private set; }
 
         // ---------- what an input change makes outdated ----------
+        /// <summary>Which results an input change makes outdated, by the editor path of the input.</summary>
         public static InputEffect EffectOf(string path)
         {
             if (path.StartsWith("Report."))
@@ -59,28 +63,33 @@ namespace Elevator.Core.Application
             return effect;
         }
 
+        /// <summary>True when the stored P1–P4 result no longer matches the project.</summary>
         public bool ChassisStale(ElevatorProject project)
         {
             var r = Chassis.Result;
             return r != null && r.Reactions != null && !Chassis.IsCurrent(project, context);
         }
 
+        /// <summary>True when the stored P5–P7 result no longer matches the project.</summary>
         public bool SafetyPitStale(ElevatorProject project)
         {
             return SafetyPit != null && !SafetyPitCalculationEngine.IsCurrent(SafetyPit, project);
         }
 
+        /// <summary>True when the stored FF1 / FF2 result no longer matches the project.</summary>
         public bool CarGuideForcesStale(ElevatorProject project)
         {
             return CarGuideForces != null && !CarGuideForceCalculationEngine.IsCurrent(CarGuideForces, project, context);
         }
 
+        /// <summary>True when the FF1 / FF2 geometry matches the project.</summary>
         public bool CarGuideForceGeometryCurrent(ElevatorProject project)
         {
             return CarGuideForceCalculationEngine.IsGeometryCurrent(CarGuideForceGeometry, project, context);
         }
 
         // ---------- resets ----------
+        /// <summary>Discards every stored result.</summary>
         public void Reset()
         {
             Chassis = new CalculationWorkspace();
@@ -91,6 +100,7 @@ namespace Elevator.Core.Application
             ResetCarGuideForces();
         }
 
+        /// <summary>Discards the P5–P7 result.</summary>
         public void ResetSafetyPit()
         {
             SafetyPit = null;
@@ -98,11 +108,13 @@ namespace Elevator.Core.Application
             SafetyPitDrafts.Clear();
         }
 
+        /// <summary>Discards the rope and traction result.</summary>
         public void ResetRopeTraction()
         {
             RopeTraction = null;
         }
 
+        /// <summary>Discards the FF1 / FF2 result.</summary>
         public void ResetCarGuideForces()
         {
             CarGuideForceGeometry = null;
@@ -111,7 +123,7 @@ namespace Elevator.Core.Application
             CarGuideForceDraftError = null;
         }
 
-        // After Fill blanks: every result is outdated and the typed text is replaced.
+        /// <summary>After Fill blanks: every result is outdated and the typed text is replaced.</summary>
         public void InputsReplaced()
         {
             Design = null;
@@ -123,7 +135,7 @@ namespace Elevator.Core.Application
             ChassisDraftErrors.Clear();
         }
 
-        // After Reset to preset of a field: its typed text is dropped.
+        /// <summary>After Reset to preset of a field: its typed text is dropped.</summary>
         public void ClearDraft(string key)
         {
             ChassisDrafts.Remove(key);
@@ -137,6 +149,7 @@ namespace Elevator.Core.Application
 
         // ---------- typed text ----------
         // A chassis input: invalid text clears the canonical value instead of leaving an old hidden number active.
+        /// <summary>Reads a typed chassis input; invalid text clears the project value and records the field message.</summary>
         public object EnterChassisText(string path, string label, string text, bool numeric)
         {
             ChassisDrafts[path] = text;
@@ -160,6 +173,9 @@ namespace Elevator.Core.Application
             return parsed;
         }
 
+        /// <summary>
+        /// Reads a participating-mass percentage typed by the user; null, with the field message recorded, when the text is invalid.
+        /// </summary>
         public double? EnterSafetyPitPercentage(string path, string label, string text)
         {
             SafetyPitDrafts[path] = text;
@@ -177,6 +193,9 @@ namespace Elevator.Core.Application
             return parsed;
         }
 
+        /// <summary>
+        /// Reads the guide-shoe spacing typed by the user; null, with the field message recorded, when the text is invalid.
+        /// </summary>
         public double? EnterGuideShoeSpacing(string label, string text)
         {
             CarGuideForceDraft = text;
@@ -198,7 +217,7 @@ namespace Elevator.Core.Application
             return parsed;
         }
 
-        // The invalid chassis entries that block the current mode (Basic: only the masses it uses).
+        /// <summary>The invalid chassis entries that block the current mode (Basic: only the masses it uses).</summary>
         public Dictionary<string, string> RelevantDraftErrors(ElevatorProject project)
         {
             if (CalculationModes.Resolve(project.Calculations) != "Basic")
@@ -219,6 +238,7 @@ namespace Elevator.Core.Application
             return ChassisDraftErrors.Where(pair => fields.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
+        /// <summary>The field messages of invalid P5–P7 entries that apply to the current project.</summary>
         public Dictionary<string, string> RelevantSafetyPitDraftErrors(ElevatorProject project)
         {
             var errors = new Dictionary<string, string>();
@@ -251,6 +271,7 @@ namespace Elevator.Core.Application
             return errors;
         }
 
+        /// <summary>Marks the P5–P7 loads that depend on an invalid entry.</summary>
         public void ApplySafetyPitDraftValidation(ElevatorProject project, SafetyPitCalculationResult result)
         {
             if (result == null)
@@ -273,6 +294,7 @@ namespace Elevator.Core.Application
             }
         }
 
+        /// <summary>Marks FF1 / FF2 invalid when the guide-shoe spacing entry is invalid.</summary>
         public void ApplyCarGuideForceDraftValidation()
         {
             if (CarGuideForces == null || CarGuideForceDraftError == null)
@@ -288,6 +310,7 @@ namespace Elevator.Core.Application
             r.Issues.Add(new CalculationIssue(GuideShoeSpacingKey, CarGuideForceDraftError));
         }
 
+        /// <summary>Generates the FF1 / FF2 geometry when it is missing or stale.</summary>
         public void EnsureCarGuideForceGeometry(ElevatorProject project)
         {
             if (!CarGuideForceCalculationEngine.IsGeometryCurrent(CarGuideForceGeometry, project, context))
@@ -296,6 +319,7 @@ namespace Elevator.Core.Application
 
         // ---------- calculation ----------
         // Validation of the current inputs for the selected drawing views.
+        /// <summary>Validates the current inputs for the drawing views of the session.</summary>
         public ElevatorDesignResult Validate(ProjectSession session)
         {
             if (session.Views == 0)
@@ -304,13 +328,16 @@ namespace Elevator.Core.Application
             return Design;
         }
 
+        /// <summary>Recalculates the results whose inputs changed: P1–P4, ropes and traction, P5–P7 and FF1 / FF2.</summary>
         public void Recalculate(ElevatorProject project)
         {
             Recalculate(project, () => presets.Apply(project, true));
         }
 
-        // Applies the presets (applyPresets; its errors are ignored), then recalculates only the results whose inputs changed;
-        // independent current results stay as they are.
+        /// <summary>
+        /// Applies the presets (applyPresets; its errors are ignored), then recalculates only the results whose inputs changed; independent
+        /// current results stay as they are.
+        /// </summary>
         public void Recalculate(ElevatorProject project, Action applyPresets)
         {
             if (Running)

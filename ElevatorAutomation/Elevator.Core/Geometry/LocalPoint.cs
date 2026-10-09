@@ -1,5 +1,6 @@
 namespace Elevator.Core.Geometry
 {
+    /// <summary>A point or vector in mm.</summary>
     public struct LocalPoint
     {
         public double X;

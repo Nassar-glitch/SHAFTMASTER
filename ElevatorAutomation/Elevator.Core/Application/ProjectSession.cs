@@ -6,7 +6,9 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Application
 {
-    // Project session (ARCHITECTURE-PLAN P4): the open project, its file, the unsaved-changes state and the drawing options.
+    /// <summary>
+    /// Project session (ARCHITECTURE-PLAN P4): the open project, its file, the unsaved-changes state and the drawing options.
+    /// </summary>
     public sealed class ProjectSession
     {
         public ElevatorProject Project;
@@ -20,14 +22,17 @@ namespace Elevator.Core.Application
             Project = project;
         }
 
-        // A new project opens complete from config/presets.json (DESIGN-FLOW stage 2); every unlocked value follows the presets.
-        // The audited counterweight reference pose and bracket source are kept from the reviewed example (seedPath).
+        /// <summary>
+        /// A new project opens complete from config/presets.json (DESIGN-FLOW stage 2); every unlocked value follows the presets. The
+        /// audited counterweight reference pose and bracket source are kept from the reviewed example (seedPath).
+        /// </summary>
         public static ElevatorProject NewProject(string seedPath, PresetLibrary presets, DesignContext context)
         {
             var seed = ProjectJson.Deserialize(File.ReadAllText(seedPath));
             return ProjectPresets.CreateNew(presets, context, seed.Counterweight, seed.Rails.BracketSource);
         }
 
+        /// <summary>Writes the project to a file and clears the unsaved state.</summary>
         public void Save(string path)
         {
             path = Path.GetFullPath(path);
@@ -49,6 +54,7 @@ namespace Elevator.Core.Application
             Dirty = false;
         }
 
+        /// <summary>Reads a project from a file and clears the unsaved state.</summary>
         public void Open(string path)
         {
             var p = ProjectJson.Deserialize(File.ReadAllText(path));
@@ -60,6 +66,7 @@ namespace Elevator.Core.Application
             Dirty = false;
         }
 
+        /// <summary>Moves an intermediate floor by a number of positions; the end floors stay fixed.</summary>
         public void MoveIntermediate(string id, int delta)
         {
             var floors = Project.Building.Floors;

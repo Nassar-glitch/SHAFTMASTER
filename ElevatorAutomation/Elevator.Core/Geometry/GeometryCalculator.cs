@@ -4,6 +4,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Maps points of the plan from the old to the new design dimensions, by anchor and role.</summary>
     public sealed class GeometryCalculator
     {
         public readonly ElevatorParameters Old;
@@ -15,28 +16,33 @@ namespace Elevator.Core.Geometry
             Next = next;
         }
 
+        /// <summary>Horizontal shift of an anchor between the old and the new design.</summary>
         public double DX(string a)
         {
             return Next.X(a) - Old.X(a);
         }
 
+        /// <summary>Vertical shift of an anchor between the old and the new design.</summary>
         public double DY(string a)
         {
             return Next.Y(a) - Old.Y(a);
         }
 
+        /// <summary>Maps an X value by the shifts of the given anchors.</summary>
         public double MapX(double x, params string[] a)
         {
             string b = a.OrderBy(k => Math.Abs(x - Old.X(k))).First();
             return x + DX(b);
         }
 
+        /// <summary>Maps a Y value by the shifts of the given anchors.</summary>
         public double MapY(double y, params string[] a)
         {
             string b = a.OrderBy(k => Math.Abs(y - Old.Y(k))).First();
             return y + DY(b);
         }
 
+        /// <summary>The translation of a role between the old and the new design.</summary>
         public LocalPoint Translation(string role)
         {
             switch (role)
@@ -67,6 +73,7 @@ namespace Elevator.Core.Geometry
             }
         }
 
+        /// <summary>True when the role stretches with the design instead of moving.</summary>
         public bool IsFlexible(string role)
         {
             return new[]
@@ -86,6 +93,7 @@ namespace Elevator.Core.Geometry
             }.Contains(role);
         }
 
+        /// <summary>Maps a point of the old design to the new design by its role.</summary>
         public LocalPoint MapPoint(LocalPoint world, string role)
         {
             LocalPoint p = world;

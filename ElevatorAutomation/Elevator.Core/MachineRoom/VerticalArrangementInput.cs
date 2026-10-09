@@ -1,5 +1,6 @@
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Inputs of the vertical machine arrangement: drops, sheaves, steel and hanger.</summary>
     public sealed class VerticalArrangementInput
     {
         public double CarDropX;

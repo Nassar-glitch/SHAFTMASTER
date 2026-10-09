@@ -5,8 +5,10 @@ using Elevator.Core.Shaft;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Calculates the A-A section from the floors and the slab thickness.</summary>
     public static class SectionAACalculator
     {
+        /// <summary>Calculates the A-A geometry from the A-A inputs and the slab thickness.</summary>
         public static SectionAAGeometry Calculate(SectionAAProject d, double slab)
         {
             if (d == null || d.SchemaVersion != 1 || d.Floors == null || d.Floors.Count < 3 || d.Floors.Count > 101)

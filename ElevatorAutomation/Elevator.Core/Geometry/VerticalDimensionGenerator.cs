@@ -2,8 +2,10 @@ using Elevator.Core.Shaft;
 
 namespace Elevator.Core.Geometry
 {
+    /// <summary>Adds the dimensions to the vertical section geometry.</summary>
     public static class VerticalDimensionGenerator
     {
+        /// <summary>Adds the dimensions to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             var f = g.Floors;

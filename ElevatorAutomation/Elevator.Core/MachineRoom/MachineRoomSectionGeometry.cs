@@ -4,6 +4,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Core.MachineRoom
 {
+    /// <summary>Maps native B-B section points from the reference design to the current design.</summary>
     public sealed class MachineRoomSectionGeometry
     {
         public readonly MachineRoomSectionParameters P;
@@ -50,6 +51,7 @@ namespace Elevator.Core.MachineRoom
             return x + (x < -R.SourceSD / 2 ? R.SourceSD - Design.SD : 0);
         }
 
+        /// <summary>Maps a point of the reference B-B section to the current design.</summary>
         public LocalPoint Map(LocalPoint p, string role)
         {
             double x = p.X, y = p.Y;
@@ -103,6 +105,7 @@ namespace Elevator.Core.MachineRoom
             return new LocalPoint(x, y, p.Z);
         }
 
+        /// <summary>True when the role stretches with the design instead of moving.</summary>
         public bool Flexible(string role)
         {
             return role == "slab"

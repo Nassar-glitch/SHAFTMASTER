@@ -2,8 +2,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Shaft
 {
+    /// <summary>Adds the pit to the vertical section geometry.</summary>
     public static class PitGenerator
     {
+        /// <summary>Adds the pit to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             g.Line("Pit.FinishedFloor", "Structure", -s.Plan.SD, g.PitFloorZ, 0, g.PitFloorZ);

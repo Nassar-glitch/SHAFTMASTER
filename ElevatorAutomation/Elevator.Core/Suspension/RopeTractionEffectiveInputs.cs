@@ -1,5 +1,6 @@
 namespace Elevator.Core.Suspension
 {
+    /// <summary>The inputs used by the rope and traction checks: project values with the presets applied.</summary>
     public sealed class RopeTractionEffectiveInputs
     {
         public string RopeDesignation;

@@ -3,8 +3,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Car
 {
+    /// <summary>Adds the car to the vertical section geometry.</summary>
     public static class CarVerticalGenerator
     {
+        /// <summary>Adds the car to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             double rear = -s.Plan.CarRear, front = -s.Plan.CarFront;

@@ -6,10 +6,13 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.Core.MachineRoom
 {
-    // Issued only by the shared design engine. Digests are immutable snapshots taken
-    // before generation, not a stamp made from the calculation caller's current project.
+    /// <summary>
+    /// Issued only by the shared design engine. Digests are immutable snapshots taken before generation, not a stamp made from the
+    /// calculation caller's current project.
+    /// </summary>
     public sealed class ChassisGeometryProvenance
     {
+        /// <summary>Version of the provenance fingerprint.</summary>
         public const string Version = "ChassisGeometrySource-v1";
         readonly string inputFingerprint;
         readonly string contextFingerprint;
@@ -102,6 +105,7 @@ namespace Elevator.Core.MachineRoom
             }
         }
 
+        /// <summary>Checks that the geometry was generated from the current inputs and context and was not changed afterwards.</summary>
         public static GeometryProvenanceValidation Validate(
             ElevatorProject p,
             ChassisCalculationGeometry g,

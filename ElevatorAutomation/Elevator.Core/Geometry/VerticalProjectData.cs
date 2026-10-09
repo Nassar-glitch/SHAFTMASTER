@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.Core.Geometry
 {
-    // Experimental schema, deliberately independent of the validated ProjectInput schema.
+    /// <summary>Experimental schema, deliberately independent of the validated ProjectInput schema.</summary>
     public sealed class VerticalProjectData
     {
         public int SchemaVersion = 1;

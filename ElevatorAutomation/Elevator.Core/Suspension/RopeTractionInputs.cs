@@ -1,7 +1,9 @@
 namespace Elevator.Core.Suspension
 {
-    // Rope / traction inputs (Suspension page). All optional and nullable; a null field of an unlocked key takes its preset
-    // from config/presets.json through PresetFields. Older projects have no group.
+    /// <summary>
+    /// Rope / traction inputs (Suspension page). All optional and nullable; a null field of an unlocked key takes its preset from
+    /// config/presets.json through PresetFields. Older projects have no group.
+    /// </summary>
     public sealed class RopeTractionInputs
     {
         public double? MinimumBreakingLoadKn;

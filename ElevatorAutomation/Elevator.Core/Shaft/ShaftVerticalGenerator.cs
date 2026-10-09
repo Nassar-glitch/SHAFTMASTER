@@ -4,8 +4,10 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Shaft
 {
+    /// <summary>Adds the shaft to the vertical section geometry.</summary>
     public static class ShaftVerticalGenerator
     {
+        /// <summary>Adds the shaft to the vertical section geometry.</summary>
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             g.Box("Shaft.RearWall", "Concrete", -s.Plan.SD - s.RearWallThicknessMm, g.PitFloorZ, -s.Plan.SD, g.MRSlabUndersideZ);
