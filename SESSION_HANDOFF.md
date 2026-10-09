@@ -12,10 +12,34 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** P7 reviewed OK and merged into main as `7c5e930` (--no-ff) after a passing pre-merge tier 1 (artifacts/test-results/20261010-000239, 141 s). Not pushed. P8 not started.
-- **Goal:** P7: xUnit as the single home of the Core / Reporting tier-1 tests, tier 1 about 3 minutes, one test command (`tools/test.ps1`). No behaviour change.
-- **Last updated:** 2026-10-09 (Claude Code, Executor role; P6 merge, then P7)
+- **Status:** Complete, awaiting Planner (2026-10-10): ARCHITECTURE-PLAN P8 "Repository polish" on branch `refactor/p8-polish` (from `main`, after the P7 merge). Not merged, not pushed. P7 was merged into main after a passing tier 1 (`20261010-000239`, 141 s).
+- **Goal:** P8: docs reorganised, README per project, CHANGELOG, tools/release.ps1, tracked legacy outputs trimmed. No behaviour change; no ShaftMaster.* rename, no GitHub upload.
+- **Last updated:** 2026-10-10 (Claude Code, Executor role; P7 merge, then P8)
 - **Completed:**
+  - P7 merged into `main` (--no-ff) after the pending `.github/workflows/ci.yml` change was committed and tier 1 passed. Not pushed.
+  - ARCHITECTURE-PLAN P8 "Repository polish" (2026-10-10), branch `refactor/p8-polish`. Commits (oldest first): `c0beb33` P8: untrack legacy outputs that no test reads (the seven golden drawings stay); `c106a51` P8: untrack legacy outputs that no test reads (the seven golden drawings and cad-test-results.json stay); `a2b56e8` P8: docs reorganised into architecture/, design/, calculations/, presets/, testing/, releases/; links fixed; `b8b9301` P8: docs overview and index, README per project, CHANGELOG; `07a03ac` P8: tools/release.ps1 (build, tiers 1-3, copy, release notes, SHA256SUMS, verify; -DryRun); `f13a281` P8: release.ps1 picks the latest timestamped test run.
+    - **Docs tree (`ElevatorAutomation/docs/`):** `README.md` (index); `architecture/` (OVERVIEW.md new, ELEVATOR_SOLUTION_ARCHITECTURE, ELEVATOR_PROJECT_MODEL, CURRENT_INPUT_INVENTORY, MACHINE_ROOM_IMPLEMENTATION, MACHINE_ROOM_CODE_REQUIREMENTS, CHASSIS_DEPENDENCY_CORRECTION, SECTION_BB_IMPLEMENTATION, SECTION_BB_INSPECTION, STEP-EXPORT); `design/` (README.md linking to DESIGN-FLOW.md, ARCHITECTURE-PLAN.md, CALCULATION_ROADMAP.md); `calculations/` (CALCULATION-SHEET-EXPORT, CALCULATION-SHEET-FIGURES, CAR-GUIDE-FORCES, ROPE-TRACTION-CALCULATIONS, SAFETY-PIT-CALCULATIONS, SIMPLIFIED-CALCULATIONS); `presets/` (PRESETS); `testing/` (TESTING, evidence/); `releases/` (README, SHAFTMASTER-UI-RESULTS, STEP-EXPORT-RESULTS). Moves were `git mv`. Links fixed in CLAUDE.md, README.md, ElevatorAutomation/README.md, CALCULATION_ROADMAP.md, ci.yml, the Desktop csproj (STEP-EXPORT.md and SHAFTMASTER-UI-RESULTS.md still copied to the output), code comments and the docs themselves; a script checked every relative Markdown link of the 43 tracked .md files: 0 broken. SESSION_HANDOFF.md history and ARCHITECTURE-PLAN.md (not to be touched) still name the old flat paths in plain text; the release folders' own doc copies are unchanged.
+    - **OVERVIEW.md:** the seven projects and their dependencies (table + diagram), component folders, data flow survey -> project -> calculations -> outputs.
+    - **READMEs:** one in each of the seven project folders (purpose, namespaces, dependencies, how to test); the "Structure" section of ElevatorAutomation/README.md is rewritten to the current layout.
+    - **CHANGELOG.md** (repository root): v01, v02, v03 and "Unreleased" (refactor P0-P8, internal, no user-visible change). v01 had no release notes file; its entry is written from docs/releases/SHAFTMASTER-UI-RESULTS.md.
+    - **tools/release.ps1 -Version vNN [-DryRun] [-SkipTests]:** refuses if `bin-shaftmaster-vNN` exists (real run) or the CHANGELOG has no `## [vNN]` section (a dry run falls back to "Unreleased"); builds into artifacts/release-build; runs tiers 1-3; copies; writes RELEASE-NOTES.md (CHANGELOG section + key hashes + test table) and SHA256SUMS.txt; verifies the copy and that v02 and v03 still match their own SHA256SUMS.txt (v01 has none); prints a summary. Tested: refusal on `-Version v03`; `-DryRun -SkipTests`; the full `-DryRun` below. `bin-shaftmaster-v04` was NOT created.
+    - **Legacy outputs untracked** (`git rm --cached`, files stay on disk, `.gitignore` entries added): 23 of 30 files in `legacy/ElevatorPlanGenerator/output/`, 16 in `tests/previous-runs/`, `RuleTests.exe`, `generated-preview.pdf/png`. Kept: the seven `current-drawing` DWGs named in `tests/cad-test-results.json` (what ArchitectureTests.Golden reads) and the json itself.
+    - **Dry-run output (`tools/release.ps1 -Version v04 -DryRun`, includes tiers 1-3):**
+      ```
+      Release v04 (DRY RUN)
+        folder        D:\CAD DATA---------------------\DWGs\2026\dwg plan codex\ElevatorAutomation\artifacts\release-dryrun\bin-shaftmaster-v04
+        files         43 (+ SHA256SUMS.txt)
+        ShaftMaster   A0A3BA227DB87323CA4BED277D5A06129EBE1E9B500C231CA4A39C5EFA9902BA
+        notes         RELEASE-NOTES.md from CHANGELOG section [Unreleased]
+        tests         tiers 1-3 PASS, 17 suites
+        verified      43 files against SHA256SUMS.txt
+        earlier       bin-shaftmaster-v01: no SHA256SUMS.txt
+        earlier       bin-shaftmaster-v02: checksums match
+        earlier       bin-shaftmaster-v03: checksums match
+        nothing was created in ElevatorAutomation; the dry-run copy is under artifacts/release-dryrun
+      ```
+      The v04 `ShaftMaster.exe` hash differs from v03 because it is a fresh build of the current sources (paths and assembly metadata); nothing in a release folder changed.
+    - **Release hashes unchanged:** ShaftMaster.exe v01 DC8A76A3, v02 57FBE447, v03 9CFD5FAB. Golden approved files and Templates unchanged.
   - P6 merged into `main` (`780e1a5`, --no-ff) after a passing pre-merge tier 1 (`20261009-215108`, 602 s). Not pushed.
   - ARCHITECTURE-PLAN P7 "Test consolidation" (2026-10-09), branch `refactor/p7-tests`. Commits (oldest first): `ca0c11d` P7: thread-safe multi-entry rope selection cache, scoped JSON serializer override, parallel xUnit test classes; `9168004` P7: Presets / rope / FF / safety-pit console suites become xUnit tests; geometry cache; warm per-fixture caches; Table 6 grid computed once; `d26c2fc` P7: tools/test.ps1 with -Suite / -List, parallel tier 1, summary table; retire the duplicated console runners; `58db77d` P7: converted suites flush their check counts per class; `6a5bea4` P7: project JSON compared independent of member order (JavaScriptSerializer order is not stable): the real cause of the flaky net48 tests; `5d88082` P7: TESTING.md, CI runs tools/test.ps1 -Tier 1.
     - **Tier 1 time:** before 602 s (xunit-core 309 s of it; presets 106 s and golden 78 s serial) -> after 160 s (+10 s xUnit build) in `20261009-234346`, all six tier-1 suites in parallel processes. Tier 2 208 s, tier 3 140 s.
@@ -726,6 +750,8 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Docs: `docs/CAR-GUIDE-FORCES.md`.
   - Outputs: `bin-shaftmaster-ff-candidate/`, `output/ff-ui-20261006/`, `output/ff-source-review-20261006/`.
 - **Checks:**
+  - P8 (2026-10-10): the dry run above ran tiers 1-3 on the final sources, all PASS (`artifacts/test-results/20261010-002708`): tier 1 138 s, tier 2 208 s, tier 3 133 s; suites and assertions as in the P7 final run. A first dry run of the same commit failed only because Python was not on PATH in that shell.
+    - Not run: `tools/release.ps1` without `-DryRun` (by instruction: the user tests STEP export manually first); STEP export against SOLIDWORKS; the Linux CI step.
   - P7 (2026-10-09): final run `ElevatorAutomation/artifacts/test-results/20261009-234346`, all PASS: tier 1 160 s (core-net8.0 533, reporting-net8.0 145, core-net48 653, reporting-net48 145, golden 566, sheet-wpf 8285); tier 2 208 s (presets-ui 59, rope-ui 33, sheet-ui 63, calculation-ui 54, basic 67, safety-pit-ui 35, safety-pit-draft-ui 117, ff-ui 126); tier 3 140 s (integration 22, presets-native 6, sheet-word-render 8285).
     - Not run: the new CI step on ubuntu (`pwsh tools/test.ps1 -Tier 1` has only been run on Windows; the Linux path is by reading); the golden console was not trimmed of the Core captures that GoldenCoreTests repeats.
   - P6 (2026-10-09): final run `ElevatorAutomation/artifacts/test-results/20261009-212749` on the last commit of the branch, all PASS:
@@ -1042,7 +1068,7 @@ This file is the shared status channel between the user's Planner chat and Execu
        - Proposal: the stalled check covers only the counterweight-on-buffers case (μ = 0.2 is given for "counterweight stalled"; EN 81-50 5.11.2.2.3 also mentions the lowest position). It applies only where EN 81-20 5.5.3 c) 1) traction limiting is used, not the 5.5.3 c) 2) electric safety device.
   1. Release target is the user's decision: keep FF as a separate candidate, combine it with the safety/pit candidate, or replace `bin-shaftmaster-v01`. This applies to release promotion and does not block planning or implementing the next calculation in a separate candidate.
   2. ~~Open FF engineering questions~~: resolved by the user decision on 2026-10-07 (user-approved interpretation; see `CAR-GUIDE-FORCES.md`).
-- **Next step:** Awaiting Planner (review and merge of `refactor/p7-tests`).
+- **Next step:** Awaiting Planner (review and merge of `refactor/p8-polish`). v04 release only after the user has tested STEP export manually.
 
 ## Decisions and constraints
 
