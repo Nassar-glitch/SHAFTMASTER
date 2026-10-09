@@ -347,10 +347,19 @@ namespace Elevator.Core.Presets
                 : (double?)null;
         }
 
-        /// <summary>Fingerprint of the library.</summary>
+        // The library is read-only after it is loaded; every rope trial and every fingerprint asks for its hash.
+        string hash;
+
+        /// <summary>Fingerprint of the library (computed once per loaded library).</summary>
         public string Hash()
         {
-            return CalculationFingerprint.Hash(this);
+            var value = hash;
+            if (value == null)
+            {
+                value = CalculationFingerprint.Hash(this);
+                hash = value;
+            }
+            return value;
         }
 
         /// <summary>Rope data follow the rope diameter by exact table match only; an unlisted diameter has no preset.</summary>

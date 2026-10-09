@@ -22,7 +22,6 @@ using Elevator.Solution.Desktop.Common;
 #endif
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Elevator.Reporting.Tests
 {
@@ -61,32 +60,33 @@ namespace Elevator.Reporting.Tests
             public byte[] Png(Figure f, double dpi) { return OnePixelPng; }
         }
         sealed class Rendered { public CalculationSheet Sheet; public byte[] SheetDocx; public byte[] NotesDocx; public List<string> Svgs = new List<string>(); }
-        static readonly Dictionary<string, Rendered> cache = new Dictionary<string, Rendered>();
-        static Rendered Render(string name)
+        // One render per fixture, shared by the tests that use it; the first request renders all fixtures in parallel.
+        static readonly WarmCache<Rendered> cache = new WarmCache<Rendered>(() => Fixtures().Select(x => (string)x[0]), RenderThread);
+        static readonly object setup = new object();
+        static Rendered Render(string name) { return cache.Get(name); }
+        static Rendered RenderThread(string name)
         {
-            lock (cache)
-            {
-                Rendered r;
-                if (cache.TryGetValue(name, out r)) return r;
-                r = null; Exception error = null;
-                // WPF measurement needs an STA thread on .NET Framework.
-                var t = new Thread(() => { try { r = RenderNow(name); } catch (Exception e) { error = e; } });
+            Rendered r = null; Exception error = null;
+            // WPF measurement needs an STA thread on .NET Framework.
+            var t = new Thread(() => { try { r = RenderNow(name); } catch (Exception e) { error = e; } });
 #if NETFRAMEWORK
-                t.SetApartmentState(ApartmentState.STA);
+            t.SetApartmentState(ApartmentState.STA);
 #endif
-                t.Start(); t.Join();
-                if (error != null) throw new Exception("Rendering " + name + " failed", error);
-                return cache[name] = r;
-            }
+            t.Start(); t.Join();
+            if (error != null) throw new Exception("Rendering " + name + " failed", error);
+            return r;
         }
         static Rendered RenderNow(string name)
         {
-            ReportClock.Now = () => Clock;
+            lock (setup)
+            {
+                ReportClock.Now = () => Clock;
 #if NETFRAMEWORK
-            if (FigureRender.Rasterizer == null) FigureRender.Rasterizer = new WpfFigureRasterizer();
+                if (FigureRender.Rasterizer == null) FigureRender.Rasterizer = new WpfFigureRasterizer();
 #else
-            if (FigureRender.Rasterizer == null) FigureRender.Rasterizer = new TestRasterizer();
+                if (FigureRender.Rasterizer == null) FigureRender.Rasterizer = new TestRasterizer();
 #endif
+            }
             var ctx = TestData.Context(); var lib = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
             string optionsPath = Path.Combine(Golden, "fixtures", name + ".options.json");
             var o = File.Exists(optionsPath) ? CoreJson.CreateWithDefaultLimit().Deserialize<GoldenOptions>(File.ReadAllText(optionsPath)) : new GoldenOptions();

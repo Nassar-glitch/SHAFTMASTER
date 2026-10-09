@@ -114,7 +114,7 @@ Reused project data: rope count and diameter, sheave pitch diameter, rated speed
 
 | Suite | Runner | What it covers |
 |---|---|---|
-| Core | `tests/solution/RopeTractionTests.cs` (`run-rope-traction-core.ps1`) | Presets, lock / follow / reset and round trip; fixtures with and without a deflector; every groove type, including the clamped edges; D/d = 40 exactly; Sf exactly at the limit and just below it; NOT OK cases; omissions; invalid geometry; rule connection; Table 6; independence from the other calculations |
+| Core | `tests/Elevator.Core.Tests/Suites/RopeTractionTests.cs` (xUnit, `tools/test.ps1 -Suite core-net48`; the Python hand check follows in the same suite) | Presets, lock / follow / reset and round trip; fixtures with and without a deflector; every groove type, including the clamped edges; D/d = 40 exactly; Sf exactly at the limit and just below it; NOT OK cases; omissions; invalid geometry; rule connection; Table 6; independence from the other calculations |
 | Independent hand check | `tests/solution/verify_rope_traction.py` | Re-implements the formulas above from the standard and compares every engine value of the exported fixtures: Nequiv, Kp, Sf, Tmax, μ, f, e^(fα), T1, T2 and OK |
 | UI | `tests/solution/RopeTractionUiTests.cs` (`run-rope-traction-ui.ps1`) | Suspension editors (presets shown, follow, lock, reset, rejection messages); Calculate; export dialog with NOT OK; Design Notes; save and reopen |
 | Sheet | `tests/solution/CalculationSheetTests.cs` | Fixtures 14–15: section, summary row, input rows, termination row, F10, NOT OK. Design Notes fixtures 16–19: Table 6 warning with 955 kg, invalid layout, traction margin, rope upsize, the clean "No design notes" case, and no forbidden wording or tables |

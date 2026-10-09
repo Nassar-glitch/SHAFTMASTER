@@ -20,9 +20,6 @@ using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
 
-// ProjectPresets keeps a static selection cache: the tests run one after another.
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elevator.Core.Tests
 {
     // The Core-level golden captures of tests/golden/GoldenTests.cs (round-trip project JSON, results, fingerprints, new
@@ -114,7 +111,9 @@ namespace Elevator.Core.Tests
         }
 
         // ---------- the same capture as tests/golden/GoldenTests.cs (Core part) ----------
-        static Dictionary<string, byte[]> Capture(string name)
+        static readonly WarmCache<Dictionary<string, byte[]>> Captured = new WarmCache<Dictionary<string, byte[]>>(() => FixtureNames().Select(x => (string)x[0]), CaptureNow);
+        static Dictionary<string, byte[]> Capture(string name) { return Captured.Get(name); }
+        static Dictionary<string, byte[]> CaptureNow(string name)
         {
             var result = new Dictionary<string, byte[]>();
             var lib = Lib.Value; var ctx = Ctx.Value;

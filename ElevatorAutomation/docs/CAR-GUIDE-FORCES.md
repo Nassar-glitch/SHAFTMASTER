@@ -88,7 +88,7 @@ Missing h/capacity produces `MISSING_INPUT`; nonpositive/nonfinite values produc
 
 Independent source fixture (never project defaults): Q480 kg, internal width1100 mm, depth2100 mm, h1200 mm → FF1 base1100 N/design2200 N; FF2 base1050 N/design2100 N. A separate live UI fixture uses SW1500/SD1800 and therefore the actual shared internal cabin1100×1400 mm → FF1 1100/2200 N and FF2 700/1400 N.
 
-Test sources: `CarGuideForceTests.cs`, `CarGuideForceUiTests.cs`, `verify_car_guide_force_note.py`; runners: `run-car-guide-force-core.ps1`, `run-ff-ui.ps1`. Evidence is under `output/ff-ui-20261006/`; affected engine regression evidence is under `output/ff-source-review-20261006/`.
+Test sources: `tests/Elevator.Core.Tests/Suites/CarGuideForceTests.cs`, `CarGuideForceUiTests.cs`, `verify_car_guide_force_note.py`; runners: `tools/test.ps1 -Suite core-net48` (the Core assertions are the xUnit class `tests/Elevator.Core.Tests/Suites/CarGuideForceTests.cs` since P7), `run-ff-ui.ps1`. Evidence is under `output/ff-ui-20261006/`; affected engine regression evidence is under `output/ff-source-review-20261006/`.
 
 Candidate: `bin-shaftmaster-ff-candidate/ShaftMaster.exe`, built using `build-solution.ps1 -BinDirectory bin-shaftmaster-ff-candidate`. Existing runtime dependencies and STEP packaging are unchanged. The release and previous safety/pit candidate remain separate.
 
