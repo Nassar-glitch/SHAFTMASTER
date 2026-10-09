@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
-using Elevator.Core;
+using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD
 {

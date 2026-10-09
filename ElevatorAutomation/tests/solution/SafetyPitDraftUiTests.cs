@@ -10,6 +10,7 @@ using System.Windows.Media;
 using Elevator.Core.Application;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+using Elevator.Core.SafetyGear;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
 

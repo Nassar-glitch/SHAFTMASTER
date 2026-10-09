@@ -2,7 +2,8 @@ using System;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Autodesk.AutoCAD.DatabaseServices;
-using Elevator.Core;
+using Elevator.Core.Serialization;
+using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD
 {

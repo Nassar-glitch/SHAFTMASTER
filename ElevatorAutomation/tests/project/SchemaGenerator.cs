@@ -4,7 +4,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Web.Script.Serialization;
+using Elevator.Core.GuideRails;
+using Elevator.Core.Calculations;
 using Elevator.Core.Project;
+using Elevator.Core.Suspension;
+using Elevator.Core.SafetyGear;
 public static class SchemaGenerator
 {
     static Dictionary<string,object> Schema(Type type,string name)
@@ -29,7 +33,7 @@ public static class SchemaGenerator
         if(type==typeof(Dictionary<string,object>))return new Dictionary<string,object>{{"type","object"},{"additionalProperties",true}};
         if(type.IsGenericType&&type.GetGenericTypeDefinition()==typeof(List<>))return new Dictionary<string,object>{{"type","array"},{"items",Schema(type.GetGenericArguments()[0],name)}};
         var properties=new Dictionary<string,object>();foreach(var field in type.GetFields(BindingFlags.Public|BindingFlags.Instance))properties[field.Name]=Schema(field.FieldType,field.Name);
-        var required=type==typeof(Elevator.Core.Calculations.ChassisCalculationInputs)||type==typeof(Elevator.Core.Calculations.SafetyPitInputs)||type==typeof(Elevator.Core.Calculations.CarGuideForceInputs)||type==typeof(Elevator.Core.Calculations.RopeTractionInputs)||type==typeof(ProjectReportDetails)?new string[0]:properties.Keys.Where(k=>type!=typeof(ElevatorProject)||(k!="Calculations"&&k!="Report"&&k!="UserEditedFields"&&k!="FollowsPresets")).ToArray();
+        var required=type==typeof(Elevator.Core.Calculations.ChassisCalculationInputs)||type==typeof(Elevator.Core.SafetyGear.SafetyPitInputs)||type==typeof(Elevator.Core.GuideRails.CarGuideForceInputs)||type==typeof(Elevator.Core.Suspension.RopeTractionInputs)||type==typeof(ProjectReportDetails)?new string[0]:properties.Keys.Where(k=>type!=typeof(ElevatorProject)||(k!="Calculations"&&k!="Report"&&k!="UserEditedFields"&&k!="FollowsPresets")).ToArray();
         return new Dictionary<string,object>{{"type","object"},{"properties",properties},{"required",required},{"additionalProperties",false}};
     }
     public static void Main(string[] args)

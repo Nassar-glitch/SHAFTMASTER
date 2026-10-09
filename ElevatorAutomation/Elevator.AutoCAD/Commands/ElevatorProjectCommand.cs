@@ -4,7 +4,8 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
 
 namespace Elevator.AutoCAD
 {

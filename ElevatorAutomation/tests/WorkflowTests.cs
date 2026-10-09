@@ -4,7 +4,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
-using Elevator.Core;
+using Elevator.Core.Project;
 public sealed class WorkflowTests
 {
  [CommandMethod("ELEVATORWORKFLOWCHECK")]

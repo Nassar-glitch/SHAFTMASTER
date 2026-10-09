@@ -6,9 +6,9 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.Core;
 using Elevator.AutoCAD;
 using Exception=System.Exception;
+using Elevator.Core.Project;
 
 public sealed class ArchitectureTests
 {

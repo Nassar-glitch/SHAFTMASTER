@@ -2,19 +2,6 @@ using System;
 
 namespace Elevator.Core.Serialization
 {
-    // JSON used by Core: project files, the preset library and the calculation fingerprints (ARCHITECTURE-PLAN P2).
-    // The contract is the output of System.Web.Script.Serialization.JavaScriptSerializer, which the .NET Framework build
-    // keeps using. JavaScriptCompatibleJson reproduces it, but not proven byte-identical for every double (docs/TESTING.md),
-    // so the netstandard2.0 build has no default: a caller chooses the serializer with CoreJson.Use (today: the tests).
-    public interface IJsonSerializer
-    {
-        string Serialize(object value);
-        T Deserialize<T>(string json);
-
-        // Objects as Dictionary<string,object>, arrays as lists, numbers as int, long, decimal or double.
-        object DeserializeObject(string json);
-    }
-
     public static class CoreJson
     {
         // The serializer chosen with Use; null in the .NET Framework application, which uses JavaScriptSerializer.
@@ -53,19 +40,4 @@ namespace Elevator.Core.Serialization
 #endif
         }
     }
-#if NETFRAMEWORK
-    // .NET Framework: JavaScriptSerializer itself.
-    public sealed class JavaScriptSerializerJson:IJsonSerializer
-    {
-        readonly System.Web.Script.Serialization.JavaScriptSerializer serializer;
-        public JavaScriptSerializerJson(int? maxJsonLength)
-        {
-            serializer=new System.Web.Script.Serialization.JavaScriptSerializer();
-            if(maxJsonLength.HasValue)serializer.MaxJsonLength=maxJsonLength.Value;
-        }
-        public string Serialize(object value){return serializer.Serialize(value);}
-        public T Deserialize<T>(string json){return serializer.Deserialize<T>(json);}
-        public object DeserializeObject(string json){return serializer.DeserializeObject(json);}
-    }
-#endif
 }

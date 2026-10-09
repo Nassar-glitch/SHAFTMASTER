@@ -1,4 +1,5 @@
-using System;using System.IO;using System.Linq;using System.Collections.Generic;using Autodesk.AutoCAD.ApplicationServices;using Autodesk.AutoCAD.DatabaseServices;using Autodesk.AutoCAD.Geometry;using Autodesk.AutoCAD.Runtime;using Elevator.AutoCAD;using Elevator.Core.SectionAA;using Elevator.Core.Vertical;
+using System;using System.IO;using System.Linq;using System.Collections.Generic;using Autodesk.AutoCAD.ApplicationServices;using Autodesk.AutoCAD.DatabaseServices;using Autodesk.AutoCAD.Geometry;using Autodesk.AutoCAD.Runtime;using Elevator.AutoCAD;using Elevator.Core.Shaft;
+using Elevator.Core.Geometry;
 public sealed class AATests {
  static string O{get{return SectionAADrawing.Output;}}
  static List<object> results=new List<object>(); static string reportName="native-tests.json";

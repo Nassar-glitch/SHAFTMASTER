@@ -7,8 +7,9 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
-using Elevator.Core;
 using Exception=System.Exception;
+using Elevator.Core.Project;
+using Elevator.Core.MachineRoom;
 public sealed class MachineRoomTests
 {
     private static List<object> results=new List<object>();

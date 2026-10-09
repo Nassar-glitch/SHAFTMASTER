@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 using System.Web.Script.Serialization;
-using Elevator.Core;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
 public static class DrawingRegressionProbe
 {

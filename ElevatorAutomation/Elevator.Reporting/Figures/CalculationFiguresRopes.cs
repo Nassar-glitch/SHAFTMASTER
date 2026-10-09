@@ -1,9 +1,7 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using Elevator.Core.Project;
-using Elevator.Core.Calculations;
-using Elevator.Reporting.Docx;
+using System.Linq;
+using Elevator.Core.Suspension;
 
 namespace Elevator.Reporting.Figures
 {

@@ -8,8 +8,11 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.PlottingServices;
 using Elevator.AutoCAD;
-using Elevator.Core;
-using Elevator.Core.Vertical;
+using Elevator.Core.Shaft;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 public sealed class VerticalTests
 {
     static List<object> results=new List<object>();

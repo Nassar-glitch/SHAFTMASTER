@@ -1,5 +1,6 @@
-using Elevator.Core;
 using Autodesk.AutoCAD.Geometry;
+using Elevator.Core.Project;
+using Elevator.Core.Geometry;
 namespace Elevator.AutoCAD {
  public sealed class PlanGeometryAdapter {
   public readonly ShaftFrame Frame; public readonly ElevatorParameters Old,Next;

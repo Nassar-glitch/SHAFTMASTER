@@ -1,7 +1,7 @@
 using System;
 using System.IO;
+using Elevator.Core.Serialization;
 using Elevator.Reporting.Docx;
-using Elevator.Reporting.Figures;
 
 namespace Elevator.Reporting.Sheet
 {

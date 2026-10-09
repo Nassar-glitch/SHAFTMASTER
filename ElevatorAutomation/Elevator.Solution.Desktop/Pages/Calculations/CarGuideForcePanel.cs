@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.GuideRails;
 using Elevator.Solution.Desktop.Common;
 namespace Elevator.Solution.Desktop.Pages
 {

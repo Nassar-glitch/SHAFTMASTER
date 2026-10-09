@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Automation;
+using Elevator.Core.Presets;
 using Elevator.Core.Project;
 namespace Elevator.Solution.Desktop
 {

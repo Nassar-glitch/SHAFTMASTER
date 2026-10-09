@@ -3,7 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
-using Elevator.Core.Vertical;
+using Elevator.Core.Suspension;
+using Elevator.Core.Shaft;
+using Elevator.Core.GuideRails;
+using Elevator.Core.Geometry;
 public sealed class VerticalCoreTests
 {
     sealed class Evidence {public VerticalSource Source {get;set;}}

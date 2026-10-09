@@ -2,7 +2,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.MachineRoom;
 namespace Elevator.AutoCAD
 {
     public sealed class MachineRoomAuditResult

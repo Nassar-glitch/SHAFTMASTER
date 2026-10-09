@@ -7,7 +7,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Presets;
 using Elevator.Core.Project;
+using Elevator.Core.SafetyGear;
 using Elevator.Solution.Desktop.Common;
 namespace Elevator.Solution.Desktop.Pages
 {

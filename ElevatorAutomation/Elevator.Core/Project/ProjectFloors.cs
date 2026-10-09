@@ -1,17 +1,9 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Elevator.Core.Project
 {
-    public sealed class FloorElevation
-    {
-        public string FloorId;
-        public string Name;
-        public double ElevationMm;
-        public bool IsServed;
-    }
-
     public static class ProjectFloors
     {
         public static bool FinitePositive(double v)

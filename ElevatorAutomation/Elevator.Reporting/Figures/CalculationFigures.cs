@@ -1,9 +1,10 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using Elevator.Core;
-using Elevator.Core.Calculations;
-using Elevator.Reporting.Docx;
+using System.Linq;
+using Elevator.Core.GuideRails;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Project;
+using Elevator.Core.SafetyGear;
 
 namespace Elevator.Reporting.Figures
 {

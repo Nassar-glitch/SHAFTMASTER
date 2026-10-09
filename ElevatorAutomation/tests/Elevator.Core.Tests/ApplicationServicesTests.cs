@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Presets;
+using Elevator.Core.GuideRails;
 using Elevator.Core.Project;
 using Xunit;
 

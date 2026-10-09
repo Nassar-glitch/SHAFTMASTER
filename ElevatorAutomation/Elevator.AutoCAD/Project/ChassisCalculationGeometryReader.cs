@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Autodesk.AutoCAD.DatabaseServices;
 using Elevator.Core.Calculations;
+using Elevator.Core.MachineRoom;
 namespace Elevator.AutoCAD
 {
     // Read existing semantic bindings only. No new tags, entity handles or template mutation.

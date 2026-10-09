@@ -1,6 +1,6 @@
 using System;
 using System.Globalization;
-using Elevator.Core;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 namespace Elevator.Solution.Desktop.Common
 {

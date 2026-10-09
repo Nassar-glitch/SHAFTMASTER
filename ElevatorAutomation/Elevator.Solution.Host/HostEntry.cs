@@ -6,7 +6,9 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
-using Elevator.Core;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
 namespace Elevator.Solution.Host

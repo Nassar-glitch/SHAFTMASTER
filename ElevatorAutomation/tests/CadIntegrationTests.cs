@@ -1,4 +1,3 @@
-using Elevator.Core;
 using System;
 using System.IO;
 using System.Linq;
@@ -9,6 +8,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
 using Exception = System.Exception;
+using Elevator.Core.Project;
 
 public sealed class CadIntegrationTests
 {

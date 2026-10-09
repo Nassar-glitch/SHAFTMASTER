@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
+using Elevator.Core.Presets;
 using Elevator.Core.Project;
-using Elevator.Core.Calculations;
+using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Application
 {

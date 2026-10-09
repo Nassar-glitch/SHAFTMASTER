@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.Geometry;
 
 namespace Elevator.AutoCAD
 {

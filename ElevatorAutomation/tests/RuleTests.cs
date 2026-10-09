@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Web.Script.Serialization;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.Geometry;
 public static class RuleTests
 {
     private static int count;

@@ -1,4 +1,4 @@
-namespace Elevator.Core
+namespace Elevator.Core.Geometry
 {
     public struct LocalPoint
     {

@@ -1,8 +1,8 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using Elevator.Core.SectionAA;
-using Elevator.Core.Vertical;
+using System.Linq;
+using Elevator.Core.Doors;
+using Elevator.Core.Geometry;
 
 namespace Elevator.Core.Project
 {

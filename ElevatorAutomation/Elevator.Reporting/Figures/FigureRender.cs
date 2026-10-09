@@ -1,19 +1,11 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Globalization;
 using Elevator.Reporting.Docx;
 
 namespace Elevator.Reporting.Figures
 {
-    // PNG rendering and text measurement for figures, supplied by the application (WPF in ShaftMaster: WpfFigureRasterizer).
-    public interface IFigureRasterizer
-    {
-        // Sets Figure.Measure and FigureFonts.Resolve; called once, before the first figure is built.
-        void Initialise();
-        byte[] Png(Figure f, double dpi);
-    }
-
     // SVG (vector) renderer for Figure, and the Word image (PNG fallback from the rasterizer, with the SVG attached).
     // Text sizes are ISO cap heights; the em size is cap height / 0.72.
     public static class FigureRender

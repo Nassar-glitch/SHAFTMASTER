@@ -1,40 +1,20 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
-using System.Collections.Generic;
 using Elevator.Core.Application;
-using Elevator.Core;
-using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+using Elevator.Core.Geometry;
+using Elevator.Core.GuideRails;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Project;
+using Elevator.Core.SafetyGear;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
 
 namespace Elevator.Reporting.Sheet
 {
-    public sealed class CalculationSheetInputs
-    {
-        // Malformed UI text clears the canonical value; it makes the dependent calculation unavailable, never zero.
-        public Dictionary<string, string> ChassisDraftErrors = new Dictionary<string, string>();
-        public Dictionary<string, string> SafetyPitDraftErrors = new Dictionary<string, string>();
-        public string CarGuideForceDraftError;
-        public DateTime GeneratedLocal = ReportClock.Now();
-
-        // Company-level settings (application, not project); both optional.
-        public string CompanyName;
-        public DocxImage Logo;
-
-        // Editable preset library (config/presets.json); null loads presets.json beside the application.
-        public PresetLibrary Presets;
-    }
-
-    // A calculation left out of the client document, with the reasons shown to the user in the application only.
-    public sealed class OmittedCalculation
-    {
-        public string Name;
-        public List<string> Reasons = new List<string>();
-    }
-
     // Every result is recalculated from the current canonical project at export and checked against its
     // input fingerprint. Previously displayed UI numbers are never reused. The document contains only
     // available calculations; unavailable ones are omitted and reported to the user before saving.

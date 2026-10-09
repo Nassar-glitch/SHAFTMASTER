@@ -3,9 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
-using Elevator.Core;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+using Elevator.Core.Suspension;
 public static class CalculationTests
 {
     static int count;

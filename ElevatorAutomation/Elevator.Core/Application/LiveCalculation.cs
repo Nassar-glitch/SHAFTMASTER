@@ -1,26 +1,16 @@
 using System;
-using System.Linq;
-using System.Globalization;
 using System.Collections.Generic;
-using Elevator.Core.Project;
+using System.Globalization;
+using System.Linq;
 using Elevator.Core.Calculations;
+using Elevator.Core.GuideRails;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Project;
+using Elevator.Core.SafetyGear;
+using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Application
 {
-    // What a changed project input makes outdated (ARCHITECTURE-PLAN P4).
-    [Flags]
-    public enum InputEffect
-    {
-        None = 0,
-        // The validation / drawing design result.
-        Design = 1,
-        // Basic / Advanced P1–P4.
-        Chassis = 2,
-        RopeTraction = 4,
-        // FF1 / FF2 (their geometry follows Q, SW and SD).
-        CarGuideForces = 8,
-    }
-
     // Live calculation (ARCHITECTURE-PLAN P4): the current results, the text of invalid entries, and what is recalculated
     // when an input changes. UI-free: the application schedules Recalculate (a 300 ms timer) and shows the results.
     // Invalid entries keep their field message and the dependent result shows nothing.

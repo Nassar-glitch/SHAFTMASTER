@@ -3,7 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 namespace Elevator.AutoCAD
 {
     public sealed class MachineRoomSectionUpdater:IViewUpdater
