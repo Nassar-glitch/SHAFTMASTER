@@ -125,14 +125,7 @@ namespace Elevator.AutoCAD.SectionAA
         public static void PrepareLibrary(Database target, string source)
         {
             var seed = Configuration.Read<AASeed>("section-aa-seed.json");
-            using (var fs = File.Open(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (var sha = SHA256.Create())
-                {
-                    if (BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "") != seed.SourceSha256)
-                        throw new InvalidOperationException("Unreviewed A-A source hash.");
-                }
-            }
+            VerifySourceHash(source, seed);
             using (var src = new Database(false, true))
             {
                 src.ReadDwgFile(source, FileOpenMode.OpenForReadAndAllShare, true, null);
@@ -154,119 +147,151 @@ namespace Elevator.AutoCAD.SectionAA
                     src.WblockCloneObjects(ids, lib.ObjectId, map, DuplicateRecordCloning.MangleName, false);
                     foreach (var b in seed.Entities)
                     {
-                        var id = src.GetObjectId(false, new Handle(Convert.ToInt64(b.Handle, 16)), 0);
-                        var e = (Entity)tr.GetObject(map[id].Value, OpenMode.ForWrite);
-                        string role = b.Role;
-                        var bounds = b.Bounds;
-                        double cy = (bounds[1] + bounds[3]) / 2;
-                        // Source coordinates are used only in this hash-gated normalization, never for runtime identity.
-                        Func<Point3d, Point3d> local = q => new Point3d(q.X - 19957.897749633543, q.Y - 4644.288108124732, 0);
-                        if (role.StartsWith("Floor."))
-                        {
-                            e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -10644.288108124732, 0)));
-                            if (role == "Floor.Slab.Bottom")
-                                Map(e, q => new Point3d(q.X, -250, 0));
-                            if (role == "Floor.Slab.Top")
-                                Map(e, q => new Point3d(q.X, 0, 0));
-                            if (role == "Floor.Slab.Break")
-                                Map(e, q => new Point3d(q.X, Interpolate(q.Y, -200, 0, -250, 0), 0));
-                            if (role == "Floor.Door.Vertical")
-                            {
-                                var l = (Line)e;
-                                l.StartPoint = new Point3d(60, 0, 0);
-                                l.EndPoint = new Point3d(60, 2160, 0);
-                            }
-                            if (role == "Floor.Door.ClearHead")
-                            {
-                                var l = (Line)e;
-                                l.StartPoint = new Point3d(0, 2000, 0);
-                                l.EndPoint = new Point3d(60, 2000, 0);
-                            }
-                            if (role == "Floor.Door.FullHead")
-                            {
-                                var l = (Line)e;
-                                l.StartPoint = new Point3d(0, 2160, 0);
-                                l.EndPoint = new Point3d(200, 2160, 0);
-                            }
-                        }
-                        else if (role == "Car")
-                        {
-                            double min = 4349.576625634523, max = 8223.514976425868;
-                            bool sling = bounds[0] > 19050 && bounds[2] < 19400;
-                            double shift;
-                            Func<double, double> cabin = y => y <= 4644.288108124732
-                                ? Interpolate(y, 4480.01094784381, 4644.288108124732, -100, 0)
-                                : Interpolate(y, 4644.288108124732, 7094.752528057128, 0, 2200);
-                            if (bounds[3] < 4484)
-                            {
-                                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -100 - min, 0)));
-                            }
-                            else if (sling)
-                            {
-                                shift = cy > 6800 ? 2300 - max : -100 - min;
-                                if (bounds[3] - bounds[1] > 700 && (e is Line || e is Polyline))
-                                {
-                                    Map(e, q => new Point3d(
-                                                                        q.X - 19957.897749633543,
-                                                                        q.Y < 6000 ? q.Y - min - 100 : q.Y - max + 2300,
-                                                                        0));
-                                }
-                                else
-                                    e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, shift, 0)));
-                            }
-                            else if (e is Line || e is Polyline)
-                            {
-                                Map(e, q =>
-                                {
-                                    double z = cabin(q.Y);
-                                    if (q.Y >= 7137.7)
-                                        z = 2300;
-                                    return new Point3d(q.X - 19957.897749633543, z, 0);
-                                });
-                            }
-                            else
-                            {
-                                shift = cabin(cy) - cy;
-                                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, shift, 0)));
-                            }
-                            var flatten = e as Line;
-                            if (flatten != null)
-                            {
-                                flatten.StartPoint = new Point3d(flatten.StartPoint.X, flatten.StartPoint.Y, 0);
-                                flatten.EndPoint = new Point3d(flatten.EndPoint.X, flatten.EndPoint.Y, 0);
-                            }
-                        }
-                        else if (role == "CW")
-                        {
-                            double low = 16991.416430697354, high = 19747.299106947947, delta = 3000 - (high - low);
-                            bool span = bounds[3] - bounds[1] > 1000 && (e is Line || e is Polyline);
-                            if (span)
-                                Map(e, q => new Point3d(q.X - 19957.897749633543, q.Y - low + (q.Y > (low + high) / 2 ? delta : 0), 0));
-                            else
-                            {
-                                e.TransformBy(Matrix3d.Displacement(
-                                                                    new Vector3d(
-                                                                        -19957.897749633543,
-                                                                        -low + (cy > (low + high) / 2 ? delta : 0),
-                                                                        0)));
-                            }
-                        }
-                        else if (role == "Governor")
-                            e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -21044.29919945264, 0)));
-                        else if (role == "Hook")
-                            e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -23544.29919945264, 0)));
-                        else
-                        {
-                            e.TransformBy(Matrix3d.Displacement(
-                                new Vector3d(-19957.897749633543, role == "Title" ? -4644.288108124732 : -3644.288108124732, 0)));
-                        }
-                        var hatch = e as Hatch;
-                        if (hatch != null)
-                            hatch.Associative = false;
-                        ComponentBinding.Tag(e, "AASeed." + b.Key, role);
+                        NormalizeSeedEntity(src, tr, map, b);
                     }
                     tr.Commit();
                 }
+            }
+        }
+
+        private static void VerifySourceHash(string source, AASeed seed)
+        {
+            using (var fs = File.Open(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var sha = SHA256.Create())
+                {
+                    if (BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "") != seed.SourceSha256)
+                        throw new InvalidOperationException("Unreviewed A-A source hash.");
+                }
+            }
+        }
+
+        private static void NormalizeSeedEntity(Database src, Transaction tr, IdMapping map, AAPart b)
+        {
+            var id = src.GetObjectId(false, new Handle(Convert.ToInt64(b.Handle, 16)), 0);
+            var e = (Entity)tr.GetObject(map[id].Value, OpenMode.ForWrite);
+            string role = b.Role;
+            var bounds = b.Bounds;
+            double cy = (bounds[1] + bounds[3]) / 2;
+            // Source coordinates are used only in this hash-gated normalization, never for runtime identity.
+            Func<Point3d, Point3d> local = q => new Point3d(q.X - 19957.897749633543, q.Y - 4644.288108124732, 0);
+            if (role.StartsWith("Floor."))
+            {
+                NormalizeFloor(e, role);
+            }
+            else if (role == "Car")
+            {
+                NormalizeCar(e, bounds, cy);
+            }
+            else if (role == "CW")
+            {
+                NormalizeCounterweight(e, bounds, cy);
+            }
+            else if (role == "Governor")
+                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -21044.29919945264, 0)));
+            else if (role == "Hook")
+                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -23544.29919945264, 0)));
+            else
+            {
+                e.TransformBy(Matrix3d.Displacement(
+                    new Vector3d(-19957.897749633543, role == "Title" ? -4644.288108124732 : -3644.288108124732, 0)));
+            }
+            var hatch = e as Hatch;
+            if (hatch != null)
+                hatch.Associative = false;
+            ComponentBinding.Tag(e, "AASeed." + b.Key, role);
+        }
+
+        private static void NormalizeFloor(Entity e, string role)
+        {
+            e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -10644.288108124732, 0)));
+            if (role == "Floor.Slab.Bottom")
+                Map(e, q => new Point3d(q.X, -250, 0));
+            if (role == "Floor.Slab.Top")
+                Map(e, q => new Point3d(q.X, 0, 0));
+            if (role == "Floor.Slab.Break")
+                Map(e, q => new Point3d(q.X, Interpolate(q.Y, -200, 0, -250, 0), 0));
+            if (role == "Floor.Door.Vertical")
+            {
+                var l = (Line)e;
+                l.StartPoint = new Point3d(60, 0, 0);
+                l.EndPoint = new Point3d(60, 2160, 0);
+            }
+            if (role == "Floor.Door.ClearHead")
+            {
+                var l = (Line)e;
+                l.StartPoint = new Point3d(0, 2000, 0);
+                l.EndPoint = new Point3d(60, 2000, 0);
+            }
+            if (role == "Floor.Door.FullHead")
+            {
+                var l = (Line)e;
+                l.StartPoint = new Point3d(0, 2160, 0);
+                l.EndPoint = new Point3d(200, 2160, 0);
+            }
+        }
+
+        private static void NormalizeCar(Entity e, double[] bounds, double cy)
+        {
+            double min = 4349.576625634523, max = 8223.514976425868;
+            bool sling = bounds[0] > 19050 && bounds[2] < 19400;
+            double shift;
+            Func<double, double> cabin = y => y <= 4644.288108124732
+                ? Interpolate(y, 4480.01094784381, 4644.288108124732, -100, 0)
+                : Interpolate(y, 4644.288108124732, 7094.752528057128, 0, 2200);
+            if (bounds[3] < 4484)
+            {
+                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, -100 - min, 0)));
+            }
+            else if (sling)
+            {
+                shift = cy > 6800 ? 2300 - max : -100 - min;
+                if (bounds[3] - bounds[1] > 700 && (e is Line || e is Polyline))
+                {
+                    Map(e, q => new Point3d(
+                                                        q.X - 19957.897749633543,
+                                                        q.Y < 6000 ? q.Y - min - 100 : q.Y - max + 2300,
+                                                        0));
+                }
+                else
+                    e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, shift, 0)));
+            }
+            else if (e is Line || e is Polyline)
+            {
+                Map(e, q =>
+                {
+                    double z = cabin(q.Y);
+                    if (q.Y >= 7137.7)
+                        z = 2300;
+                    return new Point3d(q.X - 19957.897749633543, z, 0);
+                });
+            }
+            else
+            {
+                shift = cabin(cy) - cy;
+                e.TransformBy(Matrix3d.Displacement(new Vector3d(-19957.897749633543, shift, 0)));
+            }
+            var flatten = e as Line;
+            if (flatten != null)
+            {
+                flatten.StartPoint = new Point3d(flatten.StartPoint.X, flatten.StartPoint.Y, 0);
+                flatten.EndPoint = new Point3d(flatten.EndPoint.X, flatten.EndPoint.Y, 0);
+            }
+        }
+
+        private static void NormalizeCounterweight(Entity e, double[] bounds, double cy)
+        {
+            double low = 16991.416430697354, high = 19747.299106947947, delta = 3000 - (high - low);
+            bool span = bounds[3] - bounds[1] > 1000 && (e is Line || e is Polyline);
+            if (span)
+                Map(e, q => new Point3d(q.X - 19957.897749633543, q.Y - low + (q.Y > (low + high) / 2 ? delta : 0), 0));
+            else
+            {
+                e.TransformBy(Matrix3d.Displacement(
+                                                    new Vector3d(
+                                                        -19957.897749633543,
+                                                        -low + (cy > (low + high) / 2 ? delta : 0),
+                                                        0)));
             }
         }
 
