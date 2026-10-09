@@ -12,10 +12,25 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P2 "Portable Core", approved and merged into `main` (--no-ff) after tier 1 PASS on the branch (`artifacts/test-results/20261009-103216`, 456 s); Planner section 4a committed on `main`; not pushed. P1 was merged into `main` first (`01ecbe4`, tier 1 PASS on the branch). Core multi-targets netstandard2.0 / net48 behind a serializer abstraction; the .NET Framework application keeps JavaScriptSerializer (no behaviour change); xUnit Core tests on net8.0 and net48; CI workflow (not pushed). Tiers 1, 2 and 3 PASS; golden files unchanged; release hashes unchanged.
-- **Goal:** P2: portable Core (netstandard2.0), serializer abstraction proven before any switch, xUnit Core tests, CI.
-- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P2)
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P3 "Reporting extraction" on branch `refactor/p3-reporting` (not merged, not pushed). P2 was merged into `main` first (`a1fff15`, tier 1 PASS on the branch) and the Planner section 4a committed (`f94d4d5`). Report code is now the internal DLL Elevator.Reporting (netstandard2.0, net48) next to ShaftMaster.exe; no user-visible change; golden files unchanged; tiers 1, 2 and 3 PASS; release hashes unchanged.
+- **Goal:** P3: move the non-WPF report code from Desktop into Elevator.Reporting, keep WPF parts in Desktop, add DOCX content tests without Word.
+- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P3)
 - **Completed:**
+  - ARCHITECTURE-PLAN P3 "Reporting extraction" (2026-10-09), branch `refactor/p3-reporting` from `main` `b35d087`:
+    - **Commits:** `60445b0` move the report code into Elevator.Reporting (and runners / tests); `731ebf9` Elevator.Reporting.Tests, tier 1 and CI; `7504b71` docs; plus this handoff commit.
+    - **Moved (git mv; namespace changed, type names and logic kept):**
+      - `Elevator.Solution.Desktop/CalculationSheet.cs`, `CalculationSheetRopes.cs` -> `Elevator.Reporting/Sheet/` (namespace `Elevator.Reporting.Sheet`; includes `CalculationSheetInputs`, `OmittedCalculation`);
+      - `CompanyReportSettings.cs` -> `Elevator.Reporting/Sheet/` (data and storage; an unused `using System.Web.Script.Serialization` removed);
+      - `CalculationWorkspace.cs` -> `Elevator.Reporting/Sheet/` (not in the Planner's list, but CalculationSheet builds P1-P4 through it; WPF-free);
+      - `DesignNotes.cs` -> `Elevator.Reporting/DesignNotes/` (`Elevator.Reporting.DesignNotes`);
+      - `DocxWriter.cs` (with `ReportClock`, `DocxDocument`, `DocxImage`) -> `Elevator.Reporting/Docx/` (`Elevator.Reporting.Docx`);
+      - `FigureModel.cs`, `CalculationFigures.cs`, `CalculationFiguresRopes.cs`, `FigureRender.cs` -> `Elevator.Reporting/Figures/` (`Elevator.Reporting.Figures`).
+    - **The only code change to break the WPF dependency:** `FigureRender` keeps the SVG renderer, `Image` and `Initialise` (unchanged order: Initialise runs before the first figure is built); its WPF text measurement, font choice and PNG rendering moved unchanged into `Elevator.Solution.Desktop/WpfFigureRasterizer.cs` behind the new interface `IFigureRasterizer` (Reporting). `MainWindow` registers it (`FigureRender.Rasterizer`); `CapRatio` and `Dash` became public for it.
+    - **Stayed in Desktop and why:** `CalculationSheetExport.cs` (a MainWindow partial: save dialog, omission dialog, message boxes, window state; the export logic itself is `CalculationSheet.Build/Render/Save`, which moved), `CompanySettingsWindow.cs` (WPF window), `BrandAssets.cs` (WPF imaging), `WpfFigureRasterizer.cs` (WPF), `ProjectSession.cs` (project file session, not a report).
+    - **Project:** `ElevatorAutomation/Elevator.Reporting/Elevator.Reporting.csproj` (netstandard2.0; net48). net48 uses System.IO.Packaging of .NET Framework (WindowsBase, as the DOCX writer did in Desktop); netstandard2.0 uses the System.IO.Packaging NuGet package. Output: `artifacts/bin/Elevator.Reporting.dll` next to ShaftMaster.exe (one new file in the application folder), netstandard build in `artifacts/netstandard2.0/Elevator.Reporting/`. Desktop references it.
+    - **Note for the Planner:** the namespace `Elevator.Reporting.DesignNotes` has the same name as its class `DesignNotes`; inside any `Elevator.Reporting.*` namespace the name resolves to the namespace (the Reporting tests use the full name). Consider renaming the namespace later.
+    - **Tests:** new `tests/Elevator.Reporting.Tests` (xUnit, net8.0 + net48), 145 tests on each: sheet and Design Notes text equal the approved golden text for the 36 fixtures (net48 byte-exact), forbidden strings absent, every figure an SVG part equal to the figure's SVG, page frame / header title block / footer, title block filled and blank, Design Notes without tables. The presets xUnit suite now runs on net8.0 too: Elevator.Core.Tests net8.0 41 (was 40), net48 161. Both in tools/test.ps1 tier 1 (`xunit-core`, `xunit-reporting`) and in CI (ubuntu net8.0; windows builds Core, Reporting and Bridge). Runners and test sources reference Elevator.Reporting (about 15 runners, 17 test sources); the golden and sheet test programs register the WPF rasterizer.
+    - **Golden:** approved files unchanged (0 changed against `main`); the golden suite PASS after the move.
   - ARCHITECTURE-PLAN P2 "Portable Core" (2026-10-09), branch `refactor/p2-portable-core` from `main` `55dd2b4`. Details: `ElevatorAutomation/docs/TESTING.md` (xUnit section, serializer decision).
     - **Commits:** `d5b5e4c` Core multi-target + serializer abstraction; `268b709` remaining JavaScriptSerializer uses through CoreJson; `9aa0351` Elevator.Core.Tests (xUnit) in the solution and tier 1; `a502d13` CI workflow; `f315eee` TESTING.md; plus this handoff commit.
     - **Core:** `Elevator.Core` targets netstandard2.0 (output `artifacts/netstandard2.0/Elevator.Core/`) and net48 (`artifacts/bin`, unchanged). Nothing besides JavaScriptSerializer needed an abstraction. `tools/build.ps1` passes `BinDir` (not `OutDir`) so the netstandard output can go elsewhere.
@@ -363,6 +378,10 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Missing/invalid input makes the forces unavailable, never zero, and does not block P1–P7 or drawing generation.
   - The FF input is excluded from the chassis and safety/pit fingerprints.
   - The implementation still reports scalar FF1/FF2 only. Since the audit, the UI and result details display the approved interpretation text. No calculation changed, and there is no certification claim.
+- **Changed files (P3 reporting extraction, 2026-10-09; branch `refactor/p3-reporting`):**
+  - Moved: the 10 files listed under Completed (Desktop -> `ElevatorAutomation/Elevator.Reporting/{Sheet,DesignNotes,Docx,Figures}/`).
+  - New: `Elevator.Reporting/Elevator.Reporting.csproj`, `Elevator.Solution.Desktop/WpfFigureRasterizer.cs`, `tests/Elevator.Reporting.Tests/` (csproj, ReportContentTests.cs).
+  - Changed: Desktop `App.cs` (rasterizer registration, usings), `CalculationSheetExport.cs`, `CalculationsPage.cs`, `CompanySettingsWindow.cs`, `RopeTractionPage.cs` (usings), `Elevator.Solution.Desktop.csproj`; `ElevatorAutomation.sln`; `tests/Elevator.Core.Tests` (csproj, ConsoleSuiteTests.cs, TestData.cs JavaScriptSerializer stand-in for net8.0, run-xunit.ps1 -Project, usings); test sources (usings; GoldenTests.cs and CalculationSheetTests.cs register the rasterizer; RopeTractionTests.cs qualified name); runners in `tests/solution`, `tests/shaftmaster/run-ui-tests.ps1`, `tools/run-golden.ps1`, `tools/test.ps1`; `.github/workflows/ci.yml`; `docs/TESTING.md`; `README.md`; `SESSION_HANDOFF.md`.
 - **Changed files (P2 portable Core, 2026-10-09; branch `refactor/p2-portable-core`):**
   - New: `ElevatorAutomation/Elevator.Core/Serialization/CoreJson.cs`, `JavaScriptCompatibleJson.cs`, `Elevator.Core/Properties/InternalsVisibleTo.cs`; `ElevatorAutomation/tests/Elevator.Core.Tests/` (csproj, TestData.cs, GoldenCoreTests.cs, ConsoleSuiteTests.cs, SerializerParityTests.cs, run-xunit.ps1); `.github/workflows/ci.yml`.
   - Changed: `Elevator.Core/Elevator.Core.csproj`, `Project/ProjectJson.cs`, `Project/Presets.cs`, `Calculations/CalculationFingerprint.cs`, `Calculations/ChassisGeometryProvenance.cs`; Bridge `Contracts.cs`, `StepInputFactory.cs`; Desktop `CompanyReportSettings.cs`; AutoCAD `Commands/SectionAACommands.cs`, `Commands/VerticalExperimentCommands.cs`, `Drawing/Configuration.cs`, `Drawing/ProjectDataStorage.cs`, `Drawing/SectionAADrawing.cs`, `Drawing/VerticalExperimentDrawing.cs`; StepExport `BuildModel.cs`; `Directory.Build.props`, `ElevatorAutomation.sln`, `tools/build.ps1`, `tools/test.ps1`, `docs/TESTING.md`; `SESSION_HANDOFF.md`.
@@ -646,6 +665,12 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Docs: `docs/CAR-GUIDE-FORCES.md`.
   - Outputs: `bin-shaftmaster-ff-candidate/`, `output/ff-ui-20261006/`, `output/ff-source-review-20261006/`.
 - **Checks:**
+  - P3 reporting extraction (2026-10-09), final run `ElevatorAutomation/artifacts/test-results/20261009-105905`, all PASS:
+    - build 3 s; tier 1 (541 s): golden 566, presets 160, rope 60, sheet 8285, FF 131, safety / pit 117, xunit-core 202 (net8.0 41 + net48 161), xunit-reporting 290 (145 + 145);
+    - tier 2 (258 s): presets UI 59, rope UI 33, sheet UI 63, calculation UI 54, Basic 67, safety / pit 152, draft 117, FF UI 126;
+    - tier 3 (132 s): integration (affected regressions, FF integration 22, STEP input 7, native golden 2 files), presets native 6, sheet Word render PASS.
+    - Hashes unchanged: v01 `DC8A76A3…`, v02 `57FBE447…` (SHA256SUMS 0 mismatches), v03 `9CFD5FAB…` (SHA256SUMS 0 mismatches), and every candidate.
+    - Not run: CI on GitHub / Linux (not pushed); a YAML parser check (none installed); SOLIDWORKS STEP export; manual dialogs (the export and settings dialogs were not clicked); the AutoCAD script suites of `tests/run-tests.ps1`.
   - P2 portable Core (2026-10-09), final run `ElevatorAutomation/artifacts/test-results/20261009-100253`, all PASS:
     - build 7 s; tier 1 (472 s): golden 566, presets 160, rope 60, sheet 8285, FF 131, safety / pit 117, xunit-core 201 (net8.0 40 + net48 161);
     - tier 2 (222 s): presets UI 59 (57 s), rope UI 33, sheet UI 63, calculation UI 54, Basic 67, safety / pit 152, draft 117, FF UI 126;
@@ -961,6 +986,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-09: Executor merged P2 into main (`a1fff15`), committed Planner section 4a (`f94d4d5`) and completed P3 on branch `refactor/p3-reporting` (not merged, not pushed): report code in the internal DLL Elevator.Reporting (netstandard2.0, net48), WPF rasterizer in Desktop, Elevator.Reporting.Tests 145 / 145, presets xUnit on net8.0. Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor merged P1 into main (`01ecbe4`) and completed P2 on branch `refactor/p2-portable-core` (not merged, not pushed): Core netstandard2.0 / net48, CoreJson serializer abstraction (JavaScriptSerializer kept on .NET Framework; the compatible serializer is not a default on netstandard: 157 of 199,955 doubles differ in digit count), xUnit Core tests (net8.0 40, net48 161), CI workflow. Tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor closed P0 (merged into main `ac9fdcc`, Planner files `ee898b6`) and completed P1 on branch `refactor/p1-build` (not merged, not pushed): SDK-style projects, Directory.Build.props, one solution, tools/build.ps1; same 26-file output; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor completed ARCHITECTURE-PLAN P0 on branch `refactor/p0-safety-net` (not merged, not pushed): artifacts/ build default with release guard, golden master (566 files) and native golden, tools/test.ps1 tiers, Basic UI flake fixed (external close of the test window). Tiers 1–3 PASS. Awaiting Planner.
