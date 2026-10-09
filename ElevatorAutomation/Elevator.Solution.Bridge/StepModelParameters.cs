@@ -1,19 +1,88 @@
 using System;
-namespace Elevator.Solution.Bridge {
-public sealed class StepModelParameters {
- public double SW=1450,SD=1600,CarWidth=1050,CarDepth=1200,CarFront=125,CarRow=725,CarDBG=1150,CwDBG=1040,CwWidth=1000,CwDepth=100,CwRow=1475,DoorWidth=900;
- public double Pit=1000,Travel=12000,Overhead=4200,RoofSlab=200,LandingSlab=250,RoomClearHeight=2200;
- public double CarFloorZ=0,CarInternalHeight=2200,CarFrameBottom=-100,CarFrameTop=2300,CwBottom=12347.128322572622,CwHeight=3000;
- public bool[] ServedFloors; public bool DeflectorVisible=true; public string BeamDesignation="UPN140";
- public double DoorClearHeight=2000,DoorConstructionHeight=2160,SupportLeftX=400,MachineBaseX=795,MachineBaseY=755,MachineBaseTop=760,MachineGearboxX=800,MachineMotorX=980,MachineMotorY=500,MachineMotorZ=967.796894885352;
- public double[] FloorElevations={0,3000,6000,9000,12000};
- public double WallSide=195,WallRear=200,WallFront=200,RoomLeft=525,RoomRight=525,RoomFront=900,RoomRear=0;
- public double ConcreteHeight=350,SteelBottom=531.5751416887069,SteelDepth=140,FrontSupportCenterY=-110.61188555485558,RearSupportCenterY=1710.6118855548557;
- public double TractionY=985,TractionZAboveRoof=1007.0914284303582,TractionDiameter=520,DeflectorY=1350,DeflectorZAboveRoof=406.57514168870694,DeflectorDiameter=250;
- public double PulleyWidth=100.070883886248,PanelThickness=25,FloorThickness=50,FrameMemberWidth=25,FrameMemberDepth=80,DoorThickness=20;
- public double BeamWidth=65,BeamWeb=7,BeamFlange=9,Beam1X=550,Beam2X=925,ConcreteWidth=775,ConcreteDepth=200;
- public double GovernorX=208.82,GovernorY=1000,GovernorZAboveRoof=350,GovernorDiameter=250,GovernorWidth=50;
- public double CeilingThickness=200,PitBaseThickness=200,LandingApronDepth=500,HangerWidth=16,HangerDepth=30;
- public double HangerBottomAboveDeflectorCenter=17.45307743718149;
-}
+
+namespace Elevator.Solution.Bridge
+{
+    public sealed class StepModelParameters
+    {
+        public double SW = 1450;
+        public double SD = 1600;
+        public double CarWidth = 1050;
+        public double CarDepth = 1200;
+        public double CarFront = 125;
+        public double CarRow = 725;
+        public double CarDBG = 1150;
+        public double CwDBG = 1040;
+        public double CwWidth = 1000;
+        public double CwDepth = 100;
+        public double CwRow = 1475;
+        public double DoorWidth = 900;
+        public double Pit = 1000;
+        public double Travel = 12000;
+        public double Overhead = 4200;
+        public double RoofSlab = 200;
+        public double LandingSlab = 250;
+        public double RoomClearHeight = 2200;
+        public double CarFloorZ = 0;
+        public double CarInternalHeight = 2200;
+        public double CarFrameBottom = -100;
+        public double CarFrameTop = 2300;
+        public double CwBottom = 12347.128322572622;
+        public double CwHeight = 3000;
+        public bool[] ServedFloors;
+        public bool DeflectorVisible = true;
+        public string BeamDesignation = "UPN140";
+        public double DoorClearHeight = 2000;
+        public double DoorConstructionHeight = 2160;
+        public double SupportLeftX = 400;
+        public double MachineBaseX = 795;
+        public double MachineBaseY = 755;
+        public double MachineBaseTop = 760;
+        public double MachineGearboxX = 800;
+        public double MachineMotorX = 980;
+        public double MachineMotorY = 500;
+        public double MachineMotorZ = 967.796894885352;
+        public double[] FloorElevations = { 0, 3000, 6000, 9000, 12000 };
+        public double WallSide = 195;
+        public double WallRear = 200;
+        public double WallFront = 200;
+        public double RoomLeft = 525;
+        public double RoomRight = 525;
+        public double RoomFront = 900;
+        public double RoomRear = 0;
+        public double ConcreteHeight = 350;
+        public double SteelBottom = 531.5751416887069;
+        public double SteelDepth = 140;
+        public double FrontSupportCenterY = -110.61188555485558;
+        public double RearSupportCenterY = 1710.6118855548557;
+        public double TractionY = 985;
+        public double TractionZAboveRoof = 1007.0914284303582;
+        public double TractionDiameter = 520;
+        public double DeflectorY = 1350;
+        public double DeflectorZAboveRoof = 406.57514168870694;
+        public double DeflectorDiameter = 250;
+        public double PulleyWidth = 100.070883886248;
+        public double PanelThickness = 25;
+        public double FloorThickness = 50;
+        public double FrameMemberWidth = 25;
+        public double FrameMemberDepth = 80;
+        public double DoorThickness = 20;
+        public double BeamWidth = 65;
+        public double BeamWeb = 7;
+        public double BeamFlange = 9;
+        public double Beam1X = 550;
+        public double Beam2X = 925;
+        public double ConcreteWidth = 775;
+        public double ConcreteDepth = 200;
+        public double GovernorX = 208.82;
+        public double GovernorY = 1000;
+        public double GovernorZAboveRoof = 350;
+        public double GovernorDiameter = 250;
+        public double GovernorWidth = 50;
+        public double CeilingThickness = 200;
+        public double PitBaseThickness = 200;
+        public double LandingApronDepth = 500;
+        public double HangerWidth = 16;
+        public double HangerDepth = 30;
+        public double HangerBottomAboveDeflectorCenter = 17.45307743718149;
+    }
 }
