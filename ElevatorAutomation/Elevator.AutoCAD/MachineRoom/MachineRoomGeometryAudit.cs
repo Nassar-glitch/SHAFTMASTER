@@ -38,65 +38,11 @@ namespace Elevator.AutoCAD.MachineRoom
             }
             foreach (var b in s.Manifest.Entities.Where(b => b.Dependency != null))
             {
-                var d = b.Dependency;
-                var actual = MachineRoomDependencies.Points(s.Entities[b.Key], s.Frame);
-                if (d.CircleRadius.HasValue)
-                    Near(((Circle)s.Entities[b.Key]).Radius, d.CircleRadius.Value, b.Key + " native hole radius");
-                if (actual.Length != d.Offsets.Length || d.References.Length != actual.Length)
-                    throw new InvalidOperationException("Geometry audit: changed chassis topology " + b.Key);
-                for (int i = 0; i < actual.Length; i++)
-                {
-                    var expected = ChassisDependencies.Target(d, i, design.Center, design.CarRow, design.SD, design.CwRow);
-                    Near(actual[i].X, expected.X, b.Key + " reference X");
-                    Near(actual[i].Y, expected.Y, b.Key + " reference Y");
-                    Near(actual[i].Z, expected.Z, b.Key + " reference Z");
-                    result.CheckedReferencePoints++;
-                }
-                if (s.Entities[b.Key].Visible != b.OriginalVisible)
-                    throw new InvalidOperationException("Geometry audit: visible chassis dependency lost " + b.Key);
-                if (d.Behavior == "SpanBetweenReferences" || d.Behavior.StartsWith("Stretch"))
-                {
-                    if (actual.Max(p => p.Y) - actual.Min(p => p.Y) <= .02)
-                        throw new InvalidOperationException("Geometry audit: collapsed chassis span " + b.Key);
-                    // Compare actual span ends with actual support-plate geometry, retaining source offsets.
-                    for (int i = 0; i < actual.Length; i++)
-                    {
-                        if (d.References[i] != "Machine")
-                        {
-                            bool rear = d.References[i] == "RearBeam";
-                            string name = rear ? (d.Offsets[i].X < 0 ? "P3" : "P1") : (d.Offsets[i].X < 0 ? "P4" : "P2");
-                            var plate = support[name];
-                            var p = MachineRoomDependencies.Points(s.Entities[plate.Key], s.Frame);
-                            double observed = actual[i].Y - p.Average(v => v.Y);
-                            double required = d.Offsets[i].Y - plate.Dependency.Offsets.Average(v => v.Y);
-                            Near(observed, required, b.Key + " reaches " + name + " support row");
-                            result.CheckedSpanConnections++;
-                        }
-                    }
-                }
-                result.CheckedEntities++;
+                AuditDependency(s, design, result, support, b);
             }
             foreach (var pair in support)
             {
-                var b = pair.Value;
-                var p = MachineRoomDependencies.Points(s.Entities[b.Key], s.Frame);
-                bool rear = b.Dependency.References[0] == "RearBeam";
-                // Preserve source penetration relative to the actual shaft/beam datum. No invented minimum bearing.
-                double datum = rear ? s.SD : 0;
-                Near(p.Min(v => v.Y) - datum, b.Dependency.Offsets.Min(v => v.Y), pair.Key + " beam-side bearing boundary");
-                Near(p.Max(v => v.Y) - datum, b.Dependency.Offsets.Max(v => v.Y), pair.Key + " beam-side bearing boundary");
-                var structure = s.Manifest
-                    .Entities
-                    .Where(v => rear ? v.Role == "room" : v.Role == "frontBeam")
-                    .SelectMany(v => MachineRoomDependencies.Points(s.Entities[v.Key], s.Frame))
-                    .ToArray();
-                double bandMin = rear ? s.SD : structure.Min(v => v.Y), bandMax = rear ? structure.Max(v => v.Y) : structure.Max(v => v.Y);
-                double observedOverlap = Math.Min(p.Max(v => v.Y), bandMax) - Math.Max(p.Min(v => v.Y), bandMin);
-                double requiredReferenceOverlap = b.Dependency.Offsets.Max(v => v.Y) - b.Dependency.Offsets.Min(v => v.Y);
-                if (observedOverlap + 0.02 < requiredReferenceOverlap)
-                    throw new InvalidOperationException("Geometry audit: lost reference bearing overlap at " + pair.Key);
-                if (p.Min(v => v.X) < structure.Min(v => v.X) - .02 || p.Max(v => v.X) > structure.Max(v => v.X) + .02)
-                    throw new InvalidOperationException("Geometry audit: support outside structural span " + pair.Key);
+                AuditSupport(s, pair);
             }
             foreach (var b in s.Manifest.Entities.Where(b => b.StructuralYOffsets != null))
             {
@@ -126,6 +72,75 @@ namespace Elevator.AutoCAD.MachineRoom
                     Near(displayed, dim.Measurement, b.Key + " numeric text override");
             }
             return result;
+        }
+
+        private static void AuditDependency(
+            MachineRoomSnapshot s,
+            ElevatorParameters design,
+            MachineRoomAuditResult result,
+            Dictionary<string, MachineRoomBinding> support,
+            MachineRoomBinding b)
+        {
+            var d = b.Dependency;
+            var actual = MachineRoomDependencies.Points(s.Entities[b.Key], s.Frame);
+            if (d.CircleRadius.HasValue)
+                Near(((Circle)s.Entities[b.Key]).Radius, d.CircleRadius.Value, b.Key + " native hole radius");
+            if (actual.Length != d.Offsets.Length || d.References.Length != actual.Length)
+                throw new InvalidOperationException("Geometry audit: changed chassis topology " + b.Key);
+            for (int i = 0; i < actual.Length; i++)
+            {
+                var expected = ChassisDependencies.Target(d, i, design.Center, design.CarRow, design.SD, design.CwRow);
+                Near(actual[i].X, expected.X, b.Key + " reference X");
+                Near(actual[i].Y, expected.Y, b.Key + " reference Y");
+                Near(actual[i].Z, expected.Z, b.Key + " reference Z");
+                result.CheckedReferencePoints++;
+            }
+            if (s.Entities[b.Key].Visible != b.OriginalVisible)
+                throw new InvalidOperationException("Geometry audit: visible chassis dependency lost " + b.Key);
+            if (d.Behavior == "SpanBetweenReferences" || d.Behavior.StartsWith("Stretch"))
+            {
+                if (actual.Max(p => p.Y) - actual.Min(p => p.Y) <= .02)
+                    throw new InvalidOperationException("Geometry audit: collapsed chassis span " + b.Key);
+                // Compare actual span ends with actual support-plate geometry, retaining source offsets.
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    if (d.References[i] != "Machine")
+                    {
+                        bool rear = d.References[i] == "RearBeam";
+                        string name = rear ? (d.Offsets[i].X < 0 ? "P3" : "P1") : (d.Offsets[i].X < 0 ? "P4" : "P2");
+                        var plate = support[name];
+                        var p = MachineRoomDependencies.Points(s.Entities[plate.Key], s.Frame);
+                        double observed = actual[i].Y - p.Average(v => v.Y);
+                        double required = d.Offsets[i].Y - plate.Dependency.Offsets.Average(v => v.Y);
+                        Near(observed, required, b.Key + " reaches " + name + " support row");
+                        result.CheckedSpanConnections++;
+                    }
+                }
+            }
+            result.CheckedEntities++;
+        }
+
+        private static void AuditSupport(MachineRoomSnapshot s, KeyValuePair<string, MachineRoomBinding> pair)
+        {
+            var b = pair.Value;
+            var p = MachineRoomDependencies.Points(s.Entities[b.Key], s.Frame);
+            bool rear = b.Dependency.References[0] == "RearBeam";
+            // Preserve source penetration relative to the actual shaft/beam datum. No invented minimum bearing.
+            double datum = rear ? s.SD : 0;
+            Near(p.Min(v => v.Y) - datum, b.Dependency.Offsets.Min(v => v.Y), pair.Key + " beam-side bearing boundary");
+            Near(p.Max(v => v.Y) - datum, b.Dependency.Offsets.Max(v => v.Y), pair.Key + " beam-side bearing boundary");
+            var structure = s.Manifest
+                .Entities
+                .Where(v => rear ? v.Role == "room" : v.Role == "frontBeam")
+                .SelectMany(v => MachineRoomDependencies.Points(s.Entities[v.Key], s.Frame))
+                .ToArray();
+            double bandMin = rear ? s.SD : structure.Min(v => v.Y), bandMax = rear ? structure.Max(v => v.Y) : structure.Max(v => v.Y);
+            double observedOverlap = Math.Min(p.Max(v => v.Y), bandMax) - Math.Max(p.Min(v => v.Y), bandMin);
+            double requiredReferenceOverlap = b.Dependency.Offsets.Max(v => v.Y) - b.Dependency.Offsets.Min(v => v.Y);
+            if (observedOverlap + 0.02 < requiredReferenceOverlap)
+                throw new InvalidOperationException("Geometry audit: lost reference bearing overlap at " + pair.Key);
+            if (p.Min(v => v.X) < structure.Min(v => v.X) - .02 || p.Max(v => v.X) > structure.Max(v => v.X) + .02)
+                throw new InvalidOperationException("Geometry audit: support outside structural span " + pair.Key);
         }
     }
 }

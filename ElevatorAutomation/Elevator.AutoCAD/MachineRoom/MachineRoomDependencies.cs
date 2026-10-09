@@ -66,91 +66,116 @@ namespace Elevator.AutoCAD.MachineRoom
             int full = 0, front = 0, rear = 0, labels = 0;
             foreach (var b in s.Manifest.Entities.Where(b => b.Role == "machine" || b.Role == "cw"))
             {
-                var e = s.Entities[b.Key];
-                var points = Points(e, s.Frame);
-                // Recover the reviewed source frame for legacy rigid translations, without replacing semantic IDs.
-                var original = points.Select(p => new LocalPoint(
-                    p.X - (s.SW - t.SourceSW) / 2,
-                    p.Y - (b.Role == "cw" ? s.CwRow - t.SourceCwRow : s.CarRow - t.SourceCarRow),
-                    p.Z)).ToArray();
-                double lo = original.Min(p => p.Y), hi = original.Max(p => p.Y);
-                bool straight = (e is Line) || (e is Polyline
-                    && Enumerable.Range(0, ((Polyline)e).NumberOfVertices).All(i => Math.Abs(((Polyline)e).GetBulgeAt(i)) < 1e-9));
-                bool longitudinal = straight && original.Max(p => p.X) - original.Min(p => p.X) < 2;
-                // Reviewed open L: rear crosspiece plus a right-side leg ending at the machine crosspiece.
-                bool rearOutline = straight
-                    && original.Length == 3
-                    && Near(original[0].Y, original[1].Y)
-                    && Math.Abs(original[1].X - original[2].X) < 2
-                    && Near(original[2].Y, t.MachineRearEnd);
-                bool atFront = t.FrontMemberEnds.Any(v => Near(v, lo)), atRear = t.RearMemberEnds.Any(v => Near(v, hi));
-                string behavior = "FixedToMachine", reference = "Machine";
-                string[] refs = null;
-                if (b.Role == "cw")
-                {
-                    behavior = "RigidTranslate";
-                    reference = "Counterweight";
-                }
-                else if (longitudinal && atFront && atRear)
-                {
-                    behavior = "SpanBetweenReferences";
-                    full++;
-                    refs = original.Select(p => Near(p.Y, lo) ? "FrontBeam" : "RearBeam").ToArray();
-                }
-                else if (longitudinal && atFront && Near(hi, t.MachineFrontEnd))
-                {
-                    behavior = "StretchFromCarSide";
-                    front++;
-                    refs = original.Select(p => Near(p.Y, hi) ? "Machine" : "FrontBeam").ToArray();
-                }
-                else if ((longitudinal || rearOutline) && Near(lo, t.MachineRearEnd) && atRear)
-                {
-                    behavior = "StretchFromCWRearSide";
-                    rear++;
-                    refs = original.Select(p => Near(p.Y, lo) ? "Machine" : "RearBeam").ToArray();
-                }
-                else if (b.Key.StartsWith("MachineRoom.Support.P1.") || b.Key.StartsWith("MachineRoom.Support.P3."))
-                {
-                    behavior = "FixedToBeam";
-                    reference = "RearBeam";
-                }
-                else if (b.Key.StartsWith("MachineRoom.Support.P2.") || b.Key.StartsWith("MachineRoom.Support.P4."))
-                {
-                    behavior = "FixedToBeam";
-                    reference = "FrontBeam";
-                }
-                else if (straight && hi < 0)
-                {
-                    behavior = "FixedToBeam";
-                    reference = "FrontBeam";
-                }
-                else if (straight && lo > t.SourceSD)
-                {
-                    behavior = "FixedToBeam";
-                    reference = "RearBeam";
-                }
-                else if (b.Key.StartsWith("MachineRoom.Chassis.ReferenceDetail.")
-                    && t.RearSupportLabelWindows.Any(w => original.All(p => p.X >= w[0] && p.Y >= w[1] && p.X <= w[2] && p.Y <= w[3])))
-                {
-                    behavior = "FixedToBeam";
-                    reference = "RearBeam";
-                    labels++;
-                }
-                if (refs == null)
-                    refs = original.Select(p => reference).ToArray();
-                b.Dependency =
-                    new ChassisDependency
-                    {
-                        Behavior = behavior,
-                        References = refs,
-                        Offsets = original.Select((p, i) => new LocalPoint(
-                    p.X - t.SourceSW / 2,
-                    p.Y - ChassisDependencies.Datum(refs[i], t.SourceCarRow, t.SourceSD, t.SourceCwRow),
-                    p.Z)).ToArray()
-                    };
-                if (e is Circle)
-                    b.Dependency.CircleRadius = ((Circle)e).Radius;
+                ClassifyContour(s, t, ref full, ref front, ref rear, ref labels, b);
             }
+            CheckTopology(t, full, front, rear, labels);
+            foreach (var b in s.Manifest.Entities.Where(b => new[] { "room", "frontBeam", "shaftLeft", "shaftRight" }.Contains(b.Role)))
+            {
+                var points = Points(s.Entities[b.Key], s.Frame);
+                b.StructuralRear = points.Select(p => Math.Abs(p.Y - s.SD) < Math.Abs(p.Y)).ToArray();
+                b.StructuralYOffsets = points.Select((p, i) => p.Y - (b.StructuralRear[i] ? s.SD : 0)).ToArray();
+            }
+            s.Manifest.DependencyVersion = 1;
+            ProjectDataStorage.Write(db, tr, MachineRoomDrawing.Record, s.Manifest);
+        }
+
+        private static void ClassifyContour(
+            MachineRoomSnapshot s,
+            ChassisTopology t,
+            ref int full,
+            ref int front,
+            ref int rear,
+            ref int labels,
+            MachineRoomBinding b)
+        {
+            var e = s.Entities[b.Key];
+            var points = Points(e, s.Frame);
+            // Recover the reviewed source frame for legacy rigid translations, without replacing semantic IDs.
+            var original = points.Select(p => new LocalPoint(
+                p.X - (s.SW - t.SourceSW) / 2,
+                p.Y - (b.Role == "cw" ? s.CwRow - t.SourceCwRow : s.CarRow - t.SourceCarRow),
+                p.Z)).ToArray();
+            double lo = original.Min(p => p.Y), hi = original.Max(p => p.Y);
+            bool straight = (e is Line) || (e is Polyline
+                && Enumerable.Range(0, ((Polyline)e).NumberOfVertices).All(i => Math.Abs(((Polyline)e).GetBulgeAt(i)) < 1e-9));
+            bool longitudinal = straight && original.Max(p => p.X) - original.Min(p => p.X) < 2;
+            // Reviewed open L: rear crosspiece plus a right-side leg ending at the machine crosspiece.
+            bool rearOutline = straight
+                && original.Length == 3
+                && Near(original[0].Y, original[1].Y)
+                && Math.Abs(original[1].X - original[2].X) < 2
+                && Near(original[2].Y, t.MachineRearEnd);
+            bool atFront = t.FrontMemberEnds.Any(v => Near(v, lo)), atRear = t.RearMemberEnds.Any(v => Near(v, hi));
+            string behavior = "FixedToMachine", reference = "Machine";
+            string[] refs = null;
+            if (b.Role == "cw")
+            {
+                behavior = "RigidTranslate";
+                reference = "Counterweight";
+            }
+            else if (longitudinal && atFront && atRear)
+            {
+                behavior = "SpanBetweenReferences";
+                full++;
+                refs = original.Select(p => Near(p.Y, lo) ? "FrontBeam" : "RearBeam").ToArray();
+            }
+            else if (longitudinal && atFront && Near(hi, t.MachineFrontEnd))
+            {
+                behavior = "StretchFromCarSide";
+                front++;
+                refs = original.Select(p => Near(p.Y, hi) ? "Machine" : "FrontBeam").ToArray();
+            }
+            else if ((longitudinal || rearOutline) && Near(lo, t.MachineRearEnd) && atRear)
+            {
+                behavior = "StretchFromCWRearSide";
+                rear++;
+                refs = original.Select(p => Near(p.Y, lo) ? "Machine" : "RearBeam").ToArray();
+            }
+            else if (b.Key.StartsWith("MachineRoom.Support.P1.") || b.Key.StartsWith("MachineRoom.Support.P3."))
+            {
+                behavior = "FixedToBeam";
+                reference = "RearBeam";
+            }
+            else if (b.Key.StartsWith("MachineRoom.Support.P2.") || b.Key.StartsWith("MachineRoom.Support.P4."))
+            {
+                behavior = "FixedToBeam";
+                reference = "FrontBeam";
+            }
+            else if (straight && hi < 0)
+            {
+                behavior = "FixedToBeam";
+                reference = "FrontBeam";
+            }
+            else if (straight && lo > t.SourceSD)
+            {
+                behavior = "FixedToBeam";
+                reference = "RearBeam";
+            }
+            else if (b.Key.StartsWith("MachineRoom.Chassis.ReferenceDetail.")
+                && t.RearSupportLabelWindows.Any(w => original.All(p => p.X >= w[0] && p.Y >= w[1] && p.X <= w[2] && p.Y <= w[3])))
+            {
+                behavior = "FixedToBeam";
+                reference = "RearBeam";
+                labels++;
+            }
+            if (refs == null)
+                refs = original.Select(p => reference).ToArray();
+            b.Dependency =
+                new ChassisDependency
+                {
+                    Behavior = behavior,
+                    References = refs,
+                    Offsets = original.Select((p, i) => new LocalPoint(
+                p.X - t.SourceSW / 2,
+                p.Y - ChassisDependencies.Datum(refs[i], t.SourceCarRow, t.SourceSD, t.SourceCwRow),
+                p.Z)).ToArray()
+                };
+            if (e is Circle)
+                b.Dependency.CircleRadius = ((Circle)e).Radius;
+        }
+
+        private static void CheckTopology(ChassisTopology t, int full, int front, int rear, int labels)
+        {
             if (full != t.ExpectedFullSpans || front != t.ExpectedFrontSpans || rear != t.ExpectedRearSpans)
             {
                 throw new InvalidOperationException("Chassis topology differs from the reviewed reference: spans "
@@ -163,14 +188,6 @@ namespace Elevator.AutoCAD.MachineRoom
             }
             if (labels != t.ExpectedRearLabelContours)
                 throw new InvalidOperationException("Reviewed P1/P3 annotation topology differs; no automatic label inference.");
-            foreach (var b in s.Manifest.Entities.Where(b => new[] { "room", "frontBeam", "shaftLeft", "shaftRight" }.Contains(b.Role)))
-            {
-                var points = Points(s.Entities[b.Key], s.Frame);
-                b.StructuralRear = points.Select(p => Math.Abs(p.Y - s.SD) < Math.Abs(p.Y)).ToArray();
-                b.StructuralYOffsets = points.Select((p, i) => p.Y - (b.StructuralRear[i] ? s.SD : 0)).ToArray();
-            }
-            s.Manifest.DependencyVersion = 1;
-            ProjectDataStorage.Write(db, tr, MachineRoomDrawing.Record, s.Manifest);
         }
 
         public static void Apply(Entity e, MachineRoomBinding b, MachineRoomSnapshot s, ElevatorParameters design)
