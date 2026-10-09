@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P1 "Build system" on branch `refactor/p1-build` (not merged, not pushed). P0 was closed first: tier 1 PASS on its branch, merged into `main` (`ac9fdcc`, --no-ff), Planner files committed (`ee898b6`). P1: SDK-style projects, Directory.Build.props, one solution, `tools/build.ps1`; same 26-file output as the csc build; tiers 1, 2 and 3 PASS on the new build with the golden files unchanged. No source-code behaviour change.
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P1 "Build system", merged into `main` (--no-ff) after tier 1 PASS on the branch (`artifacts/test-results/20261009-062521`, 200 s); not pushed. Note for P2: presets UI took 400 s in run 20261009-060258 (54 s in the P0 reference, 55 s when rerun alone on both builds); to be looked at only if it reproduces. P0 was closed first: tier 1 PASS on its branch, merged into `main` (`ac9fdcc`, --no-ff), Planner files committed (`ee898b6`). P1: SDK-style projects, Directory.Build.props, one solution, `tools/build.ps1`; same 26-file output as the csc build; tiers 1, 2 and 3 PASS on the new build with the golden files unchanged. No source-code behaviour change.
 - **Goal:** P1: SDK-style projects and an incremental `dotnet build` with the same output as the csc scripts.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P1)
 - **Completed:**
