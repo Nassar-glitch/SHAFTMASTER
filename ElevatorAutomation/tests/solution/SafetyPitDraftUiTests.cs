@@ -21,11 +21,11 @@ public static class SafetyPitDraftUiTests
     static string output;
     static int checks;
     static readonly List<string> names = new List<string>();
-    static readonly BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
 
-    static object Get(string name) { return typeof(MainWindow).GetField(name, PrivateInstance).GetValue(window); }
-    static void Set(string name, object value) { typeof(MainWindow).GetField(name, PrivateInstance).SetValue(window, value); }
-    static object Call(string name, params object[] arguments) { return typeof(MainWindow).GetMethod(name, PrivateInstance).Invoke(window, arguments); }
+    // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+    static object Get(string name) { return window.Automation.Get(name); }
+    static void Set(string name, object value) { window.Automation.Set(name, value); }
+    static object Call(string name, params object[] arguments) { return window.Automation.Call(name, arguments); }
     static Dictionary<string, TextBox> Editors() { return (Dictionary<string, TextBox>)Get("editors"); }
     static Dictionary<string, ComboBox> PitChoices() { return (Dictionary<string, ComboBox>)Get("safetyPitChoices"); }
     static Dictionary<string, ComboBox> CalculationChoices() { return (Dictionary<string, ComboBox>)Get("calculationChoices"); }

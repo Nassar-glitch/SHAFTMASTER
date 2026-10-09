@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Solution.Desktop.Common
 {
     public static class WindowLayout
     {

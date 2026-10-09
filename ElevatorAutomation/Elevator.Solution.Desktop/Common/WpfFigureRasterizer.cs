@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Elevator.Reporting.Figures;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Solution.Desktop.Common
 {
  // WPF text measurement and 300 dpi PNG rendering for report figures (moved unchanged from FigureRender). Must run on an
  // STA thread. Registered with FigureRender.Rasterizer by the application.

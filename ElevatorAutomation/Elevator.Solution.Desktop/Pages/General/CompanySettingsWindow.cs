@@ -5,12 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
-using Elevator.Core.Project;
 using Elevator.Reporting.Sheet;
-using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;
-using Elevator.Reporting.Figures;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Solution.Desktop.Pages
 {
  // Company / report settings: company name and logo shared by all projects (stored under %AppData%\ShaftMaster).
  public sealed class CompanySettingsWindow:Window
@@ -61,26 +58,6 @@ namespace Elevator.Solution.Desktop
    if(removeLogo)settings.RemoveLogo();
    if(pendingLogo!=null)settings.SetLogo(pendingLogo);
    settings.Save();Saved=true;return settings;
-  }
- }
- public sealed partial class MainWindow
- {
-  // General page: optional project-level sheet details. Editing them never invalidates calculations.
-  void CalculationSheetDetails()
-  {
-   if(session.Project.Report==null)session.Project.Report=new ProjectReportDetails();
-   Heading("Calculation sheet details");
-   Field("Client","Report.ClientName");Field("Document number","Report.DocumentNumber");Field("Revision","Report.Revision");
-   Field("Prepared by","Report.PreparedBy");Field("Checked by","Report.CheckedBy");Field("Approved by","Report.ApprovedBy");
-   var company=CompanyReportSettings.Load();
-   Note("Company (all projects): "+(company.CompanyName??"no name")+" · "+(company.LogoFile!=null?"logo set":"no logo"));
-   content.Children.Add(Button("Company / report settings…",ShowCompanySettings));
-  }
-  void ShowCompanySettings()
-  {
-   var dialog=new CompanySettingsWindow(CompanyReportSettings.Load()){Owner=this,FontFamily=FontFamily,Foreground=ink};
-   dialog.ShowDialog();
-   if(dialog.Saved){SetStatus("Company / report settings saved.");if(activePage=="GENERAL"){Commit();ShowPage("GENERAL");}}
   }
  }
 }

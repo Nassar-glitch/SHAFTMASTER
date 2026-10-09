@@ -12,7 +12,7 @@ using Elevator.Core.Application;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-using Elevator.Solution.Desktop;
+using Elevator.Solution.Desktop.Common;
 using Elevator.Solution.Bridge;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;

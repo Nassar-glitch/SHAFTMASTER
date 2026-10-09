@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Windows.Media.Imaging;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Solution.Desktop.Common
 {
     public static class BrandAssets
     {

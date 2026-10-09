@@ -18,7 +18,7 @@ using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
 using Elevator.Reporting.Sheet;
 #if NETFRAMEWORK
-using Elevator.Solution.Desktop;
+using Elevator.Solution.Desktop.Common;
 #endif
 using Xunit;
 

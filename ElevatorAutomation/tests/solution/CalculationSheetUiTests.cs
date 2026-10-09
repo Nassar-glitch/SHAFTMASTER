@@ -15,6 +15,7 @@ using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
+using Elevator.Solution.Desktop.Pages;
 using Elevator.Solution.Bridge;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;
@@ -26,11 +27,11 @@ using Elevator.Reporting.Figures;
 // The Save As dialog itself is not automated. SYNTHETIC inputs only.
 public static class CalculationSheetUiTests
 {
-    const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
     static MainWindow window; static string output; static int checks; static readonly List<string> names = new List<string>();
-    static object Get(string name) { return typeof(MainWindow).GetField(name, PrivateInstance).GetValue(window); }
-    static void Set(string name, object value) { typeof(MainWindow).GetField(name, PrivateInstance).SetValue(window, value); }
-    static object Call(string name, params object[] arguments) { return typeof(MainWindow).GetMethod(name, PrivateInstance).Invoke(window, arguments); }
+    // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+    static object Get(string name) { return window.Automation.Get(name); }
+    static void Set(string name, object value) { window.Automation.Set(name, value); }
+    static object Call(string name, params object[] arguments) { return window.Automation.Call(name, arguments); }
     static Dictionary<string, TextBox> Editors() { return (Dictionary<string, TextBox>)Get("editors"); }
     static Dictionary<string, ComboBox> Choices() { return (Dictionary<string, ComboBox>)Get("calculationChoices"); }
     static ProjectSession Session() { return (ProjectSession)Get("session"); }
@@ -234,7 +235,7 @@ public static class CalculationSheetUiTests
                 Check(!none.HasContent && !Confirm(none, true) && shownDialog == null, "Nothing available: export blocked without the omission dialog");
                 string message = (string)Get("calculationSheetMessage");
                 Check(message != null && message.Contains("No calculation sheet was exported") && message.Contains("Car mass") && message.Contains("Guide-shoe spacing h"), "Application explains why nothing was exported" + (message == null ? "" : " [" + message.Replace("\n", " | ") + "]"));
-                bool blocked = false; try { Call("WriteCalculationSheet", Path.Combine(output, "ui-05-blocked.docx")); } catch (TargetInvocationException failure) { blocked = failure.InnerException is InvalidOperationException; }
+                bool blocked = false; try { Call("WriteCalculationSheet", Path.Combine(output, "ui-05-blocked.docx")); } catch (InvalidOperationException) { blocked = true; }
                 Check(blocked && !File.Exists(Path.Combine(output, "ui-05-blocked.docx")), "No file is written when nothing is available");
                 exit = 0;
             }

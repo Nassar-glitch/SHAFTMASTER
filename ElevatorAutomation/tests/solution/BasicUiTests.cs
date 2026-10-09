@@ -10,7 +10,8 @@ public static class BasicUiTests
  // Source root (config/ and Templates/): the parent of the binary folder, or an ancestor for artifacts/bin.
  static string Root(string bin){var parent=Directory.GetParent(bin.TrimEnd(Path.DirectorySeparatorChar));for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;return parent.FullName;}
  static MainWindow w;static string output;static int checks;static List<string> names=new List<string>();
- static object Get(string n){return typeof(MainWindow).GetField(n,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(w);}static void Set(string n,object v){typeof(MainWindow).GetField(n,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(w,v);}static object Call(string n,params object[] a){return typeof(MainWindow).GetMethod(n,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(w,a);}
+ // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+ static object Get(string n){return w.Automation.Get(n);}static void Set(string n,object v){w.Automation.Set(n,v);}static object Call(string n,params object[] a){return w.Automation.Call(n,a);}
  static IEnumerable<DependencyObject> Tree(DependencyObject n){yield return n;for(int i=0;i<VisualTreeHelper.GetChildrenCount(n);i++)foreach(var c in Tree(VisualTreeHelper.GetChild(n,i)))yield return c;}
  static Dictionary<string,TextBox> Editors(){return (Dictionary<string,TextBox>)Get("editors");}static Dictionary<string,ComboBox> Choices(){return (Dictionary<string,ComboBox>)Get("calculationChoices");}static ProjectSession Session(){return (ProjectSession)Get("session");}static CalculationWorkspace Space(){return (CalculationWorkspace)Get("calculations");}
  // The test owns its window: a close request it did not make (title-bar X, Alt+F4, taskbar, WM_CLOSE from another process)

@@ -18,9 +18,10 @@ using Elevator.Reporting.Figures;
 public static class CalculationUiTests
 {
  static MainWindow window;static string output;static int count;static List<string> checks=new List<string>();
- static object Get(string name){return typeof(MainWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(window);}
- static void Set(string name,object value){typeof(MainWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(window,value);}
- static object Call(string name,params object[] values){return typeof(MainWindow).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(window,values);}
+ // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+ static object Get(string name){return window.Automation.Get(name);}
+ static void Set(string name,object value){window.Automation.Set(name,value);}
+ static object Call(string name,params object[] values){return window.Automation.Call(name,values);}
  static void Check(bool ok,string name){if(!ok)throw new Exception(name);count++;checks.Add(name);}
  static IEnumerable<DependencyObject> Tree(DependencyObject root){yield return root;for(int i=0;i<VisualTreeHelper.GetChildrenCount(root);i++)foreach(var child in Tree(VisualTreeHelper.GetChild(root,i)))yield return child;}
  static void Click(string text){if(text.StartsWith("Calculate ")){/* Calculate buttons were replaced by live calculation: run the debounced calculation now. */window.UpdateLayout();Call("RunLiveCalculation");return;}var b=Tree(window).OfType<Button>().First(x=>Convert.ToString(x.Content)==text);b.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));}
