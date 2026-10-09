@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Build tool: rasterises the brand mark into ShaftMaster.ico / ShaftMasterMark.png (run by the Desktop project). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>BrandIconBuilder</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\BrandIconBuilder.cs" />
+  </ItemGroup>
+</Project>

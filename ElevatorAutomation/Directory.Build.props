@@ -1,0 +1,50 @@
+<Project>
+  <!-- Shared settings for every SDK-style project (ARCHITECTURE-PLAN P1). The build must give the same binaries and the
+       same file layout as the former csc scripts: one output folder, C# 5, no generated assembly attributes. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <!-- csc v4.0.30319 compiled C# 5. -->
+    <LangVersion>5</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <!-- Warnings as with csc today: shown, never errors; no extra analyzers. -->
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <!-- The csc build emitted neither assembly-info attributes nor a TargetFrameworkAttribute (which would change the
+         runtime compatibility switches), no pdb, no binding redirects, and no 32-bit preference for AnyCPU executables. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!-- Release keeps Optimize=true: Roslyn then marks the assembly only IgnoreSymbolStoreSequencePoints and the JIT optimises,
+         as it did for the csc assemblies (no DebuggableAttribute). Optimize=false would disable JIT optimisation. -->
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
+    <Prefer32Bit>false</Prefer32Bit>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- All assemblies in one folder, as before: artifacts/bin (override with -p:OutDir=... through tools/build.ps1). -->
+    <ArtifactsRoot>$(MSBuildThisFileDirectory)artifacts\</ArtifactsRoot>
+    <OutDir Condition="'$(OutDir)' == ''">$(ArtifactsRoot)bin\</OutDir>
+    <BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <!-- Installed program folders; tools/build.ps1 passes -AutoCADDir / -SolidWorksDir. -->
+    <AutoCADDir Condition="'$(AutoCADDir)' == ''">C:\Program Files\Autodesk\AutoCAD 2023</AutoCADDir>
+    <SolidWorksDir Condition="'$(SolidWorksDir)' == ''">C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS</SolidWorksDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <!-- One shared output folder: each project writes only its own assembly there, so references are not copied again
+         (parallel copies of the same file would collide). -->
+    <ProjectReference><Private>false</Private></ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <!-- .NET Framework 4.8 reference assemblies without a targeting pack. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

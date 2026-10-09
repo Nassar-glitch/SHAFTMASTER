@@ -1,11 +1,11 @@
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domain: project model, rules, geometry, calculations, presets / selection. -->
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)'==''">Release</Configuration>
-    <ProjectGuid>{99365D36-B338-4E58-AF13-B1B24F6D0322}</ProjectGuid>
-    <OutputType>Library</OutputType><AssemblyName>Elevator.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion><OutputPath>..\bin\</OutputPath>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Elevator.Core</AssemblyName>
+    <RootNamespace>Elevator.Core</RootNamespace>
   </PropertyGroup>
-  <ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Web.Extensions"/></ItemGroup>
-  <ItemGroup><Compile Include="Models\*.cs"/><Compile Include="Rules\*.cs"/><Compile Include="Geometry\*.cs"/><Compile Include="SectionAA\*.cs"/><Compile Include="Project\*.cs"/><Compile Include="Calculations\*.cs"/></ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
 </Project>
