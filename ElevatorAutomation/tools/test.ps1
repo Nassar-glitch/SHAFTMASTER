@@ -53,6 +53,7 @@ foreach($n in $tiers){
    Suite 1 'ff-core' {param($o) Run 'tests/solution/run-car-guide-force-core.ps1' @('-CandidateBin',$Bin,'-SkipBuild','-EvidenceDirectory',$o)}
    Suite 1 'safety-pit-core' {param($o) Run 'tests/solution/run-safety-pit-ui.ps1' @('-CandidateBin',$Bin,'-SkipBuild','-SkipUi','-EvidenceDirectory',$o)}
    Suite 1 'xunit-core' {param($o) & (Join-Path $root 'tests/Elevator.Core.Tests/run-xunit.ps1') -OutDir $o;if($LASTEXITCODE){throw 'xUnit Core tests failed'}}
+   Suite 1 'xunit-reporting' {param($o) & (Join-Path $root 'tests/Elevator.Core.Tests/run-xunit.ps1') -Project Elevator.Reporting.Tests -OutDir $o;if($LASTEXITCODE){throw 'xUnit Reporting tests failed'}}
   }
   2{
    Suite 2 'presets-ui' {param($o) Run 'tests/solution/run-presets-ui.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
