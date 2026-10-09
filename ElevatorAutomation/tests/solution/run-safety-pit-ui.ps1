@@ -7,11 +7,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 if(!$SkipBuild){& (Join-Path $root 'tools/build.ps1') -Bin $CandidateBin}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $refs=@('/reference:System.Web.Extensions.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'Elevator.Reporting.dll')))
-$sources=@(@('tests/solution/SafetyPitTests.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName})
-& $compiler /nologo /target:exe ('/out:'+(Join-Path $bin 'SafetyPitTests.exe')) @refs @sources
-if($LASTEXITCODE){throw 'Safety/pit tests build failed'}
-& (Join-Path $bin 'SafetyPitTests.exe') $bin $out $root
-if($LASTEXITCODE){throw 'Safety/pit calculation tests failed'}
+# The safety gear / pit Core assertions are xUnit tests (tests/Elevator.Core.Tests/Suites/SafetyPitTests.cs, tools/test.ps1 suites core-*).
 $schemaSource=(Get-Item -LiteralPath (Join-Path $root 'tests/project/SchemaGenerator.cs')).FullName
 & $compiler /nologo /target:exe ('/out:'+(Join-Path $bin 'SchemaGenerator.exe')) @refs $schemaSource
 if($LASTEXITCODE){throw 'Schema generator build failed'}
