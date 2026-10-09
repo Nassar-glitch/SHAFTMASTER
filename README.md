@@ -20,25 +20,24 @@ The agreed design flow, presets and build stages are in [DESIGN-FLOW.md](DESIGN-
 
 Clone into a short folder path (for example `C:\src\ShaftMaster`): some legacy test files have long names and exceed the Windows 260-character path limit under a deep folder.
 
-Build into a new, separate folder. Without `-BinDirectory` the script writes to `bin-shaftmaster-v01`, which is a release folder.
+The build goes to `ElevatorAutomation/artifacts/bin` by default (ignored by Git). The build scripts refuse to write into a release folder (`bin-shaftmaster-v*`) unless `-Release` is given.
 
 ```powershell
 cd ElevatorAutomation
-./build-solution.ps1 -BinDirectory bin-local
-./bin-local/ShaftMaster.exe
+./build-solution.ps1
+./artifacts/bin/ShaftMaster.exe
 ```
 
 Use `-AutoCADDirectory` and `-SolidWorksDirectory` when they are not installed in the default folders. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
 
-Core tests, for example, after a build:
+Tests run by tier (see [ElevatorAutomation/docs/TESTING.md](ElevatorAutomation/docs/TESTING.md)):
 
 ```powershell
 cd ElevatorAutomation
-./tests/solution/run-presets-core.ps1 -CandidateBin bin-local -EvidenceDirectory output/local/presets-core
-./tests/solution/run-rope-traction-core.ps1 -CandidateBin bin-local -EvidenceDirectory output/local/rope-core
+./tools/test.ps1 -Tier 1
 ```
 
-The other suites (UI, calculation sheet, native AutoCAD, STEP) are under `ElevatorAutomation/tests/`. Tests that need local reference files kept outside the repository (for example the original project drawings) skip with a message when those files are absent.
+Tier 1 is the golden-master and core suites (no AutoCAD, no Word), tier 2 the programmatic WPF suites, tier 3 the native AutoCAD, Word render, STEP-input and affected-regression suites. Tests that need local reference files kept outside the repository (for example the original project drawings) skip with a message when those files are absent.
 
 ## Repository structure
 
