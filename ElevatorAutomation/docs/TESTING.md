@@ -16,6 +16,8 @@ cd ElevatorAutomation
 | 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui` | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
 | 3 | `integration` (tests/integration/run-tier3.ps1: affected regressions, FF native / STEP integration, STEP input, native golden), `presets-native`, `sheet-word-render` | AutoCAD 2023, Microsoft Word, Python with PyMuPDF and python-docx, the local evidence folder `output/calculation-phase1` and the release `bin-shaftmaster-v01` (read only) |
 
+Reference run (2026-10-09, `artifacts/test-results/20261009-053328`, all PASS): build 8 s, tier 1 204 s, tier 2 215 s, tier 3 229 s (the Word render of 23 sheets, 169 pages, takes 185 s of it). The golden suite takes about 70–85 s, most of it the rope selection of the heavy-Q fixtures.
+
 The AutoCAD script suites of `tests/run-tests.ps1` (plan, machine room, section, legacy regression) are not part of the tiers yet.
 
 ## Tier 1: golden master (`tests/golden`)
