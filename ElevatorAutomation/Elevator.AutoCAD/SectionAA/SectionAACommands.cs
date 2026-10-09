@@ -78,75 +78,23 @@ namespace Elevator.AutoCAD.SectionAA
                 : Choice(e, "Edit A-A", new[] { "Floors", "Insert", "Remove", "Rename", "NoStop", "PitOH", "Car", "Brackets" }, "PitOH");
             if (part == "Floors")
             {
-                var rr = e.GetInteger(new PromptIntegerOptions(
-                    "\nNumber of normal physical floors (R added automatically): ")
-                { LowerLimit = 2, UpperLimit = 99, AllowNone = false });
-                Check(rr.Status);
-                int n = rr.Value;
-                string naming = Choice(e, "Naming convention", new[] { "BG", "Numeric" }, "BG");
-                string first = Text(e, "First level", naming == "BG" ? "G" : "0");
-                string mode = Choice(e, "FFL intervals", new[] { "Common", "Individual" }, "Common");
-                double[] h = new double[n - 1];
-                if (mode == "Common")
-                {
-                    double height = Num(e, "Common floor height mm", null);
-                    for (int i = 0; i < h.Length; i++)
-                        h[i] = height;
-                }
-                else
-                {
-                    for (int i = 0; i < h.Length; i++)
-                        h[i] = Num(e, "Interval " + (i + 1) + " height mm", null);
-                }
-                d.Floors = FloorStackGenerator.Create(n + 1, naming, first, h, d.Floors);
-                foreach (var f in d.Floors)
-                    f.Served = !f.IsRoof;
+                EditFloorStack(d, e);
             }
             if (part == "Insert")
             {
-                string before = Text(e, "Insert before normal floor name", null);
-                int i = d.Floors.FindIndex(f => f.Name == before && !f.IsRoof);
-                if (i <= 0)
-                    throw new ArgumentException("Choose a floor above lowest modeled FFL.");
-                double h = Num(e, "Added floor interval mm", null);
-                string name = Text(e, "New unique floor name", null);
-                double z = d.Floors[i].FflZ;
-                for (int j = i; j < d.Floors.Count - 1; j++)
-                    d.Floors[j].FflZ += h;
-                d.Floors.Insert(i, new VerticalFloor { FloorId = Guid.NewGuid().ToString("N"), Name = name, Served = true, FflZ = z });
+                InsertFloor(d, e);
             }
             if (part == "Remove")
             {
-                string name = Text(e, "Remove normal floor name and its following interval", null);
-                int i = d.Floors.FindIndex(f => f.Name == name && !f.IsRoof);
-                if (i <= 0 || i >= d.Floors.Count - 2)
-                    throw new ArgumentException("Remove an intermediate physical floor.");
-                double delta = d.Floors[i + 1].FflZ - d.Floors[i].FflZ;
-                d.Floors.RemoveAt(i);
-                for (int j = i; j < d.Floors.Count - 1; j++)
-                    d.Floors[j].FflZ -= delta;
+                RemoveFloor(d, e);
             }
             if (part == "Rename")
             {
-                string name = Text(e, "Existing floor name", null);
-                var f = d.Floors.Single(v => v.Name == name && !v.IsRoof);
-                f.Name = Text(e, "New unique display name (FloorId retained)", null);
+                RenameFloor(d, e);
             }
             if (part == "Floors" || part == "NoStop")
             {
-                foreach (var f in d.Floors)
-                    f.Served = !f.IsRoof;
-                if (Choice(e, "ARE THERE ANY NO STOP FLOORS?", new[] { "No", "Yes" }, "No") == "Yes")
-                {
-                    string names = Text(e, "NO STOP names separated by spaces", null);
-                    foreach (var name in names.Split(
-                        new[] { ' ', ',', ';' },
-                        StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        var f = d.Floors.Single(v => v.Name == name && !v.IsRoof);
-                        f.Served = false;
-                    }
-                }
+                EditNoStopFloors(d, e);
             }
             if (current == null || part == "PitOH")
             {
@@ -171,6 +119,83 @@ namespace Elevator.AutoCAD.SectionAA
                 SectionAACalculator.Calculate(d, s.Section.Reference.SourceSlabThickness);
             }
             return d;
+        }
+
+        private static void EditFloorStack(SectionAAProject d, Editor e)
+        {
+            var rr = e.GetInteger(new PromptIntegerOptions(
+                                "\nNumber of normal physical floors (R added automatically): ")
+            { LowerLimit = 2, UpperLimit = 99, AllowNone = false });
+            Check(rr.Status);
+            int n = rr.Value;
+            string naming = Choice(e, "Naming convention", new[] { "BG", "Numeric" }, "BG");
+            string first = Text(e, "First level", naming == "BG" ? "G" : "0");
+            string mode = Choice(e, "FFL intervals", new[] { "Common", "Individual" }, "Common");
+            double[] h = new double[n - 1];
+            if (mode == "Common")
+            {
+                double height = Num(e, "Common floor height mm", null);
+                for (int i = 0; i < h.Length; i++)
+                    h[i] = height;
+            }
+            else
+            {
+                for (int i = 0; i < h.Length; i++)
+                    h[i] = Num(e, "Interval " + (i + 1) + " height mm", null);
+            }
+            d.Floors = FloorStackGenerator.Create(n + 1, naming, first, h, d.Floors);
+            foreach (var f in d.Floors)
+                f.Served = !f.IsRoof;
+        }
+
+        private static void InsertFloor(SectionAAProject d, Editor e)
+        {
+            string before = Text(e, "Insert before normal floor name", null);
+            int i = d.Floors.FindIndex(f => f.Name == before && !f.IsRoof);
+            if (i <= 0)
+                throw new ArgumentException("Choose a floor above lowest modeled FFL.");
+            double h = Num(e, "Added floor interval mm", null);
+            string name = Text(e, "New unique floor name", null);
+            double z = d.Floors[i].FflZ;
+            for (int j = i; j < d.Floors.Count - 1; j++)
+                d.Floors[j].FflZ += h;
+            d.Floors.Insert(i, new VerticalFloor { FloorId = Guid.NewGuid().ToString("N"), Name = name, Served = true, FflZ = z });
+        }
+
+        private static void RemoveFloor(SectionAAProject d, Editor e)
+        {
+            string name = Text(e, "Remove normal floor name and its following interval", null);
+            int i = d.Floors.FindIndex(f => f.Name == name && !f.IsRoof);
+            if (i <= 0 || i >= d.Floors.Count - 2)
+                throw new ArgumentException("Remove an intermediate physical floor.");
+            double delta = d.Floors[i + 1].FflZ - d.Floors[i].FflZ;
+            d.Floors.RemoveAt(i);
+            for (int j = i; j < d.Floors.Count - 1; j++)
+                d.Floors[j].FflZ -= delta;
+        }
+
+        private static void RenameFloor(SectionAAProject d, Editor e)
+        {
+            string name = Text(e, "Existing floor name", null);
+            var f = d.Floors.Single(v => v.Name == name && !v.IsRoof);
+            f.Name = Text(e, "New unique display name (FloorId retained)", null);
+        }
+
+        private static void EditNoStopFloors(SectionAAProject d, Editor e)
+        {
+            foreach (var f in d.Floors)
+                f.Served = !f.IsRoof;
+            if (Choice(e, "ARE THERE ANY NO STOP FLOORS?", new[] { "No", "Yes" }, "No") == "Yes")
+            {
+                string names = Text(e, "NO STOP names separated by spaces", null);
+                foreach (var name in names.Split(
+                    new[] { ' ', ',', ';' },
+                    StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var f = d.Floors.Single(v => v.Name == name && !v.IsRoof);
+                    f.Served = false;
+                }
+            }
         }
 
         [CommandMethod("ELEVATORSECTIONAA")]
