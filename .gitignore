@@ -41,3 +41,7 @@ acad.err
 
 # Default build and test output (tools/build.ps1, tools/test.ps1)
 ElevatorAutomation/artifacts/
+
+# AutoCAD script-suite outputs (tests/run-tests.ps1 rewrites them on every run)
+ElevatorAutomation/tests/generated/
+ElevatorAutomation/tests/*-results.json
