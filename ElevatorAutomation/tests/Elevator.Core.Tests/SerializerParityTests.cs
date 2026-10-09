@@ -13,6 +13,10 @@ using Elevator.Solution.Bridge;
 using Elevator.Solution.Desktop;
 using Xunit;
 using Xunit.Abstractions;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 namespace Elevator.Core.Tests
 {

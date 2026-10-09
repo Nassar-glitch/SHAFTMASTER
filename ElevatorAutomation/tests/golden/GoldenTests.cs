@@ -13,6 +13,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Tier-1 golden-master tests (ARCHITECTURE-PLAN P0). For every fixture in tests/golden/fixtures the current behaviour is
 // captured as text files and compared byte for byte with tests/golden/approved: calculation results and the automatic rope
@@ -43,6 +47,7 @@ public static class GoldenTests
         try
         {
             ReportClock.Now = () => Clock;
+            FigureRender.Rasterizer = new WpfFigureRasterizer(); // WPF text measurement and PNG, as in the application
             ctx = Wire.Read<DesignContext>(Path.Combine(bin, "reviewed-context.json")); ctx.ChassisEvidence = Wire.Read<ChassisGeometryEvidence>(Path.Combine(bin, "reviewed-chassis-evidence.json"));
             lib = PresetLibrary.Load(Path.Combine(bin, "presets.json"));
             Directory.CreateDirectory(run);

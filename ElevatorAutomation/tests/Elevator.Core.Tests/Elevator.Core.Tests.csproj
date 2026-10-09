@@ -23,34 +23,22 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
     <ProjectReference Include="..\..\Elevator.Core\Elevator.Core.csproj" Private="true" />
+    <ProjectReference Include="..\..\Elevator.Reporting\Elevator.Reporting.csproj" Private="true" />
   </ItemGroup>
   <ItemGroup>
-    <!-- WPF-free application sources used by the Core suites, and the golden JSON member sort. -->
-    <Compile Include="..\..\Elevator.Solution.Desktop\CalculationWorkspace.cs" Link="Linked\CalculationWorkspace.cs" />
+    <!-- WPF-free application source used by the Core suites (CalculationWorkspace is in Elevator.Reporting), and the golden
+         JSON member sort. -->
     <Compile Include="..\..\Elevator.Solution.Desktop\ProjectSession.cs" Link="Linked\ProjectSession.cs" />
     <Compile Include="..\golden\JsonMembers.cs" Link="Linked\JsonMembers.cs" />
     <!-- The console suites, run unchanged inside xUnit (the console runners stay until P7). -->
     <Compile Include="..\solution\RopeTractionTests.cs" Link="Suites\RopeTractionTests.cs" />
     <Compile Include="..\solution\CarGuideForceTests.cs" Link="Suites\CarGuideForceTests.cs" />
     <Compile Include="..\solution\SafetyPitTests.cs" Link="Suites\SafetyPitTests.cs" />
+    <!-- Needs the Design Notes, which are in Elevator.Reporting since P3: runs on net8.0 too. -->
+    <Compile Include="..\solution\PresetsTests.cs" Link="Suites\PresetsTests.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
     <ProjectReference Include="..\..\Elevator.Solution.Bridge\Elevator.Solution.Bridge.csproj" Private="true" />
-    <!-- PresetsTests needs the Design Notes, which need the calculation-sheet sources (WPF figures): .NET Framework only. -->
-    <Compile Include="..\solution\PresetsTests.cs" Link="Suites\PresetsTests.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\CalculationSheet.cs" Link="Linked\CalculationSheet.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\CalculationSheetRopes.cs" Link="Linked\CalculationSheetRopes.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\CalculationFiguresRopes.cs" Link="Linked\CalculationFiguresRopes.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\DesignNotes.cs" Link="Linked\DesignNotes.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\DocxWriter.cs" Link="Linked\DocxWriter.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\CompanyReportSettings.cs" Link="Linked\CompanyReportSettings.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\FigureModel.cs" Link="Linked\FigureModel.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\FigureRender.cs" Link="Linked\FigureRender.cs" />
-    <Compile Include="..\..\Elevator.Solution.Desktop\CalculationFigures.cs" Link="Linked\CalculationFigures.cs" />
   </ItemGroup>
 </Project>

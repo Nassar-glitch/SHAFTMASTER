@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.Docx;
+namespace Elevator.Reporting.DesignNotes
 {
  // Design Notes (DESIGN-FLOW principle 7): short advisory notes only, written as an engineer's advice, one or two lines each,
  // with the clause in brackets. Warnings carry a recommendation computed from the project; recommendations list what is

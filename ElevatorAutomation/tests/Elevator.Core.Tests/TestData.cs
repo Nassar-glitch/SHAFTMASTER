@@ -84,3 +84,19 @@ namespace Elevator.Solution.Bridge
     }
 }
 #endif
+
+#if !NETFRAMEWORK
+namespace System.Web.Script.Serialization
+{
+    // net8.0 stand-in for the JavaScriptSerializer calls in the hosted console suites (PresetsTests' order-independent
+    // comparison): the same calls over JavaScriptCompatibleJson.
+    public sealed class JavaScriptSerializer
+    {
+        readonly Elevator.Core.Serialization.JavaScriptCompatibleJson json = new Elevator.Core.Serialization.JavaScriptCompatibleJson();
+        public int MaxJsonLength { get; set; }
+        public string Serialize(object value) { return json.Serialize(value); }
+        public object DeserializeObject(string input) { return json.DeserializeObject(input); }
+        public T Deserialize<T>(string input) { return json.Deserialize<T>(input); }
+    }
+}
+#endif

@@ -13,6 +13,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Real rendered WPF controls driven through their normal TextChanged,
 // SelectionChanged and Click handlers. This is not mouse/keyboard testing.

@@ -1,34 +1,33 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Globalization;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+namespace Elevator.Reporting.Figures
 {
- // SVG (vector) and 300 dpi PNG (fallback) renderers for Figure. Text sizes are ISO cap heights;
- // the em size is cap height / 0.72. Must run on an STA thread (WPF) for PNG and measurement.
+ // PNG rendering and text measurement for figures, supplied by the application (WPF in ShaftMaster: WpfFigureRasterizer).
+ public interface IFigureRasterizer
+ {
+  // Sets Figure.Measure and FigureFonts.Resolve; called once, before the first figure is built.
+  void Initialise();
+  byte[] Png(Figure f,double dpi);
+ }
+ // SVG (vector) renderer for Figure, and the Word image (PNG fallback from the rasterizer, with the SVG attached).
+ // Text sizes are ISO cap heights; the em size is cap height / 0.72.
  public static class FigureRender
  {
   static readonly CultureInfo Inv=CultureInfo.InvariantCulture;
-  const double CapRatio=0.72;
+  public const double CapRatio=0.72;
+  // Set by the application before reports are built; without it figures keep the default measure and have no PNG.
+  public static IFigureRasterizer Rasterizer;
   static bool initialised;
   public static void Initialise()
   {
    if(initialised)return;initialised=true;
-   FigureFonts.Resolve=()=>{var names=Fonts.SystemFontFamilies.Select(f=>f.Source).ToList();foreach(var n in new[]{"ISOCPEUR","Arial Narrow","Arial"})if(names.Any(x=>String.Equals(x,n,StringComparison.OrdinalIgnoreCase)))return n;return "Arial";};
-   Figure.Measure=(text,heightMm)=>Formatted(text,heightMm,Brushes.Black).WidthIncludingTrailingWhitespace;
-  }
-  static FormattedText Formatted(string text,double heightMm,Brush brush)
-  {
-#pragma warning disable 618
-   return new FormattedText(text??"",Inv,FlowDirection.LeftToRight,new Typeface(new FontFamily(Figure.FontFamily),FontStyles.Normal,FontWeights.Normal,FontStretches.Normal),heightMm/CapRatio,brush);
-#pragma warning restore 618
+   if(Rasterizer!=null)Rasterizer.Initialise();
   }
   static string F(double v){return v.ToString("0.###",Inv);}
-  static string Dash(FigureLayer l){return l.LineType==FigureLineType.Centre?"6 1.2 0.6 1.2":l.LineType==FigureLineType.Hidden?"2.5 1.2":null;}
+  public static string Dash(FigureLayer l){return l.LineType==FigureLineType.Centre?"6 1.2 0.6 1.2":l.LineType==FigureLineType.Hidden?"2.5 1.2":null;}
   // SVG user unit = 0.1 mm: Word's SVG renderer spaces glyphs badly at very small font sizes in user units.
   public const double SvgUnitsPerMm=10;
   static string U(double mm){return (mm*SvgUnitsPerMm).ToString("0.##",Inv);}
@@ -61,45 +60,10 @@ namespace Elevator.Solution.Desktop
    }
    b.Append("</svg>");return b.ToString();
   }
-  static Brush Brush(string hex){var b=new SolidColorBrush((Color)ColorConverter.ConvertFromString("#"+hex));b.Freeze();return b;}
-  static Pen PenFor(FigureLayer l)
-  {
-   var pen=new Pen(Brush(l.Colour),l.WeightMm){LineJoin=PenLineJoin.Round,StartLineCap=PenLineCap.Flat,EndLineCap=PenLineCap.Flat};
-   var dash=Dash(l);if(dash!=null)pen.DashStyle=new DashStyle(dash.Split(' ').Select(x=>Double.Parse(x,Inv)/l.WeightMm),0); // WPF dashes are in pen widths
-   pen.Freeze();return pen;
-  }
   public static byte[] Png(Figure f,double dpi=300)
   {
-   var visual=new DrawingVisual();
-   using(var dc=visual.RenderOpen())
-   {
-    double mm=96/25.4;dc.PushTransform(new ScaleTransform(mm,mm));
-    dc.DrawRectangle(Brushes.White,null,new Rect(0,0,f.WidthMm,f.HeightMm));
-    foreach(var e in f.Entities)
-    {
-     var p=e as FigurePolyline;
-     if(p!=null)
-     {
-      var geometry=new StreamGeometry();using(var g=geometry.Open()){g.BeginFigure(new Point(p.Points[0].X,p.Points[0].Y),p.Filled,p.Closed||p.Filled);g.PolyLineTo(p.Points.Skip(1).Select(q=>new Point(q.X,q.Y)).ToList(),true,true);}geometry.Freeze();
-      dc.DrawGeometry(p.Filled?Brush(p.Layer.Colour):null,p.Filled?null:PenFor(p.Layer),geometry);continue;
-     }
-     var c=e as FigureCircle;
-     if(c!=null){dc.DrawEllipse(c.Filled?Brush(c.Layer.Colour):Brushes.White,c.Filled?null:PenFor(c.Layer),new Point(c.Centre.X,c.Centre.Y),c.Radius,c.Radius);continue;}
-     var t=e as FigureText;
-     if(t!=null)
-     {
-      var ft=Formatted(t.Content,t.HeightMm,Brush(t.Layer.Colour));if(t.Title)ft.SetFontWeight(FontWeights.Bold);
-      double width=ft.WidthIncludingTrailingWhitespace,dx=t.Anchor=="middle"?-width/2:t.Anchor=="end"?-width:0;
-      if(t.Vertical)dc.PushTransform(new RotateTransform(-90,t.At.X,t.At.Y));
-      dc.DrawText(ft,new Point(t.At.X+dx,t.At.Y-ft.Baseline));
-      if(t.Vertical)dc.Pop();
-     }
-    }
-   }
-   int w=(int)Math.Ceiling(f.WidthMm/25.4*dpi),h=(int)Math.Ceiling(f.HeightMm/25.4*dpi);
-   var bitmap=new RenderTargetBitmap(w,h,dpi,dpi,PixelFormats.Pbgra32);bitmap.Render(visual);
-   var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));
-   using(var stream=new MemoryStream()){encoder.Save(stream);return stream.ToArray();}
+   if(Rasterizer==null)throw new InvalidOperationException("No figure rasterizer is set (FigureRender.Rasterizer).");
+   return Rasterizer.Png(f,dpi);
   }
   // Word image: PNG fallback with the SVG attached (Word 2016+ svgBlip).
   public static DocxImage Image(Figure f){Initialise();return DocxImage.WithSvg(DocxImage.FromBytes(Png(f)),Encoding.UTF8.GetBytes(Svg(f)));}

@@ -2,7 +2,8 @@ using System;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+namespace Elevator.Reporting.Figures
 {
  // Engineering figure model in paper millimetres (origin top-left, y downwards), rendered to SVG and PNG.
  // Drawing standard: white background; geometry black/dark grey; loads in one accent colour (red);

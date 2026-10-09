@@ -6,6 +6,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using Elevator.Core.Project;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 namespace Elevator.Solution.Desktop
 {
  // Company / report settings: company name and logo shared by all projects (stored under %AppData%\ShaftMaster).

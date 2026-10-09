@@ -1,12 +1,12 @@
-param([string]$OutDir='',[string[]]$Framework=@('net8.0','net48'),[switch]$NoBuild)
-# Tier 1: the xUnit Core tests (tests/Elevator.Core.Tests) on net8.0 and net48. Results (TRX per framework and
+param([string]$OutDir='',[string[]]$Framework=@('net8.0','net48'),[switch]$NoBuild,[string]$Project='Elevator.Core.Tests')
+# Tier 1: an xUnit test project (-Project, default Elevator.Core.Tests; also Elevator.Reporting.Tests) on net8.0 and net48. Results (TRX per framework and
 # xunit-tests.json with the totals) go to -OutDir (default artifacts/test-results/<timestamp>/xunit-core).
 $ErrorActionPreference='Stop'
 $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 if(-not $OutDir){$OutDir=Join-Path 'artifacts/test-results' ((Get-Date -Format 'yyyyMMdd-HHmmss')+'/xunit-core')}
 $out=Join-Path $root $OutDir;New-Item -ItemType Directory -Force -Path $out | Out-Null
 $env:DOTNET_CLI_TELEMETRY_OPTOUT='1';$env:DOTNET_NOLOGO='1'
-$project=Join-Path $PSScriptRoot 'Elevator.Core.Tests.csproj'
+$project=Join-Path (Split-Path $PSScriptRoot -Parent) ($Project+'/'+$Project+'.csproj')
 if(-not $NoBuild){& dotnet build $project -c Release -nologo -v:minimal;if($LASTEXITCODE){throw 'xUnit test build failed'}}
 $totals=[ordered]@{};$failed=$false
 foreach($f in $Framework){
@@ -19,4 +19,4 @@ foreach($f in $Framework){
 }
 $status=if($failed){'FAIL'}else{'PASS'}
 [ordered]@{Status=$status;Assertions=($totals.Values|ForEach-Object{$_.Passed}|Measure-Object -Sum).Sum;Frameworks=$totals}|ConvertTo-Json -Depth 4|Set-Content -Encoding utf8 (Join-Path $out 'xunit-tests.json')
-if($failed){throw 'xUnit Core tests failed'}
+if($failed){throw "$Project failed"}

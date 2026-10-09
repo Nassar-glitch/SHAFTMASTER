@@ -10,6 +10,10 @@ using Microsoft.Win32;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 namespace Elevator.Solution.Desktop
 {
  public sealed partial class MainWindow

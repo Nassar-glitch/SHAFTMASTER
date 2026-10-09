@@ -17,6 +17,7 @@
     <Reference Include="System.Web.Extensions" />
     <ProjectReference Include="..\Elevator.Core\Elevator.Core.csproj" />
     <ProjectReference Include="..\Elevator.Solution.Bridge\Elevator.Solution.Bridge.csproj" />
+    <ProjectReference Include="..\Elevator.Reporting\Elevator.Reporting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(BrandAssetsDir)ShaftMasterLogo.png" LogicalName="ShaftMaster.Assets.ShaftMasterLogo.png" />

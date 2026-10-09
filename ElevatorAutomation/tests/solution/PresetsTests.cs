@@ -8,6 +8,10 @@ using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
 using Elevator.Solution.Desktop;
 using System.Text;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // DESIGN-FLOW stage 2 ("Flow foundation"), Core level: loader validation, capacity-table interpolation, CW = P + q·Q,
 // rope ladder, safety-gear / buffer rules, a new project computed with no input, lock / follow / Reset, rope auto-upsize,

@@ -1,5 +1,9 @@
 using System;using System.IO;using System.Linq;using System.Reflection;using System.Collections.Generic;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Media;
 using Elevator.Core.Project;using Elevator.Core.Calculations;using Elevator.Solution.Desktop;using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 public static class SafetyPitUiTests
 {
  static MainWindow w;static string output;static int checks;static List<string> names=new List<string>();

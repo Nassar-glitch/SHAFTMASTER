@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using System.Web.Script.Serialization;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
+namespace Elevator.Reporting.Sheet
 {
  // Company-level calculation-sheet settings shared by all projects (never stored in a project file).
  // Kept under %AppData%\ShaftMaster; the logo is a copy of the user's PNG/JPEG. Every value is optional.

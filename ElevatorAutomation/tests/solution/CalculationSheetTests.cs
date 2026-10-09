@@ -14,6 +14,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Client-facing calculation sheet: content, omission of unavailable calculations, renumbering, removed
 // internal/disclaimer text, unchanged numbers and save-path handling on the packaged engines.
@@ -152,6 +156,7 @@ public static class CalculationSheetTests
     [STAThread] // WPF figure rendering
     public static int Main(string[] args)
     {
+        FigureRender.Rasterizer=new WpfFigureRasterizer(); // WPF text measurement and PNG, as in the application
         root=Path.GetFullPath(args[0]);bin=Path.GetFullPath(args[1]);output=Path.GetFullPath(args[2]);
         if(Directory.Exists(output)&&Directory.EnumerateFileSystemEntries(output).Any()){Console.Error.WriteLine("Output folder is not empty: "+output);return 2;}
         Directory.CreateDirectory(output);

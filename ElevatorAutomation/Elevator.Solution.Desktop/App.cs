@@ -13,6 +13,10 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 namespace Elevator.Solution.Desktop
 {
     public sealed class Program
@@ -37,6 +41,8 @@ namespace Elevator.Solution.Desktop
         readonly string[] args;
         public MainWindow(string[] arguments)
         {
+            // Report figures: WPF text measurement and PNG rendering (Elevator.Reporting has no WPF).
+            if(FigureRender.Rasterizer==null)FigureRender.Rasterizer=new WpfFigureRasterizer();
             args=arguments;root=FindRoot(bin);
             outputFolder=Path.Combine(root,"output","solution-v01");Directory.CreateDirectory(outputFolder);
             Title="ShaftMaster — Elevator Design Solutions";WindowLayout.Initial(this);Icon=BrandAssets.Image("ShaftMasterMark.png");

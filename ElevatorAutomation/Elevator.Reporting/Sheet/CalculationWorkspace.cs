@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
+namespace Elevator.Reporting.Sheet
 {
     // In-memory results only. Geometry is issued by the shared engine, never read from JSON.
     public sealed class CalculationWorkspace
