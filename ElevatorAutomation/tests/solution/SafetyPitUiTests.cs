@@ -1,4 +1,5 @@
 using System;using System.IO;using System.Linq;using System.Reflection;using System.Collections.Generic;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core.Project;using Elevator.Core.Calculations;using Elevator.Solution.Desktop;using Elevator.Solution.Bridge;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;
@@ -7,7 +8,8 @@ using Elevator.Reporting.Figures;
 public static class SafetyPitUiTests
 {
  static MainWindow w;static string output;static int checks;static List<string> names=new List<string>();
- static object Get(string n){return typeof(MainWindow).GetField(n,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(w);}static void Set(string n,object v){typeof(MainWindow).GetField(n,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(w,v);}static object Call(string n,params object[] a){return typeof(MainWindow).GetMethod(n,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(w,a);}
+ // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+ static object Get(string n){return w.Automation.Get(n);}static void Set(string n,object v){w.Automation.Set(n,v);}static object Call(string n,params object[] a){return w.Automation.Call(n,a);}
  static IEnumerable<DependencyObject> Tree(DependencyObject n){yield return n;for(int i=0;i<VisualTreeHelper.GetChildrenCount(n);i++)foreach(var c in Tree(VisualTreeHelper.GetChild(n,i)))yield return c;}
  static Dictionary<string,TextBox> Editors(){return (Dictionary<string,TextBox>)Get("editors");}static Dictionary<string,ComboBox> Choices(){return (Dictionary<string,ComboBox>)Get("safetyPitChoices");}static ProjectSession Session(){return (ProjectSession)Get("session");}static CalculationWorkspace Space(){return (CalculationWorkspace)Get("calculations");}static SafetyPitCalculationResult Result(){return (SafetyPitCalculationResult)Get("safetyPitResult");}
  static void Check(bool ok,string name){if(!ok)throw new Exception(name);checks++;names.Add(name);}static void Click(string name){w.UpdateLayout();if(name.StartsWith("Calculate ")){/* Calculate buttons were replaced by live calculation: run the debounced calculation now. */Call("RunLiveCalculation");return;}Tree(w).OfType<Button>().First(b=>Convert.ToString(b.Content)==name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));}static string Text(){return String.Join("\n",Tree((DependencyObject)Get("safetyPitResults")).OfType<TextBlock>().Select(t=>t.Text));}

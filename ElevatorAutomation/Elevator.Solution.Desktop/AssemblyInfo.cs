@@ -4,3 +4,13 @@ using System.Reflection;
 [assembly: AssemblyDescription("Elevator project workspace, coordinated AutoCAD drawings and preliminary STEP export")]
 [assembly: AssemblyVersion("0.1.0.0")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
+// The packaged UI test programs drive the window through the internal TestAutomation facade (tests/solution, tests/shaftmaster).
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("BasicUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CalculationSheetUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CalculationUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CarGuideForceUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PresetsUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("RopeTractionUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SafetyPitDraftUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SafetyPitUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("UiRegression")]

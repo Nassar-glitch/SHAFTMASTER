@@ -1,13 +1,14 @@
 using System;using System.IO;using System.Linq;using System.Collections.Generic;using System.Reflection;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Media;
-using Elevator.Core.Project;using Elevator.Solution.Bridge;using Elevator.Solution.Desktop;
+using Elevator.Core.Application;
+using Elevator.Core.Project;using Elevator.Solution.Bridge;using Elevator.Solution.Desktop;using Elevator.Solution.Desktop.Common;
 // In-process tests of the compiled packaged WPF application, not OS input automation.
 public static class UiRegression
 {
  static MainWindow window;static string evidence;static List<object> checks=new List<object>();static int exit;
- static FieldInfo Field(string name){return typeof(MainWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic);}
- static T Get<T>(string name){return (T)Field(name).GetValue(window);}
- static void Set(string name,object value){Field(name).SetValue(window,value);}
- static object Call(string name,params object[] args){return typeof(MainWindow).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(window,args);}
+ // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+ static T Get<T>(string name){return (T)window.Automation.Get(name);}
+ static void Set(string name,object value){window.Automation.Set(name,value);}
+ static object Call(string name,params object[] args){return window.Automation.Call(name,args);}
  static void Check(bool pass,string name){checks.Add(new{Name=name,Status=pass?"PASS":"FAIL"});if(!pass)throw new Exception(name);}
  static object Ordered(object value){var dictionary=value as Dictionary<string,object>;if(dictionary!=null){var sorted=new SortedDictionary<string,object>(StringComparer.Ordinal);foreach(var pair in dictionary)sorted[pair.Key]=Ordered(pair.Value);return sorted;}var array=value as object[];if(array!=null)return array.Select(Ordered).ToArray();return value;}
  static bool SameValues(string a,string b){var json=new System.Web.Script.Serialization.JavaScriptSerializer();return json.Serialize(Ordered(json.DeserializeObject(a)))==json.Serialize(Ordered(json.DeserializeObject(b)));}

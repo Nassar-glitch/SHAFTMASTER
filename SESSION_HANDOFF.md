@@ -12,10 +12,35 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** In progress (2026-10-09): P3 merged into `main` (`723f32d`, tier 1 PASS on the branch, 552 s; not pushed). Now ARCHITECTURE-PLAN phase P4 "Desktop structure" and a clean-up on branch `refactor/p4-desktop`.
-- **Goal:** P4: UI-free application services into Elevator.Core.Application, split MainWindow into a shell and page views with small view-models, a test-automation facade for the UI tests, xUnit for the services; then the clean-up (dead code, obsolete scripts and docs, a disk clean-up proposal).
-- **Last updated:** 2026-10-09 (Claude Code, Executor role; P3 merge, P4 started)
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P4 "Desktop structure" and the clean-up, on branch `refactor/p4-desktop` (not merged, not pushed). P3 was merged into `main` first (`723f32d`). ShaftMaster stays one application with no user-visible change; golden files unchanged; tiers 1, 2 and 3 PASS; release hashes unchanged.
+- **Goal:** P4: UI-free application services in Elevator.Core.Application, MainWindow split into a shell and page views with small view-models, a test facade for the UI suites, xUnit for the services; then the clean-up of unnecessary tracked files and a disk clean-up proposal.
+- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P4 and clean-up)
 - **Completed:**
+  - ARCHITECTURE-PLAN P4 "Desktop structure" and clean-up (2026-10-09), branch `refactor/p4-desktop` from `main` `de64a1f`:
+    - **Commits:** `01e03cb` Core.Application services (+ xUnit); `ce97165` runner fix (one-file source lists); `882639d` MainWindow split, test facade, UI tests; `5cc290b` Floors view-model commands; `aff57a1` unused code; `04bf06b` obsolete scripts; `b41f16f` superseded documents; `e2b4f0e` tracked AutoCAD-suite outputs, phase-1 copy fix; `ab43266` docs; plus this handoff commit.
+    - **Services moved to Core (`Elevator.Core/Application/`, namespace `Elevator.Core.Application`, netstandard2.0 + net48):**
+      - `ProjectSession` (and `FloorRow`), moved from Desktop; `ProjectSession.NewProject` (the former `MainWindow.NewProject`): new / open / save / dirty state, floor moves.
+      - `CalculationWorkspace`, moved from Elevator.Reporting (the live calculation needs it; Reporting depends on Core).
+      - `PresetFlow` (new, logic of the former PresetFlow.cs partial): Apply (lock / follow), Edited (lock + unsaved), Reset, CanFillBlanks / FillBlanks / EnsureLibrary, PersonsFor, preset context.
+      - `LiveCalculation` (new, logic of the former live-calculation, chassis / safety-pit / FF draft code): current results (chassis, rope / traction, safety / pit, FF, validation design), typed text of invalid entries, `InputEffect EffectOf(path)` (what an input change makes outdated), staleness checks, resets, `Recalculate` (only outdated results). The WPF timer, rendering and dialogs stay in Desktop and call these services.
+    - **New Desktop structure (`Elevator.Solution.Desktop/`, UI still built in code, no XAML, no MVVM package):**
+      - `Shell/`: `Program`, `MainWindow` (navigation, toolbar, header, status bar, page switching, Commit), `LiveUpdates` (300 ms WPF timer around LiveCalculation, invalidate + render), `PresetEditing` (editors of the preset flow, Reset menu, Fill blanks), `ReportExport` (calculation sheet and Design Notes exports, omission dialog), `ProjectCommands` (new / open / save, validation, generation, STEP, --smoke), `TestAutomation` (internal test facade).
+      - `Pages/<Page>/`: one view + one view-model each: `General` (+ `CompanySettingsWindow`), `Shaft`, `Floors`, `CarDoors`, `Machine`, `Suspension`, `Rails`, `Calculations` (`CalculationsPage`, `CalculationsViewModel`, `ChassisInputs`, `BasicPanel`, `AdvancedPanel`, `RopeTractionPanel`, `SafetyPitPanel`, `CarGuideForcePanel`, `CalculationPreview`), `Drawings`, `Validation`, `About`.
+      - `Common/`: `ViewModelBase` / `PageViewModel`, `RelayCommand` (used by the Floors commands), `PageForm` (form of the visible page and the shared field builders), `PageView` / `ViewPart`, `DisplayText`, `Choice`, `DerivedGeometry`, `BrandAssets`, `WindowLayout`, `WpfFigureRasterizer`.
+      - The 10-file `MainWindow` partial class is gone. Buttons keep Click handlers (the UI suites raise ClickEvent; a Command would not run then).
+    - **UI tests:** the 8 tier-2 programs and `tests/shaftmaster/UiRegression.cs` use `window.Automation.Get / Set / Call` (same handle names as before) instead of private-field reflection; `InternalsVisibleTo` for the 9 programs. Two checks now catch the exception directly instead of `TargetInvocationException` (same condition).
+    - **UI assertion counts before / after:** presets-ui 59 / 59, rope-ui 33 / 33, sheet-ui 63 / 63, calculation-ui 54 / 54, basic 67 / 67, safety-pit-ui 152 / 152, safety-pit-draft-ui 117 / 117, ff-ui 126 / 126.
+    - **Screenshot comparison** (P3 run `20261009-105905` vs P4 run `20261009-115949`, pixel diff, `artifacts/test-results/20261009-115949/screenshot-comparison/`): 57 of 58 identical; `calculation-ui/11-drawings-generated.png` differs only in the generation time in the status bar (7.8 s vs 14.8 s, from AutoCAD).
+    - **xUnit for the services:** `tests/Elevator.Core.Tests/ApplicationServicesTests.cs`, 19 tests on net8.0 and net48 (session save / open / dirty, floor edits, lock / follow, reset, fill blanks, persons, input effects, recalculation of only outdated results, invalid text, resets, nested-run guard).
+    - **Removed (clean-up, all in git history):**
+      - Unused code: `DocxDocument.ImageAndText`, `PageBreak` (Reporting); `UnifiedProjectStorage.ImportJson`, class `MachineRoomSectionAAUpdater` (AutoCAD; never referenced, updaters are listed explicitly); `PageViewModel.Title`.
+      - Scripts: root `build.ps1`, `build-solution.ps1` (wrappers, no callers); `tests/solution/run-tests.ps1` + `SolutionTests.cs`, `run-visual-qa.ps1` + `SolutionVisualQA.cs` (v0.1 suites compiling into `bin-solution-v01`); `run-phase1-regressions.ps1` + its two `generated-run-*.ps1` copies; `tests/solution/collect-evidence.ps1`, `tests/project/collect-evidence.ps1`; `tests/calculations/run-native-readonly.ps1` + `NativeGeometryReadTests.cs` + `prepare_evidence.py` (one-off evidence).
+      - Documents: `TEST_RESULTS.md`, `PLAN_COMPLETENESS_AUDIT.md`, `PLAN_UPDATE_RESULTS.md` (README now carries the plan-automation summary and remaining manual decisions), `docs/ELEVATOR_SOLUTION_V01.md` (superseded by SHAFTMASTER-UI-RESULTS), `docs/SAFETY-PIT-DRAFT-VALIDATION-FIX.md` (table merged into SAFETY-PIT-CALCULATIONS).
+      - Untracked (kept on disk, ignored): `tests/generated/` (13 files) and `tests/*-results.json` (7), rewritten by `tests/run-tests.ps1` on every run.
+      - Kept on purpose: `legacy/ElevatorPlanGenerator/output` (golden DWGs read by ArchitectureTests), `tests/section/verification-summary.json` (cited evidence), `tests/semantic-map.json`, `build-section-aa.ps1` / `README-section-aa.md` (working Section A-A build), the AutoCAD script suite.
+      - Fixed on the way: `tests/project/run-phase1.ps1` copied the removed root `build.ps1` and missed `Elevator.Reporting` (needed since P3).
+    - **Disk proposal (nothing deleted):** `ElevatorAutomation/artifacts/disk-cleanup-proposal.md` — keep v01–v03, cited evidence and tier-3 inputs; archive or delete 7 superseded candidates, old build folders, 12 superseded evidence folders, loose September outputs and P0–P3 working folders (about 1 GB); review `output/solution-v01/` (1.2 GB, also the app's default output folder).
+    - **Golden:** approved files unchanged (0 changes against `main`; only `GoldenTests.cs` usings changed).
   - ARCHITECTURE-PLAN P3 "Reporting extraction" (2026-10-09), branch `refactor/p3-reporting` from `main` `b35d087`:
     - **Commits:** `60445b0` move the report code into Elevator.Reporting (and runners / tests); `731ebf9` Elevator.Reporting.Tests, tier 1 and CI; `7504b71` docs; plus this handoff commit.
     - **Moved (git mv; namespace changed, type names and logic kept):**
@@ -378,6 +403,11 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Missing/invalid input makes the forces unavailable, never zero, and does not block P1–P7 or drawing generation.
   - The FF input is excluded from the chassis and safety/pit fingerprints.
   - The implementation still reports scalar FF1/FF2 only. Since the audit, the UI and result details display the approved interpretation text. No calculation changed, and there is no certification claim.
+- **Changed files (P4 Desktop structure and clean-up, 2026-10-09; branch `refactor/p4-desktop`):**
+  - New: `Elevator.Core/Application/{PresetFlow,LiveCalculation}.cs`; `Elevator.Solution.Desktop/{Shell,Pages,Common}/` (see Completed); `tests/Elevator.Core.Tests/ApplicationServicesTests.cs`.
+  - Moved: `Desktop/ProjectSession.cs` and `Reporting/Sheet/CalculationWorkspace.cs` -> `Elevator.Core/Application/`; `Desktop/{WindowLayout,BrandAssets,WpfFigureRasterizer}.cs` -> `Desktop/Common/`; `Desktop/CompanySettingsWindow.cs` -> `Desktop/Pages/General/`.
+  - Removed: Desktop `App.cs`, `Chrome.cs`, `PresetFlow.cs`, `CalculationsPage.cs`, `BasicCalculationsPage.cs`, `RopeTractionPage.cs`, `SafetyPitPage.cs`, `CarGuideForcePage.cs`, `CalculationSheetExport.cs` (content moved into Shell / Pages / Common); the clean-up removals listed under Completed.
+  - Changed: `Desktop/AssemblyInfo.cs` (InternalsVisibleTo); `Reporting/Sheet/CalculationSheet.cs`, `Reporting/Docx/DocxWriter.cs`; `Elevator.AutoCAD/Drawing/SectionAADrawing.cs`, `Project/UnifiedProjectStorage.cs`; UI test sources and their helpers; test sources (usings); runners in `tests/solution`, `tools/run-golden.ps1`, `tests/project/run-phase1.ps1`; test projects (no ProjectSession link; rasterizer path); `.gitignore`; `README.md`, `ElevatorAutomation/README.md`, `docs/TESTING.md`, `docs/SAFETY-PIT-CALCULATIONS.md`, `docs/SHAFTMASTER-UI-RESULTS.md`; `SESSION_HANDOFF.md`.
 - **Changed files (P3 reporting extraction, 2026-10-09; branch `refactor/p3-reporting`):**
   - Moved: the 10 files listed under Completed (Desktop -> `ElevatorAutomation/Elevator.Reporting/{Sheet,DesignNotes,Docx,Figures}/`).
   - New: `Elevator.Reporting/Elevator.Reporting.csproj`, `Elevator.Solution.Desktop/WpfFigureRasterizer.cs`, `tests/Elevator.Reporting.Tests/` (csproj, ReportContentTests.cs).
@@ -665,6 +695,13 @@ This file is the shared status channel between the user's Planner chat and Execu
   - Docs: `docs/CAR-GUIDE-FORCES.md`.
   - Outputs: `bin-shaftmaster-ff-candidate/`, `output/ff-ui-20261006/`, `output/ff-source-review-20261006/`.
 - **Checks:**
+  - P4 and clean-up (2026-10-09), final run `ElevatorAutomation/artifacts/test-results/20261009-152008`, all PASS:
+    - build 3 s; tier 1 (599 s): golden 566, presets 160, rope 60, sheet 8285, FF 131, safety / pit 117, xunit-core 240 (net8.0 60 + net48 180; was 202), xunit-reporting 290;
+    - tier 2 (212 s): presets-ui 59, rope-ui 33, sheet-ui 63, calculation-ui 54, basic 67, safety-pit-ui 152, safety-pit-draft-ui 117, ff-ui 126;
+    - tier 3 (135 s): integration 22, presets-native 6, sheet Word render PASS.
+    - During the work: tier 1 after the services (`20261009-114209`, three suites failed on a runner bug, fixed in `ce97165` and re-run PASS) and after the split (`20261009-150411`, PASS, 615 s); tier 2 after the split (`20261009-115949`, PASS; 685 s on a busy machine, single suites re-timed at the P3 times).
+    - Hashes unchanged: v01 `DC8A76A3…`, v02 `57FBE447…` (SHA256SUMS 0 mismatches), v03 `9CFD5FAB…` (SHA256SUMS 0 mismatches).
+    - Not run: CI on GitHub / Linux (not pushed); `tests/shaftmaster/run-ui-tests.ps1` (UiRegression; not in a tier, writes into `output/shaftmaster-ui`), the AutoCAD script suites of `tests/run-tests.ps1` and `tests/project/run-phase1.ps1` (updated, not run); SOLIDWORKS STEP export; manual clicking of dialogs.
   - P3 reporting extraction (2026-10-09), final run `ElevatorAutomation/artifacts/test-results/20261009-105905`, all PASS:
     - build 3 s; tier 1 (541 s): golden 566, presets 160, rope 60, sheet 8285, FF 131, safety / pit 117, xunit-core 202 (net8.0 41 + net48 161), xunit-reporting 290 (145 + 145);
     - tier 2 (258 s): presets UI 59, rope UI 33, sheet UI 63, calculation UI 54, Basic 67, safety / pit 152, draft 117, FF UI 126;
@@ -986,6 +1023,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-09: Executor completed P4 "Desktop structure" and the clean-up on branch `refactor/p4-desktop` (not merged, not pushed): Core.Application services (session, preset flow, live calculation) with 19 xUnit tests, MainWindow split into Shell / Pages / Common with view-models and a test facade, UI counts unchanged, 57 of 58 screenshots identical, unused code / obsolete scripts / superseded docs removed, disk proposal written (nothing deleted). Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor merged P3 into main (`723f32d`; tier 1 PASS on the branch, 552 s). Not pushed. P4 and the clean-up started on `refactor/p4-desktop`.
 - 2026-10-09: Executor merged P2 into main (`a1fff15`), committed Planner section 4a (`f94d4d5`) and completed P3 on branch `refactor/p3-reporting` (not merged, not pushed): report code in the internal DLL Elevator.Reporting (netstandard2.0, net48), WPF rasterizer in Desktop, Elevator.Reporting.Tests 145 / 145, presets xUnit on net8.0. Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor merged P1 into main (`01ecbe4`) and completed P2 on branch `refactor/p2-portable-core` (not merged, not pushed): Core netstandard2.0 / net48, CoreJson serializer abstraction (JavaScriptSerializer kept on .NET Framework; the compatible serializer is not a default on netstandard: 157 of 199,955 doubles differ in digit count), xUnit Core tests (net8.0 40, net48 161), CI workflow. Tiers 1-3 PASS. Awaiting Planner.

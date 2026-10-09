@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $wpf=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/WPF'
 $refs=@('/reference:System.Web.Extensions.dll','/reference:System.Drawing.dll','/reference:System.Xaml.dll',('/reference:'+(Join-Path $wpf 'WindowsBase.dll')),('/reference:'+(Join-Path $wpf 'PresentationCore.dll')),('/reference:'+(Join-Path $wpf 'PresentationFramework.dll')),('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'Elevator.Reporting.dll')))
-$sources=@('tests/solution/CalculationSheetTests.cs','Elevator.Solution.Desktop/ProjectSession.cs','Elevator.Solution.Desktop/WpfFigureRasterizer.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName}
+$sources=@('tests/solution/CalculationSheetTests.cs','Elevator.Solution.Desktop/Common/WpfFigureRasterizer.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName}
 & $compiler /nologo /target:exe /platform:x64 ('/out:'+(Join-Path $bin 'CalculationSheetTests.exe')) @refs @sources
 if($LASTEXITCODE){throw 'Calculation sheet test build failed'}
 & (Join-Path $bin 'CalculationSheetTests.exe') $root $bin $out

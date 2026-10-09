@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
@@ -25,7 +26,6 @@ using Elevator.Reporting.Figures;
 // projects open unchanged and "Fill blanks from presets" fills them; a visual-tree scan finds no removed hint or remark.
 public static class PresetsUiTests
 {
-    const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
     static MainWindow window; static string output; static int checks; static readonly List<string> names = new List<string>();
     static readonly string[] Pages = { "GENERAL", "SHAFT", "FLOORS", "CAR & DOORS", "MACHINE", "SUSPENSION", "RAILS", "CALCULATIONS", "DRAWINGS", "VALIDATION", "ABOUT" };
     // Hints, notes, labels and remarks removed from the UI in this stage (distinctive parts; case-sensitive).
@@ -49,9 +49,10 @@ public static class PresetsUiTests
         "upper-to-lower", "h is vertical shoe spacing", "Calibration status", "Reference car elevation", "Bracket source", "extension (mm)",
         "Optional contribution when included", "compensation included here", "Optional · printed", "Elevator system", "Review independent", "Engineering reviews", "remain independent"
     };
-    static object Get(string name) { return typeof(MainWindow).GetField(name, PrivateInstance).GetValue(window); }
-    static void Set(string name, object value) { typeof(MainWindow).GetField(name, PrivateInstance).SetValue(window, value); }
-    static object Call(string name, params object[] arguments) { return typeof(MainWindow).GetMethod(name, PrivateInstance).Invoke(window, arguments); }
+    // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+    static object Get(string name) { return window.Automation.Get(name); }
+    static void Set(string name, object value) { window.Automation.Set(name, value); }
+    static object Call(string name, params object[] arguments) { return window.Automation.Call(name, arguments); }
     static Dictionary<string, TextBox> Editors() { return (Dictionary<string, TextBox>)Get("editors"); }
     static Dictionary<string, ComboBox> PitChoices() { return (Dictionary<string, ComboBox>)Get("safetyPitChoices"); }
     static ProjectSession Session() { return (ProjectSession)Get("session"); }

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
@@ -25,11 +26,11 @@ using Elevator.Reporting.Figures;
 // confirmation (stub instead of the modal) and the Design Notes write path are driven as in the application. SYNTHETIC inputs.
 public static class RopeTractionUiTests
 {
-    const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
     static MainWindow window; static string output; static int checks; static readonly List<string> names = new List<string>();
-    static object Get(string name) { return typeof(MainWindow).GetField(name, PrivateInstance).GetValue(window); }
-    static void Set(string name, object value) { typeof(MainWindow).GetField(name, PrivateInstance).SetValue(window, value); }
-    static object Call(string name, params object[] arguments) { return typeof(MainWindow).GetMethod(name, PrivateInstance).Invoke(window, arguments); }
+    // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+    static object Get(string name) { return window.Automation.Get(name); }
+    static void Set(string name, object value) { window.Automation.Set(name, value); }
+    static object Call(string name, params object[] arguments) { return window.Automation.Call(name, arguments); }
     static Dictionary<string, TextBox> Editors() { return (Dictionary<string, TextBox>)Get("editors"); }
     static Dictionary<string, ComboBox> PresetChoices() { return (Dictionary<string, ComboBox>)Get("presetChoices"); }
     static ProjectSession Session() { return (ProjectSession)Get("session"); }
@@ -118,7 +119,7 @@ public static class RopeTractionUiTests
                 Type("Calculations.RopeTraction.GrooveAngleDeg", "32"); await Ready();
                 var hint = (TextBlock)((StackPanel)Editors()["Calculations.RopeTraction.GrooveAngleDeg"].Parent).Children[1];
                 Check(hint.IsVisible && hint.Text.Contains("at least 35°"), "γ 32° (below 35°) rejected for a V-groove with a short validation message");
-                bool blocked = false; try { Call("Commit"); } catch (TargetInvocationException ex) { blocked = ex.InnerException is ArgumentException; }
+                bool blocked = false; try { Call("Commit"); } catch (ArgumentException) { blocked = true; }
                 Check(blocked, "Rejected value blocks commit (navigation) until corrected");
                 await Shot("03-groove-validation");
                 Type("Calculations.RopeTraction.GrooveAngleDeg", "40"); await Ready();
@@ -126,11 +127,11 @@ public static class RopeTractionUiTests
                 PresetChoices()["Calculations.RopeTraction.GrooveType"].SelectedValue = GrooveTypes.UndercutU; Reset("Calculations.RopeTraction.GrooveAngleDeg"); await Ready();
                 ((MenuItem)PresetChoices()["Calculations.RopeTraction.GrooveType"].ContextMenu.Items[0]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await Ready();
                 Type("Calculations.RopeTraction.UndercutAngleDeg", "110"); await Ready();
-                blocked = false; try { Call("Commit"); } catch (TargetInvocationException ex) { blocked = ex.InnerException is ArgumentException; }
+                blocked = false; try { Call("Commit"); } catch (ArgumentException) { blocked = true; }
                 Check(blocked && Session().Project.Calculations.RopeTraction.UndercutAngleDeg == null, "β above 105° rejected (not stored)");
                 Reset("Calculations.RopeTraction.UndercutAngleDeg"); await Ready();
                 Type("Calculations.RopeTraction.BrakingRetardationMps2", "0.4"); await Ready();
-                blocked = false; try { Call("Commit"); } catch (TargetInvocationException ex) { blocked = ex.InnerException is ArgumentException; }
+                blocked = false; try { Call("Commit"); } catch (ArgumentException) { blocked = true; }
                 Check(blocked, "Braking retardation below 0.5 m/s² rejected");
                 Reset("Calculations.RopeTraction.BrakingRetardationMps2"); await Ready();
                 Check(Session().Project.UserEditedFields == null, "All resets leave no locked field");

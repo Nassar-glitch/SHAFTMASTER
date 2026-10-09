@@ -44,7 +44,6 @@ namespace Elevator.AutoCAD
             }
             ProjectDataStorage.WriteRecord(db,tr,Key,new ProjectDocument{project=p});
         }
-        public static void ImportJson(Database db,Transaction tr,string json){Save(db,tr,ProjectJson.Deserialize(json));}
         public static string ExportJson(Database db,Transaction tr){return ProjectJson.Serialize(Read(db,tr));}
     }
 }

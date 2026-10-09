@@ -28,7 +28,7 @@ cd ElevatorAutomation
 ./artifacts/bin/ShaftMaster.exe
 ```
 
-`tools/build.ps1` runs `dotnet build ElevatorAutomation.sln -c Release` (SDK-style projects, shared settings in `ElevatorAutomation/Directory.Build.props`, incremental), then the pure rule tests and the STEP-input tests. Use `-AutoCADDir` and `-SolidWorksDir` when they are not installed in the default folders. `build.ps1` and `build-solution.ps1` remain as thin wrappers. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
+`tools/build.ps1` runs `dotnet build ElevatorAutomation.sln -c Release` (SDK-style projects, shared settings in `ElevatorAutomation/Directory.Build.props`, incremental), then the pure rule tests and the STEP-input tests. Use `-AutoCADDir` and `-SolidWorksDir` when they are not installed in the default folders. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
 
 Tests run by tier (see [ElevatorAutomation/docs/TESTING.md](ElevatorAutomation/docs/TESTING.md)):
 
@@ -43,10 +43,10 @@ Tier 1 is the golden-master and core suites (no AutoCAD, no Word), tier 2 the pr
 
 | Path | Contents |
 |---|---|
-| `ElevatorAutomation/Elevator.Core/` | Project model, presets, design rules and calculations (no CAD dependency) |
+| `ElevatorAutomation/Elevator.Core/` | Project model, presets, design rules and calculations (no CAD dependency); `Application/` holds the UI-free application services (project session, preset flow, live calculation) |
 | `ElevatorAutomation/Elevator.Reporting/` | Calculation sheet, Design Notes, DOCX writer, figure model and SVG renderer (an internal DLL next to `ShaftMaster.exe`; no WPF) |
 | `ElevatorAutomation/Elevator.AutoCAD/` | AutoCAD 2023 drawing reader / updater for the native views |
-| `ElevatorAutomation/Elevator.Solution.*` | ShaftMaster WPF application (`Desktop`), AutoCAD host, shared bridge and the SOLIDWORKS STEP worker |
+| `ElevatorAutomation/Elevator.Solution.*` | ShaftMaster WPF application (`Desktop`: `Shell/` window and toolbar commands, `Pages/<Page>/` one view and view-model per page, `Common/`), AutoCAD host, shared bridge and the SOLIDWORKS STEP worker |
 | `ElevatorAutomation/config/` | Presets (`presets.json`), reviewed design context, seeds and JSON schema |
 | `ElevatorAutomation/Templates/` | Native AutoCAD template drawings |
 | `ElevatorAutomation/docs/` | Calculation, presets, sheet and export documentation |

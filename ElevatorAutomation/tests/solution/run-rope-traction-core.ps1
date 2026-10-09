@@ -5,7 +5,7 @@ $bin=Join-Path $root $CandidateBin;$out=Join-Path $root $EvidenceDirectory
 if($CandidateBin -eq 'bin-shaftmaster-v01' -or $CandidateBin -eq 'bin-shaftmaster-v02'){throw 'Use a separate candidate; do not touch a release.'}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $refs=@('/reference:System.Web.Extensions.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'Elevator.Reporting.dll')))
-$sources=@('tests/solution/RopeTractionTests.cs','Elevator.Solution.Desktop/ProjectSession.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName}
+$sources=@(@('tests/solution/RopeTractionTests.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName})
 & $compiler /nologo /target:exe ('/out:'+(Join-Path $bin 'RopeTractionTests.exe')) @refs @sources
 if($LASTEXITCODE){throw 'Rope / traction tests build failed'}
 & (Join-Path $bin 'RopeTractionTests.exe') $bin $out

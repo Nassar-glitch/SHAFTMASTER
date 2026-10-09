@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Elevator.Core.Application;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
@@ -23,15 +24,15 @@ using Elevator.Reporting.Figures;
 public static class CarGuideForceUiTests
 {
     const string SpacingPath = "Calculations.CarGuideForces.GuideShoeSpacingMm";
-    const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
     static MainWindow window;
     static string output;
     static int checks;
     static readonly List<string> names = new List<string>();
 
-    static object Get(string name) { return typeof(MainWindow).GetField(name, PrivateInstance).GetValue(window); }
-    static void Set(string name, object value) { typeof(MainWindow).GetField(name, PrivateInstance).SetValue(window, value); }
-    static object Call(string name, params object[] arguments) { return typeof(MainWindow).GetMethod(name, PrivateInstance).Invoke(window, arguments); }
+    // The window state through its internal test-automation facade (TestAutomation, ARCHITECTURE-PLAN P4).
+    static object Get(string name) { return window.Automation.Get(name); }
+    static void Set(string name, object value) { window.Automation.Set(name, value); }
+    static object Call(string name, params object[] arguments) { return window.Automation.Call(name, arguments); }
     static Dictionary<string, TextBox> Editors() { return (Dictionary<string, TextBox>)Get("editors"); }
     static Dictionary<string, ComboBox> Choices() { return (Dictionary<string, ComboBox>)Get("calculationChoices"); }
     static Dictionary<string, ComboBox> PitChoices() { return (Dictionary<string, ComboBox>)Get("safetyPitChoices"); }

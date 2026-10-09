@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 if(!$SkipBuild){& (Join-Path $root 'tools/build.ps1') -Bin $CandidateBin}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $refs=@('/reference:System.Web.Extensions.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'Elevator.Reporting.dll')))
-$sources=@('tests/solution/SimplifiedTests.cs','Elevator.Solution.Desktop/ProjectSession.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName}
+$sources=@(@('tests/solution/SimplifiedTests.cs')|ForEach-Object{(Get-Item -LiteralPath (Join-Path $root $_)).FullName})
 & $compiler /nologo /target:exe ('/out:'+(Join-Path $bin 'SimplifiedTests.exe')) @refs @sources
 if($LASTEXITCODE){throw 'Basic tests build failed'}
 & (Join-Path $bin 'SimplifiedTests.exe') $bin $out
