@@ -4,6 +4,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+
 namespace Elevator.Reporting.Docx
 {
     // Date and time used by the reports (calculation sheet, Design Notes, DOCX package): the local time in the
@@ -12,6 +13,7 @@ namespace Elevator.Reporting.Docx
     {
         public static Func<DateTime> Now = () => DateTime.Now;
     }
+
     // PNG or JPEG image for embedding. Pixel size is read from the file header so callers can keep the
     // aspect ratio without WPF. Reusable for logos now and drawings later.
     public sealed class DocxImage
@@ -20,11 +22,13 @@ namespace Elevator.Reporting.Docx
         {
             get; private set;
         }
+
         // Optional vector version (SVG); Data is then its PNG fallback.
         public byte[] SvgData
         {
             get; private set;
         }
+
         public static DocxImage WithSvg(DocxImage png, byte[] svg)
         {
             if (png == null || png.Extension != "png" || svg == null || svg.Length == 0)
@@ -39,26 +43,32 @@ namespace Elevator.Reporting.Docx
                 SvgData = svg
             };
         }
+
         public string Extension
         {
             get; private set;
         }
+
         public string ContentType
         {
             get; private set;
         }
+
         public int PixelWidth
         {
             get; private set;
         }
+
         public int PixelHeight
         {
             get; private set;
         }
+
         public static DocxImage FromFile(string path)
         {
             return FromBytes(File.ReadAllBytes(path));
         }
+
         public static DocxImage FromBytes(byte[] d)
         {
             if (d == null)
@@ -122,16 +132,19 @@ namespace Elevator.Reporting.Docx
             }
             throw new ArgumentException("Only PNG or JPEG images are supported.");
         }
+
         static int BigEndian(byte[] d, int o)
         {
             return (d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3];
         }
+
         static DocxImage Checked(DocxImage image)
         {
             if (image.PixelWidth <= 0 || image.PixelHeight <= 0)
                 throw new ArgumentException("The image has no valid pixel size.");
             return image;
         }
+
         // Largest size within the box that keeps the aspect ratio.
         public void Fit(double maxWidthMm, double maxHeightMm, out double widthMm, out double heightMm)
         {
@@ -140,14 +153,17 @@ namespace Elevator.Reporting.Docx
             heightMm = PixelHeight * scale;
         }
     }
+
     // Header title block content: logo | company over title | project rows | document rows + Page X of Y.
     public sealed class DocxTitleBlock
     {
-        public DocxImage Logo; public string Company;
+        public DocxImage Logo;
+        public string Company;
         public string Title = "Elevator Calculation Sheet";
         public List<KeyValuePair<string, string>> ProjectRows = new List<KeyValuePair<string, string>>();
         public List<KeyValuePair<string, string>> DocumentRows = new List<KeyValuePair<string, string>>();
     }
+
     // Minimal WordprocessingML writer. Produces an editable .docx with System.IO.Packaging only;
     // Microsoft Word is not required to create the file.
     public sealed class DocxDocument
@@ -160,6 +176,7 @@ namespace Elevator.Reporting.Docx
         readonly StringBuilder body = new StringBuilder();
         public string Title;
         public string Subject;
+
         // CAD-style title block repeated in the header of every page, and a bordered footer band.
         public DocxTitleBlock TitleBlock = new DocxTitleBlock();
         public string FooterLeft;
@@ -168,6 +185,7 @@ namespace Elevator.Reporting.Docx
         readonly Dictionary<DocxImage, string> documentImages = new Dictionary<DocxImage, string>();
         readonly Dictionary<DocxImage, string> headerImages = new Dictionary<DocxImage, string>();
         int drawingId;
+
         string Relation(DocxImage image, bool header)
         {
             if (!media.Contains(image))
@@ -181,6 +199,7 @@ namespace Elevator.Reporting.Docx
             }
             return id;
         }
+
         // Inline picture run sized in mm (1 mm = 36000 EMU).
         string Drawing(DocxImage image, double widthMm, double heightMm, bool header)
         {
@@ -221,6 +240,7 @@ namespace Elevator.Reporting.Docx
                  + "\"/></a:xfrm><a:prstGeom "
                  + "prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>";
         }
+
         // Body image fitted into maxWidthMm × maxHeightMm, keeping its aspect ratio. align: left, center or right.
         public void Image(DocxImage image, double maxWidthMm, double maxHeightMm, string align = "left", bool keepNext = false)
         {
@@ -234,6 +254,7 @@ namespace Elevator.Reporting.Docx
                 .Append(Drawing(image, w, h, false))
                 .Append("</w:p>");
         }
+
         public static string Escape(string text)
         {
             if (text == null)
@@ -258,6 +279,7 @@ namespace Elevator.Reporting.Docx
             }
             return b.ToString();
         }
+
         static string Runs(string text, string runProperties)
         {
             var b = new StringBuilder();
@@ -271,6 +293,7 @@ namespace Elevator.Reporting.Docx
             }
             return b.ToString();
         }
+
         public void Paragraph(
             string text,
             string style = null,
@@ -287,6 +310,7 @@ namespace Elevator.Reporting.Docx
                 body.Append(extraParagraphProperties);
             body.Append("</w:pPr>").Append(Runs(text, runProperties)).Append("</w:p>");
         }
+
         // Label/value runs within one paragraph.
         public void Mixed(IEnumerable<KeyValuePair<string, string>> parts, string style = null, bool keepNext = false)
         {
@@ -300,10 +324,12 @@ namespace Elevator.Reporting.Docx
                 body.Append(Runs(part.Value, part.Key));
             body.Append("</w:p>");
         }
+
         public void Heading(string text, int level)
         {
             Paragraph(text, "Heading" + level, null, true);
         }
+
         public void Banner(string text, string fillHex, string colourHex)
         {
             Paragraph(
@@ -323,11 +349,13 @@ namespace Elevator.Reporting.Docx
                 + fillHex
                 + "\"/>");
         }
+
         // Equation block: each line kept together with the next so a derivation is not split across pages.
         public void Equations(IEnumerable<string> lines)
         {
             Equations(false, lines);
         }
+
         // keepWithFollowing also keeps the last line with the next block (for example its result table).
         public void Equations(bool keepWithFollowing, IEnumerable<string> lines)
         {
@@ -335,6 +363,7 @@ namespace Elevator.Reporting.Docx
             for (int i = 0; i < list.Count; i++)
                 Paragraph(list[i], "Equation", null, !Flow && (keepWithFollowing || i < list.Count - 1), "<w:keepLines/>");
         }
+
         // Figure in a thin bordered frame with a bottom title strip: caption | units | scale note (NTS).
         public void FigureFrame(DocxImage image, double widthMm, double heightMm, string caption, string units, string scaleNote)
         {
@@ -376,7 +405,9 @@ namespace Elevator.Reporting.Docx
             body.Append("</w:tr></w:tbl>");
             Paragraph("", "TableGap");
         }
+
         static readonly int[] TitleColumns = { 1500, 3000, 3038, 2100 };
+
         static string SizedRuns(string text, int halfPoints, string colour, bool bold)
         {
             return Runs(text, (bold ? "<w:b/>" : "")
@@ -388,6 +419,7 @@ namespace Elevator.Reporting.Docx
                 + halfPoints
                 + "\"/>");
         }
+
         static string SizedField(string instruction, int halfPoints)
         {
             string rpr = "<w:rPr><w:sz w:val=\"" + halfPoints + "\"/><w:szCs w:val=\"" + halfPoints + "\"/></w:rPr>";
@@ -405,8 +437,10 @@ namespace Elevator.Reporting.Docx
                 + rpr
                 + "<w:fldChar w:fldCharType=\"end\"/></w:r>";
         }
+
         const string Tight = "<w:spacing w:before=\"0\" w:after=\"0\" w:line=\"240\" w:lineRule=\"auto\"/>";
         const string Spacer = "<w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\" w:line=\"20\" w:lineRule=\"exact\"/></w:pPr></w:p>";
+
         // Nested label/value table: 8 pt labels on a light shade, 9 pt values, thin borders. Rows with blank values never reach here.
         static string LabelTable(int width, IList<KeyValuePair<string, string>> rows, bool page)
         {
@@ -444,6 +478,7 @@ namespace Elevator.Reporting.Docx
             b.Append("</w:tbl>").Append(Spacer);
             return b.ToString();
         }
+
         string TitleBlockXml()
         {
             var t = TitleBlock;
@@ -485,6 +520,7 @@ namespace Elevator.Reporting.Docx
             b.Append("</w:tr></w:tbl>").Append(Spacer);
             return b.ToString();
         }
+
         string FooterXml()
         {
             var b = new StringBuilder();
@@ -507,13 +543,16 @@ namespace Elevator.Reporting.Docx
                 .Append(Spacer);
             return b.ToString();
         }
+
         // Flow: equation lines and table rows may break across pages (headings still keep with their first line).
         public bool Flow;
+
         // widths: twentieths of a point (dxa); total ≤ 9638 for A4 with 20 mm margins.
         public void Table(string[] headers, IList<string[]> rows, int[] widths, ISet<int> boldColumns = null, IList<string> rowFills = null)
         {
             Table(headers, rows, widths, boldColumns, rowFills, 0);
         }
+
         // minRowHeightTwips > 0 gives body rows a minimum height (for example space to sign by hand).
         public void Table(
             string[] headers,
@@ -554,7 +593,9 @@ namespace Elevator.Reporting.Docx
             Paragraph("", "TableGap");
             rowHeight = 0;
         }
+
         int rowHeight;
+
         void Row(string[] cells, int[] widths, bool header, string fill, ISet<int> bold, bool keepNext)
         {
             body.Append("<w:tr><w:trPr><w:cantSplit/>")
@@ -578,6 +619,7 @@ namespace Elevator.Reporting.Docx
             }
             body.Append("</w:tr>");
         }
+
         static string Styles()
         {
             Func<string, string, string, string, string> style =
@@ -646,6 +688,7 @@ namespace Elevator.Reporting.Docx
              + "w:type=\"dxa\"/></w:tblPr></w:style>"
              + "</w:styles>";
         }
+
         static string Field(string instruction)
         {
             return "<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText xml:space=\"preserve\"> "
@@ -653,6 +696,7 @@ namespace Elevator.Reporting.Docx
                 + " </w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar "
                 + "w:fldCharType=\"end\"/></w:r>";
         }
+
         static void WritePart(Package package, Uri uri, string contentType, string xml)
         {
             var part = package.CreatePart(uri, contentType, CompressionOption.Normal);
@@ -662,6 +706,7 @@ namespace Elevator.Reporting.Docx
                 stream.Write(bytes, 0, bytes.Length);
             }
         }
+
         public void Save(Stream output)
         {
             using (var package = Package.Open(output, FileMode.Create, FileAccess.ReadWrite))

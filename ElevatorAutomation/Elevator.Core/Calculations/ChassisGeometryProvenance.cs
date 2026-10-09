@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Elevator.Core.Serialization;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Calculations
 {
     internal sealed class GeometrySourceSnapshot
@@ -9,6 +10,7 @@ namespace Elevator.Core.Calculations
         internal readonly string InputFingerprint;
         internal readonly string ContextFingerprint;
         internal readonly DesignContext OriginContext;
+
         internal GeometrySourceSnapshot(ElevatorProject project, DesignContext context)
         {
             InputFingerprint = ChassisGeometryProvenance.InputHash(project);
@@ -16,10 +18,12 @@ namespace Elevator.Core.Calculations
             OriginContext = context;
         }
     }
+
     public sealed class GeometryProvenanceValidation
     {
         public string Status;
         public List<CalculationIssue> Issues = new List<CalculationIssue>();
+
         public bool IsValid
         {
             get
@@ -28,6 +32,7 @@ namespace Elevator.Core.Calculations
             }
         }
     }
+
     // Issued only by the shared design engine. Digests are immutable snapshots taken
     // before generation, not a stamp made from the calculation caller's current project.
     public sealed class ChassisGeometryProvenance
@@ -37,6 +42,7 @@ namespace Elevator.Core.Calculations
         readonly string contextFingerprint;
         readonly string geometryFingerprint;
         readonly DesignContext originContext;
+
         public string SourceVersion
         {
             get
@@ -44,6 +50,7 @@ namespace Elevator.Core.Calculations
                 return Version;
             }
         }
+
         public string SourceInputFingerprint
         {
             get
@@ -51,6 +58,7 @@ namespace Elevator.Core.Calculations
                 return inputFingerprint;
             }
         }
+
         public string SourceContextFingerprint
         {
             get
@@ -58,6 +66,7 @@ namespace Elevator.Core.Calculations
                 return contextFingerprint;
             }
         }
+
         public string GeneratedGeometryFingerprint
         {
             get
@@ -65,6 +74,7 @@ namespace Elevator.Core.Calculations
                 return geometryFingerprint;
             }
         }
+
         internal ChassisGeometryProvenance(GeometrySourceSnapshot source, ChassisCalculationGeometry geometry)
         {
             inputFingerprint = source.InputFingerprint;
@@ -72,6 +82,7 @@ namespace Elevator.Core.Calculations
             originContext = source.OriginContext;
             geometryFingerprint = GeometryHash(geometry);
         }
+
         internal static string InputHash(ElevatorProject p)
         {
             if (p == null
@@ -100,6 +111,7 @@ namespace Elevator.Core.Calculations
                 p.Standards.RuleSetId
             });
         }
+
         static string GeometryHash(ChassisCalculationGeometry g)
         {
             if (g == null)
@@ -113,6 +125,7 @@ namespace Elevator.Core.Calculations
             }
             catch (ArgumentException) { return null; }
         }
+
         public static GeometryProvenanceValidation Validate(
             ElevatorProject p,
             ChassisCalculationGeometry g,

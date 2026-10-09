@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
+
 namespace Elevator.Reporting.Sheet
 {
     // Company-level calculation-sheet settings shared by all projects (never stored in a project file).
@@ -10,9 +11,11 @@ namespace Elevator.Reporting.Sheet
     {
         public string CompanyName;
         public string LogoFile; // file name inside SettingsDirectory
-                                // Overridable so tests never touch the real user profile.
+
+        // Overridable so tests never touch the real user profile.
         public static string SettingsDirectory =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ShaftMaster");
+
         static string SettingsPath
         {
             get
@@ -20,6 +23,7 @@ namespace Elevator.Reporting.Sheet
                 return Path.Combine(SettingsDirectory, "report-settings.json");
             }
         }
+
         public static CompanyReportSettings Load()
         {
             try
@@ -38,6 +42,7 @@ namespace Elevator.Reporting.Sheet
             }
             catch (Exception) { return new CompanyReportSettings(); } // unreadable settings never block the application
         }
+
         public void Save()
         {
             Directory.CreateDirectory(SettingsDirectory);
@@ -52,6 +57,7 @@ namespace Elevator.Reporting.Sheet
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
+
         public string LogoPath
         {
             get
@@ -59,6 +65,7 @@ namespace Elevator.Reporting.Sheet
                 return LogoFile == null ? null : Path.Combine(SettingsDirectory, LogoFile);
             }
         }
+
         // The stored logo, or null when none is set or the file cannot be read as PNG/JPEG.
         public DocxImage Logo()
         {
@@ -68,6 +75,7 @@ namespace Elevator.Reporting.Sheet
             }
             catch (Exception) { return null; }
         }
+
         // Validates the picked file as PNG/JPEG, then copies it into the settings folder.
         public void SetLogo(string source)
         {
@@ -80,6 +88,7 @@ namespace Elevator.Reporting.Sheet
             if (old != null && File.Exists(old))
                 File.Delete(old);
         }
+
         public void RemoveLogo()
         {
             string old = LogoPath;

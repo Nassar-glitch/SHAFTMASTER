@@ -1,5 +1,6 @@
 using System;
 using Elevator.Core.Serialization;
+
 namespace Elevator.Core.Project
 {
     public static class ProjectJson
@@ -8,12 +9,14 @@ namespace Elevator.Core.Project
         {
             return CoreJson.Create();
         }
+
         public static string Serialize(ElevatorProject project)
         {
             if (project == null)
                 throw new ArgumentNullException("project");
             return Serializer().Serialize(new ProjectDocument { project = project });
         }
+
         public static ElevatorProject Deserialize(string json)
         {
             var raw = Serializer().DeserializeObject(json) as System.Collections.Generic.Dictionary<string, object>;
@@ -24,6 +27,7 @@ namespace Elevator.Core.Project
                 throw new ArgumentException("Project document is missing project.");
             return document.project;
         }
+
         public static ElevatorProject Clone(ElevatorProject project)
         {
             return Deserialize(Serialize(project));

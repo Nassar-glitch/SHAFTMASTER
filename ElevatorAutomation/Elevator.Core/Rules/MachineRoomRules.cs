@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+
 namespace Elevator.Core
 {
     public static class MachineRoomRules
@@ -17,6 +18,7 @@ namespace Elevator.Core
                 RuleSource = "Engineer-confirmed project rule: <700:100; 700<=TZ<850:150; 850<=TZ<=1100:200; >1100 review."
             };
         }
+
         public static DeflectorSheaveSelection SelectDeflector(double tz)
         {
             if (Double.IsNaN(tz) || Double.IsInfinity(tz) || tz < 0)
@@ -29,6 +31,7 @@ namespace Elevator.Core
                 RuleSource = "Project Design Rule MR-DS-001, supplied by engineer; not an EN 81-20 threshold"
             };
         }
+
         public static MachineRoomParameters Calculate(ProjectInput input, ElevatorParameters shared, MachineRoomExtensions extensions)
         {
             if (extensions == null)
@@ -65,6 +68,7 @@ namespace Elevator.Core
             return result;
         }
     }
+
     public static class MachineRoomRuleRegistry
     {
         private static EngineeringRule Code(string id, string description, string clause, string required, string missing)
@@ -83,6 +87,7 @@ namespace Elevator.Core
                 InputParameters = new Dictionary<string, object>()
             };
         }
+
         public static List<EngineeringRule> Evaluate(ProjectInput input, ElevatorParameters p, MachineRoomParameters mr)
         {
             var rules = new List<EngineeringRule>();

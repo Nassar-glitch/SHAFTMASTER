@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+
 namespace Elevator.Core.Calculations
 {
     public sealed class ChassisContour
@@ -11,6 +12,7 @@ namespace Elevator.Core.Calculations
         public LocalPoint[] Points;
         public ChassisDependency Dependency;
     }
+
     public sealed class ChassisGeometryEvidence
     {
         public double SW;
@@ -23,15 +25,19 @@ namespace Elevator.Core.Calculations
         public List<ChassisContour> Contours = new List<ChassisContour>();
         public List<CalculationIssue> Issues = new List<CalculationIssue>();
     }
+
     public static class ChassisGeometry
     {
         const double Tol = .02;
+
         sealed class Segment
         {
-            public string Id; public double Fixed;
+            public string Id;
+            public double Fixed;
             public double Low;
             public double High;
         }
+
         sealed class Edge
         {
             public double Fixed;
@@ -40,10 +46,12 @@ namespace Elevator.Core.Calculations
             public double Coverage;
             public List<Segment> Segments;
         }
+
         static bool Finite(double v)
         {
             return !Double.IsNaN(v) && !Double.IsInfinity(v);
         }
+
         public static LocalPoint ContactCentroid(LocalPoint[] polygon)
         {
             if (polygon == null || polygon.Length < 3)
@@ -64,6 +72,7 @@ namespace Elevator.Core.Calculations
                 throw new ArgumentException("Degenerate bearing contact region.");
             return new LocalPoint(x / (3 * a), y / (3 * a), polygon[0].Z);
         }
+
         static List<Edge> Edges(List<Segment> segments)
         {
             var result = new List<Edge>();
@@ -98,6 +107,7 @@ namespace Elevator.Core.Calculations
             }
             return result;
         }
+
         public static BearingSeat ReadContactSeat(string id, IEnumerable<ChassisContour> contours, double bearingZ)
         {
             var vertical = new List<Segment>();
@@ -154,6 +164,7 @@ namespace Elevator.Core.Calculations
                 throw new ArgumentException(id + ": contact perimeter missing/ambiguous; no bounding-box fallback.");
             return candidates[0];
         }
+
         public static ChassisCalculationGeometry Calculate(ChassisGeometryEvidence evidence, ElevatorParameters design, bool basic = false)
         {
             var g = new ChassisCalculationGeometry { Recipe = basic ? "Basic" : "Advanced" };
@@ -256,6 +267,7 @@ namespace Elevator.Core.Calculations
             catch (ArgumentException ex) { g.Issues.Add(new CalculationIssue("Geometry.ContactOrMembers", ex.Message)); }
             return g;
         }
+
         static double PitchPlane(List<ChassisContour> cs, string prefix, double diameter)
         {
             var edges = cs.Where(c => c.Id.StartsWith(prefix)

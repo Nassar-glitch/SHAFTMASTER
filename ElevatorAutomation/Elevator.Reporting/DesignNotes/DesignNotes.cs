@@ -8,6 +8,7 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.Docx;
+
 namespace Elevator.Reporting.DesignNotes
 {
     // Design Notes (DESIGN-FLOW principle 7): short advisory notes only, written as an engineer's advice, one or two lines each,
@@ -17,31 +18,38 @@ namespace Elevator.Reporting.DesignNotes
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         public const string NoNotes = "No design notes for this project.";
+
         public ElevatorProject Project
         {
             get; private set;
         }
+
         public CalculationSheetInputs Inputs
         {
             get; private set;
         }
+
         public RopeTractionResult RopeTraction
         {
             get; private set;
         }
+
         public List<string> Warnings
         {
             get; private set;
         }
+
         public List<string> Recommendations
         {
             get; private set;
         }
+
         // Quotations (DESIGN-FLOW 11a): the deflector D/d below 40, quoted once; not a warning.
         public List<string> Notes
         {
             get; private set;
         }
+
         public bool Empty
         {
             get
@@ -49,18 +57,22 @@ namespace Elevator.Reporting.DesignNotes
                 return Warnings.Count == 0 && Recommendations.Count == 0 && Notes.Count == 0;
             }
         }
+
         static string L(double v)
         {
             return v.ToString("0.##", Inv);
         }
+
         static string L1(double v)
         {
             return v.ToString("0.#", Inv);
         }
+
         static string Lower1(string t)
         {
             return String.IsNullOrEmpty(t) ? t : t.Substring(0, 1).ToLowerInvariant() + t.Substring(1);
         }
+
         static readonly Dictionary<string, string> Clause = new Dictionary<string, string>{
    {"Nominal rope diameter","EN 81-20 5.5.1.2"},
        {"Number of ropes","EN 81-20 5.5.1.3"},
@@ -70,11 +82,13 @@ namespace Elevator.Reporting.DesignNotes
    {"Emergency braking","EN 81-50 5.11.2.2.2"},
        {"Car stalled (counterweight on buffers)","EN 81-50 5.11.2.2.3"},
        {"Safety factor and traction","EN 81-50 5.11; 5.12"}};
+
         static string ClauseOf(string item)
         {
             string c;
             return Clause.TryGetValue(item, out c) ? c : "EN 81-20 5.5; EN 81-50 5.11, 5.12";
         }
+
         public static DesignNotes Build(ElevatorProject project, DesignContext context, CalculationSheetInputs inputs)
         {
             if (project == null)
@@ -244,6 +258,7 @@ namespace Elevator.Reporting.DesignNotes
             }
             return n;
         }
+
         // Smallest rope count (up to 7, the project rope range) or next listed rope diameter that gives an OK safety factor,
         // computed with the same engine on a copy of the project. A new diameter takes the rope data of that diameter.
         static string SafetyFactorRemedy(
@@ -287,6 +302,7 @@ namespace Elevator.Reporting.DesignNotes
                 ? "No rope count up to 7 and no listed rope diameter reaches it; a stronger rope (higher MBL) is needed."
                 : "Use " + String.Join(", or ", options) + ".";
         }
+
         public DocxDocument Render()
         {
             var p = Project;
@@ -328,11 +344,13 @@ namespace Elevator.Reporting.DesignNotes
             }
             return d;
         }
+
         public static string SuggestedFileName(string projectName)
         {
             var s = CalculationSheet.SuggestedFileName(projectName);
             return s.Replace(" - Calculation Sheet.docx", " - Design Notes.docx");
         }
+
         public void Save(string path)
         {
             if (String.IsNullOrWhiteSpace(path))

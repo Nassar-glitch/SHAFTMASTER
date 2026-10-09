@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core
 {
     public static class DesignRules

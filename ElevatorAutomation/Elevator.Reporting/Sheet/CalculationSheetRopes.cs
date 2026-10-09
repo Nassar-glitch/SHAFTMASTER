@@ -7,6 +7,7 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
+
 namespace Elevator.Reporting.Sheet
 {
     // "Suspension rope and traction checks" section (EN 81-20 5.5; EN 81-50 5.11 / 5.12). Clean client format: equation,
@@ -17,15 +18,18 @@ namespace Elevator.Reporting.Sheet
         {
             get; private set;
         }
+
         public PresetLibrary Presets
         {
             get; private set;
         }
+
         // NOT OK results, listed for the user before export (application only).
         public List<string> NotOk
         {
             get; private set;
         }
+
         // Present when a substantive check exists (D/d, safety factor or traction), not for a rope diameter / count alone.
         public bool RopeTractionAvailable
         {
@@ -35,7 +39,9 @@ namespace Elevator.Reporting.Sheet
                     && (RopeTraction.Traction.Count > 0 || RopeTraction.Checks.Any(c => c.Id == "safety-factor" || c.Id.StartsWith("dd-")));
             }
         }
+
         public const string RopeTractionSectionTitle = "Suspension rope and traction checks";
+
         public static PresetLibrary LoadPresets(string folder)
         {
             try
@@ -45,6 +51,7 @@ namespace Elevator.Reporting.Sheet
             }
             catch (ArgumentException) { return null; }
         }
+
         void BuildRopeTraction(DesignContext context)
         {
             Presets = Inputs.Presets ?? LoadPresets(null);
@@ -71,18 +78,22 @@ namespace Elevator.Reporting.Sheet
                 Omitted.Add(o);
             }
         }
+
         static string L3(double v)
         {
             return v.ToString("0.###", Inv);
         }
+
         static string Res(bool? ok)
         {
             return ok == null ? "" : ok.Value ? "OK" : "NOT OK";
         }
+
         static string G(string groove)
         {
             return GrooveTypes.Label(groove);
         }
+
         string RopeSummary()
         {
             var r = RopeTraction;
@@ -101,6 +112,7 @@ namespace Elevator.Reporting.Sheet
                 parts.Add("traction " + (r.Traction.All(t => t.Ok) ? "OK" : "NOT OK"));
             return String.Join("; ", parts);
         }
+
         void RopeTractionInputRows(List<string[]> rows)
         {
             // Only the inputs used by the rope / traction checks that appear in this document.
@@ -148,6 +160,7 @@ namespace Elevator.Reporting.Sheet
             if (sf || traction)
                 num("Overhead", x.OverheadMm, "mm");
         }
+
         void RopeTractionSection(DocxDocument d, int n)
         {
             var r = RopeTraction;

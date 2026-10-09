@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Calculations
 {
     public sealed class SafetyPitInputs
@@ -16,9 +17,11 @@ namespace Elevator.Core.Calculations
         public string CounterweightAdditionalMassAllocation;
         public double? CarEventAdditionalMassPercent;
         public double? CounterweightEventAdditionalMassPercent;
+
         // Buffer type (EnergyAccumulation / EnergyDissipation). A project selection only; P6/P7 equations do not use it.
         public string BufferType;
     }
+
     public sealed class SafetyPitLoad
     {
         public string Id;
@@ -32,6 +35,7 @@ namespace Elevator.Core.Calculations
         public List<CalculationIssue> Issues = new List<CalculationIssue>();
         public List<string> Details = new List<string>();
     }
+
     public sealed class SafetyPitCalculationResult
     {
         public string RuleVersion = SafetyPitCalculationEngine.RuleVersion;
@@ -42,19 +46,23 @@ namespace Elevator.Core.Calculations
         public SafetyPitLoad P6 = new SafetyPitLoad { Id = "P6", Application = "Car-buffer reaction at pit support" };
         public SafetyPitLoad P7 = new SafetyPitLoad { Id = "P7", Application = "Counterweight-buffer reaction at pit support" };
     }
+
     public sealed class SafetyPitCalculationEngine
     {
         public const string RuleVersion = "GearboxNoteSafetyPit-v1";
         public const string SourceDocumentSha256 = "ECFD591133F5F97ED923F62A3A3EEA60C2B97A67805E60BCB7131C3DA7FB13DF";
+
         public const string RuleBasis =
             "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx: Progressive Safety Gear p104–106 (equation 439730EB), Car "
             + "Buffer p108–110 (5429655E), Counterweight Buffer p112–114 (3897FF34), zero-based descendant paragraphs / Word paraIds. The "
             + "note supplies no P5–P7 standard clause or manufacturer basis. Adopted note rules, not independent code/manufacturer "
             + "certification.";
+
         public const double SafetyGearCoefficientNPerKg = 10.0;
         public const double BufferMinimumCoefficientNPerKg = 40.0;
         public const double BufferFactor = 4.0;
         public const double GravityMetresPerSecondSquared = 9.81;
+
         public static double BufferCoefficientNPerKg
         {
             get
@@ -62,6 +70,7 @@ namespace Elevator.Core.Calculations
                 return Math.Max(BufferMinimumCoefficientNPerKg, BufferFactor * GravityMetresPerSecondSquared);
             }
         }
+
         static string Fingerprint(ElevatorProject p)
         {
             if (p == null || p.Calculations == null || p.Elevator == null)
@@ -91,6 +100,7 @@ namespace Elevator.Core.Calculations
                     && s.CounterweightAdditionalMassAllocation == "FractionParticipates" ? s.CounterweightEventAdditionalMassPercent : null
             });
         }
+
         public static bool IsCurrent(SafetyPitCalculationResult result, ElevatorProject project)
         {
             return result != null
@@ -98,12 +108,14 @@ namespace Elevator.Core.Calculations
                 && result.InputFingerprint != null
                 && result.InputFingerprint == Fingerprint(project);
         }
+
         static void Issue(SafetyPitLoad load, string field, string message, string status)
         {
             load.Issues.Add(new CalculationIssue(field, message));
             if (load.Status == "MISSING_INPUT" || status == "INVALID_INPUT" || status == "UNSUPPORTED_CONFIGURATION")
                 load.Status = status;
         }
+
         static double? Mass(SafetyPitLoad load, double? value, string field, bool optional)
         {
             if (!value.HasValue)
@@ -119,6 +131,7 @@ namespace Elevator.Core.Calculations
             }
             return value;
         }
+
         static double? Additional(SafetyPitLoad load, double? value, string field, string allocation, double? percent, string side)
         {
             var amount = Mass(load, value, field, true);
@@ -174,6 +187,7 @@ namespace Elevator.Core.Calculations
                 + " kg. Explicit event allocation; effective suspended mass is not automatically event mass.");
             return amount * share;
         }
+
         static void Buffers(SafetyPitLoad load, int? count, string sharing)
         {
             string side = load.Id == "P6" ? "Car" : "Counterweight";
@@ -216,6 +230,7 @@ namespace Elevator.Core.Calculations
                     + count
                     + " physical buffers; not established by the note or verified stiffness/contact distribution.");
         }
+
         public SafetyPitCalculationResult Calculate(ElevatorProject project)
         {
             var r = new SafetyPitCalculationResult();

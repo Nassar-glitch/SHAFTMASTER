@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Elevator.Core;
 using Elevator.Core.Calculations;
 using Elevator.Reporting.Docx;
+
 namespace Elevator.Reporting.Figures
 {
     // Phase A figures F1–F6, built only from the same plan geometry and results as the calculation sheet.
@@ -12,18 +13,22 @@ namespace Elevator.Reporting.Figures
     public static partial class CalculationFigures
     {
         const double Wall = 200; // symbolic wall band in plan figures (not dimensioned, not a project value)
+
         static FigurePoint Pt(double x, double y)
         {
             return new FigurePoint(x, y);
         }
+
         static List<FigurePoint> Map(FigureView v, IEnumerable<FigurePoint> model)
         {
             return model.Select(p => v.P(p.X, p.Y)).ToList();
         }
+
         static void Finish(Figure f, double bottom)
         {
             f.HeightMm = Math.Ceiling(bottom + 4);
         }
+
         static void Axes(Figure f, FigurePoint origin)
         {
             f.Line(origin, origin + Pt(10, 0), FigureLayer.Thin);
@@ -33,17 +38,21 @@ namespace Elevator.Reporting.Figures
             f.Text("X", origin + Pt(11.5, 1), "start");
             f.Text("Y", origin + Pt(0, -11.5), "middle");
         }
+
         // Rail outline in model plan coordinates: blade tip at (tipX, lineY), blade pointing in direction 'dir' (+1 → +X).
         static List<FigurePoint> RailPlan(IRailSection rail, double tipX, double lineY, int dir, double k = 1)
         {
             return rail.Outline().Select(q => Pt(tipX - dir * (rail.HeightMm - q.Y) * k, lineY + q.X * k)).ToList();
         }
+
         // True scale, enlarged about the blade tip only when the symbol would be smaller than about 3 mm on paper.
         public const double MinRailSymbolMm = 3;
+
         public static double RailSymbolFactor(IRailSection rail, FigureView v)
         {
             return Math.Max(1, MinRailSymbolMm / (Math.Max(rail.BaseWidthMm, rail.HeightMm) * v.Scale));
         }
+
         static void LoadPoint(Figure f, FigurePoint c, string tag)
         {
             f.Circle(c, 1.6, FigureLayer.Load, false, tag);
@@ -572,6 +581,7 @@ namespace Elevator.Reporting.Figures
         public const double F5SideFrontFace = 132;
         public const double F5SideRearFace = 136;
         public const double F5ViewSplitX = 104;
+
         public static Figure GuideForceElevation(CarGuideForceResult ff, int ff1Side = 1, int ff2Side = 1)
         {
             int s1 = Math.Sign(ff1Side) < 0 ? -1 : 1, s2 = Math.Sign(ff2Side) < 0 ? -1 : 1;
@@ -737,6 +747,7 @@ namespace Elevator.Reporting.Figures
             Finish(f, label.At.Y);
             return f;
         }
+
         // ===================== Phase B figures F7–F9 (schematic, NTS; no dimension without a project value) =====================
         static List<FigurePoint> Arc(FigurePoint c, double r, double fromDeg, double toDeg, int n = 16)
         {
@@ -748,12 +759,14 @@ namespace Elevator.Reporting.Figures
             }
             return pts;
         }
+
         static void HatchedBand(Figure f, double x0, double y0, double x1, double y1, string tag = null)
         {
             var poly = new[] { Pt(x0, y0), Pt(x1, y0), Pt(x1, y1), Pt(x0, y1) };
             f.Hatch(poly);
             f.Poly(poly, true, FigureLayer.Secondary, tag);
         }
+
         static string Ratio(double? r)
         {
             return r.HasValue && r.Value > 0 ? Figure.Num(r.Value, "0.##") + ":1" : null;
@@ -769,6 +782,7 @@ namespace Elevator.Reporting.Figures
         public const double F7SheaveY = 28;
         public const double F7SheaveR = 9;
         public const double F7SlabTop = 42;
+
         public static Figure Suspension(
             ChassisCalculationResult r,
             int? ropeCount,
@@ -984,6 +998,7 @@ namespace Elevator.Reporting.Figures
 
         // ---------- F9 pit buffers (P6 / P7) ----------
         public const double F9Floor = 72;
+
         public static Figure PitBuffers(SafetyPitLoad p6, SafetyPitLoad p7, double? pitDepthMm)
         {
             var f = new Figure { Id = "F9", Title = "Pit buffer loads P6 / P7 — pit section", Schematic = true };

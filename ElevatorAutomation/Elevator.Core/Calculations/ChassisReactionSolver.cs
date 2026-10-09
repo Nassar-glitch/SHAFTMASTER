@@ -1,40 +1,49 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+
 namespace Elevator.Core.Calculations
 {
     public static class ChassisReactionSolver
     {
         public const string Model = "ReleasedTwoStageWithRigidSpreader-v1";
+
         public static bool Finite(double v)
         {
             return !Double.IsNaN(v) && !Double.IsInfinity(v);
         }
+
         public static bool Finite(LocalPoint p)
         {
             return Finite(p.X) && Finite(p.Y) && Finite(p.Z);
         }
+
         public static LocalPoint Add(LocalPoint a, LocalPoint b)
         {
             return new LocalPoint(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         }
+
         public static LocalPoint Sub(LocalPoint a, LocalPoint b)
         {
             return new LocalPoint(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         }
+
         public static LocalPoint Scale(LocalPoint a, double s)
         {
             return new LocalPoint(a.X * s, a.Y * s, a.Z * s);
         }
+
         public static LocalPoint Cross(LocalPoint a, LocalPoint b)
         {
             return new LocalPoint(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
         }
+
         static void Require(bool b, string message)
         {
             if (!b)
                 throw new ArgumentException(message);
         }
+
         // In addition to released member ends: ideal rigid transverse spreaders apply nodal
         // force/couple via work-conjugate influence functions. This fixes the otherwise
         // indeterminate fourth reaction. It is NOT a welded-grillage stiffness solution.

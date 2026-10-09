@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core
 {
     public static class ReevingSolver
@@ -7,14 +8,17 @@ namespace Elevator.Core
         {
             return a.X * b.X + a.Y * b.Y;
         }
+
         private static LocalPoint Add(LocalPoint a, LocalPoint b, double scale)
         {
             return new LocalPoint(a.X + scale * b.X, a.Y + scale * b.Y, 0);
         }
+
         private static bool Finite(double n)
         {
             return !Double.IsNaN(n) && !Double.IsInfinity(n);
         }
+
         public static ReevingSolution Calculate(
             LocalPoint traction,
             LocalPoint deflector,
@@ -77,6 +81,7 @@ namespace Elevator.Core
             }
             return result;
         }
+
         public static VerticalArrangementResult SolveVertical(VerticalArrangementInput p)
         {
             var result = new VerticalArrangementResult();

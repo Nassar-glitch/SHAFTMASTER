@@ -1,20 +1,24 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+
 namespace Elevator.Core.Project
 {
     public sealed class FloorElevation
     {
         public string FloorId;
         public string Name;
-        public double ElevationMm; public bool IsServed;
+        public double ElevationMm;
+        public bool IsServed;
     }
+
     public static class ProjectFloors
     {
         public static bool FinitePositive(double v)
         {
             return !Double.IsNaN(v) && !Double.IsInfinity(v) && v > 0;
         }
+
         public static List<FloorElevation> Elevations(BuildingConfiguration building)
         {
             if (building == null || building.Floors == null)
@@ -41,12 +45,14 @@ namespace Elevator.Core.Project
                 throw new ArgumentException("Floor IDs and names must be unique.");
             return result;
         }
+
         public static void Rename(BuildingConfiguration b, string id, string name)
         {
             if (String.IsNullOrWhiteSpace(name) || b.Floors.Any(f => f.FloorId != id && f.Name == name))
                 throw new ArgumentException("Unique floor name required.");
             b.Floors.Single(f => f.FloorId == id).Name = name;
         }
+
         public static void InsertBefore(BuildingConfiguration b, string beforeId, FloorDefinition floor, double height)
         {
             int index = b.Floors.FindIndex(f => f.FloorId == beforeId);
@@ -60,6 +66,7 @@ namespace Elevator.Core.Project
             floor.HeightToNextMm = height;
             b.Floors.Insert(index, floor);
         }
+
         public static void Remove(BuildingConfiguration b, string id)
         {
             int index = b.Floors.FindIndex(f => f.FloorId == id);

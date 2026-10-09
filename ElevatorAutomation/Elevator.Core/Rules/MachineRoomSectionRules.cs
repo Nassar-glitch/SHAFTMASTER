@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace Elevator.Core
 {
     public static class MachineRoomSectionRules

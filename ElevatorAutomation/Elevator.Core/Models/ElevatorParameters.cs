@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core
 {
     public sealed class ElevatorParameters
@@ -7,10 +8,12 @@ namespace Elevator.Core
         {
             get; set;
         }
+
         public MachineRoomSectionParameters MachineRoomSection
         {
             get; set;
         }
+
         public double SW;
         public double SD;
         public double CarDbg;
@@ -28,6 +31,7 @@ namespace Elevator.Core
         public double CwFront;
         public double CwRear;
         public double JambWidth;
+
         public double Center
         {
             get
@@ -35,6 +39,7 @@ namespace Elevator.Core
                 return SW / 2;
             }
         }
+
         public double X(string anchor)
         {
             switch (anchor)
@@ -73,6 +78,7 @@ namespace Elevator.Core
                     throw new ArgumentException("Unknown X anchor: " + anchor);
             }
         }
+
         public double Y(string anchor)
         {
             switch (anchor)

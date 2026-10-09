@@ -9,6 +9,7 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Reporting.Docx;
 using Elevator.Reporting.Figures;
+
 namespace Elevator.Reporting.Sheet
 {
     public sealed class CalculationSheetInputs
@@ -18,17 +19,22 @@ namespace Elevator.Reporting.Sheet
         public Dictionary<string, string> SafetyPitDraftErrors = new Dictionary<string, string>();
         public string CarGuideForceDraftError;
         public DateTime GeneratedLocal = ReportClock.Now();
+
         // Company-level settings (application, not project); both optional.
         public string CompanyName;
         public DocxImage Logo;
+
         // Editable preset library (config/presets.json); null loads presets.json beside the application.
         public PresetLibrary Presets;
     }
+
     // A calculation left out of the client document, with the reasons shown to the user in the application only.
     public sealed class OmittedCalculation
     {
-        public string Name; public List<string> Reasons = new List<string>();
+        public string Name;
+        public List<string> Reasons = new List<string>();
     }
+
     // Every result is recalculated from the current canonical project at export and checked against its
     // input fingerprint. Previously displayed UI numbers are never reused. The document contains only
     // available calculations; unavailable ones are omitted and reported to the user before saving.
@@ -37,42 +43,52 @@ namespace Elevator.Reporting.Sheet
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         public const string DesignBasis = "Design basis: EN 81-20:2014 and EN 81-50:2014.";
+
         public ElevatorProject Project
         {
             get; private set;
         }
+
         public CalculationSheetInputs Inputs
         {
             get; private set;
         }
+
         public string Mode
         {
             get; private set;
         }
+
         public ChassisCalculationResult Chassis
         {
             get; private set;
         }
+
         public bool ChassisAvailable
         {
             get; private set;
         }
+
         public SafetyPitCalculationResult SafetyPit
         {
             get; private set;
         }
+
         public CarGuideForceResult CarGuideForces
         {
             get; private set;
         }
+
         public bool CarGuideForcesAvailable
         {
             get; private set;
         }
+
         public List<OmittedCalculation> Omitted
         {
             get; private set;
         }
+
         public bool HasContent
         {
             get
@@ -80,6 +96,7 @@ namespace Elevator.Reporting.Sheet
                 return ChassisAvailable || Loads.Any(Available) || CarGuideForcesAvailable || RopeTractionAvailable;
             }
         }
+
         public bool RopeTensionsAvailable
         {
             get
@@ -87,10 +104,12 @@ namespace Elevator.Reporting.Sheet
                 return ChassisAvailable && Chassis.CarBundleTensionN.HasValue && Chassis.CounterweightBundleTensionN.HasValue;
             }
         }
+
         CalculationSheet()
         {
             Omitted = new List<OmittedCalculation>();
         }
+
         public static CalculationSheet Build(ElevatorProject project, DesignContext context, CalculationSheetInputs inputs)
         {
             if (project == null)
@@ -201,6 +220,7 @@ namespace Elevator.Reporting.Sheet
             s.BuildRopeTraction(context);
             return s;
         }
+
         void Omit(string name, IEnumerable<CalculationIssue> issues)
         {
             var o = new OmittedCalculation { Name = name };
@@ -210,6 +230,7 @@ namespace Elevator.Reporting.Sheet
                 o.Reasons.Add("Required inputs are not available.");
             Omitted.Add(o);
         }
+
         static string FieldLabel(string field)
         {
             switch (field ?? "")
@@ -244,16 +265,19 @@ namespace Elevator.Reporting.Sheet
                     return String.IsNullOrEmpty(field) ? "Input" : field;
             }
         }
+
         static bool Available(SafetyPitLoad load)
         {
             return load.PerComponentLoadN.HasValue && load.GroupLoadN.HasValue && load.ParticipatingMassKg.HasValue;
         }
+
         static string LoadTitle(SafetyPitLoad load)
         {
             return load.Id == "P5"
                 ? "P5 safety-gear load per car guide rail"
                 : load.Id == "P6" ? "P6 car-buffer reaction" : "P7 counterweight-buffer reaction";
         }
+
         public IEnumerable<SafetyPitLoad> Loads
         {
             get
@@ -261,6 +285,7 @@ namespace Elevator.Reporting.Sheet
                 return new[] { SafetyPit.P5, SafetyPit.P6, SafetyPit.P7 };
             }
         }
+
         public static string SuggestedFileName(string projectName)
         {
             string name = String.IsNullOrWhiteSpace(projectName) ? "Untitled project" : projectName.Trim();
@@ -272,6 +297,7 @@ namespace Elevator.Reporting.Sheet
                 name = "Untitled project";
             return name + " - Calculation Sheet.docx";
         }
+
         // Write atomically: a failed export never truncates an existing file.
         public void Save(string path)
         {
@@ -312,54 +338,67 @@ namespace Elevator.Reporting.Sheet
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
+
         // ---------- formatting (only ever applied to available, finite values) ----------
         static string L(double v)
         {
             return v.ToString("0.##", Inv);
         }
+
         static string N(double? v)
         {
             return L(v.Value);
         }
+
         static string KN(double? v)
         {
             return (v.Value / 1000).ToString("0.###", Inv);
         }
+
         static string S(double v)
         {
             return v < 0 ? "(" + L(v) + ")" : L(v);
         }
+
         static string Pt(LocalPoint p)
         {
             return "(" + L(p.X) + ", " + L(p.Y) + ", " + L(p.Z) + ")";
         }
+
         static bool Positive(double? v)
         {
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value) && v.Value > 0;
         }
+
         // Figures actually placed in the last Render, numbered in order; builder failures are recorded (and tested) instead of breaking the
         // export.
         public List<Figure> Figures
         {
             get; private set;
         }
+
         public List<string> FigureErrors
         {
             get; private set;
         }
+
         public ElevatorParameters Plan
         {
             get; private set;
         }
+
         public IRailSection CarRail
         {
             get; private set;
         }
+
         public IRailSection CounterweightRail
         {
             get; private set;
         }
+
         int figureNumber;
+
         void AddFigure(DocxDocument d, Func<Figure> build)
         {
             Figure f;
@@ -380,33 +419,40 @@ namespace Elevator.Reporting.Sheet
                 "Dimensions in mm",
                 f.Schematic ? "NTS" : null);
         }
+
         static string Clean(string v)
         {
             return String.IsNullOrWhiteSpace(v) ? null : v.Trim();
         }
+
         static bool Finite(double? v)
         {
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value);
         }
+
         bool Draft(string path)
         {
             return Inputs.ChassisDraftErrors.ContainsKey(path)
                 || Inputs.SafetyPitDraftErrors.ContainsKey(path)
                 || (path == "Calculations.CarGuideForces.GuideShoeSpacingMm" && Inputs.CarGuideForceDraftError != null);
         }
+
         // A supplied, valid, nonzero value; anything else is not listed.
         bool Has(string path, double? v)
         {
             return Positive(v) && !Draft(path);
         }
+
         static string Bearing(string id)
         {
             return id == "P1" ? "right / rear" : id == "P2" ? "right / front" : id == "P3" ? "left / rear" : "left / front";
         }
+
         static string System(string id)
         {
             return id == "traction-geared" ? "Geared traction elevator" : String.IsNullOrWhiteSpace(id) ? "Traction elevator" : id;
         }
+
         static string LoadName(string id)
         {
             switch (id)
@@ -425,19 +471,24 @@ namespace Elevator.Reporting.Sheet
                     return id;
             }
         }
+
         static string Member(string id)
         {
             return String.IsNullOrEmpty(id) ? "" : id.StartsWith("Longitudinal.") ? id.Substring(13) + " longitudinal member" : id;
         }
+
         static readonly int[] TwoCol = { 4200, 5438 };
+
         static KeyValuePair<string, string> Bold(string t)
         {
             return new KeyValuePair<string, string>("<w:b/>", t);
         }
+
         static KeyValuePair<string, string> Plain(string t)
         {
             return new KeyValuePair<string, string>(null, t);
         }
+
         static List<string> NullFills(int count, bool shadeLast)
         {
             var f = Enumerable.Repeat<string>(null, count).ToList();
@@ -445,6 +496,7 @@ namespace Elevator.Reporting.Sheet
                 f[count - 1] = "EEF3F8";
             return f;
         }
+
         // ---------- document ----------
         public DocxDocument Render()
         {
@@ -518,6 +570,7 @@ namespace Elevator.Reporting.Sheet
                 ForcesSection(d, n++);
             return d;
         }
+
         void Summary(DocxDocument d, int n)
         {
             d.Heading(n + "  Calculation summary", 1);
@@ -543,6 +596,7 @@ namespace Elevator.Reporting.Sheet
                     "FF1 " + KN(f.FF1DesignN) + " kN; FF2 " + KN(f.FF2DesignN) + " kN (design, per guide rail)" });
             d.Table(new[] { "Calculation", "Key result" }, rows, new[] { 3900, 5738 }, new HashSet<int> { 0 });
         }
+
         void ProjectInputs(DocxDocument d, int n)
         {
             var p = Project;
@@ -591,6 +645,7 @@ namespace Elevator.Reporting.Sheet
             if (Plan != null && CarRail != null)
                 AddFigure(d, () => CalculationFigures.ShaftPlan(Plan, CarRail, CounterweightRail));
         }
+
         void BasicChassis(DocxDocument d, int n)
         {
             var r = Chassis;
@@ -681,6 +736,7 @@ namespace Elevator.Reporting.Sheet
             AddFigure(d, () => CalculationFigures.ChassisPlan(r, true));
             AddFigure(d, () => CalculationFigures.ChassisElevation(r));
         }
+
         static string MassName(string key)
         {
             if (key.StartsWith("Rated capacity"))
@@ -701,10 +757,12 @@ namespace Elevator.Reporting.Sheet
                 return "Hanger assembly mass";
             return key;
         }
+
         double? R(string id)
         {
             return Chassis.Reactions.Single(v => v.Id == id).UpwardN;
         }
+
         void Reactions(DocxDocument d)
         {
             var r = Chassis;
@@ -722,6 +780,7 @@ namespace Elevator.Reporting.Sheet
                 ? " A negative value indicates uplift at that bearing, which must be restrained."
                 : ""), "Small");
         }
+
         void AdvancedChassis(DocxDocument d, int n)
         {
             var c = Project.Calculations;
@@ -790,6 +849,7 @@ namespace Elevator.Reporting.Sheet
             AddFigure(d, () => CalculationFigures.ChassisPlan(r, false));
             Reactions(d);
         }
+
         void RopeTensions(DocxDocument d, int n)
         {
             var p = Project;
@@ -857,6 +917,7 @@ namespace Elevator.Reporting.Sheet
                     p.Machine == null ? null : p.Machine.TractionSheavePitchDiameterMm,
                     MachineRoomRules.SelectDeflector(Plan.TZ).IsRequired));
         }
+
         // Event-mass terms rebuilt from the inputs; used only when they reproduce the engine's mass exactly.
         List<KeyValuePair<string, double>> EventTerms(SafetyPitLoad load)
         {
@@ -886,6 +947,7 @@ namespace Elevator.Reporting.Sheet
             }
             return Math.Abs(terms.Sum(t => t.Value) - load.ParticipatingMassKg.Value) < 1e-6 ? terms : null;
         }
+
         void SafetyPitSection(DocxDocument d, int n)
         {
             var s = Project.Calculations.SafetyPit;
@@ -984,6 +1046,7 @@ namespace Elevator.Reporting.Sheet
                     Available(SafetyPit.P7) ? SafetyPit.P7 : null,
                     Project.Shaft == null ? null : Project.Shaft.PitDepthMm));
         }
+
         void ForcesSection(DocxDocument d, int n)
         {
             var f = CarGuideForces;

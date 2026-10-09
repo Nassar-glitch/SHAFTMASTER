@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Elevator.Core.Serialization;
+
 namespace Elevator.Core.Calculations
 {
     internal static class CalculationFingerprint
@@ -17,6 +18,7 @@ namespace Elevator.Core.Calculations
                 .Where(f => f.Name != "SafetyPit" && f.Name != "CarGuideForces" && f.Name != "RopeTraction")
                 .ToDictionary(f => f.Name, f => f.GetValue(inputs));
         }
+
         internal static string Hash(object value)
         {
             var serializer = CoreJson.Create();
@@ -29,6 +31,7 @@ namespace Elevator.Core.Calculations
             using (var sha = SHA256.Create())
                 return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(canonical.ToString()))).Replace("-", "");
         }
+
         static void Canonical(object value, IJsonSerializer serializer, StringBuilder output)
         {
             var map = value as IDictionary<string, object>;

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
 using Elevator.Reporting.Docx;
+
 namespace Elevator.Reporting.Figures
 {
     // Engineering figure model in paper millimetres (origin top-left, y downwards), rendered to SVG and PNG.
@@ -10,46 +11,61 @@ namespace Elevator.Reporting.Figures
     // ISO line weights; centre lines dash-dot, hidden lines dashed; ANSI31 hatch; 2.5 mm text, 3.5 mm titles.
     public enum FigureLineType
     {
-        Continuous, Centre, Hidden
+        Continuous,
+        Centre,
+        Hidden
     }
+
     public sealed class FigureLayer
     {
-        public string Name; public double WeightMm; public FigureLineType LineType; public string Colour;
+        public string Name;
+        public double WeightMm;
+        public FigureLineType LineType;
+        public string Colour;
         public static readonly FigureLayer Outline = new FigureLayer { Name = "outline", WeightMm = 0.5, Colour = "000000" };
         public static readonly FigureLayer Secondary = new FigureLayer { Name = "secondary", WeightMm = 0.35, Colour = "2B2B2B" };
         public static readonly FigureLayer Thin = new FigureLayer { Name = "thin", WeightMm = 0.25, Colour = "2B2B2B" };
         public static readonly FigureLayer Dimension = new FigureLayer { Name = "dimension", WeightMm = 0.18, Colour = "000000" };
         public static readonly FigureLayer Hatch = new FigureLayer { Name = "hatch", WeightMm = 0.18, Colour = "4A4A4A" };
         public static readonly FigureLayer Leader = new FigureLayer { Name = "leader", WeightMm = 0.25, Colour = "000000" };
+
         public static readonly FigureLayer Centre =
             new FigureLayer { Name = "centre", WeightMm = 0.25, LineType = FigureLineType.Centre, Colour = "2B2B2B" };
+
         public static readonly FigureLayer Hidden =
             new FigureLayer { Name = "hidden", WeightMm = 0.25, LineType = FigureLineType.Hidden, Colour = "2B2B2B" };
+
         public static readonly FigureLayer Load = new FigureLayer { Name = "load", WeightMm = 0.35, Colour = "D0021B" };
         public static readonly FigureLayer Text = new FigureLayer { Name = "text", WeightMm = 0, Colour = "000000" };
         public static readonly FigureLayer LoadText = new FigureLayer { Name = "load-text", WeightMm = 0, Colour = "D0021B" };
     }
+
     public struct FigurePoint
     {
         public double X;
         public double Y;
+
         public FigurePoint(double x, double y)
         {
             X = x;
             Y = y;
         }
+
         public static FigurePoint operator +(FigurePoint a, FigurePoint b)
         {
             return new FigurePoint(a.X + b.X, a.Y + b.Y);
         }
+
         public static FigurePoint operator -(FigurePoint a, FigurePoint b)
         {
             return new FigurePoint(a.X - b.X, a.Y - b.Y);
         }
+
         public static FigurePoint operator *(FigurePoint a, double s)
         {
             return new FigurePoint(a.X * s, a.Y * s);
         }
+
         public double Length
         {
             get
@@ -57,6 +73,7 @@ namespace Elevator.Reporting.Figures
                 return Math.Sqrt(X * X + Y * Y);
             }
         }
+
         public FigurePoint Unit
         {
             get
@@ -65,6 +82,7 @@ namespace Elevator.Reporting.Figures
                 return l > 0 ? new FigurePoint(X / l, Y / l) : new FigurePoint(0, 0);
             }
         }
+
         public FigurePoint Normal
         {
             get
@@ -73,25 +91,39 @@ namespace Elevator.Reporting.Figures
             }
         }
     }
+
     public abstract class FigureEntity
     {
-        public FigureLayer Layer; public string Tag; public string Value;
+        public FigureLayer Layer;
+        public string Tag;
+        public string Value;
     }
+
     public sealed class FigurePolyline : FigureEntity
     {
-        public List<FigurePoint> Points = new List<FigurePoint>(); public bool Closed;
+        public List<FigurePoint> Points = new List<FigurePoint>();
+        public bool Closed;
         public bool Filled;
     }
+
     public sealed class FigureCircle : FigureEntity
     {
-        public FigurePoint Centre; public double Radius; public bool Filled;
+        public FigurePoint Centre;
+        public double Radius;
+        public bool Filled;
     }
+
     public sealed class FigureText : FigureEntity
     {
-        public FigurePoint At; public string Content; public double HeightMm = 2.5; public string Anchor = "start"; public bool Vertical;
+        public FigurePoint At;
+        public string Content;
+        public double HeightMm = 2.5;
+        public string Anchor = "start";
+        public bool Vertical;
         public bool Title;
         public double WidthMm; // measured with the figure font
-                               // Axis-aligned box in paper mm; At is on the baseline.
+
+        // Axis-aligned box in paper mm; At is on the baseline.
         public void Box(out double x0, out double y0, out double x1, out double y1)
         {
             double ascent = HeightMm * 1.05, descent = HeightMm * 0.3;
@@ -113,14 +145,17 @@ namespace Elevator.Reporting.Figures
             }
         }
     }
+
     public sealed class Figure
     {
         public string Title;
         public string Id;
-        public bool Schematic; public double WidthMm = 165;
+        public bool Schematic;
+        public double WidthMm = 165;
         public double HeightMm;
         public FigureView View; // main model-to-paper transform (recorded in the SVG for verification)
         public readonly List<FigureEntity> Entities = new List<FigureEntity>();
+
         public IEnumerable<FigureText> Texts
         {
             get
@@ -128,6 +163,7 @@ namespace Elevator.Reporting.Figures
                 return Entities.OfType<FigureText>();
             }
         }
+
         // Font chain per the drawing standard; measured by the WPF renderer.
         public static string FontFamily
         {
@@ -136,19 +172,24 @@ namespace Elevator.Reporting.Figures
                 return FigureFonts.Family;
             }
         }
+
         public static Func<string, double, double> Measure = (text, heightMm) => text.Length * heightMm * 0.62;
+
         public static string Num(double v, string format)
         {
             return v.ToString(format, CultureInfo.InvariantCulture);
         }
+
         public static string Kn(double newtons)
         {
             return Num(newtons / 1000, "0.###") + " kN";
         }
+
         public static string Mm(double mm)
         {
             return Num(mm, "0.#");
         }
+
         public FigurePolyline Line(FigurePoint a, FigurePoint b, FigureLayer layer, string tag = null)
         {
             var l = new FigurePolyline { Layer = layer, Tag = tag };
@@ -157,6 +198,7 @@ namespace Elevator.Reporting.Figures
             Entities.Add(l);
             return l;
         }
+
         public FigurePolyline Poly(IEnumerable<FigurePoint> points, bool closed, FigureLayer layer, string tag = null, bool filled = false)
         {
             var l = new FigurePolyline { Layer = layer, Closed = closed, Filled = filled, Tag = tag };
@@ -164,6 +206,7 @@ namespace Elevator.Reporting.Figures
             Entities.Add(l);
             return l;
         }
+
         public FigurePolyline Rect(double x0, double y0, double x1, double y1, FigureLayer layer, string tag = null)
         {
             return Poly(
@@ -172,12 +215,14 @@ namespace Elevator.Reporting.Figures
                 layer,
                 tag);
         }
+
         public FigureCircle Circle(FigurePoint c, double r, FigureLayer layer, bool filled = false, string tag = null)
         {
             var e = new FigureCircle { Centre = c, Radius = r, Layer = layer, Filled = filled, Tag = tag };
             Entities.Add(e);
             return e;
         }
+
         // ANSI31: 45° lines, 1.5 mm pitch, clipped to the (simple) polygon.
         public void Hatch(IList<FigurePoint> polygon, double pitchMm = 1.5)
         {
@@ -201,6 +246,7 @@ namespace Elevator.Reporting.Figures
                     Line(back(new FigurePoint(xs[i], y)), back(new FigurePoint(xs[i + 1], y)), FigureLayer.Hatch);
             }
         }
+
         // Filled closed arrowhead with its tip at 'tip', pointing along 'direction'.
         public void Arrowhead(FigurePoint tip, FigurePoint direction, FigureLayer layer, double lengthMm = 2.5, double halfWidthMm = 0.45)
         {
@@ -209,6 +255,7 @@ namespace Elevator.Reporting.Figures
             var baseCentre = tip - d * lengthMm;
             Poly(new[] { tip, baseCentre + n * halfWidthMm, baseCentre - n * halfWidthMm }, true, layer, null, true);
         }
+
         bool Overlaps(double x0, double y0, double x1, double y1, FigureText self)
         {
             foreach (var t in Texts)
@@ -222,6 +269,7 @@ namespace Elevator.Reporting.Figures
             }
             return false;
         }
+
         // Adds text at the first candidate position whose box does not overlap existing text.
         public FigureText Text(
             string content,
@@ -263,6 +311,7 @@ namespace Elevator.Reporting.Figures
             Entities.Add(t);
             return t; // reported by the overlap test if no candidate was free
         }
+
         public FigureText Text(
             string content,
             FigurePoint at,
@@ -283,6 +332,7 @@ namespace Elevator.Reporting.Figures
             }
             return Text(content, candidates, anchor, layer, heightMm, vertical, tag, value, title);
         }
+
         // Horizontal dimension between p1 and p2 with its line at yDim. Extension lines leave a 0.8 mm gap at the
         // geometry and overshoot the dimension line by 1.5 mm; filled closed arrows; 2.5 mm text above the line.
         public void DimH(FigurePoint p1, FigurePoint p2, double yDim, string text, string tag = null, string value = null)
@@ -324,6 +374,7 @@ namespace Elevator.Reporting.Figures
                     tag == null ? null : tag + "-text",
                     value);
         }
+
         // Vertical dimension between p1 and p2 with its line at xDim; text reads upwards on the left of the line.
         public void DimV(FigurePoint p1, FigurePoint p2, double xDim, string text, string tag = null, string value = null)
         {
@@ -363,6 +414,7 @@ namespace Elevator.Reporting.Figures
                     tag == null ? null : tag + "-text",
                     value);
         }
+
         // Load arrow from tail to tip in the accent colour, label near the tail.
         public void Load(
             FigurePoint tail,
@@ -378,10 +430,12 @@ namespace Elevator.Reporting.Figures
             Text(label, labelCandidates, anchor, FigureLayer.LoadText, 2.5, false, tag == null ? null : tag + "-text", value);
         }
     }
+
     public static class FigureFonts
     {
         static string family;
         public static Func<string> Resolve = () => "Arial";
+
         public static string Family
         {
             get
@@ -390,6 +444,7 @@ namespace Elevator.Reporting.Figures
             }
         }
     }
+
     // Model-to-paper transform: model mm, y up → paper mm, y down; uniform scale.
     public sealed class FigureView
     {
@@ -398,6 +453,7 @@ namespace Elevator.Reporting.Figures
         public double MaxY;
         public double OffsetX;
         public double OffsetY;
+
         public FigureView(
             double minX,
             double minY,
@@ -415,11 +471,13 @@ namespace Elevator.Reporting.Figures
             OffsetX = left + (widthMm - (maxX - minX) * Scale) / 2;
             OffsetY = alignTop ? top : top + (heightMm - (maxY - minY) * Scale) / 2;
         }
+
         public FigurePoint P(double x, double y)
         {
             return new FigurePoint(OffsetX + (x - MinX) * Scale, OffsetY + (MaxY - y) * Scale);
         }
     }
+
     // Rail cross-section geometry. Today derived proportionally from the designation (only b1, h1, k are known);
     // a future table (designation → full dimensions) can implement this interface without changing figure code.
     public interface IRailSection
@@ -428,42 +486,52 @@ namespace Elevator.Reporting.Figures
         {
             get;
         }
+
         double BaseWidthMm
         {
             get;
         }   // b1
+
         double HeightMm
         {
             get;
         }      // h1
+
         double BladeWidthMm
         {
             get;
         }  // k
+
         bool Proportional
         {
             get;
         }    // true: features other than b1, h1, k are drawn proportionally and not dimensioned
+
         IList<FigurePoint> Outline(); // closed outline in section mm: x across the foot (centre 0), y from foot underside upwards
     }
+
     public sealed class ProportionalRailSection : IRailSection
     {
         public string Designation
         {
             get; private set;
         }
+
         public double BaseWidthMm
         {
             get; private set;
         }
+
         public double HeightMm
         {
             get; private set;
         }
+
         public double BladeWidthMm
         {
             get; private set;
         }
+
         public bool Proportional
         {
             get
@@ -471,6 +539,7 @@ namespace Elevator.Reporting.Figures
                 return true;
             }
         }
+
         // "T70/65/9" → b1 = 70, h1 = 65, k = 9. Returns null if the designation does not have that form.
         public static ProportionalRailSection Parse(string designation)
         {
@@ -488,6 +557,7 @@ namespace Elevator.Reporting.Figures
                 return null;
             return new ProportionalRailSection { Designation = designation.Trim(), BaseWidthMm = b, HeightMm = h, BladeWidthMm = k };
         }
+
         // Proportional shape (undimensioned features): foot thickness 0.12 h1 tapering to 0.09 h1 at the edges, root width 1.6 k.
         public IList<FigurePoint> Outline()
         {

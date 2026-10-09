@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+
 namespace Elevator.Core.Serialization
 {
     // A serializer with the output and the conversions of System.Web.Script.Serialization.JavaScriptSerializer (.NET
@@ -31,6 +32,7 @@ namespace Elevator.Core.Serialization
             Write(value, b, 0, new Dictionary<object, object>(ReferenceComparer.Instance));
             return b.ToString();
         }
+
         void Write(object o, StringBuilder b, int depth, Dictionary<object, object> inUse)
         {
             if (++depth > RecursionLimit)
@@ -177,10 +179,12 @@ namespace Elevator.Core.Serialization
             }
             finally { inUse.Remove(o); }
         }
+
         static void WriteDate(DateTime d, StringBuilder b)
         {
             b.Append("\"\\/Date(").Append(((d.ToUniversalTime().Ticks - EpochTicks) / 10000).ToString(Inv)).Append(")\\/\"");
         }
+
         // .NET Framework "R": 15 significant digits when they round-trip, otherwise 17 (".NET Core" "R" is the shortest form).
         public static string RoundTrip(double v)
         {
@@ -195,6 +199,7 @@ namespace Elevator.Core.Serialization
             string s = v.ToString("G15", Inv);
             return RoundTrips(s, v) ? s : v.ToString("G17", Inv);
         }
+
         // Whether the decimal text s converts back to exactly v under IEEE round-to-nearest, ties to even. Exact arithmetic,
         // independent of the runtime's parser (the .NET Framework parser is not always correctly rounded).
         static bool RoundTrips(string s, double v)
@@ -254,6 +259,7 @@ namespace Elevator.Core.Serialization
             int cl = left.CompareTo(low), ch = left.CompareTo(high);
             return (cl > 0 || (cl == 0 && even)) && (ch < 0 || (ch == 0 && even));
         }
+
         static void Exact(double d, out System.Numerics.BigInteger mantissa, out int exponent)
         {
             long bits = BitConverter.DoubleToInt64Bits(d);
@@ -270,6 +276,7 @@ namespace Elevator.Core.Serialization
                 exponent = biased - 1075;
             }
         }
+
         public static string RoundTrip(float v)
         {
             if (Single.IsNaN(v))
@@ -284,6 +291,7 @@ namespace Elevator.Core.Serialization
             float back;
             return Single.TryParse(s, NumberStyles.Float, Inv, out back) && back == v ? s : v.ToString("G9", Inv);
         }
+
         static void Quote(string s, StringBuilder b)
         {
             b.Append('"');
@@ -335,10 +343,12 @@ namespace Elevator.Core.Serialization
         {
             return Convert(Parse(json), typeof(object));
         }
+
         public T Deserialize<T>(string json)
         {
             return (T)Convert(Parse(json), typeof(T));
         }
+
         static object Parse(string json)
         {
             if (json == null)
@@ -350,11 +360,13 @@ namespace Elevator.Core.Serialization
                 throw new ArgumentException("Invalid JSON primitive: " + json.Substring(i) + ".");
             return v;
         }
+
         static void Skip(string s, ref int i)
         {
             while (i < s.Length && Char.IsWhiteSpace(s[i]))
                 i++;
         }
+
         static object Value(string s, ref int i, int depth)
         {
             if (++depth > RecursionLimit)
@@ -440,6 +452,7 @@ namespace Elevator.Core.Serialization
                 i++;
             return Primitive(s.Substring(start, i - start));
         }
+
         static string MemberName(string s, ref int i)
         {
             if (i < s.Length && (s[i] == '"' || s[i] == '\''))
@@ -451,6 +464,7 @@ namespace Elevator.Core.Serialization
                 throw new ArgumentException("Invalid object passed in, member name expected. (" + i + ")");
             return s.Substring(start, i - start);
         }
+
         static string Str(string s, ref int i)
         {
             char quote = s[i++];
@@ -499,6 +513,7 @@ namespace Elevator.Core.Serialization
                 }
             }
         }
+
         static object Primitive(string input)
         {
             if (input == "null")
@@ -562,6 +577,7 @@ namespace Elevator.Core.Serialization
                 return o;
             throw new InvalidOperationException("Cannot convert object of type '" + o.GetType() + "' to type '" + type + "'");
         }
+
         static object FromDictionary(Dictionary<string, object> d, Type type)
         {
             if (type == typeof(object))
@@ -611,6 +627,7 @@ namespace Elevator.Core.Serialization
             }
             return instance;
         }
+
         static Type GenericDictionary(Type type)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
@@ -620,6 +637,7 @@ namespace Elevator.Core.Serialization
                     return i;
             return null;
         }
+
         static object FromList(ArrayList list, Type type)
         {
             if (type == typeof(object)
@@ -658,13 +676,16 @@ namespace Elevator.Core.Serialization
                 target.Add(Convert(item, element2));
             return target;
         }
+
         sealed class ReferenceComparer : IEqualityComparer<object>
         {
             public static readonly ReferenceComparer Instance = new ReferenceComparer();
+
             public new bool Equals(object a, object b)
             {
                 return Object.ReferenceEquals(a, b);
             }
+
             public int GetHashCode(object o)
             {
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(o);

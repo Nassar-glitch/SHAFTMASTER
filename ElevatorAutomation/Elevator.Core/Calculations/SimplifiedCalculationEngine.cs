@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Calculations
 {
     public static class CalculationModes
@@ -17,6 +18,7 @@ namespace Elevator.Core.Calculations
                 f.Name != "Mode" && f.Name != "SafetyPit" && f.Name != "CarGuideForces" && f.GetValue(c) != null) ? "Advanced" : "Basic";
         }
     }
+
     public sealed class SimplifiedDistances
     {
         public LocalPoint LoadReference;
@@ -34,14 +36,17 @@ namespace Elevator.Core.Calculations
         public double FrontLoadN;
         public double RearLoadN;
     }
+
     public static class SimplifiedVerticalSolver
     {
         public const string Model = "TwoStageVerticalMachineDatum-v1";
+
         static void Require(bool ok, string message)
         {
             if (!ok)
                 throw new ArgumentException(message);
         }
+
         public static ChassisCalculationResult Solve(ChassisCalculationGeometry g, double force)
         {
             var r = new ChassisCalculationResult { Mode = "Basic", ModelVersion = Model };
@@ -151,6 +156,7 @@ namespace Elevator.Core.Calculations
             return r;
         }
     }
+
     public sealed class SimplifiedCalculationEngine
     {
         static string Fingerprint(ElevatorProject p, ChassisCalculationGeometry g)
@@ -175,6 +181,7 @@ namespace Elevator.Core.Calculations
                 Geometry = g
             });
         }
+
         public static bool IsCurrent(ChassisCalculationResult r, ElevatorProject p, ChassisCalculationGeometry g, DesignContext ctx)
         {
             return p != null
@@ -187,6 +194,7 @@ namespace Elevator.Core.Calculations
                 && ChassisGeometryProvenance.Validate(p, g, ctx).IsValid
                 && r.InputFingerprint == Fingerprint(p, g);
         }
+
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g, DesignContext ctx)
         {
             var r = new ChassisCalculationResult { Mode = "Basic", ModelVersion = SimplifiedVerticalSolver.Model };

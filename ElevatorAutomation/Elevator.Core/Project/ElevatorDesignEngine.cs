@@ -2,29 +2,38 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.SectionAA;
+
 namespace Elevator.Core.Project
 {
     [Flags]
     public enum DrawingViews
     {
-        Plan = 1, MachineRoomPlan = 2, SectionAA = 4, SectionBB = 8, All = 15
+        Plan = 1,
+        MachineRoomPlan = 2,
+        SectionAA = 4,
+        SectionBB = 8,
+        All = 15
     }
+
     public sealed class GenerationOptions
     {
         public DrawingViews Views = DrawingViews.All;
         public bool ArrangeViews;
         public string OutputPath;
     }
+
     public sealed class DrawingGenerationResult
     {
         public ElevatorDesignResult Design;
         public Dictionary<string, int> EntityCounts = new Dictionary<string, int>();
         public string OutputPath;
     }
+
     public interface IProjectDrawingGenerator
     {
         DrawingGenerationResult GenerateProjectDrawings(ElevatorProject project, GenerationOptions options);
     }
+
     public sealed class DesignContext
     {
         public EquipmentProfile Equipment;
@@ -37,6 +46,7 @@ namespace Elevator.Core.Project
         public bool RetainedDeflectorVisible;
         public Elevator.Core.Calculations.ChassisGeometryEvidence ChassisEvidence;
     }
+
     public sealed class ElevatorDesignResult
     {
         public ElevatorParameters Plan;
@@ -48,6 +58,7 @@ namespace Elevator.Core.Project
         public ValidationStatus LayoutStatus = ValidationStatus.NOT_YET_EVALUABLE;
         public ValidationStatus WrapAngleStatus = ValidationStatus.NOT_YET_EVALUABLE;
         public ValidationStatus CodeDiameterRatioStatus = ValidationStatus.NOT_YET_EVALUABLE;
+
         public bool CanGenerate
         {
             get
@@ -55,6 +66,7 @@ namespace Elevator.Core.Project
                 return !Validation.Any(v => v.BlocksGeneration);
             }
         }
+
         // Accepted V1 component dimensions are results of the selected native template, not editable inputs.
         public double CarInternalHeightMm = 2200;
         public double CarOverallHeightMm = 2400;
@@ -66,6 +78,7 @@ namespace Elevator.Core.Project
         public string CarRailProfile = "T70/65/9";
         public string CounterweightRailProfile = "T50/50/5";
     }
+
     public static class ProjectValidator
     {
         public static List<ValidationIssue> Validate(ElevatorProject p, DrawingViews views, bool chassisGeometryOnly = false)
@@ -164,6 +177,7 @@ namespace Elevator.Core.Project
             return issues;
         }
     }
+
     public sealed class ElevatorDesignEngine
     {
         public static ValidationStatus Status(string text)
@@ -179,16 +193,19 @@ namespace Elevator.Core.Project
                 return ValidationStatus.PASS;
             return ValidationStatus.NOT_YET_EVALUABLE;
         }
+
         public ElevatorDesignResult Calculate(ElevatorProject project, DesignContext context, DrawingViews views = DrawingViews.All)
         {
             return CalculateInternal(project, context, views, false);
         }
+
         // Same geometry recipes and authoritative source inputs. Non-geometric rope
         // metadata/floor summaries are not prerequisites for Basic vertical statics.
         public ElevatorDesignResult CalculateBasicChassisGeometry(ElevatorProject project, DesignContext context)
         {
             return CalculateInternal(project, context, DrawingViews.MachineRoomPlan | DrawingViews.SectionBB, true);
         }
+
         // FF loads need only authoritative internal plan dimensions. Unrelated
         // masses, safety/pit choices, floors or reeving metadata are not sizing
         // inputs. Use the SAME plan recipe and bind its sources before it runs.
@@ -201,6 +218,7 @@ namespace Elevator.Core.Project
                 context,
                 () => DesignRules.Calculate(project.Shaft.WidthMm, project.Shaft.DepthMm, context.Equipment, context.CounterweightDepthMm));
         }
+
         ElevatorDesignResult CalculateInternal(ElevatorProject project, DesignContext context, DrawingViews views, bool basicGeometry)
         {
             var result = new ElevatorDesignResult();
@@ -283,6 +301,7 @@ namespace Elevator.Core.Project
                 : new Elevator.Core.Calculations.ChassisCalculationEngine().Calculate(project, result.ChassisGeometry, context);
             return result;
         }
+
         static void Failure(ElevatorDesignResult r, string message)
         {
             r.LayoutStatus = ValidationStatus.FAIL;

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+
 namespace Elevator.Core.Application
 {
     // In-memory results only. Geometry is issued by the shared engine, never read from JSON.
@@ -11,37 +12,45 @@ namespace Elevator.Core.Application
         {
             get; private set;
         }
+
         public ChassisCalculationResult Result
         {
             get; private set;
         }
+
         public ElevatorDesignResult SourceDesign
         {
             get; private set;
         }
+
         public int GeometryGenerationCount
         {
             get; private set;
         }
+
         public string DisplayStatus
         {
             get; private set;
         }
+
         public CalculationWorkspace()
         {
             DisplayStatus = "Calculate to show P1–P4 for the current inputs.";
         }
+
         public void Invalidate()
         {
             Result = null;
             DisplayStatus = "STALE — inputs changed; recalculate.";
         }
+
         public bool IsCurrent(ElevatorProject project, DesignContext context)
         {
             return CalculationModes.Resolve(project.Calculations) == "Basic"
                 ? SimplifiedCalculationEngine.IsCurrent(Result, project, Geometry, context)
                 : ChassisCalculationEngine.IsCurrent(Result, project, Geometry, context) && Result.Mode == "Advanced";
         }
+
         public bool EnsureGeometry(ElevatorProject project, DesignContext context)
         {
             string mode = CalculationModes.Resolve(project.Calculations);
@@ -60,6 +69,7 @@ namespace Elevator.Core.Application
             }
             return false;
         }
+
         public ChassisCalculationResult Calculate(ElevatorProject project, DesignContext context)
         {
             if (!EnsureGeometry(project, context))

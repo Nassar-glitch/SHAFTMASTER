@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core
 {
     public sealed class SectionReference
@@ -22,6 +23,7 @@ namespace Elevator.Core
         public double HangerBottomAboveDeflectorCenter;
         public double SourceStandBottomZ;
     }
+
     public sealed class MachineRoomSectionParameters
     {
         public MachineBeamSelection Beam;
@@ -48,6 +50,7 @@ namespace Elevator.Core
         public string RopeClearanceStatus = "NOT YET EVALUABLE";
         public string ConcreteBeamStructuralStatus = "NOT EVALUATED";
         public string OpeningStatus = "OPENING SIZE ENGINEERING REVIEW REQUIRED";
+
         public string MachineBeamStructuralStatus
         {
             get
@@ -56,6 +59,7 @@ namespace Elevator.Core
             }
         }
     }
+
     public sealed class MachineBeamSelection
     {
         public string SectionDesignation;
@@ -71,6 +75,7 @@ namespace Elevator.Core
         public double? DeflectionMm;
         public double? Utilization;
     }
+
     public sealed class ReevingSolution
     {
         public LocalPoint TractionSheaveCenter;
@@ -91,6 +96,7 @@ namespace Elevator.Core
         public string GeometryStatus;
         public string WrapAngleStatus;
     }
+
     public sealed class VerticalArrangementInput
     {
         public double CarDropX;
@@ -111,6 +117,7 @@ namespace Elevator.Core
         public double? PreferredHeightIncrementMm;
         public double? ReferenceConcreteHeightMm;
     }
+
     public sealed class VerticalArrangementResult
     {
         public ReevingSolution Reeving;
@@ -126,6 +133,7 @@ namespace Elevator.Core
         public string HangerMechanicalStatus = "MECHANICAL REVIEW REQUIRED";
         public string Status;
         public string ConcreteBeamStructuralStatus = "NOT EVALUATED";
+
         public double? ConcreteSupportHeightMm
         {
             get
@@ -133,6 +141,7 @@ namespace Elevator.Core
                 return ConcreteBeamHeightMm;
             }
         }
+
         public double? CalculatedWrapAngleDeg
         {
             get

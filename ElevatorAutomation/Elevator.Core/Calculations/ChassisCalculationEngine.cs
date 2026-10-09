@@ -1,31 +1,38 @@
 using System;
 using System.Linq;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Calculations
 {
     public sealed class ChassisCalculationEngine
     {
         public const double GravityMetresPerSecondSquared = 9.81;
+
         static LocalPoint Add(LocalPoint a, LocalPoint b)
         {
             return ChassisReactionSolver.Add(a, b);
         }
+
         static LocalPoint Sub(LocalPoint a, LocalPoint b)
         {
             return ChassisReactionSolver.Sub(a, b);
         }
+
         static LocalPoint Scale(LocalPoint a, double s)
         {
             return ChassisReactionSolver.Scale(a, s);
         }
+
         static LocalPoint Cross(LocalPoint a, LocalPoint b)
         {
             return ChassisReactionSolver.Cross(a, b);
         }
+
         static bool HasText(string s)
         {
             return !String.IsNullOrWhiteSpace(s);
         }
+
         public static string Fingerprint(ElevatorProject p, ChassisCalculationGeometry g)
         {
             return CalculationFingerprint.Hash(new
@@ -41,10 +48,12 @@ namespace Elevator.Core.Calculations
                 Geometry = g
             });
         }
+
         public static bool IsCurrent(ChassisCalculationResult r, ElevatorProject p, ChassisCalculationGeometry g)
         {
             return IsCurrent(r, p, g, null);
         }
+
         public static bool IsCurrent(
             ChassisCalculationResult r,
             ElevatorProject p,
@@ -59,10 +68,12 @@ namespace Elevator.Core.Calculations
                 && ChassisGeometryProvenance.Validate(p, g, currentContext).IsValid
                 && r.InputFingerprint == Fingerprint(p, g);
         }
+
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g)
         {
             return Calculate(p, g, null);
         }
+
         public ChassisCalculationResult Calculate(ElevatorProject p, ChassisCalculationGeometry g, DesignContext currentContext)
         {
             var r = new ChassisCalculationResult();
@@ -324,6 +335,7 @@ namespace Elevator.Core.Calculations
                     + "dead-load distribution is not represented and requires engineering acceptance.");
             return solved;
         }
+
         static LoadNode Weight(string id, LocalPoint point, double mass, string source)
         {
             return new LoadNode

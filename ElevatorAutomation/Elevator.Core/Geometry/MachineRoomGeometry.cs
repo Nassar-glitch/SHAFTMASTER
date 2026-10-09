@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+
 namespace Elevator.Core
 {
     // Every target axis is read from the single shared design; no SW/SD/TZ sizing formulas here.
@@ -15,6 +16,7 @@ namespace Elevator.Core
         public readonly MachineRoomExtensions Extensions;
         public readonly double OldGovernorOffset;
         public readonly double GovernorOffset;
+
         public MachineRoomGeometry(
             ElevatorParameters design,
             double sw,
@@ -36,6 +38,7 @@ namespace Elevator.Core
             OldGovernorOffset = oldGovernorOffset;
             GovernorOffset = design.MachineRoom.Governor.OffsetFromCarGuideAxisMm ?? oldGovernorOffset;
         }
+
         public double MapX(double value)
         {
             double[] old = { 0, OldSW / 2, OldSW, -Extensions.Left, OldSW + Extensions.Right };
@@ -43,6 +46,7 @@ namespace Elevator.Core
             int i = Enumerable.Range(0, old.Length).OrderBy(k => Math.Abs(value - old[k])).First();
             return value + next[i] - old[i];
         }
+
         public double MapY(double value)
         {
             double[] old = { 0, OldCarRow, OldCwRow, OldSD, -Extensions.Front, OldSD + Extensions.Rear };
@@ -50,6 +54,7 @@ namespace Elevator.Core
             int i = Enumerable.Range(0, old.Length).OrderBy(k => Math.Abs(value - old[k])).First();
             return value + next[i] - old[i];
         }
+
         private double RoomX(double value)
         {
             double[] old = { -Extensions.Left, OldSW / 2, OldSW + Extensions.Right };
@@ -57,6 +62,7 @@ namespace Elevator.Core
             int i = Enumerable.Range(0, old.Length).OrderBy(k => Math.Abs(value - old[k])).First();
             return value + next[i] - old[i];
         }
+
         public LocalPoint Move(LocalPoint p, string role)
         {
             double dx = Design.Center - OldSW / 2, dy = Design.CarRow - OldCarRow;
@@ -114,6 +120,7 @@ namespace Elevator.Core
             }
             return new LocalPoint(p.X + dx, p.Y + dy, p.Z);
         }
+
         public bool Flexible(string role)
         {
             return new[] { "room",

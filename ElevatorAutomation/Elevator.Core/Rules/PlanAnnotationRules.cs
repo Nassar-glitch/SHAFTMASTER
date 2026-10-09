@@ -27,6 +27,7 @@ namespace Elevator.Core
                 values["Stops"] = input.Stops.Value.ToString(CultureInfo.InvariantCulture);
             return values;
         }
+
         public static string Render(string template, Dictionary<string, string> values, Func<string, string> escapeValue)
         {
             if (template == null)
@@ -39,6 +40,7 @@ namespace Elevator.Core
                 return escapeValue(value);
             });
         }
+
         private static string Number(double value)
         {
             if (Double.IsNaN(value) || Double.IsInfinity(value))

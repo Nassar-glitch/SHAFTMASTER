@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using Elevator.Core.Serialization;
+
 namespace Elevator.Core.Project
 {
     // Editable preset library (config/presets.json, shipped beside the application). Company practice changes here,
@@ -17,6 +18,7 @@ namespace Elevator.Core.Project
         public double? BrakingRetardationMps2;
         public List<DeflectorMassRow> DeflectorMass;
         public string TractionLimitingMethod;
+
         // Project presets (DESIGN-FLOW stage 2): a new project opens complete; unlocked fields follow these values.
         public NewProjectPreset NewProject;
         public double? PersonMassKg;
@@ -33,12 +35,14 @@ namespace Elevator.Core.Project
         public SafetyGearPreset SafetyGear;
         public BufferPreset Buffers;
         public AdvancedPreset Advanced;
+
         public static PresetLibrary Load(string path)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Preset library not found: " + path, path);
             return Parse(File.ReadAllText(path));
         }
+
         public static PresetLibrary Parse(string json)
         {
             PresetLibrary library;
@@ -54,10 +58,12 @@ namespace Elevator.Core.Project
                 throw new ArgumentException("Preset library is invalid: " + String.Join("; ", problems));
             return library;
         }
+
         static bool Positive(double v)
         {
             return !Double.IsNaN(v) && !Double.IsInfinity(v) && v > 0;
         }
+
         public List<string> Validate()
         {
             var p = new List<string>();
@@ -103,14 +109,17 @@ namespace Elevator.Core.Project
             ValidateProject(p);
             return p;
         }
+
         static bool Positive(double? v)
         {
             return v.HasValue && Positive(v.Value);
         }
+
         static bool Finite(double? v)
         {
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value);
         }
+
         void ValidateProject(List<string> p)
         {
             var n = NewProject;
@@ -230,6 +239,7 @@ namespace Elevator.Core.Project
                     p.Add("Advanced basis texts are required");
             }
         }
+
         // Car and machine mass from the capacity table: linear interpolation, clamped to the end rows.
         public CapacityPresetRow MassesFor(double? capacityKg)
         {
@@ -257,28 +267,33 @@ namespace Elevator.Core.Project
                 }
             return null;
         }
+
         public RopeLadderRow RopesFor(double? capacityKg)
         {
             if (!capacityKg.HasValue || RopeLadder == null || RopeLadder.Count == 0)
                 return null;
             return RopeLadder.FirstOrDefault(r => !r.MaxCapacityKg.HasValue || capacityKg.Value <= r.MaxCapacityKg.Value + 1e-9);
         }
+
         public int? PersonsFor(double? capacityKg)
         {
             return capacityKg.HasValue && Positive(PersonMassKg) && capacityKg.Value >= 0
                 ? (int?)(int)Math.Floor(capacityKg.Value / PersonMassKg.Value + 1e-9)
                 : null;
         }
+
         public double? CounterweightFor(double? carMassKg, double? capacityKg)
         {
             return carMassKg.HasValue && capacityKg.HasValue && CounterweightBalanceFactor.HasValue
                 ? carMassKg.Value + CounterweightBalanceFactor.Value * capacityKg.Value
                 : (double?)null;
         }
+
         public string Hash()
         {
             return Elevator.Core.Calculations.CalculationFingerprint.Hash(this);
         }
+
         // Rope data follow the rope diameter by exact table match only; an unlisted diameter has no preset.
         public RopeRow Rope(double? diameterMm)
         {
@@ -286,6 +301,7 @@ namespace Elevator.Core.Project
                 return null;
             return Ropes.Table.FirstOrDefault(r => Math.Abs(r.DiameterMm - diameterMm.Value) < 1e-9);
         }
+
         // Linear interpolation in the deflector table; outside the table the nearest end value is used.
         public double? DeflectorMassFor(double? pitchMm)
         {
@@ -307,26 +323,33 @@ namespace Elevator.Core.Project
             return null;
         }
     }
+
     public sealed class RopePresetTable
     {
-        public string Designation; public List<RopeRow> Table;
+        public string Designation;
+        public List<RopeRow> Table;
     }
+
     public sealed class RopeRow
     {
         public double DiameterMm;
         public double MinimumBreakingLoadKn;
         public double MassKgPerM;
     }
+
     public sealed class GroovePreset
     {
-        public string Type; public double? UndercutAngleDeg;
+        public string Type;
+        public double? UndercutAngleDeg;
         public double? GrooveAngleDeg;
     }
+
     public sealed class DeflectorMassRow
     {
         public double PitchDiameterMm;
         public double MassKg;
     }
+
     public sealed class NewProjectPreset
     {
         public double? ShaftWidthMm;
@@ -338,26 +361,35 @@ namespace Elevator.Core.Project
         public double? SpeedMps;
         public int? Stops;
     }
+
     public sealed class CapacityPresetRow
     {
         public double CapacityKg;
         public double CarMassKg;
         public double MachineMassKg;
     }
+
     public sealed class RopeLadderRow
     {
-        public double? MaxCapacityKg; public int RopeCount; public double DiameterMm;
+        public double? MaxCapacityKg;
+        public int RopeCount;
+        public double DiameterMm;
     }
+
     public sealed class SafetyGearPreset
     {
-        public double? ProgressiveAboveSpeedMps; public int CarGuideCount;
+        public double? ProgressiveAboveSpeedMps;
+        public int CarGuideCount;
     }
+
     public sealed class BufferPreset
     {
-        public double? EnergyAccumulationUpToSpeedMps; public int CarCount;
+        public double? EnergyAccumulationUpToSpeedMps;
+        public int CarCount;
         public int CounterweightCount;
         public string Sharing;
     }
+
     public sealed class AdvancedPreset
     {
         public double? MachineCgOffsetXMm;
@@ -381,20 +413,24 @@ namespace Elevator.Core.Project
         public const string VHardened = "VHardened";
         public const string VUnhardened = "VUnhardened";
         public static readonly string[] All = { UndercutU, VHardened, VUnhardened };
+
         public static string Label(string type)
         {
             return type == UndercutU
                 ? "Semi-circular / undercut"
                 : type == VHardened ? "V-groove, hardened" : type == VUnhardened ? "V-groove, unhardened" : type;
         }
+
         public static bool NeedsUndercut(string type)
         {
             return type == UndercutU || type == VUnhardened;
         }
+
         public static bool NeedsGrooveAngle(string type)
         {
             return type == UndercutU || type == VHardened || type == VUnhardened;
         }
+
         // Limits of EN 81-50:2014 5.11.2.3.1: β ≤ 105°; semi-circular γ ≥ 25°; V-groove γ ≥ 35° for lifts.
         public static string AngleProblem(string type, double? beta, double? gamma)
         {
@@ -420,12 +456,14 @@ namespace Elevator.Core.Project
             return null;
         }
     }
+
     // EN 81-20:2014 5.5.3 c): stalled-condition protection by rope slip (1) or by an electric safety device (2).
     public static class TractionLimitingMethods
     {
         public const string RopesSlip = "RopesSlip";
         public const string ElectricSafetyDevice = "ElectricSafetyDevice";
         public static readonly string[] All = { RopesSlip, ElectricSafetyDevice };
+
         public static string Label(string m)
         {
             return m == RopesSlip
@@ -433,6 +471,7 @@ namespace Elevator.Core.Project
                 : m == ElectricSafetyDevice ? "Electric safety device (EN 81-20 5.5.3 c) 2))" : m;
         }
     }
+
     public static class TractionRules
     {
         public const double MinimumBrakingRetardationMps2 = 0.5;
@@ -447,6 +486,7 @@ namespace Elevator.Core.Project
         public PresetLibrary Library;
         public double? DeflectorPitchMm; // driver for the deflector mass preset (from the shared deflector rule)
     }
+
     public sealed class PresetField
     {
         public string Key;
@@ -454,10 +494,12 @@ namespace Elevator.Core.Project
         public Func<PresetContext, object> Preset;
         public Func<ElevatorProject, object> Stored;
         public Action<ElevatorProject, object> Store;
+
         // Materialized fields (stage 2) are ordinary project values that ProjectPresets.Apply writes while unlocked.
         // A project without FollowsPresets (older files) treats every materialized field as edited: it opens unchanged.
         public bool Materialized;
         public string Page;
+
         public bool IsEdited(ElevatorProject p)
         {
             if (p == null)
@@ -466,6 +508,7 @@ namespace Elevator.Core.Project
                 return true;
             return p.UserEditedFields != null && p.UserEditedFields.Contains(Key);
         }
+
         public bool IsBlank(ElevatorProject p)
         {
             var v = Stored(p);
@@ -477,14 +520,17 @@ namespace Elevator.Core.Project
                 return (double)v <= 0; // non-nullable shaft size: 0 is blank
             return false;
         }
+
         public object PresetValue(PresetContext c)
         {
             return c == null || c.Library == null ? null : Preset(c);
         }
+
         public object Effective(PresetContext c)
         {
             return IsEdited(c.Project) ? Stored(c.Project) : PresetValue(c);
         }
+
         public void Edit(ElevatorProject p, object value)
         {
             Store(p, value);
@@ -493,6 +539,7 @@ namespace Elevator.Core.Project
             if (!p.UserEditedFields.Contains(Key))
                 p.UserEditedFields.Add(Key);
         }
+
         // Materialized fields: the caller runs ProjectPresets.Apply afterwards to write the preset.
         public void Reset(ElevatorProject p)
         {
@@ -510,6 +557,7 @@ namespace Elevator.Core.Project
             Store(p, null);
         }
     }
+
     public static class PresetFields
     {
         static Elevator.Core.Calculations.RopeTractionInputs Group(ElevatorProject p)
@@ -520,10 +568,12 @@ namespace Elevator.Core.Project
                 p.Calculations.RopeTraction = new Elevator.Core.Calculations.RopeTractionInputs();
             return p.Calculations.RopeTraction;
         }
+
         static Elevator.Core.Calculations.RopeTractionInputs Read(ElevatorProject p)
         {
             return p == null || p.Calculations == null ? null : p.Calculations.RopeTraction;
         }
+
         static PresetField Number(
             string name,
             string label,
@@ -540,6 +590,7 @@ namespace Elevator.Core.Project
                 Store = (p, v) => set(Group(p), v == null ? (double?)null : Convert.ToDouble(v, CultureInfo.InvariantCulture))
             };
         }
+
         static PresetField Text(
             string name,
             string label,
@@ -556,30 +607,36 @@ namespace Elevator.Core.Project
                 Store = (p, v) => set(Group(p), v as string)
             };
         }
+
         static double? RopeDiameter(PresetContext c)
         {
             return c.Project == null || c.Project.Suspension == null ? null : c.Project.Suspension.RopeDiameterMm;
         }
+
         public static readonly PresetField RopeDesignation = Text(
             "RopeDesignation",
             "Rope designation",
             c => c.Library.Ropes.Designation,
             g => g.RopeDesignation,
             (g, v) => g.RopeDesignation = v);
+
         public static readonly PresetField MinimumBreakingLoad = Number(
             "MinimumBreakingLoadKn",
             "Rope minimum breaking load MBL per rope (kN)",
             c => { var r = c.Library.Rope(RopeDiameter(c)); return r == null ? (double?)null : r.MinimumBreakingLoadKn; },
             g => g.MinimumBreakingLoadKn,
             (g, v) => g.MinimumBreakingLoadKn = v);
+
         public static readonly PresetField RopeMass = Number(
             "RopeMassKgPerM",
             "Rope mass per metre (kg/m)",
             c => { var r = c.Library.Rope(RopeDiameter(c)); return r == null ? (double?)null : r.MassKgPerM; },
             g => g.RopeMassKgPerM,
             (g, v) => g.RopeMassKgPerM = v);
+
         public static readonly PresetField GrooveType =
             Text("GrooveType", "Traction sheave groove", c => c.Library.Groove.Type, g => g.GrooveType, (g, v) => g.GrooveType = v);
+
         public static readonly PresetField UndercutAngle = Number(
             "UndercutAngleDeg",
             "Undercut angle β (°)",
@@ -592,36 +649,42 @@ namespace Elevator.Core.Project
             },
             g => g.UndercutAngleDeg,
             (g, v) => g.UndercutAngleDeg = v);
+
         public static readonly PresetField GrooveAngle = Number(
             "GrooveAngleDeg",
             "Groove angle γ (°)",
             c => c.Library.Groove.GrooveAngleDeg,
             g => g.GrooveAngleDeg,
             (g, v) => g.GrooveAngleDeg = v);
+
         public static readonly PresetField TravellingCable = Number(
             "TravellingCableKgPerM",
             "Travelling cable mass per metre, all cables (kg/m)",
             c => c.Library.TravellingCableKgPerM,
             g => g.TravellingCableKgPerM,
             (g, v) => g.TravellingCableKgPerM = v);
+
         public static readonly PresetField BrakingRetardation = Number(
             "BrakingRetardationMps2",
             "Emergency braking retardation a (m/s²)",
             c => c.Library.BrakingRetardationMps2,
             g => g.BrakingRetardationMps2,
             (g, v) => g.BrakingRetardationMps2 = v);
+
         public static readonly PresetField DeflectorMass = Number(
             "DeflectorMassKg",
             "Deflector sheave mass (kg)",
             c => c.Library.DeflectorMassFor(c.DeflectorPitchMm),
             g => g.DeflectorMassKg,
             (g, v) => g.DeflectorMassKg = v);
+
         public static readonly PresetField TractionLimitingMethod = Text(
             "TractionLimitingMethod",
             "Traction limiting method",
             c => c.Library.TractionLimitingMethod,
             g => g.TractionLimitingMethod,
             (g, v) => g.TractionLimitingMethod = v);
+
         public static readonly PresetField[] RopeTraction = { RopeDesignation,
             MinimumBreakingLoad,
             RopeMass,
@@ -632,6 +695,7 @@ namespace Elevator.Core.Project
             BrakingRetardation,
             DeflectorMass,
             TractionLimitingMethod };
+
         public static PresetField Find(string key)
         {
             return RopeTraction.FirstOrDefault(f => f.Key == key);

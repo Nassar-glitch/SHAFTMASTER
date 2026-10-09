@@ -8,29 +8,35 @@ namespace Elevator.Core
     {
         public readonly ElevatorParameters Old;
         public readonly ElevatorParameters Next;
+
         public GeometryCalculator(ElevatorParameters old, ElevatorParameters next)
         {
             Old = old;
             Next = next;
         }
+
         public double DX(string a)
         {
             return Next.X(a) - Old.X(a);
         }
+
         public double DY(string a)
         {
             return Next.Y(a) - Old.Y(a);
         }
+
         public double MapX(double x, params string[] a)
         {
             string b = a.OrderBy(k => Math.Abs(x - Old.X(k))).First();
             return x + DX(b);
         }
+
         public double MapY(double y, params string[] a)
         {
             string b = a.OrderBy(k => Math.Abs(y - Old.Y(k))).First();
             return y + DY(b);
         }
+
         public LocalPoint Translation(string role)
         {
             switch (role)
@@ -60,6 +66,7 @@ namespace Elevator.Core
                     throw new ArgumentException("No rigid translation for role " + role);
             }
         }
+
         public bool IsFlexible(string role)
         {
             return new[] { "wall",
@@ -75,6 +82,7 @@ namespace Elevator.Core
                 "doorSpan",
                 "doorLeader" }.Contains(role);
         }
+
         public LocalPoint MapPoint(LocalPoint world, string role)
         {
             LocalPoint p = world;

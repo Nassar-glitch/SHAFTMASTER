@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.SectionAA;
 using Elevator.Core.Vertical;
+
 namespace Elevator.Core.Project
 {
     public static class LegacyProjectAdapter
@@ -82,6 +83,7 @@ namespace Elevator.Core.Project
             }
             return p;
         }
+
         public static ProjectInput ToLegacy(ElevatorProject p, bool includeFloorSummary = true)
         {
             var old = new ProjectInput
@@ -132,6 +134,7 @@ namespace Elevator.Core.Project
             }
             return old;
         }
+
         public static SectionAAProject ToSectionAA(ElevatorProject p)
         {
             if (!p.Shaft.PitDepthMm.HasValue

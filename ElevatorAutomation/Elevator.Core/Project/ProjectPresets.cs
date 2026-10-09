@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.Calculations;
+
 namespace Elevator.Core.Project
 {
     // DESIGN-FLOW stage 2 ("Flow foundation"): every remaining project input is a materialized preset field. While the
@@ -26,6 +27,7 @@ namespace Elevator.Core.Project
                 p.Calculations = new ChassisCalculationInputs();
             return p.Calculations;
         }
+
         static SafetyPitInputs Pit(ElevatorProject p)
         {
             var c = Calc(p);
@@ -33,6 +35,7 @@ namespace Elevator.Core.Project
                 c.SafetyPit = new SafetyPitInputs();
             return c.SafetyPit;
         }
+
         static CarGuideForceInputs Guides(ElevatorProject p)
         {
             var c = Calc(p);
@@ -40,34 +43,42 @@ namespace Elevator.Core.Project
                 c.CarGuideForces = new CarGuideForceInputs();
             return c.CarGuideForces;
         }
+
         static ChassisCalculationInputs ReadCalc(ElevatorProject p)
         {
             return p == null ? null : p.Calculations;
         }
+
         static double? D(object v)
         {
             return v == null ? (double?)null : Convert.ToDouble(v, System.Globalization.CultureInfo.InvariantCulture);
         }
+
         static int? I(object v)
         {
             return v == null ? (int?)null : Convert.ToInt32(v, System.Globalization.CultureInfo.InvariantCulture);
         }
+
         static bool? B(object v)
         {
             return v == null ? (bool?)null : Convert.ToBoolean(v);
         }
+
         static double? Q(PresetContext c)
         {
             return c.Project.Elevator == null ? null : c.Project.Elevator.CapacityKg;
         }
+
         static double? V(PresetContext c)
         {
             return c.Project.Elevator == null ? null : c.Project.Elevator.SpeedMetresPerSecond;
         }
+
         static bool Advanced(PresetContext c)
         {
             return CalculationModes.Resolve(c.Project.Calculations) == "Advanced";
         }
+
         static PresetField F(
             string page,
             string key,
@@ -343,6 +354,7 @@ namespace Elevator.Core.Project
                 p=>PitValue(p,s=>s.CounterweightBufferSharing),
                 (p,v)=>Pit(p).CounterweightBufferSharing=v as string),
         };
+
         // CW = P + q·Q with the selected q (balance factor step) while the CW is unlocked, else the library q.
         static object CounterweightPreset(PresetContext c)
         {
@@ -353,15 +365,18 @@ namespace Elevator.Core.Project
                 return p.HasValue && q.HasValue ? p.Value + rt.SelectedBalanceFactor.Value * q.Value : (double?)null;
             return c.Library.CounterweightFor(p, q);
         }
+
         static object PitValue(ElevatorProject p, Func<SafetyPitInputs, object> get)
         {
             var c = ReadCalc(p);
             return c == null || c.SafetyPit == null ? null : get(c.SafetyPit);
         }
+
         public static PresetField Find(string key)
         {
             return Fields.FirstOrDefault(f => f.Key == key) ?? PresetFields.Find(key);
         }
+
         public static bool Follows(ElevatorProject p)
         {
             return p != null && p.FollowsPresets == true;
@@ -385,6 +400,7 @@ namespace Elevator.Core.Project
             if (p.UserEditedFields.Count == 0)
                 p.UserEditedFields = null;
         }
+
         public static void Lock(ElevatorProject p, string key)
         {
             if (p.UserEditedFields == null)
@@ -418,10 +434,12 @@ namespace Elevator.Core.Project
             Apply(p, lib, ctx);
             return p;
         }
+
         public static string FloorName(int index)
         {
             return index == 0 ? "G" : index.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
+
         static void NewFloors(ElevatorProject p, PresetLibrary lib)
         {
             int stops = lib.NewProject.Stops.Value;
@@ -429,6 +447,7 @@ namespace Elevator.Core.Project
                 p.Building.Floors.Add(
                     new FloorDefinition { Name = FloorName(i), HeightToNextMm = i < stops - 1 ? lib.NewProject.FloorHeightMm : null });
         }
+
         public static double? NewFloorHeight(PresetLibrary lib)
         {
             return lib == null || lib.NewProject == null ? null : lib.NewProject.FloorHeightMm;
@@ -445,6 +464,7 @@ namespace Elevator.Core.Project
                     f.Store(p, f.Preset(c));
             return SizeRopes(p, lib, ctx);
         }
+
         public static bool AnyBlank(ElevatorProject p, string page)
         {
             if (p == null)
@@ -453,11 +473,13 @@ namespace Elevator.Core.Project
                 return true;
             return Fields.Any(f => (page == null || f.Page == page) && BlankForFill(p, f));
         }
+
         // Blank Advanced-only values do not count on a Basic project (Basic does not use them).
         static bool BlankForFill(ElevatorProject p, PresetField f)
         {
             return f.IsBlank(p) && (f.Page != "CALCULATIONS" || Relevant(p, f.Key));
         }
+
         static bool Relevant(ElevatorProject p, string key)
         {
             if (CalculationModes.Resolve(p.Calculations) == "Advanced")
@@ -469,11 +491,13 @@ namespace Elevator.Core.Project
                 "Calculations.IncludeHangerAssemblyWeight",
                 "Calculations.CarGuideForces.GuideShoeSpacingMm" }.Contains(key) || key.StartsWith("Calculations.SafetyPit.");
         }
+
         static bool FloorsBlank(ElevatorProject p)
         {
             var floors = p.Building == null ? null : p.Building.Floors;
             return floors == null || floors.Count < 2 || floors.Take(floors.Count - 1).Any(f => f != null && !f.HeightToNextMm.HasValue);
         }
+
         // "Fill blanks from presets" (one page, or every page when page is null). Non-blank values are kept and locked.
         public static RopeSizing FillBlanks(ElevatorProject p, PresetLibrary lib, DesignContext ctx, string page)
         {
@@ -513,6 +537,7 @@ namespace Elevator.Core.Project
             }
             return Apply(p, lib, ctx);
         }
+
         static string UniqueName(List<FloorDefinition> floors)
         {
             for (int i = 1; ; i++)
@@ -534,8 +559,11 @@ namespace Elevator.Core.Project
         // The first combination whose checks are all OK (rope diameter and count, Sf, sheave D/d, every traction case) is taken.
         // Otherwise the ladder / preset values stay, the checks stay NOT OK and the outcome is NoPass with the limiting check named.
         // Locked values never change. No equation is involved: every trial is the rope / traction engine.
-        static string cacheKey; static RopeSizing cacheValue; static DesignContext cacheContext;
+        static string cacheKey;
+        static RopeSizing cacheValue;
+        static DesignContext cacheContext;
         public static readonly string[] RopeChecks = { "rope-diameter", "rope-count", "dd-sheave", "safety-factor" };
+
         public static RopeSizing SizeRopes(ElevatorProject p, PresetLibrary lib, DesignContext ctx)
         {
             var countField = Find(RopeCountKey);
@@ -727,7 +755,9 @@ namespace Elevator.Core.Project
             cacheContext = ctx;
             return Finish(p, lib, outcome, betaFree, qFree);
         }
+
         public const string CounterweightKey = "Calculations.CounterweightMassKg";
+
         static void SelectBeta(ElevatorProject p, double? beta)
         {
             if (p.Calculations == null)
@@ -740,6 +770,7 @@ namespace Elevator.Core.Project
             }
             p.Calculations.RopeTraction.SelectedUndercutAngleDeg = beta;
         }
+
         // q selection (unlocked CW only): CW = P + q·Q; the library q needs no stored selection.
         static void SetBalance(ElevatorProject p, PresetLibrary lib, double? q)
         {
@@ -756,6 +787,7 @@ namespace Elevator.Core.Project
                 ? p.Calculations.CarMassKg.Value + qq.Value * p.Elevator.CapacityKg.Value
                 : (double?)null;
         }
+
         static RopeSizing Finish(ElevatorProject p, PresetLibrary lib, RopeSizing o, bool betaFree, bool qFree)
         {
             if (o.Status == "Selected" || o.Status == "Passed")
@@ -787,6 +819,7 @@ namespace Elevator.Core.Project
             }
             return o;
         }
+
         // A combination passes only with complete results: every rope check present and OK, every traction case OK, no omission.
         public static bool Passes(RopeTractionResult r)
         {
@@ -797,6 +830,7 @@ namespace Elevator.Core.Project
                 && r.Traction.Count >= 2
                 && !r.Checks.Any(k => k.Ok == false) && !r.Traction.Any(t => !t.Ok);
         }
+
         static IEnumerable<string> Failures(RopeTractionResult r)
         {
             foreach (var k in r.Checks.Where(x => x.Ok == false))
@@ -804,6 +838,7 @@ namespace Elevator.Core.Project
             foreach (var t in r.Traction.Where(x => !x.Ok))
                 yield return "Traction, " + t.Title.Substring(0, 1).ToLowerInvariant() + t.Title.Substring(1);
         }
+
         static string FirstFailure(RopeTractionResult r)
         {
             var c = r.Checks.FirstOrDefault(k => k.Ok == false);
@@ -815,6 +850,7 @@ namespace Elevator.Core.Project
             var o = r.Omissions.FirstOrDefault();
             return o == null ? null : o.Item;
         }
+
         // Outcome for the Design Notes (no project change).
         public static RopeSizing Outcome(ElevatorProject p, PresetLibrary lib, DesignContext ctx)
         {
@@ -828,6 +864,7 @@ namespace Elevator.Core.Project
             return SizeRopes(copy, lib, ctx);
         }
     }
+
     public sealed class RopeSizing
     {
         public string Status; // NotApplicable, NotEvaluable, Selected, NoPass
@@ -841,7 +878,10 @@ namespace Elevator.Core.Project
         public double? UndercutAngleDeg;
         public double? StartBalanceFactor;
         public double? BalanceFactor;
-        public string LimitingCheck; public int Trials; public long Milliseconds;
+        public string LimitingCheck;
+        public int Trials;
+        public long Milliseconds;
+
         public RopeSizing Copy()
         {
             return (RopeSizing)MemberwiseClone();

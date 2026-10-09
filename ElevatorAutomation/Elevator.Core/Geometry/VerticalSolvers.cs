@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+
 namespace Elevator.Core.Vertical
 {
     public static class FloorStackGenerator
@@ -60,11 +61,13 @@ namespace Elevator.Core.Vertical
             }
             return result;
         }
+
         public static bool Finite(double x)
         {
             return !Double.IsNaN(x) && !Double.IsInfinity(x);
         }
     }
+
     public static class SuspensionTopology
     {
         public static double CounterweightBottom(double pitZ, double calibration, double highestServedZ, double carFloorZ)
@@ -72,6 +75,7 @@ namespace Elevator.Core.Vertical
             return pitZ + calibration + highestServedZ - carFloorZ;
         }
     }
+
     public static class BracketLayoutSolver
     {
         public static BracketLayout Solve(
@@ -124,6 +128,7 @@ namespace Elevator.Core.Vertical
             return r;
         }
     }
+
     public static class VerticalSectionCalculator
     {
         public static VerticalGeometry Calculate(VerticalProjectData d, VerticalSource s)

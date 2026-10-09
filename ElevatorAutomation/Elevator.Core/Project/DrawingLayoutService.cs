@@ -1,20 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 namespace Elevator.Core.Project
 {
     public sealed class ViewBounds
     {
-        public DrawingViews View; public double MinX;
+        public DrawingViews View;
+        public double MinX;
         public double MinY;
         public double MaxX;
         public double MaxY;
     }
+
     public sealed class ViewPlacement
     {
-        public DrawingViews View; public double DeltaX;
+        public DrawingViews View;
+        public double DeltaX;
         public double DeltaY;
     }
+
     public static class DrawingLayoutService
     {
         // Top row Plan/MR, bottom row AA/BB; measured extents, no engineering WCS coordinates.

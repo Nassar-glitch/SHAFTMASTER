@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Reporting.Docx;
+
 namespace Elevator.Reporting.Figures
 {
     // F10 traction sheave (schematic, NTS): rope wrap with α dimensioned from the reeving geometry, T1 / T2 on the rope runs,
@@ -13,6 +14,7 @@ namespace Elevator.Reporting.Figures
         public const double F10SheaveX = 52;
         public const double F10SheaveY = 50;
         public const double F10SheaveR = 26;
+
         // Angular dimension: arc of radius r about c from a0 to a1 (math degrees, counter-clockwise, paper y down) with arrowheads and
         // text.
         static void AngleDim(
@@ -36,11 +38,13 @@ namespace Elevator.Reporting.Figures
             f.Arrowhead(arc[arc.Count - 1], tangent(a1, s), FigureLayer.Dimension);
             f.Text(text, labelAt, anchor, FigureLayer.Text, 2.5, false, tag + "-text", value);
         }
+
         static FigurePoint Polar(FigurePoint c, double r, double deg)
         {
             double t = deg * Math.PI / 180;
             return c + Pt(r * Math.Cos(t), -r * Math.Sin(t));
         }
+
         public static Figure TractionSheave(RopeTractionResult r)
         {
             var x = r.Inputs;
@@ -236,6 +240,7 @@ namespace Elevator.Reporting.Figures
             Finish(f, note.At.Y);
             return f;
         }
+
         static bool Positive(double? v)
         {
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value) && v.Value > 0;

@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core.Calculations
 {
     public sealed class StaticRopeTensions
@@ -8,6 +9,7 @@ namespace Elevator.Core.Calculations
         public double CarPerRopeN;
         public double CounterweightPerRopeN;
     }
+
     // Ideal rope tension equation only. Ratio 2 supports the independent DOCX fixture;
     // this does not implement a 2:1 anchorage topology or authorize its live drawings.
     public static class IdealStaticRopeTensions

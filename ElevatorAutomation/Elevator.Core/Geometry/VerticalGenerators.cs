@@ -1,12 +1,14 @@
 using System;
 using System.Linq;
 using System.Globalization;
+
 namespace Elevator.Core.Vertical
 {
     public static class BuildingVerticalGenerator
     {
         // 1000 mm is a drawing crop of the landing beyond the shaft, not building design width.
         public const double LandingDrawingExtent = 1000;
+
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             foreach (var f in g.Floors.Where(f => !f.IsRoof))
@@ -25,6 +27,7 @@ namespace Elevator.Core.Vertical
             g.Line("Building.MRFront", "Structure", s.RoomFrontX, g.RoofZ, s.RoomFrontX, g.CeilingZ);
         }
     }
+
     public static class ShaftVerticalGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -42,6 +45,7 @@ namespace Elevator.Core.Vertical
                 g.Box("Shaft.FrontPier." + (n++), "Concrete", 0, z, s.FrontWallThicknessMm, g.MRSlabUndersideZ);
         }
     }
+
     public static class LandingGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -68,6 +72,7 @@ namespace Elevator.Core.Vertical
             }
         }
     }
+
     public static class CarVerticalGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -97,6 +102,7 @@ namespace Elevator.Core.Vertical
             g.Note("Car.DetailStatus", "CAR FRAME / SHOES / SAFETY GEAR\\PDETAIL DEVELOPMENT REQUIRED", 2300, g.CarFloorZ + 1500);
         }
     }
+
     public static class CounterweightVerticalGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -117,12 +123,14 @@ namespace Elevator.Core.Vertical
                 g.CwBottomZ + d.CounterweightOverallHeightMm / 2);
         }
     }
+
     public static class CarGuideRailGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
         {
             Rail(g, s.CarRailProjectedEdges, "CarRails");
         }
+
         internal static void Rail(VerticalGeometry g, double[] edges, string name)
         {
             foreach (string physical in new[] { "Left", "Right" })
@@ -130,6 +138,7 @@ namespace Elevator.Core.Vertical
                     g.Line(name + "." + physical + ".Edge" + i, "Rail", edges[i], g.PitFloorZ, edges[i], g.MRSlabUndersideZ);
         }
     }
+
     public static class CWGuideRailGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -137,6 +146,7 @@ namespace Elevator.Core.Vertical
             CarGuideRailGenerator.Rail(g, s.CwRailProjectedEdges, "CWRails");
         }
     }
+
     public static class GuideRailBracketGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -154,6 +164,7 @@ namespace Elevator.Core.Vertical
             }
         }
     }
+
     public static class SuspensionRopeVerticalGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -168,6 +179,7 @@ namespace Elevator.Core.Vertical
             g.Line("Rope.CWDrop", "Rope", s.Section.CwDropX, g.CwTopZ, s.Section.CwDropX, g.RoofZ + s.Section.DeflectorZ);
         }
     }
+
     public static class PitGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -188,6 +200,7 @@ namespace Elevator.Core.Vertical
                 g.PitFloorZ + 500);
         }
     }
+
     public static class MachineRoomVerticalGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -199,6 +212,7 @@ namespace Elevator.Core.Vertical
                 g.CeilingZ + 300);
         }
     }
+
     public static class VerticalDimensionGenerator
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)
@@ -232,6 +246,7 @@ namespace Elevator.Core.Vertical
             g.Add("Dimension.OH", "Dimension", "Dimension", "PROJECT_DATUM", "OH <>", 0, g.HighestServedZ, 0, g.MRSlabUndersideZ, x + 700);
         }
     }
+
     public static class AnnotationLayoutEngine
     {
         public static void Generate(VerticalGeometry g, VerticalProjectData d, VerticalSource s)

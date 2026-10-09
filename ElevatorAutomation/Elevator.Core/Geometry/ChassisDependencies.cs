@@ -1,4 +1,5 @@
 using System;
+
 namespace Elevator.Core
 {
     public sealed class ChassisDependency
@@ -8,6 +9,7 @@ namespace Elevator.Core
         public LocalPoint[] Offsets;
         public double? CircleRadius;
     }
+
     public static class ChassisDependencies
     {
         public static double Datum(string reference, double car, double rear, double cw = Double.NaN)
@@ -26,6 +28,7 @@ namespace Elevator.Core
                     throw new ArgumentException("Unknown chassis datum: " + reference);
             }
         }
+
         public static LocalPoint Target(ChassisDependency d, int i, double center, double car, double rear, double cw = Double.NaN)
         {
             var p = d.Offsets[i];

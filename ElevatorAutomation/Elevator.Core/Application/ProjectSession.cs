@@ -4,6 +4,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Globalization;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Application
 {
     // Project session (ARCHITECTURE-PLAN P4): the open project, its file, the unsaved-changes state and the drawing options.
@@ -14,10 +15,12 @@ namespace Elevator.Core.Application
         public bool Dirty;
         public DrawingViews Views = DrawingViews.All;
         public bool Arrange = true;
+
         public ProjectSession(ElevatorProject project)
         {
             Project = project;
         }
+
         // A new project opens complete from config/presets.json (DESIGN-FLOW stage 2); every unlocked value follows the presets.
         // The audited counterweight reference pose and bracket source are kept from the reviewed example (seedPath).
         public static ElevatorProject NewProject(string seedPath, PresetLibrary presets, DesignContext context)
@@ -25,6 +28,7 @@ namespace Elevator.Core.Application
             var seed = ProjectJson.Deserialize(File.ReadAllText(seedPath));
             return ProjectPresets.CreateNew(presets, context, seed.Counterweight, seed.Rails.BracketSource);
         }
+
         public void Save(string path)
         {
             path = Path.GetFullPath(path);
@@ -41,6 +45,7 @@ namespace Elevator.Core.Application
             FilePath = path;
             Dirty = false;
         }
+
         public void Open(string path)
         {
             var p = ProjectJson.Deserialize(File.ReadAllText(path));
@@ -51,6 +56,7 @@ namespace Elevator.Core.Application
             FilePath = path;
             Dirty = false;
         }
+
         public void MoveIntermediate(string id, int delta)
         {
             var floors = Project.Building.Floors;
@@ -66,15 +72,20 @@ namespace Elevator.Core.Application
             Dirty = true;
         }
     }
+
     public sealed class FloorRow : INotifyPropertyChanged
     {
-        readonly ProjectSession session; public readonly FloorDefinition Floor; readonly Action changed;
+        readonly ProjectSession session;
+        public readonly FloorDefinition Floor;
+        readonly Action changed;
+
         public FloorRow(ProjectSession s, FloorDefinition f, Action callback)
         {
             session = s;
             Floor = f;
             changed = callback;
         }
+
         public string Name
         {
             get
@@ -87,6 +98,7 @@ namespace Elevator.Core.Application
                 Notify("Name");
             }
         }
+
         public string Height
         {
             get
@@ -110,6 +122,7 @@ namespace Elevator.Core.Application
                 Notify("Height");
             }
         }
+
         public bool Served
         {
             get
@@ -122,6 +135,7 @@ namespace Elevator.Core.Application
                 Notify("Served");
             }
         }
+
         public string Elevation
         {
             get
@@ -136,6 +150,7 @@ namespace Elevator.Core.Application
                 catch (ArgumentException) { return ""; }
             }
         }
+
         void Notify(string name)
         {
             session.Dirty = true;
@@ -143,11 +158,13 @@ namespace Elevator.Core.Application
                 PropertyChanged(this, new PropertyChangedEventArgs(name));
             changed();
         }
+
         public void Refresh()
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs("Elevation"));
         }
+
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }

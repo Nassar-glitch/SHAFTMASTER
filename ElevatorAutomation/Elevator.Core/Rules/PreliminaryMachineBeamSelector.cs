@@ -1,10 +1,12 @@
 using System;
+
 namespace Elevator.Core
 {
     public interface IMachineBeamSelector
     {
         MachineBeamSelection Select(double capacityKg, double spanMm);
     }
+
     public sealed class PreliminaryMachineBeamSelector : IMachineBeamSelector
     {
         public MachineBeamSelection Select(double capacityKg, double spanMm)
@@ -27,6 +29,7 @@ namespace Elevator.Core
             };
         }
     }
+
     public static class SuspensionProjectRules
     {
         public static void Validate(double? diameter, int? number)

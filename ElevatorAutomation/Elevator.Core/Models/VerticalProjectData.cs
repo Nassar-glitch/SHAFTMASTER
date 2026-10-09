@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace Elevator.Core.Vertical
 {
     // Experimental schema, deliberately independent of the validated ProjectInput schema.
@@ -23,6 +24,7 @@ namespace Elevator.Core.Vertical
         public string CarEnvelopeOffsetSource = "PROVISIONAL_V1_DRAWING_DEFAULT";
         public double? CWBottomAbovePitFloorAtHighestServedLandingMm;
         public double ProvisionalCWCalibrationMm = 300;
+
         public string CWAbsolutePositionStatus
         {
             get
@@ -32,6 +34,7 @@ namespace Elevator.Core.Vertical
                     : "PROVISIONAL_REFERENCE_INPUT_REQUIRED";
             }
         }
+
         public string CarReferenceFloorId;
         public double LevelingOffsetMm;
         public double RequestedBracketMaxSpacingMm; // Mandatory: no default.
@@ -42,6 +45,7 @@ namespace Elevator.Core.Vertical
         public string FloorDatumDefinition = "FFL = graphical slab top; R = coordinated MR slab top";
         public string FixtureLabel;
     }
+
     public sealed class VerticalFloor
     {
         public string FloorId;
@@ -50,6 +54,7 @@ namespace Elevator.Core.Vertical
         public bool IsRoof;
         public double FflZ;
     }
+
     public sealed class VerticalSource
     {
         public ElevatorParameters Plan;
@@ -71,6 +76,7 @@ namespace Elevator.Core.Vertical
         public string CodeDiameterRatioStatus;
         public string GovernorStatus;
     }
+
     public sealed class VerticalPrimitive
     {
         public string Id;
@@ -81,6 +87,7 @@ namespace Elevator.Core.Vertical
         public double[] Points;
         public double TextHeight = 40;
     }
+
     public sealed class BracketLayout
     {
         public List<double> Elevations = new List<double>();
@@ -91,6 +98,7 @@ namespace Elevator.Core.Vertical
         public string RailEndAdequacyStatus = "NOT_YET_EVALUABLE";
         public string RailJointDetailStatus = "NOT_YET_IMPLEMENTED";
     }
+
     public sealed class VerticalGeometry
     {
         public List<VerticalPrimitive> Entities = new List<VerticalPrimitive>();
@@ -112,6 +120,7 @@ namespace Elevator.Core.Vertical
         public string CWAbsolutePositionStatus;
         public string LayoutStatus = "PASS";
         public string CodeDiameterRatioStatus;
+
         public void Add(string id, string kind, string layer, string provenance, string text, params double[] points)
         {
             Entities.Add(new VerticalPrimitive
@@ -124,14 +133,17 @@ namespace Elevator.Core.Vertical
                 Points = points
             });
         }
+
         public void Line(string id, string layer, double x, double z, double x2, double z2)
         {
             Add(id, "Line", layer, "PROJECT_DERIVED", null, x, z, x2, z2);
         }
+
         public void Box(string id, string layer, double x, double z, double x2, double z2)
         {
             Add(id, "Box", layer, "PROJECT_DERIVED", null, x, z, x2, z2);
         }
+
         public void Note(string id, string text, double x, double z)
         {
             Add(id, "Text", "Annotation", "DRAWING_PRESENTATION", text, x, z);

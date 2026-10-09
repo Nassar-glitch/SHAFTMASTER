@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Globalization;
 using Elevator.Reporting.Docx;
+
 namespace Elevator.Reporting.Figures
 {
     // PNG rendering and text measurement for figures, supplied by the application (WPF in ShaftMaster: WpfFigureRasterizer).
@@ -12,15 +13,18 @@ namespace Elevator.Reporting.Figures
         void Initialise();
         byte[] Png(Figure f, double dpi);
     }
+
     // SVG (vector) renderer for Figure, and the Word image (PNG fallback from the rasterizer, with the SVG attached).
     // Text sizes are ISO cap heights; the em size is cap height / 0.72.
     public static class FigureRender
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         public const double CapRatio = 0.72;
+
         // Set by the application before reports are built; without it figures keep the default measure and have no PNG.
         public static IFigureRasterizer Rasterizer;
         static bool initialised;
+
         public static void Initialise()
         {
             if (initialised)
@@ -29,20 +33,25 @@ namespace Elevator.Reporting.Figures
             if (Rasterizer != null)
                 Rasterizer.Initialise();
         }
+
         static string F(double v)
         {
             return v.ToString("0.###", Inv);
         }
+
         public static string Dash(FigureLayer l)
         {
             return l.LineType == FigureLineType.Centre ? "6 1.2 0.6 1.2" : l.LineType == FigureLineType.Hidden ? "2.5 1.2" : null;
         }
+
         // SVG user unit = 0.1 mm: Word's SVG renderer spaces glyphs badly at very small font sizes in user units.
         public const double SvgUnitsPerMm = 10;
+
         static string U(double mm)
         {
             return (mm * SvgUnitsPerMm).ToString("0.##", Inv);
         }
+
         public static string Svg(Figure f)
         {
             var b = new StringBuilder();
@@ -158,12 +167,14 @@ namespace Elevator.Reporting.Figures
             b.Append("</svg>");
             return b.ToString();
         }
+
         public static byte[] Png(Figure f, double dpi = 300)
         {
             if (Rasterizer == null)
                 throw new InvalidOperationException("No figure rasterizer is set (FigureRender.Rasterizer).");
             return Rasterizer.Png(f, dpi);
         }
+
         // Word image: PNG fallback with the SVG attached (Word 2016+ svgBlip).
         public static DocxImage Image(Figure f)
         {

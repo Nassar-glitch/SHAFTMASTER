@@ -1,4 +1,5 @@
 using System.Linq;
+
 namespace Elevator.Core
 {
     public static class DoorRules

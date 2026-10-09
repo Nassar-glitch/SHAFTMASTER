@@ -2,11 +2,14 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.Vertical;
+
 namespace Elevator.Core.SectionAA
 {
     public sealed class SectionAAProject
     {
-        public int SchemaVersion = 1; public List<VerticalFloor> Floors = new List<VerticalFloor>(); public string DisplayFloorId;
+        public int SchemaVersion = 1;
+        public List<VerticalFloor> Floors = new List<VerticalFloor>();
+        public string DisplayFloorId;
         public double Pit = 1000;
         public double OH = 4200;
         public double BracketMaximum = 1500;
@@ -15,6 +18,7 @@ namespace Elevator.Core.SectionAA
         public string CWCalibrationStatus = "PROVISIONAL_SOURCE_REFERENCE_POSE";
         public string BracketSource = "PROJECT INPUT PENDING FUTURE CALCULATION SHEET";
     }
+
     public sealed class SectionAAGeometry
     {
         public double PitZ;
@@ -25,9 +29,11 @@ namespace Elevator.Core.SectionAA
         public double CWBottom;
         public double Travel;
         public BracketLayout Brackets;
-        public List<VerticalFloor> Floors; public string LayoutStatus = "PASS";
+        public List<VerticalFloor> Floors;
+        public string LayoutStatus = "PASS";
         public string RailEndAdequacy = "NOT_YET_EVALUABLE";
     }
+
     public static class SectionAACalculator
     {
         public static SectionAAGeometry Calculate(SectionAAProject d, double slab)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 namespace Elevator.Core
 {
     public sealed class DeflectorSheaveSelection
@@ -7,19 +8,23 @@ namespace Elevator.Core
         {
             get; set;
         }
+
         public double? PitchDiameterMm
         {
             get; set;
         }
+
         public string SelectionStatus
         {
             get; set;
         }
+
         public string RuleSource
         {
             get; set;
         }
     }
+
     public sealed class MachineRoomExtensions
     {
         public double Left;
@@ -27,6 +32,7 @@ namespace Elevator.Core
         public double Front;
         public double Rear;
     }
+
     public sealed class MachineRoomParameters
     {
         public MachineRoomExtensions Extensions;
@@ -36,9 +42,11 @@ namespace Elevator.Core
         public GovernorOffsetSelection Governor;
         public ReevingGeometry Reeving;
         public List<EngineeringRule> Rules;
+
         // CAD validation sets PASS only after the current view has been checked.
         public string LayoutStatus = "NOT YET EVALUATED";
         public string CodeDiameterRatioStatus = "NOT YET EVALUABLE";
+
         public double[] AvailableDeflectorPitchDiametersMm
         {
             get
@@ -47,12 +55,14 @@ namespace Elevator.Core
             }
         }
     }
+
     public sealed class GovernorOffsetSelection
     {
         public double? OffsetFromCarGuideAxisMm;
         public string SelectionStatus;
         public string RuleSource;
     }
+
     public sealed class ReevingGeometry
     {
         public double? TractionSheavePitchDiameterMm;
@@ -69,6 +79,7 @@ namespace Elevator.Core
         public double? RopeExitAngleDeg;
         public double? RequiredChassisElevationAdjustmentMm;
         public string WrapAngleStatus = "NOT YET EVALUABLE";
+
         public bool AllowDeflectorDiameterSubstitution
         {
             get
@@ -76,6 +87,7 @@ namespace Elevator.Core
                 return false;
             }
         }
+
         public string FutureOptimizationStrategy
         {
             get
@@ -85,12 +97,19 @@ namespace Elevator.Core
                     + "checks remain separate.";
             }
         }
+
         public string TractionVerificationResult = "NOT YET EVALUABLE - vertical reeving geometry and EN 81-50 calculation required";
     }
+
     public enum RequirementType
     {
-        Code, Manufacturer, Company, Project, EngineeringAssumption
+        Code,
+        Manufacturer,
+        Company,
+        Project,
+        EngineeringAssumption
     }
+
     public sealed class EngineeringRule
     {
         public string RuleId;

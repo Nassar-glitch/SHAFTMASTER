@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using Elevator.Core.Project;
+
 namespace Elevator.Core.Calculations
 {
     // Rope / traction inputs (Suspension page). All optional and nullable; a null field of an unlocked key takes its preset
@@ -19,12 +20,15 @@ namespace Elevator.Core.Calculations
         public double? BrakingRetardationMps2;
         public double? DeflectorMassKg;
         public string TractionLimitingMethod;
+
         // Undercut β chosen by the preset selection (UndercutAngleStepsDeg) while β is unlocked; null = the library preset.
         // It is not a user value: a user edit is stored in UndercutAngleDeg and locks β.
         public double? SelectedUndercutAngleDeg;
+
         // Balance factor q chosen by the preset selection (BalanceFactorSteps) while the counterweight is unlocked; null = the library q.
         public double? SelectedBalanceFactor;
     }
+
     public sealed class RopeTractionEffectiveInputs
     {
         public string RopeDesignation;
@@ -47,11 +51,13 @@ namespace Elevator.Core.Calculations
         public double? OverheadMm;
         public int? RopeCount;
     }
+
     // Geometry shared with the drawings: deflector (MachineRoomRules.SelectDeflector on TZ), reeving path and wrap angle
     // (MachineRoomSectionRules / ReevingSolver), served travel (ProjectFloors).
     public sealed class RopeTractionGeometry
     {
-        public bool Available; public string Problem;
+        public bool Available;
+        public string Problem;
         public double? TravelMm;
         public double? TzMm;
         public bool DeflectorPresent;
@@ -61,6 +67,7 @@ namespace Elevator.Core.Calculations
         public double? CarWidthMm;
         public double? CarDepthMm;
     }
+
     public sealed class RopeCheck
     {
         public string Id;
@@ -75,14 +82,17 @@ namespace Elevator.Core.Calculations
         public double? ActualValue;
         public bool? Ok; // null = computed requirement (no comparison)
     }
+
     public sealed class TractionPosition
     {
-        public string Name; public double T1N;
+        public string Name;
+        public double T1N;
         public double T2N;
         public double Ratio;
         public string T1Equation;
         public string T2Equation;
     }
+
     public sealed class TractionCaseResult
     {
         public string Id;
@@ -101,12 +111,14 @@ namespace Elevator.Core.Calculations
         public string FEquation;
         public List<TractionPosition> Positions = new List<TractionPosition>();
     }
+
     public sealed class RopeTractionOmission
     {
         public string Item;
         public string Reason;
         public string Kind;
     } // Kind: MISSING_INPUT, INVALID_INPUT, INVALID_GEOMETRY, NOT_APPLICABLE
+
     public sealed class RopeTractionResult
     {
         public string Status = "MISSING_INPUT";
@@ -127,11 +139,13 @@ namespace Elevator.Core.Calculations
         public double? Nequiv;
         public double? DtOverDr;
         public double? MdpKg;
+
         // Deflector Dp / d as a value only (DESIGN-FLOW 11a): not a check row; the smaller deflector enters Sf through Kp (EN 81-50 5.12).
         public double? DpOverDr;
         public List<RopeCheck> Checks = new List<RopeCheck>();
         public List<TractionCaseResult> Traction = new List<TractionCaseResult>();
         public List<RopeTractionOmission> Omissions = new List<RopeTractionOmission>();
+
         public bool AnyNotOk
         {
             get
@@ -139,6 +153,7 @@ namespace Elevator.Core.Calculations
                 return Checks.Any(c => c.Ok == false) || Traction.Any(t => !t.Ok);
             }
         }
+
         public bool HasResults
         {
             get
@@ -146,21 +161,26 @@ namespace Elevator.Core.Calculations
                 return Checks.Count > 0 || Traction.Count > 0;
             }
         }
+
         internal string LibraryHash;
     }
+
     public sealed class RopeTractionCalculationEngine
     {
         public const string RuleVersion = "EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1";
         public const double Gn = 9.81; // EN 81-50:2014 5.11.3: gn standard acceleration of free fall (m/s²)
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
         static string F(double v)
         {
             return v.ToString("0.###", Inv);
         }
+
         static string F2(double v)
         {
             return v.ToString("0.##", Inv);
         }
+
         static bool Positive(double? v)
         {
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value) && v.Value > 0;
@@ -184,6 +204,7 @@ namespace Elevator.Core.Calculations
             }
             catch (ArgumentException) { return null; }
         }
+
         public static RopeTractionGeometry Geometry(ElevatorProject p, DesignContext c)
         {
             var g = new RopeTractionGeometry();
@@ -311,6 +332,7 @@ namespace Elevator.Core.Calculations
                 }
             });
         }
+
         public static bool IsCurrent(RopeTractionResult r, ElevatorProject p, DesignContext c, PresetLibrary library)
         {
             return r != null
@@ -324,8 +346,10 @@ namespace Elevator.Core.Calculations
         // table (5.12.2.2). Planner decision A5: outside the table on the conservative side the edge value is used
         // (U β < 75° → value at 75°; V γ > 50° → value at 50°); the unsafe side is rejected by input validation.
         static readonly double[,] TableV = { { 35, 18.5 }, { 36, 16 }, { 38, 12 }, { 40, 10 }, { 42, 8 }, { 45, 6.5 }, { 50, 5 } };
+
         static readonly double[,] TableU =
             { { 75, 2.5 }, { 80, 3.0 }, { 85, 3.8 }, { 90, 5.0 }, { 95, 6.7 }, { 100, 10.0 }, { 105, 15.2 } };
+
         static double Interp(double[,] t, double x)
         {
             int n = t.GetLength(0);
@@ -338,6 +362,7 @@ namespace Elevator.Core.Calculations
                     return t[i, 1] + (t[i + 1, 1] - t[i, 1]) * (x - t[i, 0]) / (t[i + 1, 0] - t[i, 0]);
             return t[n - 1, 1];
         }
+
         public static double NequivTraction(string groove, double? betaDeg, double? gammaDeg)
         {
             if (groove == GrooveTypes.UndercutU)
@@ -350,11 +375,13 @@ namespace Elevator.Core.Calculations
                 throw new ArgumentException("V-groove angle below 35° is outside EN 81-50 Table 2.");
             return Interp(TableV, Math.Min(50, gammaDeg.Value));
         }
+
         // 5.12.2.3: Nequiv(p) = Kp·(Nps + 4·Npr), Kp = (Dt/Dp)^4.
         public static double KpFactor(double dt, double dp)
         {
             return Math.Pow(dt / dp, 4);
         }
+
         // 5.12.3, formula of Figure 10 (log = log10).
         public static double SafetyFactor8150(double dtOverDr, double nequiv)
         {
@@ -362,11 +389,15 @@ namespace Elevator.Core.Calculations
             double den = Math.Log10(77.09 * Math.Pow(dtOverDr, -2.894));
             return Math.Pow(10, 2.6834 - num / den);
         }
+
         // ---------- EN 81-50:2014 5.11.2.3 friction factor ----------
         public enum TractionCase
         {
-            Loading, Braking, Stalled
+            Loading,
+            Braking,
+            Stalled
         }
+
         public static double FrictionFactor(string groove, TractionCase k, double mu, double? betaDeg, double? gammaDeg)
         {
             double beta = (betaDeg ?? 0) * Math.PI / 180, gamma = (gammaDeg ?? 0) * Math.PI / 180;
@@ -376,6 +407,7 @@ namespace Elevator.Core.Calculations
                 return mu / Math.Sin(gamma / 2);
             return mu * 4 * (1 - Math.Sin(beta / 2)) / (Math.PI - beta - Math.Sin(beta)); // V-groove unhardened, loading / braking
         }
+
         static string FEquation(string groove, TractionCase k)
         {
             if (groove == GrooveTypes.UndercutU)
@@ -384,6 +416,7 @@ namespace Elevator.Core.Calculations
                 return "f = μ / sin(γ/2)";
             return "f = μ · 4 (1 − sin(β/2)) / (π − β − sin β)";
         }
+
         // 5.11.2.3.2 friction coefficients.
         public static double Mu(TractionCase k, double v)
         {
@@ -395,10 +428,12 @@ namespace Elevator.Core.Calculations
         {
             r.Omissions.Add(new RopeTractionOmission { Item = item, Kind = kind, Reason = reason });
         }
+
         public RopeTractionResult Calculate(ElevatorProject p, DesignContext c, PresetLibrary library)
         {
             return Calculate(p, c, library, null);
         }
+
         // Same calculation with the shared geometry already computed for this project and context (Geometry(p, c)); used by
         // the preset selection to avoid recomputing an identical geometry for every rope trial. Null computes it here.
         public RopeTractionResult Calculate(ElevatorProject p, DesignContext c, PresetLibrary library, RopeTractionGeometry geometry)
@@ -601,6 +636,7 @@ namespace Elevator.Core.Calculations
             Traction(r, g, x, P, Q, M, w, n, grooveProblem);
             return Finish(r);
         }
+
         void Traction(
             RopeTractionResult r,
             RopeTractionGeometry g,
@@ -814,6 +850,7 @@ namespace Elevator.Core.Calculations
                 r.Traction.Add(t);
             }
         }
+
         static void Close(TractionCaseResult t)
         {
             // Governing position: largest ratio for "≤" cases, smallest for "≥".
@@ -825,6 +862,7 @@ namespace Elevator.Core.Calculations
                 ? t.Positions.All(p => p.Ratio <= t.EFAlpha * (1 + 1e-12))
                 : t.Positions.All(p => p.Ratio >= t.EFAlpha * (1 - 1e-12));
         }
+
         static RopeTractionResult Finish(RopeTractionResult r)
         {
             r.Status = !r.HasResults
@@ -833,6 +871,7 @@ namespace Elevator.Core.Calculations
             return r;
         }
     }
+
     // EN 81-20:2014 5.4.2.1, Table 6: rated load and maximum available car area (linear interpolation; beyond 2500 kg add
     // 0.16 m² per extra 100 kg).
     public static class CarAreaRules
@@ -865,6 +904,7 @@ namespace Elevator.Core.Calculations
                 { 1600, 3.56 },
                 { 2000, 4.20 },
                 { 2500, 5.00 } };
+
         public static double? MaximumAvailableAreaM2(double ratedLoadKg)
         {
             if (Double.IsNaN(ratedLoadKg) || ratedLoadKg < 100)
@@ -878,6 +918,7 @@ namespace Elevator.Core.Calculations
                         + (Table6[i + 1, 1] - Table6[i, 1]) * (ratedLoadKg - Table6[i, 0]) / (Table6[i + 1, 0] - Table6[i, 0]);
             return Table6[n - 1, 1];
         }
+
         // Inverse of Table 6: the smallest rated load whose maximum available area is at least the given car area
         // (same linear interpolation; beyond 5.00 m² the 2500 kg rule). Rounded up to whole kilograms.
         public static double? MinimumRatedLoadKg(double areaM2)
@@ -903,6 +944,7 @@ namespace Elevator.Core.Calculations
             return Math.Ceiling(q - 1e-6);
         }
     }
+
     // Connects the rope / traction results to the machine-room code rules (MR-ROPE-MIN-001, MR-ROPE-001, MR-TRACTION-001).
     public static class RopeTractionRules
     {

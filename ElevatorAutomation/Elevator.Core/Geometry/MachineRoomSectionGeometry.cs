@@ -1,9 +1,12 @@
 using System;
+
 namespace Elevator.Core
 {
     public sealed class MachineRoomSectionGeometry
     {
-        public readonly MachineRoomSectionParameters P; public readonly ElevatorParameters Design;
+        public readonly MachineRoomSectionParameters P;
+        public readonly ElevatorParameters Design;
+
         private SectionReference R
         {
             get
@@ -11,15 +14,18 @@ namespace Elevator.Core
                 return P.Reference;
             }
         }
+
         public MachineRoomSectionGeometry(ElevatorParameters design)
         {
             Design = design;
             P = design.MachineRoomSection;
         }
+
         private double SupportX(double x)
         {
             return x + (x < -R.SourceSD / 2 ? P.RearSupportX - R.SourceRearSupportX : P.FrontSupportX - R.SourceFrontSupportX);
         }
+
         private double SlabX(double x)
         {
             double[] old = { -R.SourceCarRow - R.CarOpeningWidth / 2,
@@ -39,6 +45,7 @@ namespace Elevator.Core
                 return P.CwDropX;
             return x + (x < -R.SourceSD / 2 ? R.SourceSD - Design.SD : 0);
         }
+
         public LocalPoint Map(LocalPoint p, string role)
         {
             double x = p.X, y = p.Y;
@@ -89,6 +96,7 @@ namespace Elevator.Core
             }
             return new LocalPoint(x, y, p.Z);
         }
+
         public bool Flexible(string role)
         {
             return role == "slab"

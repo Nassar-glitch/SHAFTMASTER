@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace Elevator.Core.Calculations
 {
     // Optional canonical inputs. Null is unavailable; zero is only an explicit supplied value.
@@ -8,6 +9,7 @@ namespace Elevator.Core.Calculations
         public string Mode; // Basic / Advanced. Null legacy projects resolve without discarding data.
         public SafetyPitInputs SafetyPit; // Independent event workflow; null in older projects.
         public CarGuideForceInputs CarGuideForces; // Independent FF note workflow; no fabricated shoe spacing.
+
         // Independent rope / traction workflow (EN 81-20 5.5, EN 81-50 5.11/5.12); null in older projects.
         public RopeTractionInputs RopeTraction;
         public string LoadCase; // StaticRatedLoad1To1 only (no acceleration/braking factors).
@@ -16,6 +18,7 @@ namespace Elevator.Core.Calculations
         public double? MachineMassKg;
         public double? CarSideAdditionalSuspendedMassKg;
         public double? CounterweightSideAdditionalSuspendedMassKg;
+
         // Relative to calculated traction centre, never its contour or an inferred CG.
         public double? MachineCgOffsetXMm;
         public double? MachineCgOffsetYMm;
@@ -41,19 +44,23 @@ namespace Elevator.Core.Calculations
         public double? HangerCgOffsetYMm;
         public double? HangerCgOffsetZMm;
     }
+
     public sealed class CalculationIssue
     {
         public string Field;
         public string Message;
+
         public CalculationIssue()
         {
         }
+
         public CalculationIssue(string f, string m)
         {
             Field = f;
             Message = m;
         }
     }
+
     public sealed class BearingSeat
     {
         public string Id;
@@ -61,6 +68,7 @@ namespace Elevator.Core.Calculations
         public LocalPoint[] ContactBoundary;
         public LocalPoint Centre;
     }
+
     public sealed class ChassisMember
     {
         public string Id;
@@ -68,17 +76,21 @@ namespace Elevator.Core.Calculations
         public LocalPoint Front;
         public LocalPoint Rear;
     }
+
     public sealed class ChassisCalculationGeometry
     {
         public string Recipe = "Advanced";
+
         public ChassisGeometryProvenance Provenance
         {
             get; private set;
         }
+
         internal void BindSource(GeometrySourceSnapshot source)
         {
             Provenance = new ChassisGeometryProvenance(source, this);
         }
+
         public string Units = "mm";
         public string Axes = "X right; Y entrance to rear; Z above machine-room slab";
         public List<BearingSeat> Bearings = new List<BearingSeat>();
@@ -93,6 +105,7 @@ namespace Elevator.Core.Calculations
         public MachineRoomSectionParameters Section;
         public List<CalculationIssue> Issues = new List<CalculationIssue>();
     }
+
     public sealed class LoadNode
     {
         public string Id;
@@ -103,6 +116,7 @@ namespace Elevator.Core.Calculations
         public LocalPoint CoupleNmm;
         public bool AssumedLocation;
     }
+
     public sealed class MemberTransfer
     {
         public string LoadId;
@@ -112,10 +126,14 @@ namespace Elevator.Core.Calculations
         public LocalPoint FrontPointMm;
         public LocalPoint RearPointMm;
     }
+
     public sealed class BearingReaction
     {
-        public string Id; public LocalPoint PositionMm; public double UpwardN;
+        public string Id;
+        public LocalPoint PositionMm;
+        public double UpwardN;
     }
+
     public sealed class ChassisCalculationResult
     {
         public string Mode = "Advanced";
