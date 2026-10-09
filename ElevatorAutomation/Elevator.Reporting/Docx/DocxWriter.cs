@@ -100,19 +100,6 @@ namespace Elevator.Reporting.Docx
    double w,h;image.Fit(maxWidthMm,maxHeightMm,out w,out h);
    body.Append("<w:p><w:pPr>").Append(keepNext?"<w:keepNext/>":"").Append("<w:jc w:val=\"").Append(align).Append("\"/></w:pPr>").Append(Drawing(image,w,h,false)).Append("</w:p>");
   }
-  // Borderless band: image on the left, text right-aligned (either may be null).
-  public void ImageAndText(DocxImage image,double maxWidthMm,double maxHeightMm,string text,string runProperties)
-  {
-   if(image==null){if(!String.IsNullOrEmpty(text))Paragraph(text,null,runProperties);return;}
-   if(String.IsNullOrEmpty(text)){Image(image,maxWidthMm,maxHeightMm);return;}
-   double w,h;image.Fit(maxWidthMm,maxHeightMm,out w,out h);int left=(int)Math.Round(maxWidthMm*56.7)+120,right=9638-left;
-   body.Append("<w:tbl><w:tblPr><w:tblW w:w=\"9638\" w:type=\"dxa\"/><w:tblLayout w:type=\"fixed\"/><w:tblBorders>");
-   foreach(var side in new[]{"top","left","bottom","right","insideH","insideV"})body.Append("<w:").Append(side).Append(" w:val=\"nil\"/>");
-   body.Append("</w:tblBorders><w:tblCellMar><w:left w:w=\"0\" w:type=\"dxa\"/><w:right w:w=\"0\" w:type=\"dxa\"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w=\"").Append(left).Append("\"/><w:gridCol w:w=\"").Append(right).Append("\"/></w:tblGrid><w:tr>");
-   body.Append("<w:tc><w:tcPr><w:tcW w:w=\"").Append(left).Append("\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:spacing w:after=\"0\"/></w:pPr>").Append(Drawing(image,w,h,false)).Append("</w:p></w:tc>");
-   body.Append("<w:tc><w:tcPr><w:tcW w:w=\"").Append(right).Append("\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:spacing w:after=\"0\"/><w:jc w:val=\"right\"/></w:pPr>").Append(Runs(text,runProperties)).Append("</w:p></w:tc></w:tr></w:tbl>");
-   Paragraph("","TableGap");
-  }
   public static string Escape(string text)
   {
    if(text==null)return "";var b=new StringBuilder(text.Length);
@@ -215,7 +202,6 @@ namespace Elevator.Reporting.Docx
   }
   // Flow: equation lines and table rows may break across pages (headings still keep with their first line).
   public bool Flow;
-  public void PageBreak(){body.Append("<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>");}
   // widths: twentieths of a point (dxa); total ≤ 9638 for A4 with 20 mm margins.
   public void Table(string[] headers,IList<string[]> rows,int[] widths,ISet<int> boldColumns=null,IList<string> rowFills=null){Table(headers,rows,widths,boldColumns,rowFills,0);}
   // minRowHeightTwips > 0 gives body rows a minimum height (for example space to sign by hand).
