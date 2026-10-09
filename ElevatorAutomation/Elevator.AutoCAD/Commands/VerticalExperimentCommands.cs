@@ -52,7 +52,7 @@ namespace Elevator.AutoCAD
         }
         public static VerticalProjectData Edit(Document doc,VerticalProjectData data)
         {
-            var d=data==null?new VerticalProjectData():new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<VerticalProjectData>(VerticalExperimentDrawing.Json(data));var ed=doc.Editor;
+            var d=data==null?new VerticalProjectData():Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Deserialize<VerticalProjectData>(VerticalExperimentDrawing.Json(data));var ed=doc.Editor;
             if(d.Floors.Count==0)Setup(ed,d);
             else
             {

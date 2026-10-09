@@ -5,7 +5,7 @@ using SolidWorks.Interop.sldworks;using SolidWorks.Interop.swconst;
 public class BodyRecord {public string Name,Kind;public double[] BoundsMm;public double VolumeMm3;public int FaultCount;}
 public class BuildModel {
  static SldWorks sw;static ModelDoc2 model,construction;static PartDoc part;static Modeler kernel;static StepModelParameters p;static string partTemplate,previousActiveTitle;static bool ownsApplication;
- static List<BodyRecord> records=new List<BodyRecord>();static List<Body2> solids=new List<Body2>();static JavaScriptSerializer json=new JavaScriptSerializer{MaxJsonLength=int.MaxValue};
+ static List<BodyRecord> records=new List<BodyRecord>();static List<Body2> solids=new List<Body2>();static Elevator.Core.Serialization.IJsonSerializer json=Elevator.Core.Serialization.CoreJson.Create();
  static double M(double mm){return mm/1000;}
  static Body2 Primitive(string plane,double offset,double depth,Action<SketchManager> sketch){
   int err=0;construction=(ModelDoc2)sw.NewDocument(partTemplate,0,0,0);construction.ClearSelection2(true);

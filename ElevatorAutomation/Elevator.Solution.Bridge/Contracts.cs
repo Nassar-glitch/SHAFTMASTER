@@ -30,8 +30,8 @@ namespace Elevator.Solution.Bridge
     }
     public static class Wire
     {
-        public static string Json(object value){return new JavaScriptSerializer{MaxJsonLength=Int32.MaxValue}.Serialize(value);}
-        public static T Read<T>(string path){return new JavaScriptSerializer{MaxJsonLength=Int32.MaxValue}.Deserialize<T>(File.ReadAllText(path));}
+        public static string Json(object value){return Elevator.Core.Serialization.CoreJson.Create().Serialize(value);}
+        public static T Read<T>(string path){return Elevator.Core.Serialization.CoreJson.Create().Deserialize<T>(File.ReadAllText(path));}
         public static void Write(string path,object value){File.WriteAllText(path,Json(value));}
         public static string HashText(string value){using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(value))).Replace("-","");}
         public static string HashFile(string path){using(var sha=SHA256.Create())using(var s=File.OpenRead(path))return BitConverter.ToString(sha.ComputeHash(s)).Replace("-","");}

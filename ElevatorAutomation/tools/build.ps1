@@ -11,7 +11,7 @@ $out=[IO.Path]::GetFullPath($out).TrimEnd('\','/')
 foreach($dll in 'AcDbMgd.dll','AcCoreMgd.dll','AcMgd.dll'){if(-not (Test-Path -LiteralPath (Join-Path $AutoCADDir $dll))){throw "AutoCAD build dependency missing: $(Join-Path $AutoCADDir $dll). Pass -AutoCADDir."}}
 $env:DOTNET_CLI_TELEMETRY_OPTOUT='1';$env:DOTNET_NOLOGO='1'
 # The folder is passed with a trailing '/', never '\': a backslash before the closing quote would escape it.
-& dotnet build (Join-Path $root 'ElevatorAutomation.sln') -c $Configuration "-p:OutDir=$out/" "-p:AutoCADDir=$AutoCADDir" "-p:SolidWorksDir=$SolidWorksDir" -nologo -v:minimal
+& dotnet build (Join-Path $root 'ElevatorAutomation.sln') -c $Configuration "-p:BinDir=$out/" "-p:AutoCADDir=$AutoCADDir" "-p:SolidWorksDir=$SolidWorksDir" -nologo -v:minimal
 if($LASTEXITCODE){throw 'Build failed'}
 if(-not $SkipTests){
  foreach($test in 'RuleTests','MachineRoomRuleTests'){& (Join-Path $out "$test.exe") (Join-Path $root 'config\equipment-profile.json');if($LASTEXITCODE){throw "$test failed"}}

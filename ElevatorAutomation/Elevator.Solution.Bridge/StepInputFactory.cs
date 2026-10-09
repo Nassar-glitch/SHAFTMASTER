@@ -10,7 +10,7 @@ namespace Elevator.Solution.Bridge
             design=new ElevatorDesignEngine().Calculate(project,context,DrawingViews.All);
             if(!design.CanGenerate)throw new ArgumentException(String.Join("\n",design.Validation.Where(v=>v.BlocksGeneration).Select(v=>v.Message)));
             if(design.SectionAA==null||design.Plan==null||design.Plan.MachineRoomSection==null)throw new ArgumentException("The coordinated four-view design could not be calculated.");
-            var p=new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<StepModelParameters>(Wire.Json(reference));
+            var p=Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Deserialize<StepModelParameters>(Wire.Json(reference));
             var plan=design.Plan;var section=plan.MachineRoomSection;var aa=design.SectionAA;var mr=plan.MachineRoom;
             if(!section.HasCalculatedPath)throw new ArgumentException("The preliminary 3D workflow requires the reviewed two-sheave arrangement. Direct rope routing or TZ above 1100 mm needs a reviewed 3D arrangement before export.");
             p.SW=plan.SW;p.SD=plan.SD;p.CarWidth=plan.CarWidth;p.CarDepth=plan.CarDepth;p.CarFront=plan.CarFront;p.CarRow=plan.CarRow;p.CarDBG=plan.CarDbg;

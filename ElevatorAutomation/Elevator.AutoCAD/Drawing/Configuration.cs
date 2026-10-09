@@ -21,7 +21,7 @@ namespace Elevator.AutoCAD
             for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;
             return parent.FullName;
         }
-        public static T Read<T>(string file) { return new JavaScriptSerializer().Deserialize<T>(File.ReadAllText(Path.Combine(Root,"config",file))); }
-        public static void WriteJson(string file, object value) { var s=new JavaScriptSerializer();s.MaxJsonLength=Int32.MaxValue;File.WriteAllText(file,s.Serialize(value)); }
+        public static T Read<T>(string file) { return Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Deserialize<T>(File.ReadAllText(Path.Combine(Root,"config",file))); }
+        public static void WriteJson(string file, object value) { File.WriteAllText(file,Elevator.Core.Serialization.CoreJson.Create().Serialize(value)); }
     }
 }

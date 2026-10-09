@@ -1,6 +1,7 @@
 param([string[]]$Tier=@('1'),[string]$Bin='artifacts/bin',[switch]$NoBuild)
 # Test entry point (ARCHITECTURE-PLAN section 3; skeleton for P7). Calls the existing runners by tier:
-#   1  golden master, presets / rope / calculation-sheet / FF / safety-pit core suites (no AutoCAD, no Word);
+#   1  golden master, presets / rope / calculation-sheet / FF / safety-pit core suites, xUnit Core tests on net8.0 and net48
+#      (no AutoCAD, no Word);
 #   2  programmatic WPF suites;
 #   3  native AutoCAD, Word render, STEP-input and affected-regression suites.
 # Usage: ./tools/test.ps1 -Tier 1   or   ./tools/test.ps1 -Tier 1,2,3
@@ -51,6 +52,7 @@ foreach($n in $tiers){
    Suite 1 'sheet-core' {param($o) Run 'tests/solution/run-calculation-sheet.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
    Suite 1 'ff-core' {param($o) Run 'tests/solution/run-car-guide-force-core.ps1' @('-CandidateBin',$Bin,'-SkipBuild','-EvidenceDirectory',$o)}
    Suite 1 'safety-pit-core' {param($o) Run 'tests/solution/run-safety-pit-ui.ps1' @('-CandidateBin',$Bin,'-SkipBuild','-SkipUi','-EvidenceDirectory',$o)}
+   Suite 1 'xunit-core' {param($o) & (Join-Path $root 'tests/Elevator.Core.Tests/run-xunit.ps1') -OutDir $o;if($LASTEXITCODE){throw 'xUnit Core tests failed'}}
   }
   2{
    Suite 2 'presets-ui' {param($o) Run 'tests/solution/run-presets-ui.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}

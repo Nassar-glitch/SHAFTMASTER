@@ -17,7 +17,7 @@ namespace Elevator.Solution.Desktop
    try
    {
     if(!File.Exists(SettingsPath))return new CompanyReportSettings();
-    var s=new JavaScriptSerializer().Deserialize<CompanyReportSettings>(File.ReadAllText(SettingsPath))??new CompanyReportSettings();
+    var s=Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Deserialize<CompanyReportSettings>(File.ReadAllText(SettingsPath))??new CompanyReportSettings();
     if(s.LogoFile!=null&&(s.LogoFile!=Path.GetFileName(s.LogoFile)||!File.Exists(Path.Combine(SettingsDirectory,s.LogoFile))))s.LogoFile=null;
     return s;
    }
@@ -27,7 +27,7 @@ namespace Elevator.Solution.Desktop
   {
    Directory.CreateDirectory(SettingsDirectory);
    string temporary=SettingsPath+"."+Guid.NewGuid().ToString("N")+".tmp";
-   try{File.WriteAllText(temporary,new JavaScriptSerializer().Serialize(this));if(File.Exists(SettingsPath))File.Replace(temporary,SettingsPath,null);else File.Move(temporary,SettingsPath);}
+   try{File.WriteAllText(temporary,Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Serialize(this));if(File.Exists(SettingsPath))File.Replace(temporary,SettingsPath,null);else File.Move(temporary,SettingsPath);}
    finally{if(File.Exists(temporary))File.Delete(temporary);}
   }
   public string LogoPath{get{return LogoFile==null?null:Path.Combine(SettingsDirectory,LogoFile);}}

@@ -1,11 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Domain: project model, rules, geometry, calculations, presets / selection. -->
+  <!-- Domain: project model, rules, geometry, calculations, presets / selection. netstandard2.0 for portable use and tests
+       (net8.0, CI); net48 for the application, unchanged (JavaScriptSerializer). -->
   <PropertyGroup>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
     <OutputType>Library</OutputType>
     <AssemblyName>Elevator.Core</AssemblyName>
     <RootNamespace>Elevator.Core</RootNamespace>
+    <!-- Separate intermediate folders per target framework. -->
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
-  <ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <OutDir>$(ArtifactsRoot)netstandard2.0\Elevator.Core\</OutDir>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
 </Project>

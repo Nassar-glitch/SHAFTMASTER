@@ -12,7 +12,7 @@ cd ElevatorAutomation
 
 | Tier | Suites | Needs |
 |---|---|---|
-| 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core` | .NET Framework, Python 3 |
+| 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core`, `xunit-core` (tests/Elevator.Core.Tests on net8.0 and net48) | .NET Framework, .NET 8 runtime, Python 3 |
 | 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui` | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
 | 3 | `integration` (tests/integration/run-tier3.ps1: affected regressions, FF native / STEP integration, STEP input, native golden), `presets-native`, `sheet-word-render` | AutoCAD 2023, Microsoft Word, Python with PyMuPDF and python-docx, the local evidence folder `output/calculation-phase1` and the release `bin-shaftmaster-v01` (read only) |
 
@@ -66,6 +66,49 @@ Only values that are volatile by nature are normalised:
 6. **DOCX:** only the text of `document.xml`, the header and the footer is compared, not the package (part GUIDs, relationship IDs, `docProps`, images); figures are compared as SVG.
 
 Figure SVG depends on the fonts installed (text is measured with ISOCPEUR, Arial Narrow or Arial, the first one installed).
+
+## Tier 1: xUnit Core tests (`tests/Elevator.Core.Tests`, ARCHITECTURE-PLAN P2)
+
+`tests/Elevator.Core.Tests/run-xunit.ps1` (and `tools/test.ps1` suite `xunit-core`) runs the xUnit project on net8.0 (against the netstandard2.0 build of `Elevator.Core`) and on net48 (against the application's build). It contains:
+
+- **GoldenCoreTests:** the Core-level golden captures of `tests/golden/GoldenTests.cs` for all 36 fixtures plus the new project (round-trip project JSON, `results.json`, `fingerprints.json`), compared with the same approved files in `tests/golden/approved`. The calculation-sheet, Design Notes and figure captures need the WPF report code and stay in the console golden suite.
+- **ConsoleSuiteTests:** the rope / traction (60), FF (131) and safety / pit (117) console suites run unchanged inside xUnit; presets (160) on net48 only, because it needs the Design Notes and so the WPF calculation-sheet sources. The console runners stay until P7.
+- **SerializerParityTests** (net48): the evidence for the serializer decision below.
+
+CI (`.github/workflows/ci.yml`, not pushed yet): ubuntu-latest builds `Elevator.Core` for netstandard2.0 and runs the tests on net8.0; windows-latest builds Core and Bridge.
+
+### Serializer decision (P2)
+
+The contract is the output of `System.Web.Script.Serialization.JavaScriptSerializer`, which exists only on .NET Framework. Core reaches JSON only through `CoreJson` / `IJsonSerializer`:
+
+- **net48 (the application):** `JavaScriptSerializer` itself, with the same limits as before. Behaviour byte-identical by construction.
+- **netstandard2.0:** no default. `CoreJson.Use` chooses the serializer; today only the tests do, with `JavaScriptCompatibleJson` (a reimplementation of the JavaScriptSerializer rules).
+
+Evidence (net48, the compatible serializer against JavaScriptSerializer in the same process, texts compared after sorting object members):
+
+| Check | Result |
+|---|---|
+| Every character U+0000–U+FFFF in a string | identical |
+| Integers, decimals, enums, bool, null, char, Guid, DateTime, float | identical |
+| Number literals read back (int / long / decimal / double rules) | identical |
+| Project JSON: 36 fixtures, 36 approved round-trips, the DWG read-back, the example and the new project (read and write) | identical |
+| Configuration files (presets, reviewed context, chassis evidence, 3D reference, equipment profile) | identical |
+| Every calculation result, the shared design and the fingerprints of all 36 fixtures, computed with either serializer | identical |
+| Bridge contracts: 36 generation requests, 4 generation responses, 4 STEP parameter files | identical |
+| 199,955 random doubles | 157 normal doubles differ, 8 of 52 subnormals differ |
+
+**What differs:** only how a double is written, and only in the choice between 15 and 17 significant digits for the same value. .NET Framework's "R" format picks 15 digits when its own (not always correctly rounded) conversion reads them back as the same double; `JavaScriptCompatibleJson` decides with exact arithmetic. Example: JavaScriptSerializer writes `3.6455822429999998` where the compatible serializer writes `3.645582243`. The test asserts that every difference is of this kind. Identity is therefore not proven for every double, so the netstandard2.0 build does not use the compatible serializer by default.
+
+**Member order:** JavaScriptSerializer writes object members in reflection order, and that order is not stable even within one process (two serializations of the same object seconds apart can differ). Member order cannot be a byte criterion; all comparisons sort the members (as the golden captures do).
+
+### net8.0 against the approved files
+
+On net8.0, 17 of the 36 fixtures differ from the approved files, all in numbers only. The test accepts a file when every differing line is the same apart from its numbers, and all of them agree within 1e-12 relative; each accepted file is printed. Nothing else is tolerated, and net48 stays byte-exact. The two causes are outside the serializer:
+
+1. `double.ToString()` without a format: .NET Framework writes 15 significant digits, .NET Core 3.0+ the shortest round-trip form. This affects the FF detail texts built by string concatenation, e.g. `1571.42857142857` vs `1571.4285714285713` (23 lines).
+2. The last bit of some Math functions: `Sf8150` for `sweep-table6-q1000` is `20.263343160486862` on .NET Framework and `20.263343160486858` on .NET 8 (3 lines).
+
+Making Core's number formatting explicit (for example `G15`) would remove cause 1 without changing the .NET Framework output; that is a separate decision.
 
 ## Tier 3: integration (`tests/integration`)
 
