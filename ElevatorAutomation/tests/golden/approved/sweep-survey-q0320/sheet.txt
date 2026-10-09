@@ -1,0 +1,490 @@
+=== /word/document.xml
+Elevator Calculation Sheet
+Date
+2026-10-09
+Elevator system
+Geared traction elevator
+Rated load
+320 kg
+
+Design basis: EN 81-20:2014 and EN 81-50:2014.
+
+Name
+Signature
+Date
+Prepared by
+
+
+
+Checked by
+
+
+
+Approved by
+
+
+
+
+1  Calculation summary
+Calculation
+Key result
+P1–P4 machine-room bearing reactions
+P1 4.485 kN; P2 3.1 kN; P3 4.97 kN; P4 3.435 kN
+Suspension rope tensions
+Car side 7.554 kN; counterweight side 5.984 kN
+Suspension rope and traction checks
+Rope Sf 22.65 ≥ 12.56 OK; D/d OK; traction OK
+P5 safety-gear load per car guide rail
+7.7 kN per car guide rail
+P6 car-buffer reaction
+30.8 kN per buffer; 30.8 kN total
+P7 counterweight-buffer reaction
+24.4 kN per buffer; 24.4 kN total
+FF1 / FF2 car guide-rail forces
+FF1 0.629 kN; FF2 0.4 kN (design, per guide rail)
+
+2  Input data
+Input
+Value
+Rated load Q
+320 kg
+Shaft width
+1500 mm
+Shaft depth
+1800 mm
+Roping
+1:1
+Number of suspension ropes n
+4
+Car mass
+450 kg
+Counterweight mass
+610 kg
+Machine mass
+250 kg
+Guide-shoe spacing h
+2800 mm
+Rope designation
+8×19 Seale FC 1370/1770
+Rope nominal diameter d
+10 mm
+Rope minimum breaking load MBL
+44 kN
+Rope mass per metre w
+0.34 kg/m
+Traction sheave pitch diameter Dt
+520 mm
+Traction sheave groove
+Semi-circular / undercut
+Undercut angle β
+95°
+Groove angle γ
+30°
+Travelling cable mass per metre
+0.5 kg/m
+Rated speed v
+1 m/s
+Emergency braking retardation a
+0.5 m/s²
+Deflector sheave mass
+45 kg
+Traction limiting method
+Ropes slip (EN 81-20 5.5.3 c) 1))
+Overhead
+4200 mm
+
+
+Figure 1 — Shaft plan
+Dimensions in mm
+
+3  Machine-room bearing reactions P1–P4
+P1 to P4 are the vertical reactions at the four bearing seats of the machine chassis in the machine room. The total weight W of the suspended masses and the machine acts as one vertical load at the traction-sheave centre. W is shared between the front and rear bearing rows by their lever arms, and within each row between the left and right bearings by their lever arms.
+Masses
+Mass
+Value
+Rated load Q
+320 kg
+Car mass
+450 kg
+Counterweight mass
+610 kg
+Machine mass
+250 kg
+Total Σm
+1630 kg
+
+W = Σm × g = (320 + 450 + 610 + 250) kg × 9.81 m/s² = 15990.3 N
+Load position and bearing positions
+Machine-room axes in mm: +X to the right, +Y from the entrance towards the rear, +Z above the machine-room slab.
+Point
+Location
+X (mm)
+Y (mm)
+Z (mm)
+Load W
+Traction-sheave centre
+750
+1085
+1007.09
+P1
+right / rear
+1060.05
+1913.38
+531.58
+P2
+right / front
+1060.05
+-113.38
+531.58
+P3
+left / rear
+470.16
+1913.38
+531.58
+P4
+left / front
+470.16
+-113.38
+531.58
+
+Equations
+L = y(rear row) − y(front row) = 1913.38 − (-113.38) = 2026.75 mm
+a = y(W) − y(front row) = 1198.38 mm      b = y(rear row) − y(W) = 828.38 mm
+F(front) = W × b / L = 15990.3 × 828.38 / 2026.75 = 6535.57 N
+F(rear) = W × a / L = 15990.3 × 1198.38 / 2026.75 = 9454.73 N
+s(f) = x(P2) − x(P4) = 1060.05 − 470.16 = 589.89 mm
+P2 = F(front) × (x(W) − x(P4)) / s(f) = 6535.57 × 279.84 / 589.89 = 3100.4 N
+P4 = F(front) × (x(P2) − x(W)) / s(f) = 6535.57 × 310.05 / 589.89 = 3435.17 N
+s(r) = x(P1) − x(P3) = 1060.05 − 470.16 = 589.89 mm
+P1 = F(rear) × (x(W) − x(P3)) / s(r) = 9454.73 × 279.84 / 589.89 = 4485.22 N
+P3 = F(rear) × (x(P1) − x(W)) / s(r) = 9454.73 × 310.05 / 589.89 = 4969.51 N
+Results
+Bearing
+Location
+Reaction (N)
+Reaction (kN)
+P1
+right / rear
+4485.22
+4.485
+P2
+right / front
+3100.4
+3.1
+P3
+left / rear
+4969.51
+4.97
+P4
+left / front
+3435.17
+3.435
+ΣP
+
+15990.3
+15.99
+
+Positive values are upward (compressive) bearing reactions.
+
+Figure 2 — Machine-room bearing reactions P1–P4 — plan
+Dimensions in mm
+
+
+Figure 3 — Machine-room bearing reactions — free body
+Dimensions in mm
+NTS
+
+4  Suspension rope tensions
+Static rope tensions on the car side and the counterweight side under rated load, with r the roping ratio and n the number of ropes.
+T(car) = (Q + M(car)) × g / r = (320 + 450) kg × 9.81 m/s² / 1 = 7553.7 N
+T(cwt) = M(cwt) × g / r = 610 kg × 9.81 m/s² / 1 = 5984.1 N
+T(car) / n = 7553.7 / 4 = 1888.43 N      T(cwt) / n = 5984.1 / 4 = 1496.03 N
+Rope tension
+All ropes (N)
+All ropes (kN)
+Per rope (N)
+Car side
+7553.7
+7.554
+1888.43
+Counterweight side
+5984.1
+5.984
+1496.03
+
+
+Figure 4 — Suspension — 1:1 roping and rope tensions
+Dimensions in mm
+NTS
+
+5  Suspension rope and traction checks
+Suspension ropes and traction of the 1:1 rope drive with deflector sheave (EN 81-20:2014 5.5; EN 81-50:2014 5.11 and 5.12).
+Quantity
+Symbol
+Value
+Travel height
+Htr
+12 m
+Suspended rope length (travel + overhead)
+H
+16.2 m
+Deflector sheave pitch diameter
+Dp
+400 mm
+Angle of wrap on the traction sheave
+α
+154.41°
+Reduced mass of the deflector sheave (m/2)
+mDP
+22.5 kg
+
+Rope checks
+Tmax = ((P + Q) / n + H · w) · gn = ((450 + 320) / 4 + 16.2 × 0.34) × 9.81 = 1942.46 N
+Sf = MBL / Tmax = 44000 / 1942.46 = 22.65
+Nequiv(t) = 6.7 (EN 81-50 Table 2, Semi-circular / undercut, β = 95°)
+Kp = (Dt / Dp)^4 = (520 / 400)^4 = 2.8561;   Nequiv(p) = Kp · (Nps + 4 · Npr) = 2.8561 × (1 + 4 × 0) = 2.8561
+Nequiv = Nequiv(t) + Nequiv(p) = 9.5561
+Sf(EN 81-50) = 10^(2.6834 − log(695.85·10⁶ · Nequiv / (Dt/d)^8.567) / log(77.09 · (Dt/d)^−2.894)), Dt/d = 52  →  Sf(EN 81-50) = 12.56
+Sf required = max(12; 12.56) = 12.56
+Ftermination ≥ 0.8 × MBL = 0.8 × 44 = 35.2 kN
+Check
+Clause
+Equation
+Required
+Actual
+Result
+Nominal rope diameter
+EN 81-20 5.5.1.2 a)
+d ≥ 8 mm
+≥ 8 mm
+10 mm
+OK
+Number of ropes
+EN 81-20 5.5.1.3
+n ≥ 2
+≥ 2
+4
+OK
+Traction sheave D/d
+EN 81-20 5.5.2.1
+Dt / d ≥ 40
+≥ 40
+52
+OK
+Rope safety factor
+EN 81-20 5.5.2.2; EN 81-50 5.12
+Sf = MBL / Tmax ≥ max(12; Sf(EN 81-50))
+≥ 12.56
+22.65
+OK
+Rope termination strength
+EN 81-20 5.5.2.3
+Ftermination ≥ 0.8 × MBL
+0.8 × MBL = 35.2 kN
+MBL = 44 kN
+Required strength
+
+Traction
+T1 / T2 ≤ e^(f·α) for car loading and emergency braking;   T1 / T2 ≥ e^(f·α) for the stalled condition (EN 81-50 5.11.2.1)
+α = 154.41° = 2.695 rad;   gn = 9.81 m/s²
+Car loading (125 % Q) — EN 81-50 5.11.2.2.1
+μ = 0.1
+f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ) = 0.1972
+e^(f·α) = e^(0.1972 × 2.695) = 1.702
+Car at the lowest landing:
+   T1 = (P + 1.25 Q) · gn + MSRcar · gn = (450 + 1.25 × 320) × 9.81 + 22.032 × 9.81 = 8554.63 N
+   T2 = Mcwt · gn = 610 × 9.81 = 5984.1 N
+Position
+T1 (N)
+T2 (N)
+T1 / T2
+Required
+Result
+Car at the lowest landing
+8554.63
+5984.1
+1.43
+≤ 1.702
+OK
+
+Emergency braking — EN 81-50 5.11.2.2.2
+μ = 0.1 / (1 + v/10) = 0.1 / (1 + 1/10) = 0.0909
+f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ) = 0.1793
+e^(f·α) = e^(0.1793 × 2.695) = 1.621
+Rated load, lowest landing, retarding downwards:
+   T1 = (P + Q) · (gn + a) + MSRcar · (gn + a) = (450 + 320) × (9.81 + 0.5) + 22.032 × (9.81 + 0.5) = 8165.85 N
+   T2 = Mcwt · (gn − a) − mDP · a = 610 × (9.81 − 0.5) − 22.5 × 0.5 = 5667.85 N
+Empty car, highest landing, retarding upwards:
+   T1 = Mcwt · (gn + a) + MSRcwt · (gn + a) + mDP · a = 610 × (9.81 + 0.5) + 22.032 × (9.81 + 0.5) + 22.5 × 0.5 = 6527.5 N
+   T2 = (P + MTrav) · (gn − a) = (450 + 3) × (9.81 − 0.5) = 4217.43 N
+Position
+T1 (N)
+T2 (N)
+T1 / T2
+Required
+Result
+Rated load, lowest landing, retarding downwards
+8165.85
+5667.85
+1.441
+≤ 1.621
+OK
+Empty car, highest landing, retarding upwards
+6527.5
+4217.43
+1.548
+≤ 1.621
+OK
+
+Car stalled (counterweight on buffers) — EN 81-50 5.11.2.2.3
+μ = 0.2
+f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ) = 0.3944
+e^(f·α) = e^(0.3944 × 2.695) = 2.895
+Empty car at the highest position:
+   T1 = (P + MTrav) · gn = (450 + 3) × 9.81 = 4443.93 N
+   T2 = MSRcwt · gn = 22.032 × 9.81 = 216.13 N
+Position
+T1 (N)
+T2 (N)
+T1 / T2
+Required
+Result
+Empty car at the highest position
+4443.93
+216.13
+20.561
+≥ 2.895
+OK
+
+
+Figure 5 — Traction sheave — wrap angle and groove
+Dimensions in mm
+NTS
+
+6  Safety-gear and buffer loads P5–P7
+Item
+Value
+Car safety gear
+Progressive
+Car guide rails
+2
+Car buffers
+1
+Counterweight buffers
+1
+
+P5 — Safety-gear load per car guide rail
+P5 is the vertical load transmitted to each car guide rail when the progressive safety gear stops the car with rated load.
+m(car) = Q + M(car) = 320 + 450 = 770 kg
+P5 = m(car) × 10 N/kg = 770 kg × 10 N/kg = 7700 N per car guide rail
+Quantity
+Value
+Event mass m(car)
+770 kg
+P5 per car guide rail
+7700 N (7.7 kN)
+
+
+Figure 6 — Progressive safety gear — P5 on the car guide rails
+Dimensions in mm
+NTS
+
+P6 — Car-buffer reaction
+P6 is the vertical reaction on the pit floor under the car buffers when the car with rated load strikes the buffers. The total acts on all car buffers together; the per-buffer value acts on each buffer.
+m(car) = Q + M(car) = 320 + 450 = 770 kg
+P6(total) = m(car) × max(40, 4 × 9.81) N/kg = 770 kg × 40 N/kg = 30800 N
+P6(per buffer) = P6(total) / n = 30800 / 1 = 30800 N
+Quantity
+Value
+Event mass m(car)
+770 kg
+Number of buffers n
+1
+P6 per buffer
+30800 N (30.8 kN)
+P6 total
+30800 N (30.8 kN)
+
+P7 — Counterweight-buffer reaction
+P7 is the vertical reaction on the pit floor under the counterweight buffers when the counterweight strikes the buffers. The total acts on all counterweight buffers together; the per-buffer value acts on each buffer.
+m(cwt) = 610 kg
+P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 610 kg × 40 N/kg = 24400 N
+P7(per buffer) = P7(total) / n = 24400 / 1 = 24400 N
+Quantity
+Value
+Event mass m(cwt)
+610 kg
+Number of buffers n
+1
+P7 per buffer
+24400 N (24.4 kN)
+P7 total
+24400 N (24.4 kN)
+
+
+Figure 7 — Pit buffer loads P6 / P7 — pit section
+Dimensions in mm
+NTS
+
+7  Car guide-rail forces FF1 / FF2
+FF1 and FF2 are the horizontal forces on the car guide rails from rated load distributed irregularly in the car. FF1 acts along the car-rail line, in the car-width direction. FF2 acts perpendicular to the car-rail line, in the car-depth direction. Both are forces per guide rail at one guide-shoe level.
+h is the vertical centre-to-centre distance between the upper and lower car guide shoes. W and D are the internal car width and depth.
+Input
+Value
+Rated load Q
+320 kg
+Internal car width W
+1100 mm
+Internal car depth D
+1400 mm
+Guide-shoe spacing h
+2800 mm
+
+Equations
+FF1 = Q × 10 N/kg × W / (4 h) = 320 × 10 × 1100 / (4 × 2800) = 314.29 N
+FF1(design) = 2 × FF1 = 2 × 314.29 = 628.57 N
+FF2 = Q × 10 N/kg × D / (8 h) = 320 × 10 × 1400 / (8 × 2800) = 200 N
+FF2(design) = 2 × FF2 = 2 × 200 = 400 N
+Results
+Force
+Direction
+FF (N)
+FF design (N)
+FF design (kN)
+FF1
+Along the car-rail line (car width)
+314.29
+628.57
+0.629
+FF2
+Perpendicular to the car-rail line (car depth)
+200
+400
+0.4
+
+Values per guide rail at one guide-shoe level.
+
+Figure 8 — Car guide-rail forces FF1 / FF2 — load cases (plan)
+Dimensions in mm
+
+
+Figure 9 — Guide-shoe forces — front and side elevations
+Dimensions in mm
+NTS
+
+
+Figure 10 — Car guide rail T70/65/9 — section
+Dimensions in mm
+NTS
+
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Elevator Calculation Sheet
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

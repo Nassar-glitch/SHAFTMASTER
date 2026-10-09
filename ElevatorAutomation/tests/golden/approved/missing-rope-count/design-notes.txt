@@ -1,0 +1,20 @@
+=== /word/document.xml
+Warnings
+•  Traction and the EN 81-50 safety factor were not calculated: TZ 1200 mm is outside the deflector selection range 520–1100 mm. Keep TZ at 1100 mm or less.
+•  Car available area 2.31 m² exceeds the maximum 1.36 m² for 480 kg (EN 81-20 Table 6). Use a rated load of at least 955 kg, or reduce the car to ≤ 1.36 m².
+Recommendations
+•  Number of ropes not calculated: Rope count not provided.
+•  Enter the rope count to check rope safety factor (EN 81-20 5.5.2.2; EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+Project
+Golden G - no rope count
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

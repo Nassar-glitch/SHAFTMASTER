@@ -1,0 +1,122 @@
+=== /word/document.xml
+Elevator Calculation Sheet
+Project
+Golden F - malformed values
+Date
+2026-10-09
+Elevator system
+Geared traction elevator
+
+Design basis: EN 81-20:2014 and EN 81-50:2014.
+
+Name
+Signature
+Date
+Prepared by
+
+
+
+Checked by
+
+
+
+Approved by
+
+
+
+
+1  Calculation summary
+Calculation
+Key result
+Suspension rope and traction checks
+D/d OK
+P7 counterweight-buffer reaction
+14.8 kN per buffer; 29.6 kN total
+
+2  Input data
+Input
+Value
+Counterweight mass
+740 kg
+Rope designation
+8×19 Seale FC 1370/1770
+Rope nominal diameter d
+8 mm
+Rope minimum breaking load MBL
+28.1 kN
+Traction sheave pitch diameter Dt
+520 mm
+
+
+Figure 1 — Shaft plan
+Dimensions in mm
+
+3  Suspension rope and traction checks
+Suspension ropes and traction of the 1:1 rope drive without deflector sheave (EN 81-20:2014 5.5; EN 81-50:2014 5.11 and 5.12).
+Rope checks
+Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN
+Check
+Clause
+Equation
+Required
+Actual
+Result
+Nominal rope diameter
+EN 81-20 5.5.1.2 a)
+d ≥ 8 mm
+≥ 8 mm
+8 mm
+OK
+Traction sheave D/d
+EN 81-20 5.5.2.1
+Dt / d ≥ 40
+≥ 40
+65
+OK
+Rope termination strength
+EN 81-20 5.5.2.3
+Ftermination ≥ 0.8 × MBL
+0.8 × MBL = 22.48 kN
+MBL = 28.1 kN
+Required strength
+
+4  Safety-gear and buffer loads P5–P7
+Item
+Value
+Counterweight buffers
+2
+
+P7 — Counterweight-buffer reaction
+P7 is the vertical reaction on the pit floor under the counterweight buffers when the counterweight strikes the buffers. The total acts on all counterweight buffers together; the per-buffer value acts on each buffer.
+m(cwt) = 740 kg
+P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 740 kg × 40 N/kg = 29600 N
+P7(per buffer) = P7(total) / n = 29600 / 2 = 14800 N
+Quantity
+Value
+Event mass m(cwt)
+740 kg
+Number of buffers n
+2
+P7 per buffer
+14800 N (14.8 kN)
+P7 total
+29600 N (29.6 kN)
+
+
+Figure 2 — Pit buffer loads P6 / P7 — pit section
+Dimensions in mm
+NTS
+
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Elevator Calculation Sheet
+Project
+Golden F - malformed values
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

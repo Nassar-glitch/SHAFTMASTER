@@ -1,0 +1,14 @@
+=== /word/document.xml
+Notes
+•  Deflector pitch diameter 250 mm gives D/d = 25 for 10 mm ropes; EN 81-20 5.5.2.1 requires D/d ≥ 40 for pulleys (≥ 400 mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

@@ -1,0 +1,170 @@
+=== /word/document.xml
+Elevator Calculation Sheet
+Project
+Golden D - missing masses and pit
+Date
+2026-10-09
+Elevator system
+Geared traction elevator
+Rated load
+480 kg
+
+Design basis: EN 81-20:2014 and EN 81-50:2014.
+
+Name
+Signature
+Date
+Prepared by
+
+
+
+Checked by
+
+
+
+Approved by
+
+
+
+
+1  Calculation summary
+Calculation
+Key result
+Suspension rope and traction checks
+D/d OK
+FF1 / FF2 car guide-rail forces
+FF1 2.2 kN; FF2 2.1 kN (design, per guide rail)
+
+2  Input data
+Input
+Value
+Rated load Q
+480 kg
+Shaft width
+1500 mm
+Shaft depth
+2500 mm
+Guide-shoe spacing h
+1200 mm
+Rope designation
+8×19 Seale FC 1370/1770
+Rope nominal diameter d
+8 mm
+Rope minimum breaking load MBL
+28.1 kN
+Traction sheave pitch diameter Dt
+520 mm
+
+
+Figure 1 — Shaft plan
+Dimensions in mm
+
+3  Suspension rope and traction checks
+Suspension ropes and traction of the 1:1 rope drive with deflector sheave (EN 81-20:2014 5.5; EN 81-50:2014 5.11 and 5.12).
+Quantity
+Symbol
+Value
+Travel height
+Htr
+12.5 m
+Suspended rope length (travel + overhead)
+H
+16.7 m
+
+Rope checks
+Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN
+Check
+Clause
+Equation
+Required
+Actual
+Result
+Nominal rope diameter
+EN 81-20 5.5.1.2 a)
+d ≥ 8 mm
+≥ 8 mm
+8 mm
+OK
+Number of ropes
+EN 81-20 5.5.1.3
+n ≥ 2
+≥ 2
+6
+OK
+Traction sheave D/d
+EN 81-20 5.5.2.1
+Dt / d ≥ 40
+≥ 40
+65
+OK
+Rope termination strength
+EN 81-20 5.5.2.3
+Ftermination ≥ 0.8 × MBL
+0.8 × MBL = 22.48 kN
+MBL = 28.1 kN
+Required strength
+
+4  Car guide-rail forces FF1 / FF2
+FF1 and FF2 are the horizontal forces on the car guide rails from rated load distributed irregularly in the car. FF1 acts along the car-rail line, in the car-width direction. FF2 acts perpendicular to the car-rail line, in the car-depth direction. Both are forces per guide rail at one guide-shoe level.
+h is the vertical centre-to-centre distance between the upper and lower car guide shoes. W and D are the internal car width and depth.
+Input
+Value
+Rated load Q
+480 kg
+Internal car width W
+1100 mm
+Internal car depth D
+2100 mm
+Guide-shoe spacing h
+1200 mm
+
+Equations
+FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 1100 / (4 × 1200) = 1100 N
+FF1(design) = 2 × FF1 = 2 × 1100 = 2200 N
+FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2100 / (8 × 1200) = 1050 N
+FF2(design) = 2 × FF2 = 2 × 1050 = 2100 N
+Results
+Force
+Direction
+FF (N)
+FF design (N)
+FF design (kN)
+FF1
+Along the car-rail line (car width)
+1100
+2200
+2.2
+FF2
+Perpendicular to the car-rail line (car depth)
+1050
+2100
+2.1
+
+Values per guide rail at one guide-shoe level.
+
+Figure 2 — Car guide-rail forces FF1 / FF2 — load cases (plan)
+Dimensions in mm
+
+
+Figure 3 — Guide-shoe forces — front and side elevations
+Dimensions in mm
+NTS
+
+
+Figure 4 — Car guide rail T70/65/9 — section
+Dimensions in mm
+NTS
+
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Elevator Calculation Sheet
+Project
+Golden D - missing masses and pit
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

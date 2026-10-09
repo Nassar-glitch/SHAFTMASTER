@@ -1,0 +1,451 @@
+{
+  "CarGuideForces": {
+    "CapacityKg": 1000,
+    "Details": [
+      "FF1 base = 1000 kg × 10 N/kg × 1100 mm / (4 × 2800 mm) = 982.142857142857 N; design = base × 2 = 1964.28571428571 N.",
+      "FF2 base = 1000 kg × 10 N/kg × 1400 mm / (8 × 2800 mm) = 625 N; design = base × 2 = 1250 N.",
+      "Q: rated capacity kg; internal cabin width/depth: shared Plan.Cabin.Inner faces in mm; h: the note\u0027s Vertical Guide Shoe Distance = vertical centre-to-centre distance between the upper and lower car guide shoes in mm (sliding shoes: mid-length of the guiding insert; roller guides: roller axle centre). Manual input with no default; the application has no car-frame/shoe geometry.",
+      "User-approved design interpretation (2026-10-07; basis EN 81-50:2014 Annex C.2.1, informative; not certification): FF1 = Fy, along the car-rail line (project car-width direction), on the rail blade tip, bending the rail about x-x. FF2 = Fx, perpendicular to the rail line (car-depth direction), on the blade side, bending the rail about y-y. Each value is the horizontal force per guide rail at one guide-shoe level (equal and opposite at the upper and lower shoes): no division by rail or shoe count and no group sum. Valid for two car guide rails with a centrally guided/suspended car. Not covered: normal running (k2), car-sill loading (Fs), guide-rail stress/deflection/buckling check.",
+      "Irregular rated-load distribution inside car. No car/CW/machine mass, rope tension, roping ratio or P1–P7 load added. The adopted 10 N/kg is not replaced with g = 9.81. No guide strength or connection verification."
+    ],
+    "FF1BaseN": 982.14285714285711,
+    "FF1DesignN": 1964.2857142857142,
+    "FF2BaseN": 625,
+    "FF2DesignN": 1250,
+    "GuideShoeSpacingMm": 2800,
+    "InputFingerprint": "8AE0747CAB8F0972DACAD0CA19143156412D051FE5C53386154B8DFC56BBA544",
+    "InternalDepthMm": 1400,
+    "InternalWidthMm": 1100,
+    "Issues": [],
+    "RuleBasis": "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx, Third: irregular load distribution inside car, zero-based descendant paragraphs 77–87. FF1 = Q × 10 × internal width / (4h); FF2 = Q × 10 × internal depth / (8h); design multiplier 2 applied once. Adopted note rules, not independent standards/manufacturer certification.",
+    "RuleVersion": "GearboxNoteCarGuideForces-v1",
+    "Status": "CALCULATED_UNDER_NOTE_ASSUMPTIONS"
+  },
+  "Chassis": {
+    "Assumptions": [
+      "Simplified static vertical distribution at the assumed machine load reference.",
+      "Total vertical load applied once at native traction-sheave centre. Not a measured machine CG. No separate rope/sheave actions or assembly CGs added.",
+      "Declared two-stage sharing: front/rear shares by longitudinal lever arms, then front P4/P2 and rear P3/P1 by actual transverse lever arms at the same X station. This additional sharing assumption makes four reactions determinate; it is not a stiffness or structural verification.",
+      "Optional blank side additions are not included; supplied effective masses are counted once, including compensation assigned to that side. Optional chassis/hanger mass is counted only when included; no automatic member weights without full properties/lengths. Rope tensions are separate informational results and are not added to the resultant again."
+    ],
+    "CarBundleTensionN": 20601,
+    "CarPerRopeTensionN": 3433.5,
+    "CounterweightBundleTensionN": 15696,
+    "CounterweightPerRopeTensionN": 2616,
+    "InputFingerprint": "2C5A39056A3A4047AA50DB395FE2C80DA60C176071A262FA517FC222F71ABE5F",
+    "Issues": [],
+    "Loads": [
+      {
+        "AssumedLocation": true,
+        "CoupleNmm": {
+          "X": 0,
+          "Y": 0,
+          "Z": 0
+        },
+        "ForceN": {
+          "X": 0,
+          "Y": 0,
+          "Z": -40711.5
+        },
+        "Id": "SimplifiedVerticalResultant",
+        "Kind": null,
+        "PositionMm": {
+          "X": 749.99999999999977,
+          "Y": 1085,
+          "Z": 1067.0914284303581
+        },
+        "Source": "Native traction-sheave centre used as the user-accepted assumed machine load reference, not measured CG."
+      }
+    ],
+    "MassCompositionKg": {
+      "Chassis assembly (not included)": 0,
+      "Counterweight": 1600,
+      "Effective CW-side additions / compensation (not included)": 0,
+      "Effective car-side additions / compensation (not included)": 0,
+      "Empty car": 1100,
+      "Hanger assembly (not included)": 0,
+      "Machine": 450,
+      "Rated capacity": 1000
+    },
+    "Mode": "Basic",
+    "ModelVersion": "TwoStageVerticalMachineDatum-v1",
+    "MomentXResidualNmm": -8.1956386566162109E-08,
+    "MomentYResidualNmm": 3.7252902984619141E-09,
+    "Reactions": [
+      {
+        "Id": "P1",
+        "PositionMm": {
+          "X": 1060.0535097030511,
+          "Y": 1913.377002083344,
+          "Z": 531.57514168870694
+        },
+        "UpwardN": 11419.421055325713
+      },
+      {
+        "Id": "P2",
+        "PositionMm": {
+          "X": 1060.0535097030522,
+          "Y": -113.37700208334707,
+          "Z": 531.57514168870694
+        },
+        "UpwardN": 7893.6643167325274
+      },
+      {
+        "Id": "P3",
+        "PositionMm": {
+          "X": 470.16198363676182,
+          "Y": 1913.3770020833513,
+          "Z": 531.57514168870694
+        },
+        "UpwardN": 12652.432371393084
+      },
+      {
+        "Id": "P4",
+        "PositionMm": {
+          "X": 470.16198363676057,
+          "Y": -113.37700208334712,
+          "Z": 531.57514168870694
+        },
+        "UpwardN": 8745.9822565486738
+      }
+    ],
+    "SimplifiedGeometry": {
+      "FrontLoadFromLeftMm": 279.83801636323921,
+      "FrontLoadN": 16639.6465732812,
+      "FrontLoadToRightMm": 310.05350970305244,
+      "FrontRowY": -113.37700208334712,
+      "FrontTransverseSpanMm": 589.89152606629159,
+      "LoadFromFrontMm": 1198.3770020833472,
+      "LoadReference": {
+        "X": 749.99999999999977,
+        "Y": 1085,
+        "Z": 1067.0914284303581
+      },
+      "LoadToRearMm": 828.37700208335127,
+      "LongitudinalSpanMm": 2026.7540041666985,
+      "RearLoadFromLeftMm": 279.83801636323795,
+      "RearLoadN": 24071.8534267188,
+      "RearLoadToRightMm": 310.0535097030513,
+      "RearRowY": 1913.3770020833513,
+      "RearTransverseSpanMm": 589.89152606628932
+    },
+    "Status": "CALCULATED_UNDER_ASSUMPTIONS",
+    "TotalMassKg": 4150,
+    "TotalVerticalLoadN": 40711.5,
+    "Transfers": [],
+    "Units": "mm, kg, N, N.mm (divide N.mm by 1000 for N.m)",
+    "UnverifiedLateralForceN": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "UnverifiedYawMomentNmm": 0,
+    "VerificationStatus": "ENGINEERING REVIEW REQUIRED - simplified reactions only",
+    "VerticalResidualN": 0
+  },
+  "Description": "Q sweep: new project, Q 1000 locked, default survey shaft 1500 x 1800.",
+  "Fixture": "sweep-survey-q1000",
+  "FollowsPresets": true,
+  "Mode": "Basic",
+  "RopeTraction": {
+    "AnyNotOk": false,
+    "Checks": [
+      {
+        "Actual": "12 mm",
+        "ActualValue": 12,
+        "Clause": "EN 81-20 5.5.1.2 a)",
+        "Equation": "d ≥ 8 mm",
+        "Id": "rope-diameter",
+        "Ok": true,
+        "Required": "≥ 8 mm",
+        "RequiredValue": 8,
+        "Substitution": "d = 12 mm",
+        "Title": "Nominal rope diameter",
+        "Unit": "mm"
+      },
+      {
+        "Actual": "6",
+        "ActualValue": 6,
+        "Clause": "EN 81-20 5.5.1.3",
+        "Equation": "n ≥ 2",
+        "Id": "rope-count",
+        "Ok": true,
+        "Required": "≥ 2",
+        "RequiredValue": 2,
+        "Substitution": "n = 6",
+        "Title": "Number of ropes",
+        "Unit": null
+      },
+      {
+        "Actual": "43.33",
+        "ActualValue": 43.333333333333336,
+        "Clause": "EN 81-20 5.5.2.1",
+        "Equation": "Dt / d ≥ 40",
+        "Id": "dd-sheave",
+        "Ok": true,
+        "Required": "≥ 40",
+        "RequiredValue": 40,
+        "Substitution": "520 / 12 = 43.33",
+        "Title": "Traction sheave D/d",
+        "Unit": null
+      },
+      {
+        "Actual": "18.03",
+        "ActualValue": 18.027142657050117,
+        "Clause": "EN 81-20 5.5.2.2; EN 81-50 5.12",
+        "Equation": "Sf = MBL / Tmax ≥ max(12; Sf(EN 81-50))",
+        "Id": "safety-factor",
+        "Ok": true,
+        "Required": "≥ 17.99",
+        "RequiredValue": 17.986676278653793,
+        "Substitution": "Tmax = ((1100 + 1000) / 6 + 16.2 × 0.49) × 9.81 = 3511.37 N; Sf = 63300 / 3511.37 = 18.03",
+        "Title": "Rope safety factor",
+        "Unit": null
+      },
+      {
+        "Actual": null,
+        "ActualValue": null,
+        "Clause": "EN 81-20 5.5.2.3",
+        "Equation": "Ftermination ≥ 0.8 × MBL",
+        "Id": "termination",
+        "Ok": null,
+        "Required": "≥ 50.64 kN",
+        "RequiredValue": 50.64,
+        "Substitution": "0.8 × 63.3 = 50.64 kN",
+        "Title": "Rope termination strength",
+        "Unit": "kN"
+      }
+    ],
+    "DpOverDr": 33.333333333333336,
+    "DtOverDr": 43.333333333333336,
+    "Geometry": {
+      "Available": true,
+      "CarDepthMm": 1400,
+      "CarWidthMm": 1100,
+      "DeflectorPathValid": true,
+      "DeflectorPitchMm": 400,
+      "DeflectorPresent": true,
+      "Problem": null,
+      "TravelMm": 12000,
+      "TzMm": 850,
+      "WrapAngleDeg": 156.1986108160003
+    },
+    "HangingLengthM": 16.2,
+    "HasResults": true,
+    "InputFingerprint": "FAED5C12D155155043EB8D9D43E536A16EED03A64409DB5841C186AA1B0EBB53",
+    "Inputs": {
+      "BrakingRetardationMps2": 0.5,
+      "CapacityKg": 1000,
+      "CarMassKg": 1100,
+      "CounterweightMassKg": 1600,
+      "DeflectorMassKg": 45,
+      "GrooveAngleDeg": 30,
+      "GrooveType": "UndercutU",
+      "MinimumBreakingLoadKn": 63.3,
+      "OverheadMm": 4200,
+      "RopeCount": 6,
+      "RopeDesignation": "8×19 Seale FC 1370/1770",
+      "RopeDiameterMm": 12,
+      "RopeMassKgPerM": 0.49,
+      "RopingRatio": 1,
+      "SheavePitchDiameterMm": 520,
+      "SpeedMps": 1,
+      "TractionLimitingMethod": "RopesSlip",
+      "TravellingCableKgPerM": 0.5,
+      "UndercutAngleDeg": 100
+    },
+    "Kp": 2.8561000000000005,
+    "MdpKg": 22.5,
+    "Nequiv": 12.856100000000001,
+    "NequivP": 2.8561000000000005,
+    "NequivT": 10,
+    "Omissions": [],
+    "RuleVersion": "EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1",
+    "Sf8150": 17.986676278653793,
+    "SfActual": 18.027142657050117,
+    "SfMinimum8120": 12,
+    "SfRequired": 17.986676278653793,
+    "Status": "CALCULATED_OK",
+    "TmaxN": 3511.37178,
+    "Traction": [
+      {
+        "AlphaDeg": 156.1986108160003,
+        "Clause": "EN 81-50 5.11.2.2.1",
+        "Condition": "≤",
+        "EFAlpha": 1.7541298278422697,
+        "F": 0.20613932312896555,
+        "FEquation": "f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ)",
+        "Id": "loading",
+        "Mu": 0.1,
+        "MuEquation": "μ = 0.1",
+        "Ok": true,
+        "Positions": [
+          {
+            "Name": "Car at the lowest landing",
+            "Ratio": 1.4985175,
+            "T1Equation": "T1 = (P + 1.25 Q) · gn + MSRcar · gn = (1100 + 1.25 × 1000) × 9.81 + 47.628 × 9.81 = 23520.73 N",
+            "T1N": 23520.73068,
+            "T2Equation": "T2 = Mcwt · gn = 1600 × 9.81 = 15696 N",
+            "T2N": 15696
+          }
+        ],
+        "Ratio": 1.4985175,
+        "T1N": 23520.73068,
+        "T2N": 15696,
+        "Title": "Car loading (125 % Q)"
+      },
+      {
+        "AlphaDeg": 156.1986108160003,
+        "Clause": "EN 81-50 5.11.2.2.2",
+        "Condition": "≤",
+        "EFAlpha": 1.6667647350400794,
+        "F": 0.18739938466269593,
+        "FEquation": "f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ)",
+        "Id": "braking",
+        "Mu": 0.090909090909090912,
+        "MuEquation": "μ = 0.1 / (1 + v/10) = 0.1 / (1 + 1/10) = 0.0909",
+        "Ok": true,
+        "Positions": [
+          {
+            "Name": "Rated load, lowest landing, retarding downwards",
+            "Ratio": 1.4875657757100387,
+            "T1Equation": "T1 = (P + Q) · (gn + a) + MSRcar · (gn + a) = (1100 + 1000) × (9.81 + 0.5) + 47.628 × (9.81 + 0.5) = 22142.04 N",
+            "T1N": 22142.04468,
+            "T2Equation": "T2 = Mcwt · (gn − a) − mDP · a = 1600 × (9.81 − 0.5) − 22.5 × 0.5 = 14884.75 N",
+            "T2N": 14884.75
+          },
+          {
+            "Name": "Empty car, highest landing, retarding upwards",
+            "Ratio": 1.6553131319426657,
+            "T1Equation": "T1 = Mcwt · (gn + a) + MSRcwt · (gn + a) + mDP · a = 1600 × (9.81 + 0.5) + 47.628 × (9.81 + 0.5) + 22.5 × 0.5 = 16998.29 N",
+            "T1N": 16998.29468,
+            "T2Equation": "T2 = (P + MTrav) · (gn − a) = (1100 + 3) × (9.81 − 0.5) = 10268.93 N",
+            "T2N": 10268.93
+          }
+        ],
+        "Ratio": 1.6553131319426657,
+        "T1N": 16998.29468,
+        "T2N": 10268.93,
+        "Title": "Emergency braking"
+      },
+      {
+        "AlphaDeg": 156.1986108160003,
+        "Clause": "EN 81-50 5.11.2.2.3",
+        "Condition": "≥",
+        "EFAlpha": 3.0769714529259509,
+        "F": 0.41227864625793109,
+        "FEquation": "f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ)",
+        "Id": "stalled",
+        "Mu": 0.2,
+        "MuEquation": "μ = 0.2",
+        "Ok": true,
+        "Positions": [
+          {
+            "Name": "Empty car at the highest position",
+            "Ratio": 23.158646174519195,
+            "T1Equation": "T1 = (P + MTrav) · gn = (1100 + 3) × 9.81 = 10820.43 N",
+            "T1N": 10820.43,
+            "T2Equation": "T2 = MSRcwt · gn = 47.628 × 9.81 = 467.23 N",
+            "T2N": 467.23067999999995
+          }
+        ],
+        "Ratio": 23.158646174519195,
+        "T1N": 10820.43,
+        "T2N": 467.23067999999995,
+        "Title": "Car stalled (counterweight on buffers)"
+      }
+    ],
+    "TravelM": 12
+  },
+  "SafetyPit": {
+    "InputFingerprint": "3E6C524300036988AE8A0CE51DAC677EF0A3504AFC4D2D332B0692A4DEE111ED",
+    "P5": {
+      "Application": "Vertical safety-gear load per car guide rail",
+      "ComponentCount": 2,
+      "Details": [
+        "Car effective additions: not included (blank optional mass).",
+        "Car event mass = capacity 1000 + empty car 1100 + allocated car additions 0 = 2100 kg. Machine, chassis and hanger masses excluded.",
+        "P5 = 2100 kg × 10 N/kg = 21000 N PER CAR GUIDE. Already per guide; no second division by guide count. Sum over two guides = 42000 N.",
+        "Adopted note coefficients: safety 10 N/kg is distinct from physical g = 9.81 m/s²; buffer factor 4 is the note\u0027s adopted value, not a supplied manufacturer rating. No chassis reactions or rope-tension/roping-ratio factors added."
+      ],
+      "GroupLoadN": 42000,
+      "Id": "P5",
+      "Issues": [],
+      "ParticipatingMassKg": 2100,
+      "PerComponentLoadN": 21000,
+      "Status": "CALCULATED_UNDER_NOTE_ASSUMPTIONS",
+      "Units": "N"
+    },
+    "P6": {
+      "Application": "Car-buffer reaction at pit support",
+      "ComponentCount": 1,
+      "Details": [
+        "Car effective additions: not included (blank optional mass).",
+        "Car event mass = capacity 1000 + empty car 1100 + allocated car additions 0 = 2100 kg. Machine, chassis and hanger masses excluded.",
+        "P6 group = 2100 kg × max(40 N/kg, 4 × 9.81 N/kg) = 84000 N; coefficient = 40 N/kg. Per buffer = 84000 N under one physical buffer.",
+        "Adopted note coefficients: safety 10 N/kg is distinct from physical g = 9.81 m/s²; buffer factor 4 is the note\u0027s adopted value, not a supplied manufacturer rating. No chassis reactions or rope-tension/roping-ratio factors added."
+      ],
+      "GroupLoadN": 84000,
+      "Id": "P6",
+      "Issues": [],
+      "ParticipatingMassKg": 2100,
+      "PerComponentLoadN": 84000,
+      "Status": "CALCULATED_UNDER_NOTE_ASSUMPTIONS",
+      "Units": "N"
+    },
+    "P7": {
+      "Application": "Counterweight-buffer reaction at pit support",
+      "ComponentCount": 1,
+      "Details": [
+        "Counterweight effective additions: not included (blank optional mass).",
+        "CW event mass = counterweight 1600 + allocated CW additions 0 = 1600 kg. Capacity/car/machine/chassis/hanger excluded.",
+        "P7 group = 1600 kg × max(40 N/kg, 4 × 9.81 N/kg) = 64000 N; coefficient = 40 N/kg. Per buffer = 64000 N under one physical buffer.",
+        "Adopted note coefficients: safety 10 N/kg is distinct from physical g = 9.81 m/s²; buffer factor 4 is the note\u0027s adopted value, not a supplied manufacturer rating. No chassis reactions or rope-tension/roping-ratio factors added."
+      ],
+      "GroupLoadN": 64000,
+      "Id": "P7",
+      "Issues": [],
+      "ParticipatingMassKg": 1600,
+      "PerComponentLoadN": 64000,
+      "Status": "CALCULATED_UNDER_NOTE_ASSUMPTIONS",
+      "Units": "N"
+    },
+    "RuleBasis": "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx: Progressive Safety Gear p104–106 (equation 439730EB), Car Buffer p108–110 (5429655E), Counterweight Buffer p112–114 (3897FF34), zero-based descendant paragraphs / Word paraIds. The note supplies no P5–P7 standard clause or manufacturer basis. Adopted note rules, not independent code/manufacturer certification.",
+    "RuleVersion": "GearboxNoteSafetyPit-v1",
+    "VerificationStatus": "ADOPTED NOTE RULES — engineering/manufacturer verification remains required"
+  },
+  "Selection": {
+    "BalanceFactor": 0.5,
+    "LimitingCheck": null,
+    "Milliseconds": 0,
+    "RopeCount": 6,
+    "RopeDiameterMm": 12,
+    "SheaveMm": 520,
+    "StartBalanceFactor": 0.5,
+    "StartCount": 6,
+    "StartDiameterMm": 12,
+    "StartSheaveMm": 520,
+    "StartUndercutAngleDeg": 95,
+    "Status": "Selected",
+    "Trials": 19,
+    "UndercutAngleDeg": 100
+  },
+  "Values": {
+    "BalanceFactor": 0.5,
+    "Beta": 100,
+    "CW": 1600,
+    "Dt": 520,
+    "Locked": [
+      "Elevator.CapacityKg"
+    ],
+    "Machine": 450,
+    "P": 1100,
+    "Q": 1000,
+    "SD": 1800,
+    "SW": 1500,
+    "SelectedBalanceFactor": null,
+    "SelectedBeta": 100,
+    "d": 12,
+    "n": 6
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "HasContent": true,
+  "Omitted": [
+    {
+      "Name": "Suspension rope and traction checks (part)",
+      "Reasons": [
+        "Number of ropes: Rope count not provided.",
+        "EN 81-50 safety factor: TZ 1200 mm is outside the deflector selection range; no deflector size is selected.",
+        "Rope safety factor: Not provided: rope count.",
+        "Traction: Deflector without a valid rope path (TZ 1200 mm); the wrap angle α cannot be determined."
+      ]
+    }
+  ]
+}
