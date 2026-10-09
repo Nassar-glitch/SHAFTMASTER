@@ -1,12 +1,13 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.AutoCAD;
+using Elevator.AutoCAD.Common;
+using Elevator.AutoCAD.Plan;
 using Exception=System.Exception;
 
 public sealed class PlanCompletenessTests

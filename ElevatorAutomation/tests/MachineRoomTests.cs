@@ -1,15 +1,17 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.AutoCAD;
-using Exception=System.Exception;
-using Elevator.Core.Project;
+using Elevator.AutoCAD.Common;
+using Elevator.AutoCAD.MachineRoom;
+using Elevator.AutoCAD.Plan;
 using Elevator.Core.MachineRoom;
+using Elevator.Core.Project;
+using Exception=System.Exception;
 public sealed class MachineRoomTests
 {
     private static List<object> results=new List<object>();

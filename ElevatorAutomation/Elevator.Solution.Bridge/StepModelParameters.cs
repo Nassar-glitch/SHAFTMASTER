@@ -1,4 +1,3 @@
-using System;
 
 namespace Elevator.Solution.Bridge
 {

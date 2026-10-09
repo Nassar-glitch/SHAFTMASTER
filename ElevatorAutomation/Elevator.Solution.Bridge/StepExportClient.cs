@@ -1,33 +1,11 @@
 using System;
-using System.IO;
-using System.Linq;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
-    public sealed class StepVerification
-    {
-        public int SourceSolidCount;
-        public int ReopenedSolidCount;
-        public int FaultCount;
-        public double MaxReopenedBoundsDifferenceMm;
-        public string Units;
-        public object[] Intersections;
-    }
-
-    public sealed class StepExportResult
-    {
-        public string OutputPath;
-        public string SourceFolder;
-        public string LayoutStatus;
-        public string WrapAngleStatus;
-        public string CodeDiameterRatioStatus;
-        public double ElapsedSeconds;
-        public StepVerification Verification;
-    }
-
     public sealed class StepExportClient
     {
         readonly string bin;

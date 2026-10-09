@@ -1,8 +1,8 @@
 using System;
-using System.IO;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
