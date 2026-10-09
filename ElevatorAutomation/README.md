@@ -22,21 +22,19 @@ The current release is `bin-shaftmaster-v03/ShaftMaster.exe` (SHA-256 `9CFD5FABâ
 
 ```
 ElevatorAutomation/
-  ElevatorAutomation.sln
-  Elevator.Core/             # No Autodesk references
-    Models/                 # ProjectInput, ElevatorParameters, ElevatorType, EquipmentProfile
-    Rules/                  # Common validation, door/rail selection, shared sizing
-    Geometry/               # Local-frame point mappings, independent of AutoCAD
-  Elevator.AutoCAD/
-    Commands/               # ELEVATORPROJECT, ELEVATORUPDATE, UPDATEALL, shared coordinator
-    Drawing/                # Reader, updater, semantic bindings, DWG data, legacy import
-    Views/                  # IViewUpdater, PlanUpdater, native coordinate adapter
-  config/                   # Family catalog, shared profile, one-time migration resources
-  Templates/                # Prepared existing-plan master; family readiness manifest
-  tests/                    # Original cases, golden DWG comparisons, persistence/editing tests
-  bin/                      # Core DLL, AutoCAD DLL, test binaries
-  output/                   # Separate generated DWGs and diagnostic JSON
+  ElevatorAutomation.sln, Directory.Build.props
+  Elevator.Core/            # Model, presets, calculations, application services (no Autodesk / WPF references)
+  Elevator.Reporting/       # Calculation sheet, Design Notes, DOCX, figures
+  Elevator.AutoCAD/         # Native drawing adapter, by output: Plan, MachineRoom, SectionAA, SectionBB, Vertical, Common
+  Elevator.Solution.Bridge/ Elevator.Solution.Host/ Elevator.Solution.StepExport/ Elevator.Solution.Desktop/
+  config/ Templates/        # Catalogs, reviewed context, presets; prepared drawing templates
+  docs/                     # architecture/, design/, calculations/, presets/, testing/, releases/
+  tests/ tools/             # xUnit projects, console suites, golden master; build, test and release scripts
+  artifacts/                # Build and test output (not tracked); bin-shaftmaster-vNN/ are the releases
 ```
+
+Each project folder has a README with its purpose, namespaces, dependencies and how to test it; the overview is
+[`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md).
 
 The core owns all sizing and local geometry calculations. `PlanGeometryAdapter` converts between native AutoCAD points and the shaft's local frame. The coordinator computes `ElevatorParameters` once and passes it to each `IViewUpdater` within one database transaction. Both update commands use the same `PlanUpdater`. Add validated views to the registry in `UpdateAllCommand`, rather than duplicating the design engine.
 
