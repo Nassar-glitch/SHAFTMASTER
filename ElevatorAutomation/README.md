@@ -75,15 +75,25 @@ Car DBG = SW − 300; cabin width = SW − 400; cabin depth = SD − 400; TZ = c
 
 ## Build and verification
 
-Run `./tools/build.ps1` in PowerShell (output `artifacts/bin` unless `-Bin` is given; `./build.ps1` is a thin wrapper). It builds `ElevatorAutomation.sln` (SDK-style projects for .NET Framework 4.8, referencing the AutoCAD 2023 assemblies), then runs the 43 pure rule assertions and the other rule tests; pass `-AutoCADDir` if AutoCAD is installed elsewhere.
+Run `./tools/build.ps1` in PowerShell (output `artifacts/bin` unless `-Bin` is given). It builds `ElevatorAutomation.sln` (SDK-style projects for .NET Framework 4.8, referencing the AutoCAD 2023 assemblies), then runs the 43 pure rule assertions and the other rule tests; pass `-AutoCADDir` if AutoCAD is installed elsewhere.
 
 Run `./tests/run-tests.ps1` for the native regression and interactive command workflow. It uses disposable copies and real AutoCAD Core Console command boundaries; AutoCAD's dimension-association callbacks run between commands. Keep the original `legacy/ElevatorPlanGenerator` directory because it contains the preserved regression template and independently generated golden DWGs. The runner restores SECURELOAD and checks result JSON for failures, not merely the console exit code.
 
-See `TEST_RESULTS.md` for evidence and limits. Geometry/validation errors roll back the update transaction. As in the original plugin, a filesystem failure during the subsequent separate SaveAs can leave the current in-memory drawing updated; the command reports the failure rather than claiming a saved file.
+Geometry/validation errors roll back the update transaction. As in the original plugin, a filesystem failure during the subsequent separate SaveAs can leave the current in-memory drawing updated; the command reports the failure rather than claiming a saved file.
 
 ## Completing the plan: annotations and coverage
 
-The plan contains no remaining unbound *original* equipment geometry: all 521 original entities are already transformed. The next pass adds text-content automation and stronger validation without changing the validated geometry. Read `PLAN_COMPLETENESS_AUDIT.md` for the before-change inventory and `PLAN_UPDATE_RESULTS.md` for the new test results and remaining manual decisions.
+The plan contains no remaining unbound *original* equipment geometry: all 521 original entities are already transformed. Text-content automation and stronger validation were added without changing the validated geometry: an optional project-driven plan title, persistent text recipes for bound MText and multileaders, semantic annotations, hatch regeneration and validation, and clearance checks on native bounds (front clearance reported). UPDATEALL reports unbound entities and writes plan coverage to its output report.
+
+Remaining manual decisions (not inferred by the automation):
+
+* P5/P6/P7 identifier meaning and numbering rules on the plan.
+* Rail/governor selection or physical equipment changes; current native details and labels remain unchanged.
+* Counterweight thickness selection; thickness still comes from the template outline.
+* Other door mechanisms, entrances and counterweight arrangements; optional future model fields do not enable these geometries yet.
+* Printed scale versus actual plotting requirements; the supplied 1:8 caption is preserved.
+* Choosing annotation recipes and checking placement/readability of long custom labels.
+* Binding or removing newly introduced equipment geometry reported as unbound. The annotation command can bind text, not arbitrary new equipment assemblies.
 
 After `ELEVATORPROJECT`, optional commands are:
 

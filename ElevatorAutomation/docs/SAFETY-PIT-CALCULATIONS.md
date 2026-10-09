@@ -58,6 +58,15 @@ P5/P6/P7 each return `CALCULATED_UNDER_NOTE_ASSUMPTIONS`, `MISSING_INPUT`, `INVA
 
 Missing event data does not block Basic P1–P4, Advanced calculations or drawing generation. Inputs survive save/open/save-as and native drawing storage/reopening. Equations, substitutions, composition, assumptions, statuses and source identifiers are expandable; no calculated loads are published on drawings.
 
+**Malformed mass text (fix of 2026-10-06):** a malformed mass field clears its value and keeps a field error; it is never treated as an omitted mass. Only the event loads that use the field become `INVALID_INPUT`; the other assembly keeps its loads:
+
+| Malformed field | Loads unavailable | Independent loads preserved |
+|---|---|---|
+| Empty car mass / car-side additional mass / active car percentage | P5 and P6 | P7 |
+| CW mass / CW-side additional mass / active CW percentage | P7 | P5 and P6 |
+
+Machine, CG, chassis and hanger draft errors are ignored for these event loads. Intentionally blank optional masses remain omitted; an entered zero stays zero; inactive percentages are ignored. Covered by `tests/solution/SafetyPitDraftUiTests.cs` (`run-safety-pit-draft-ui.ps1`, tier 2, 117 assertions).
+
 ## Verification
 
 - Direct read-only DOCX verification passed for all three equations, adopted coefficients, units, per-guide/single-buffer meanings, source checksum and independent expected substitutions.

@@ -39,5 +39,5 @@ review_internal/
 /*.dwg
 acad.err
 
-# Default build and test output (build.ps1, build-solution.ps1, tools/test.ps1)
+# Default build and test output (tools/build.ps1, tools/test.ps1)
 ElevatorAutomation/artifacts/
