@@ -3,8 +3,8 @@
 This document covers the rope checks of EN 81-20:2014 5.5 and the traction and rope safety-factor methods of EN 81-50:2014 5.11 and 5.12. It applies to the current system: geared traction with the machine room above and 1:1 roping, with or without a deflector sheave.
 
 - **Code:**
-  - Calculation: `Elevator.Core/Calculations/RopeTractionCalculation.cs` (`RopeTractionCalculationEngine`, rule version `EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1`).
-  - Presets: `Elevator.Core/Project/Presets.cs`.
+  - Calculation: `Elevator.Core/Suspension/RopeTractionCalculationEngine.cs` (`RopeTractionCalculationEngine`, rule version `EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1`).
+  - Presets: `Elevator.Core/Presets/` (`PresetLibrary`, `PresetFields`, `ProjectPresets`).
   - Application: `Elevator.Solution.Desktop/RopeTractionPage.cs`, `CalculationSheetRopes.cs`, `CalculationFiguresRopes.cs` (F10), `DesignNotes.cs`.
 - **Sources:**
   - `AHM Folder/CODES/EN 81-20-2014.pdf` and `bs_en_81_t50_e_d01_14.pdf`. Every formula was read from the page images of these files.

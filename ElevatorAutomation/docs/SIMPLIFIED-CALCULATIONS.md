@@ -72,9 +72,9 @@ No Word report, P5–P7 calculation, drawing-load annotation, template change or
 
 ## Main code locations
 
-- `Elevator.Core/Calculations/SimplifiedCalculationEngine.cs`: independent Basic solver, mode resolution, accounting, separate tensions and currency.
+- `Elevator.Core/Calculations/SimplifiedCalculationEngine.cs` and `SimplifiedVerticalSolver.cs`: independent Basic solver, mode resolution, accounting, separate tensions and currency.
 - `Elevator.Core/Project/ElevatorDesignEngine.cs`: shared source-bound Basic geometry recipe and result dispatch.
-- `Elevator.Core/Calculations/ChassisGeometry.cs` / `ChassisGeometryProvenance.cs`: native contact/datum extraction and retained-geometry validation.
+- `Elevator.Core/MachineRoom/ChassisGeometry.cs` / `ChassisGeometryProvenance.cs`: native contact/datum extraction and retained-geometry validation.
 - `Elevator.Solution.Desktop/BasicCalculationsPage.cs`: compact form, mode selection, inclusion decisions, distances and Basic result rendering.
 - `Elevator.Solution.Desktop/CalculationWorkspace.cs`: context-aware geometry cache and mode-specific calculation dispatch.
 - `Elevator.Solution.Desktop/CalculationsPage.cs`: preserved Advanced workflow and shared labelled preview.

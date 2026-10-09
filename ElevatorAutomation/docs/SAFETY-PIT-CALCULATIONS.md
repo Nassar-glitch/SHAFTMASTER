@@ -84,9 +84,9 @@ The note coefficients have not been independently certified against an applicabl
 
 ## Main code and test locations
 
-- `Elevator.Core/Calculations/SafetyPitCalculationEngine.cs`: rule constants/basis, event allocation, independent per-load validation, units, group/component outputs and currency.
+- `Elevator.Core/SafetyGear/SafetyPitCalculationEngine.cs`: rule constants/basis, event allocation, independent per-load validation, units, group/component outputs and currency.
 - `Elevator.Solution.Desktop/SafetyPitPage.cs`: compact independent section, live allocation controls, explicit sharing, result/details display.
-- `Elevator.Core/Calculations/CalculationModels.cs`: optional canonical input group.
+- `Elevator.Core/Calculations/ChassisCalculationInputs.cs`: optional canonical input group.
 - `tests/solution/SafetyPitTests.cs`, `SafetyPitUiTests.cs`, `run-safety-pit-ui.ps1`: reproducible fixture, API and rendered UI checks.
 - `tests/calculations/verify_safety_pit_note.py`: direct read-only source verification.
 
