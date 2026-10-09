@@ -51,7 +51,10 @@ namespace Elevator.Core.Presets
             {
                 library = CoreJson.CreateWithDefaultLimit().Deserialize<PresetLibrary>(json);
             }
-            catch (Exception e) { throw new ArgumentException("Preset library is not valid JSON: " + e.Message); }
+            catch (Exception e)
+            {
+                throw new ArgumentException("Preset library is not valid JSON: " + e.Message);
+            }
             if (library == null)
                 throw new ArgumentException("Preset library is empty.");
             var problems = library.Validate();

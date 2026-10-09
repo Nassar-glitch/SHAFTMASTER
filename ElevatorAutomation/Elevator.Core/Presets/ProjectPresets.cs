@@ -161,14 +161,20 @@ namespace Elevator.Core.Presets
                 "SUSPENSION",
                 RopeDiameterKey,
                 "Rope diameter (mm)",
-                c=>{var r=c.Library.RopesFor(Q(c));return r==null?(double?)null:r.DiameterMm;},
+                c=>{
+var r=c.Library.RopesFor(Q(c));
+return r==null?(double?)null:r.DiameterMm;
+},
                 p=>p.Suspension.RopeDiameterMm,
                 (p,v)=>p.Suspension.RopeDiameterMm=D(v)),
             F(
                 "SUSPENSION",
                 RopeCountKey,
                 "Number of ropes",
-                c=>{var r=c.Library.RopesFor(Q(c));return r==null?(int?)null:r.RopeCount;},
+                c=>{
+var r=c.Library.RopesFor(Q(c));
+return r==null?(int?)null:r.RopeCount;
+},
                 p=>p.Suspension.RopeCount,
                 (p,v)=>p.Suspension.RopeCount=I(v)),
             F(
@@ -182,14 +188,20 @@ namespace Elevator.Core.Presets
                 "CALCULATIONS",
                 "Calculations.CarMassKg",
                 "Empty car mass P (kg)",
-                c=>{var m=c.Library.MassesFor(Q(c));return m==null?(double?)null:m.CarMassKg;},
+                c=>{
+var m=c.Library.MassesFor(Q(c));
+return m==null?(double?)null:m.CarMassKg;
+},
                 p=>ReadCalc(p)==null?null:p.Calculations.CarMassKg,
                 (p,v)=>Calc(p).CarMassKg=D(v)),
             F(
                 "CALCULATIONS",
                 "Calculations.MachineMassKg",
                 "Machine mass (kg)",
-                c=>{var m=c.Library.MassesFor(Q(c));return m==null?(double?)null:m.MachineMassKg;},
+                c=>{
+var m=c.Library.MassesFor(Q(c));
+return m==null?(double?)null:m.MachineMassKg;
+},
                 p=>ReadCalc(p)==null?null:p.Calculations.MachineMassKg,
                 (p,v)=>Calc(p).MachineMassKg=D(v)),
             F(

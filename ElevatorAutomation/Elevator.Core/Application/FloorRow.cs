@@ -80,7 +80,10 @@ namespace Elevator.Core.Application
                         .ElevationMm
                         .ToString("0.###");
                 }
-                catch (ArgumentException) { return ""; }
+                catch (ArgumentException)
+                {
+                    return "";
+                }
             }
         }
 

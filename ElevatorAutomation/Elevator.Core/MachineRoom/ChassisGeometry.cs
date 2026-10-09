@@ -204,7 +204,10 @@ namespace Elevator.Core.MachineRoom
                 FindLongitudinalMembers(basic, g, s, target);
                 LocateSheaves(basic, g, s, target);
             }
-            catch (ArgumentException ex) { g.Issues.Add(new CalculationIssue("Geometry.ContactOrMembers", ex.Message)); }
+            catch (ArgumentException ex)
+            {
+                g.Issues.Add(new CalculationIssue("Geometry.ContactOrMembers", ex.Message));
+            }
             return g;
         }
 

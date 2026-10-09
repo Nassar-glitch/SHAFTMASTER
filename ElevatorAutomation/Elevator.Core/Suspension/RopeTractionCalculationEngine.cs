@@ -46,7 +46,10 @@ namespace Elevator.Core.Suspension
                 var d = MachineRoomRules.SelectDeflector(plan.TZ);
                 return d.IsRequired ? d.PitchDiameterMm : null;
             }
-            catch (ArgumentException) { return null; }
+            catch (ArgumentException)
+            {
+                return null;
+            }
         }
 
         public static RopeTractionGeometry Geometry(ElevatorProject p, DesignContext c)
@@ -87,8 +90,14 @@ namespace Elevator.Core.Suspension
                     g.WrapAngleDeg = 180; // Planner decision A3: direct roping, α = 180°.
                 g.Available = true;
             }
-            catch (ArgumentException e) { g.Problem = e.Message; }
-            catch (InvalidOperationException e) { g.Problem = e.Message; }
+            catch (ArgumentException e)
+            {
+                g.Problem = e.Message;
+            }
+            catch (InvalidOperationException e)
+            {
+                g.Problem = e.Message;
+            }
             return g;
         }
 

@@ -33,7 +33,11 @@ namespace Elevator.Core.Presets
                 Key = "Calculations.RopeTraction." + name,
                 Label = label,
                 Preset = c => preset(c),
-                Stored = p => { var g = Read(p); return g == null ? null : get(g); },
+                Stored = p =>
+                {
+                    var g = Read(p);
+                    return g == null ? null : get(g);
+                },
                 Store = (p, v) => set(Group(p), v == null ? (double?)null : Convert.ToDouble(v, CultureInfo.InvariantCulture))
             };
         }
@@ -50,7 +54,11 @@ namespace Elevator.Core.Presets
                 Key = "Calculations.RopeTraction." + name,
                 Label = label,
                 Preset = c => preset(c),
-                Stored = p => { var g = Read(p); return g == null ? null : get(g); },
+                Stored = p =>
+                {
+                    var g = Read(p);
+                    return g == null ? null : get(g);
+                },
                 Store = (p, v) => set(Group(p), v as string)
             };
         }
@@ -70,14 +78,22 @@ namespace Elevator.Core.Presets
         public static readonly PresetField MinimumBreakingLoad = Number(
             "MinimumBreakingLoadKn",
             "Rope minimum breaking load MBL per rope (kN)",
-            c => { var r = c.Library.Rope(RopeDiameter(c)); return r == null ? (double?)null : r.MinimumBreakingLoadKn; },
+            c =>
+            {
+                var r = c.Library.Rope(RopeDiameter(c));
+                return r == null ? (double?)null : r.MinimumBreakingLoadKn;
+            },
             g => g.MinimumBreakingLoadKn,
             (g, v) => g.MinimumBreakingLoadKn = v);
 
         public static readonly PresetField RopeMass = Number(
             "RopeMassKgPerM",
             "Rope mass per metre (kg/m)",
-            c => { var r = c.Library.Rope(RopeDiameter(c)); return r == null ? (double?)null : r.MassKgPerM; },
+            c =>
+            {
+                var r = c.Library.Rope(RopeDiameter(c));
+                return r == null ? (double?)null : r.MassKgPerM;
+            },
             g => g.RopeMassKgPerM,
             (g, v) => g.RopeMassKgPerM = v);
 

@@ -70,8 +70,14 @@ namespace Elevator.Core.Project
                 result.Floors = basicGeometry ? new List<FloorElevation>() : ProjectFloors.Elevations(project.Building);
                 CalculateSectionAA(project, context, views, result);
             }
-            catch (ArgumentException e) { Failure(result, e.Message); }
-            catch (InvalidOperationException e) { Failure(result, e.Message); }
+            catch (ArgumentException e)
+            {
+                Failure(result, e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                Failure(result, e.Message);
+            }
             // Calculation availability never changes the established drawing validation/geometry.
             result.ChassisGeometry = Elevator.Core.MachineRoom.ChassisGeometry.Calculate(
                 context == null ? null : context.ChassisEvidence,

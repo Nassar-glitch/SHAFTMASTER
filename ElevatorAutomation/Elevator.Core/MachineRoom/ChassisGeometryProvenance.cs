@@ -96,7 +96,10 @@ namespace Elevator.Core.MachineRoom
                 payload.Remove("Provenance"); // Hash all payload fields, without a self-referential digest.
                 return CalculationFingerprint.Hash(payload);
             }
-            catch (ArgumentException) { return null; }
+            catch (ArgumentException)
+            {
+                return null;
+            }
         }
 
         public static GeometryProvenanceValidation Validate(

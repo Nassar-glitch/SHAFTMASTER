@@ -333,13 +333,19 @@ namespace Elevator.Core.Application
                     else if (Chassis.Result == null || !Chassis.IsCurrent(p, context))
                         Chassis.Calculate(p, context);
                 }
-                catch (Exception) { Chassis.Invalidate(); }
+                catch (Exception)
+                {
+                    Chassis.Invalidate();
+                }
                 try
                 {
                     if (!RopeTractionCalculationEngine.IsCurrent(RopeTraction, p, context, presets.Library))
                         RopeTraction = new RopeTractionCalculationEngine().Calculate(p, context, presets.Library);
                 }
-                catch (Exception) { RopeTraction = null; }
+                catch (Exception)
+                {
+                    RopeTraction = null;
+                }
                 try
                 {
                     if (!SafetyPitCalculationEngine.IsCurrent(SafetyPit, p))
@@ -348,7 +354,10 @@ namespace Elevator.Core.Application
                         ApplySafetyPitDraftValidation(p, SafetyPit);
                     }
                 }
-                catch (Exception) { SafetyPit = null; }
+                catch (Exception)
+                {
+                    SafetyPit = null;
+                }
                 try
                 {
                     if (CarGuideForceDraftError != null || !CarGuideForceCalculationEngine.IsCurrent(CarGuideForces, p, context))
@@ -358,9 +367,15 @@ namespace Elevator.Core.Application
                         ApplyCarGuideForceDraftValidation();
                     }
                 }
-                catch (Exception) { CarGuideForces = null; }
+                catch (Exception)
+                {
+                    CarGuideForces = null;
+                }
             }
-            finally { Running = false; }
+            finally
+            {
+                Running = false;
+            }
         }
     }
 }

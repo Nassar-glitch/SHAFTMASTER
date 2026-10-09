@@ -39,7 +39,10 @@ namespace Elevator.Reporting.Sheet
                 var path = Path.Combine(folder ?? AppDomain.CurrentDomain.BaseDirectory, "presets.json");
                 return File.Exists(path) ? PresetLibrary.Load(path) : null;
             }
-            catch (ArgumentException) { return null; }
+            catch (ArgumentException)
+            {
+                return null;
+            }
         }
 
         void BuildRopeTraction(DesignContext context)
@@ -122,7 +125,11 @@ namespace Elevator.Reporting.Sheet
                 r.Traction.Count > 0, braking = r.Traction.Any(t => t.Id == "braking"), stalled = r.Traction.Any(
                 t => t.Id == "stalled"), term = r.Checks.Any(c => c.Id == "termination"), dd = r.Checks.Any(c => c.Id.StartsWith("dd-"));
             Action<string, double?, string> num =
-                (label, v, unit) => { if (Positive(v)) rows.Add(new[] { label, L(v.Value) + (unit == null ? "" : " " + unit) }); };
+                (label, v, unit) =>
+                {
+                    if (Positive(v))
+                        rows.Add(new[] { label, L(v.Value) + (unit == null ? "" : " " + unit) });
+                };
             if (!String.IsNullOrWhiteSpace(x.RopeDesignation) && (sf || term))
                 rows.Add(new[] { "Rope designation", x.RopeDesignation });
             num("Rope nominal diameter d", x.RopeDiameterMm, "mm");

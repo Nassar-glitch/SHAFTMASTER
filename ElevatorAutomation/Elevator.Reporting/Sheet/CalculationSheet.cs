@@ -178,7 +178,10 @@ namespace Elevator.Reporting.Sheet
                                             context.CounterweightDepthMm);
                 }
             }
-            catch (ArgumentException) { s.Plan = null; }
+            catch (ArgumentException)
+            {
+                s.Plan = null;
+            }
             if (s.Plan != null && s.CarGuideForcesAvailable && (Math.Abs(s.Plan.CarWidth - s.CarGuideForces.InternalWidthMm.Value) > 1e-6
                 || Math.Abs(s.Plan.CarDepth - s.CarGuideForces.InternalDepthMm.Value) > 1e-6))
                 s.Plan = null;
@@ -312,7 +315,11 @@ namespace Elevator.Reporting.Sheet
                     e);
                 }
             }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            finally
+            {
+                if (File.Exists(temporary))
+                    File.Delete(temporary);
+            }
         }
 
         // ---------- formatting (only ever applied to available, finite values) ----------
@@ -363,7 +370,11 @@ namespace Elevator.Reporting.Sheet
             {
                 f = build();
             }
-            catch (Exception e) { FigureErrors.Add(e.Message); return; }
+            catch (Exception e)
+            {
+                FigureErrors.Add(e.Message);
+                return;
+            }
             if (f == null)
                 return;
             figureNumber++;
@@ -583,7 +594,11 @@ namespace Elevator.Reporting.Sheet
             d.Heading(n + "  Input data", 1);
             var rows = new List<string[]>();
             Action<string, string, double?, string> add =
-                (label, path, v, unit) => { if (Has(path, v)) rows.Add(new[] { label, L(v.Value) + " " + unit }); };
+                (label, path, v, unit) =>
+                {
+                    if (Has(path, v))
+                        rows.Add(new[] { label, L(v.Value) + " " + unit });
+                };
             // Only inputs used by the calculations that appear in this document.
             bool chassis = ChassisAvailable, carEvent =
                 Available(SafetyPit.P5) || Available(SafetyPit.P6), cwEvent = Available(SafetyPit.P7), ff = CarGuideForcesAvailable;

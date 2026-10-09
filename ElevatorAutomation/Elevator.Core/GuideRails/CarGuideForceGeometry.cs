@@ -40,7 +40,11 @@ namespace Elevator.Core.GuideRails
                 InternalWidthMm = plan.CarWidth;
                 InternalDepthMm = plan.CarDepth;
             }
-            catch (ArgumentException e) { Status = "INVALID_INPUT"; Issues.Add(new CalculationIssue("Cabin.Geometry", e.Message)); }
+            catch (ArgumentException e)
+            {
+                Status = "INVALID_INPUT";
+                Issues.Add(new CalculationIssue("Cabin.Geometry", e.Message));
+            }
             catch (InvalidOperationException e)
             {
                 Status =

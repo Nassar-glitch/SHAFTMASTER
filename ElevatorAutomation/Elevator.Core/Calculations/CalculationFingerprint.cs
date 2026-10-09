@@ -27,7 +27,10 @@ namespace Elevator.Core.Calculations
             {
                 Canonical(serializer.DeserializeObject(serializer.Serialize(value)), serializer, canonical);
             }
-            catch (ArgumentException) { return null; }
+            catch (ArgumentException)
+            {
+                return null;
+            }
             using (var sha = SHA256.Create())
                 return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(canonical.ToString()))).Replace("-", "");
         }

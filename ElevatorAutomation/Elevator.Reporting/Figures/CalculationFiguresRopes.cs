@@ -30,7 +30,11 @@ namespace Elevator.Reporting.Figures
             var arc = Arc(c, r, a0, a1, 24);
             f.Poly(arc, false, FigureLayer.Dimension, tag).Value = value;
             Func<double, double, FigurePoint> tangent =
-                (a, sign) => { double t = a * Math.PI / 180; return Pt(-Math.Sin(t) * sign, -Math.Cos(t) * sign); };
+                (a, sign) =>
+                {
+                    double t = a * Math.PI / 180;
+                    return Pt(-Math.Sin(t) * sign, -Math.Cos(t) * sign);
+                };
             double s = a1 > a0 ? 1 : -1;
             f.Arrowhead(arc[0], tangent(a0, -s), FigureLayer.Dimension);
             f.Arrowhead(arc[arc.Count - 1], tangent(a1, s), FigureLayer.Dimension);

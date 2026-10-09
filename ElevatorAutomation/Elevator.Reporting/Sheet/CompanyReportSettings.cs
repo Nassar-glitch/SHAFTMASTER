@@ -55,7 +55,11 @@ namespace Elevator.Reporting.Sheet
                 else
                     File.Move(temporary, SettingsPath);
             }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            finally
+            {
+                if (File.Exists(temporary))
+                    File.Delete(temporary);
+            }
         }
 
         public string LogoPath
@@ -73,7 +77,10 @@ namespace Elevator.Reporting.Sheet
             {
                 return LogoFile != null && File.Exists(LogoPath) ? DocxImage.FromFile(LogoPath) : null;
             }
-            catch (Exception) { return null; }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         // Validates the picked file as PNG/JPEG, then copies it into the settings folder.

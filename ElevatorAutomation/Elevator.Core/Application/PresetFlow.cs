@@ -33,7 +33,10 @@ namespace Elevator.Core.Application
             {
                 return new PresetFlow(PresetLibrary.Load(path), null, context);
             }
-            catch (Exception e) { return new PresetFlow(null, e.Message, context); }
+            catch (Exception e)
+            {
+                return new PresetFlow(null, e.Message, context);
+            }
         }
 
         // The preset-managed field of an editor path, or null.

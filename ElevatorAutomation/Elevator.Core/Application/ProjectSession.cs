@@ -40,7 +40,11 @@ namespace Elevator.Core.Application
                 else
                     File.Move(temporary, path);
             }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            finally
+            {
+                if (File.Exists(temporary))
+                    File.Delete(temporary);
+            }
             FilePath = path;
             Dirty = false;
         }
