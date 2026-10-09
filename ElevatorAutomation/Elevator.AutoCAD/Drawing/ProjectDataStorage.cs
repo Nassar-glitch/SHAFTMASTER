@@ -53,7 +53,7 @@ namespace Elevator.AutoCAD
                 record.Data = data;
             }
         }
-        private static JavaScriptSerializer Serializer() { return new JavaScriptSerializer { MaxJsonLength = Int32.MaxValue }; }
+        private static Elevator.Core.Serialization.IJsonSerializer Serializer() { return Elevator.Core.Serialization.CoreJson.Create(); }
         public static ProjectInput ReadProject(Database db, Transaction tr)
         {
             var p = Read<ProjectInput>(db, tr, "Project");

@@ -29,7 +29,7 @@ namespace Elevator.AutoCAD
     {
         public const string Prefix="VerticalExperiment.",DataKey="VerticalExperimentProject",ManifestKey="VerticalExperimentManifest",FrameKey=Prefix+"Reference.Frame";
         public static string OutputDirectory {get{return Path.Combine(Configuration.Root,"output","experimental-vertical");}}
-        public static string Json(object value){return new System.Web.Script.Serialization.JavaScriptSerializer{MaxJsonLength=Int32.MaxValue}.Serialize(value);}
+        public static string Json(object value){return Elevator.Core.Serialization.CoreJson.Create().Serialize(value);}
         public static Dictionary<string,Entity> Find(Database db,Transaction tr)
         {
             var all=new Dictionary<string,Entity>();var bt=(BlockTable)tr.GetObject(db.BlockTableId,OpenMode.ForRead);var model=(BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace],OpenMode.ForRead);

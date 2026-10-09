@@ -8,7 +8,7 @@ namespace Elevator.AutoCAD {
   public const string Prefix="SectionAA.",Library="SECTION_AA_NATIVE_PARTS",DataKey="SectionAAProject",ManifestKey="SectionAAManifest";
   public static string Output {get{return Path.Combine(Configuration.Root,"output","section-aa");}}
   public static string Master {get{return Path.Combine(Configuration.Root,"Templates","SectionAA_Master.dwg");}}
-  public static string Json(object o){return new System.Web.Script.Serialization.JavaScriptSerializer{MaxJsonLength=Int32.MaxValue}.Serialize(o);}
+  public static string Json(object o){return Elevator.Core.Serialization.CoreJson.Create().Serialize(o);}
   static ObjectId Model(Database db,Transaction tr){return ((BlockTable)tr.GetObject(db.BlockTableId,OpenMode.ForRead))[BlockTableRecord.ModelSpace];}
   public static string[] Tag(Entity e){using(var x=e.GetXDataForApplication(DrawingReader.RegApp)){return x==null?null:x.AsArray().Skip(1).Select(v=>Convert.ToString(v.Value)).ToArray();}}
   public static Dictionary<string,Entity> Find(Database db,Transaction tr){var r=new Dictionary<string,Entity>();foreach(ObjectId id in (BlockTableRecord)tr.GetObject(Model(db,tr),OpenMode.ForRead)){var e=(Entity)tr.GetObject(id,OpenMode.ForRead);var t=Tag(e);if(t==null||!t[0].StartsWith(Prefix))continue;if(r.ContainsKey(t[0]))throw new InvalidOperationException("Duplicate A-A identity "+t[0]);r.Add(t[0],e);}return r;}
