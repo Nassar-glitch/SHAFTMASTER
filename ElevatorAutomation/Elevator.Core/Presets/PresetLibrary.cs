@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Calculations;
+using Elevator.Core.MachineRoom;
 using Elevator.Core.Serialization;
 using Elevator.Core.Suspension;
 
@@ -274,8 +276,8 @@ namespace Elevator.Core.Presets
                     p.Add("Advanced offsets must be finite");
                 if (!Finite(adv.AdditionalMassKg) || adv.AdditionalMassKg.Value < 0)
                     p.Add("Advanced.AdditionalMassKg must be zero or positive");
-                if (adv.TransferModel != Elevator.Core.MachineRoom.ChassisReactionSolver.Model)
-                    p.Add("Advanced.TransferModel must be " + Elevator.Core.MachineRoom.ChassisReactionSolver.Model);
+                if (adv.TransferModel != ChassisReactionSolver.Model)
+                    p.Add("Advanced.TransferModel must be " + ChassisReactionSolver.Model);
                 if (adv.LoadCase != "StaticRatedLoad1To1")
                     p.Add("Advanced.LoadCase must be StaticRatedLoad1To1");
                 if (String.IsNullOrWhiteSpace(adv.MachineCgBasis)
@@ -339,7 +341,7 @@ namespace Elevator.Core.Presets
 
         public string Hash()
         {
-            return Elevator.Core.Calculations.CalculationFingerprint.Hash(this);
+            return CalculationFingerprint.Hash(this);
         }
 
         // Rope data follow the rope diameter by exact table match only; an unlisted diameter has no preset.

@@ -13,6 +13,6 @@ namespace Elevator.Core.Project
         public double RearSupportOffsetMm;
         public double RetainedDeflectorPitchMm;
         public bool RetainedDeflectorVisible;
-        public Elevator.Core.MachineRoom.ChassisGeometryEvidence ChassisEvidence;
+        public ChassisGeometryEvidence ChassisEvidence;
     }
 }

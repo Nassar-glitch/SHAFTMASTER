@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Elevator.Core.Calculations;
 using Elevator.Core.Car;
 using Elevator.Core.Counterweight;
 using Elevator.Core.Doors;
@@ -25,7 +26,7 @@ namespace Elevator.Core.Project
         public MachineRoomConfiguration MachineRoom = new MachineRoomConfiguration();
         public DrawingConfiguration Drawing = new DrawingConfiguration();
         public StandardsConfiguration Standards = new StandardsConfiguration();
-        public Elevator.Core.Calculations.ChassisCalculationInputs Calculations = new Elevator.Core.Calculations.ChassisCalculationInputs();
+        public ChassisCalculationInputs Calculations = new ChassisCalculationInputs();
 
         // Optional calculation-sheet metadata. Null in older projects; never used by any calculation,
         // drawing geometry, STEP parameter or calculation fingerprint.

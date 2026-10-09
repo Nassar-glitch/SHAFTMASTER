@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Elevator.Core.Geometry;
+using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Project
 {
@@ -10,8 +11,8 @@ namespace Elevator.Core.Project
         public SectionAAGeometry SectionAA;
         public List<FloorElevation> Floors;
         public List<ValidationIssue> Validation = new List<ValidationIssue>();
-        public Elevator.Core.MachineRoom.ChassisCalculationGeometry ChassisGeometry;
-        public Elevator.Core.MachineRoom.ChassisCalculationResult ChassisCalculation;
+        public ChassisCalculationGeometry ChassisGeometry;
+        public ChassisCalculationResult ChassisCalculation;
         public ValidationStatus LayoutStatus = ValidationStatus.NOT_YET_EVALUABLE;
         public ValidationStatus WrapAngleStatus = ValidationStatus.NOT_YET_EVALUABLE;
         public ValidationStatus CodeDiameterRatioStatus = ValidationStatus.NOT_YET_EVALUABLE;

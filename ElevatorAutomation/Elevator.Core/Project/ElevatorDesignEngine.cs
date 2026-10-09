@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Elevator.Core.Calculations;
 using Elevator.Core.Geometry;
+using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
 
 namespace Elevator.Core.Project
@@ -36,11 +38,11 @@ namespace Elevator.Core.Project
         // FF loads need only authoritative internal plan dimensions. Unrelated
         // masses, safety/pit choices, floors or reeving metadata are not sizing
         // inputs. Use the SAME plan recipe and bind its sources before it runs.
-        public Elevator.Core.GuideRails.CarGuideForceGeometry CalculateCarGuideForceGeometry(
+        public CarGuideForceGeometry CalculateCarGuideForceGeometry(
             ElevatorProject project,
             DesignContext context)
         {
-            return new Elevator.Core.GuideRails.CarGuideForceGeometry(
+            return new CarGuideForceGeometry(
                 project,
                 context,
                 () => DesignRules.Calculate(project.Shaft.WidthMm, project.Shaft.DepthMm, context.Equipment, context.CounterweightDepthMm));
@@ -52,12 +54,12 @@ namespace Elevator.Core.Project
             result.Validation = ProjectValidator.Validate(project, views, basicGeometry);
             if (!result.CanGenerate)
                 return result;
-            Elevator.Core.MachineRoom.GeometrySourceSnapshot chassisSource = null;
+            GeometrySourceSnapshot chassisSource = null;
             try
             {
                 if (context == null || context.Equipment == null)
                     throw new ArgumentException("Reviewed equipment/template context is required.");
-                chassisSource = new Elevator.Core.MachineRoom.GeometrySourceSnapshot(project, context);
+                chassisSource = new GeometrySourceSnapshot(project, context);
                 var input = LegacyProjectAdapter.ToLegacy(project, !basicGeometry);
                 if (basicGeometry)
                 {
@@ -79,15 +81,15 @@ namespace Elevator.Core.Project
                 Failure(result, e.Message);
             }
             // Calculation availability never changes the established drawing validation/geometry.
-            result.ChassisGeometry = Elevator.Core.MachineRoom.ChassisGeometry.Calculate(
+            result.ChassisGeometry = ChassisGeometry.Calculate(
                 context == null ? null : context.ChassisEvidence,
                 result.Plan,
                 basicGeometry);
             if (result.CanGenerate && chassisSource != null && result.ChassisGeometry.Issues.Count == 0)
                 result.ChassisGeometry.BindSource(chassisSource);
-            result.ChassisCalculation = Elevator.Core.Calculations.CalculationModes.Resolve(project.Calculations) == "Basic"
-                ? new Elevator.Core.Calculations.SimplifiedCalculationEngine().Calculate(project, result.ChassisGeometry, context)
-                : new Elevator.Core.MachineRoom.ChassisCalculationEngine().Calculate(project, result.ChassisGeometry, context);
+            result.ChassisCalculation = CalculationModes.Resolve(project.Calculations) == "Basic"
+                ? new SimplifiedCalculationEngine().Calculate(project, result.ChassisGeometry, context)
+                : new ChassisCalculationEngine().Calculate(project, result.ChassisGeometry, context);
             return result;
         }
 

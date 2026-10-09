@@ -1,22 +1,24 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Elevator.Core.Calculations;
 using Elevator.Core.Project;
+using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Presets
 {
     public static class PresetFields
     {
-        static Elevator.Core.Suspension.RopeTractionInputs Group(ElevatorProject p)
+        static RopeTractionInputs Group(ElevatorProject p)
         {
             if (p.Calculations == null)
-                p.Calculations = new Elevator.Core.Calculations.ChassisCalculationInputs();
+                p.Calculations = new ChassisCalculationInputs();
             if (p.Calculations.RopeTraction == null)
-                p.Calculations.RopeTraction = new Elevator.Core.Suspension.RopeTractionInputs();
+                p.Calculations.RopeTraction = new RopeTractionInputs();
             return p.Calculations.RopeTraction;
         }
 
-        static Elevator.Core.Suspension.RopeTractionInputs Read(ElevatorProject p)
+        static RopeTractionInputs Read(ElevatorProject p)
         {
             return p == null || p.Calculations == null ? null : p.Calculations.RopeTraction;
         }
@@ -25,8 +27,8 @@ namespace Elevator.Core.Presets
             string name,
             string label,
             Func<PresetContext, double?> preset,
-            Func<Elevator.Core.Suspension.RopeTractionInputs, double?> get,
-            Action<Elevator.Core.Suspension.RopeTractionInputs, double?> set)
+            Func<RopeTractionInputs, double?> get,
+            Action<RopeTractionInputs, double?> set)
         {
             return new PresetField
             {
@@ -46,8 +48,8 @@ namespace Elevator.Core.Presets
             string name,
             string label,
             Func<PresetContext, string> preset,
-            Func<Elevator.Core.Suspension.RopeTractionInputs, string> get,
-            Action<Elevator.Core.Suspension.RopeTractionInputs, string> set)
+            Func<RopeTractionInputs, string> get,
+            Action<RopeTractionInputs, string> set)
         {
             return new PresetField
             {

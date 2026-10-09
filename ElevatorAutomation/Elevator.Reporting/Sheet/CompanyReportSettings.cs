@@ -49,7 +49,7 @@ namespace Elevator.Reporting.Sheet
             string temporary = SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
-                File.WriteAllText(temporary, Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Serialize(this));
+                File.WriteAllText(temporary, CoreJson.CreateWithDefaultLimit().Serialize(this));
                 if (File.Exists(SettingsPath))
                     File.Replace(temporary, SettingsPath, null);
                 else
