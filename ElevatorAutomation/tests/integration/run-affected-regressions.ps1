@@ -32,7 +32,7 @@ Compile 'DrawingRegressionProbe.exe' 'exe' @((Join-Path $root 'tests\calculation
 if($LASTEXITCODE -ne 0){throw 'Candidate drawing snapshot generation failed'}
 $baseline=Join-Path $out 'baseline-bin';New-Item -ItemType Directory -Force -Path $baseline | Out-Null
 Copy-Item -LiteralPath (Join-Path $root 'bin-shaftmaster-v01\Elevator.Core.dll') -Destination (Join-Path $baseline 'Elevator.Core.dll')
-& $compiler /nologo /target:exe ('/out:'+(Join-Path $baseline 'DrawingRegressionProbe.exe')) /reference:System.Web.Extensions.dll ('/reference:'+(Join-Path $baseline 'Elevator.Core.dll')) (Join-Path $root 'tests\calculations\DrawingRegressionProbe.cs')
+& $compiler /nologo /target:exe /define:RELEASE_BASELINE ('/out:'+(Join-Path $baseline 'DrawingRegressionProbe.exe')) /reference:System.Web.Extensions.dll ('/reference:'+(Join-Path $baseline 'Elevator.Core.dll')) (Join-Path $root 'tests\calculations\DrawingRegressionProbe.cs')
 if($LASTEXITCODE -ne 0){throw 'Release baseline probe build failed'}
 & (Join-Path $baseline 'DrawingRegressionProbe.exe') (Join-Path $out 'reference-plan.json') (Join-Path $root 'examples\ElevatorProject.example.json') (Join-Path $root 'config\equipment-profile.json') (Join-Path $out 'release-drawing-snapshots.json')
 if($LASTEXITCODE -ne 0){throw 'Release baseline failed'}
