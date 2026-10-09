@@ -15,11 +15,10 @@ namespace Elevator.Solution.Desktop.Common
    field=value;OnPropertyChanged(name);return true;
   }
  }
- // A page view-model: the navigation key and the page title.
+ // A page view-model: the navigation key of its page.
  abstract class PageViewModel:ViewModelBase
  {
   protected PageViewModel(string key){Key=key;}
   public string Key {get;private set;}
-  public string Title {get{return DisplayText.PageLabel(Key);}}
  }
 }
