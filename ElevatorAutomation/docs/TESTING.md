@@ -12,7 +12,7 @@ cd ElevatorAutomation
 
 | Tier | Suites | Needs |
 |---|---|---|
-| 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core`, `xunit-core` (tests/Elevator.Core.Tests on net8.0 and net48) | .NET Framework, .NET 8 runtime, Python 3 |
+| 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core`, `xunit-core` (tests/Elevator.Core.Tests) and `xunit-reporting` (tests/Elevator.Reporting.Tests), each on net8.0 and net48 | .NET Framework, .NET 8 runtime, Python 3 |
 | 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui` | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
 | 3 | `integration` (tests/integration/run-tier3.ps1: affected regressions, FF native / STEP integration, STEP input, native golden), `presets-native`, `sheet-word-render` | AutoCAD 2023, Microsoft Word, Python with PyMuPDF and python-docx, the local evidence folder `output/calculation-phase1` and the release `bin-shaftmaster-v01` (read only) |
 
@@ -22,7 +22,7 @@ The AutoCAD script suites of `tests/run-tests.ps1` (plan, machine room, section,
 
 ## Tier 1: golden master (`tests/golden`)
 
-`tools/run-golden.ps1` compiles `tests/golden/GoldenTests.cs` with the report sources of the desktop application (calculation sheet, Design Notes, DOCX writer, figures, calculation workspace, project session) against `Elevator.Core.dll` and `Elevator.Solution.Bridge.dll` of the build, and runs it. No AutoCAD and no Word; WPF is used only to measure figure text.
+`tools/run-golden.ps1` compiles `tests/golden/GoldenTests.cs` with the WPF figure rasterizer and the project session of the desktop application against `Elevator.Core.dll`, `Elevator.Reporting.dll` and `Elevator.Solution.Bridge.dll` of the build, and runs it. No AutoCAD and no Word; WPF is used only to measure figure text.
 
 For every fixture `tests/golden/fixtures/<name>.elevator.json` (optional `<name>.options.json`: description, company name, logo, malformed-text draft errors) it captures, in `tests/golden/approved/<name>/`:
 
@@ -72,7 +72,7 @@ Figure SVG depends on the fonts installed (text is measured with ISOCPEUR, Arial
 `tests/Elevator.Core.Tests/run-xunit.ps1` (and `tools/test.ps1` suite `xunit-core`) runs the xUnit project on net8.0 (against the netstandard2.0 build of `Elevator.Core`) and on net48 (against the application's build). It contains:
 
 - **GoldenCoreTests:** the Core-level golden captures of `tests/golden/GoldenTests.cs` for all 36 fixtures plus the new project (round-trip project JSON, `results.json`, `fingerprints.json`), compared with the same approved files in `tests/golden/approved`. The calculation-sheet, Design Notes and figure captures need the WPF report code and stay in the console golden suite.
-- **ConsoleSuiteTests:** the rope / traction (60), FF (131) and safety / pit (117) console suites run unchanged inside xUnit; presets (160) on net48 only, because it needs the Design Notes and so the WPF calculation-sheet sources. The console runners stay until P7.
+- **ConsoleSuiteTests:** the rope / traction (60), FF (131) and safety / pit (117) console suites run unchanged inside xUnit; presets (160) on both since P3 (the Design Notes are in Elevator.Reporting). The console runners stay until P7.
 - **SerializerParityTests** (net48): the evidence for the serializer decision below.
 
 CI (`.github/workflows/ci.yml`, not pushed yet): ubuntu-latest builds `Elevator.Core` for netstandard2.0 and runs the tests on net8.0; windows-latest builds Core and Bridge.
@@ -109,6 +109,18 @@ On net8.0, 17 of the 36 fixtures differ from the approved files, all in numbers 
 2. The last bit of some Math functions: `Sf8150` for `sweep-table6-q1000` is `20.263343160486862` on .NET Framework and `20.263343160486858` on .NET 8 (3 lines).
 
 Making Core's number formatting explicit (for example `G15`) would remove cause 1 without changing the .NET Framework output; that is a separate decision.
+
+## Tier 1: xUnit Reporting tests (`tests/Elevator.Reporting.Tests`, ARCHITECTURE-PLAN P3)
+
+`run-xunit.ps1 -Project Elevator.Reporting.Tests` (and `tools/test.ps1` suite `xunit-reporting`) checks the DOCX content without Word for the 36 golden fixtures, on net8.0 (netstandard2.0 Elevator.Reporting) and net48 (the application's):
+
+- the calculation-sheet and Design Notes text (document, header, footer) equals the approved golden text in `tests/golden/approved` (net48 byte-exact; net8.0 with the numbers-only rule of the Core tests);
+- the forbidden strings of `CalculationSheetTests` are absent from the text and the document properties; no non-finite number;
+- every figure is in the package as a well-formed SVG part (and equals the SVG of the figure);
+- the page frame (`w:pgBorders`), one default header with the title-block table, one footer, and the title block with filled and with blank fields;
+- Design Notes without tables and without check or basis wording.
+
+On net48 the figures use the application's WPF rasterizer; on net8.0 a test rasterizer gives a one-pixel PNG and the model's default text measure (the figure geometry is not compared there; the console golden suite compares the SVG on .NET Framework).
 
 ## Tier 3: integration (`tests/integration`)
 
