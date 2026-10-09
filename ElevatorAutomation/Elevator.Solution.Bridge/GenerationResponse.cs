@@ -8,7 +8,7 @@ namespace Elevator.Solution.Bridge
 {
     public sealed class GenerationResponse
     {
-        public int ProtocolVersion = 1;
+        public int ProtocolVersion = BridgeContract.Version;
         public string RequestId;
         public string InputHash;
         public string OutputPath;

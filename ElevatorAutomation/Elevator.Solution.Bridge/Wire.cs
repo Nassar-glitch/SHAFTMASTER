@@ -40,7 +40,7 @@ namespace Elevator.Solution.Bridge
 
         public static ElevatorProject Validate(GenerationRequest r)
         {
-            if (r == null || r.ProtocolVersion != 1 || String.IsNullOrWhiteSpace(r.RequestId) || r.Options == null)
+            if (r == null || r.ProtocolVersion != BridgeContract.Version || String.IsNullOrWhiteSpace(r.RequestId) || r.Options == null)
                 throw new ArgumentException("Unsupported/incomplete generation request.");
             if (r.Options.Views == 0 || (r.Options.Views & ~DrawingViews.All) != 0)
                 throw new ArgumentException("Select at least one supported view.");

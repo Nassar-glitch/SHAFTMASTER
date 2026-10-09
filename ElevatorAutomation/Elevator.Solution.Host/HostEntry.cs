@@ -32,6 +32,7 @@ namespace Elevator.Solution.Host
             var response = new GenerationResponse { RequestId = request.RequestId, InputHash = Wire.HashText(request.ProjectJson) };
             try
             {
+                BridgeContract.Require(request.ProtocolVersion);
                 var project = Wire.Validate(request);
                 PrepareRoofMetadata(project, request.Options.Views);
                 var doc = Application.DocumentManager.MdiActiveDocument;

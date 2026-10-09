@@ -10,7 +10,7 @@ namespace Elevator.Solution.Bridge
     // Transport envelopes reference the existing versioned project JSON, never a second project model.
     public sealed class GenerationRequest
     {
-        public int ProtocolVersion = 1;
+        public int ProtocolVersion = BridgeContract.Version;
         public string RequestId = Guid.NewGuid().ToString("N");
         public string ProjectJson;
         public GenerationOptions Options = new GenerationOptions { ArrangeViews = true };

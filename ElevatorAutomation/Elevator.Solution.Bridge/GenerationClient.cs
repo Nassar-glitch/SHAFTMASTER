@@ -86,7 +86,9 @@ namespace Elevator.Solution.Bridge
         GenerationResponse ReadResponse(GenerationRequest request, string filename)
         {
             var r = Wire.Read<GenerationResponse>(Path.Combine(LastJobDirectory, filename));
-            if (r.ProtocolVersion != 1 || r.RequestId != request.RequestId || r.InputHash != Wire.HashText(request.ProjectJson))
+            if (r.ProtocolVersion != BridgeContract.Version
+                || r.RequestId != request.RequestId
+                || r.InputHash != Wire.HashText(request.ProjectJson))
                 throw new InvalidDataException("Host response does not match the project snapshot.");
             return r;
         }
