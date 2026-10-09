@@ -18,6 +18,7 @@
 ## Start here
 
 - Read `DESIGN-FLOW.md` for the agreed design flow, presets and build stages.
+- Read `ARCHITECTURE-PLAN.md` for the target code structure, refactor phases, test tiers and refactor rules. It is binding for structural work.
 - Read `SESSION_HANDOFF.md` for the latest Executor progress and next step.
 - Read `CALCULATION_ROADMAP.md` for the user's broader calculation goal and the note-section inventory.
 - For the main application, read `ElevatorAutomation/README.md` and the relevant current documents under `ElevatorAutomation/docs/` before changing code.
