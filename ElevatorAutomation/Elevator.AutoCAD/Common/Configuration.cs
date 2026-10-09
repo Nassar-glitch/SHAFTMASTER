@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Elevator.Core.Serialization;
 

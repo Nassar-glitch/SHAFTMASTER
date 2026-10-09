@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge

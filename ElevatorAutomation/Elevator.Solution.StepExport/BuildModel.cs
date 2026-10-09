@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Web.Script.Serialization;
 using Elevator.Core.Serialization;
 using Elevator.Solution.Bridge;
@@ -15,7 +14,6 @@ public class BuildModel
     static ModelDoc2 model;
     static ModelDoc2 construction;
     static PartDoc part;
-    static Modeler kernel;
     static StepModelParameters p;
     static string partTemplate;
     static string previousActiveTitle;
@@ -543,7 +541,7 @@ public class BuildModel
         partTemplate = sw.GetDocumentTemplate(1, "", 0, 0, 0);
         if (String.IsNullOrEmpty(partTemplate) || !File.Exists(partTemplate))
             throw new Exception("Configure a default part template in SOLIDWORKS before STEP export.");
-        kernel = (Modeler)sw.GetModeler();
+        sw.GetModeler();
         model = (ModelDoc2)sw.NewDocument(partTemplate, 0, 0, 0);
         if (model == null)
             throw new Exception("SOLIDWORKS could not create a part from its default template.");

@@ -8,7 +8,6 @@ using Elevator.AutoCAD.MachineRoom;
 using Elevator.AutoCAD.Plan;
 using Elevator.AutoCAD.SectionBB;
 using Elevator.Core.Geometry;
-using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.Serialization;
 

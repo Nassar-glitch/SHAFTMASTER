@@ -8,7 +8,6 @@ using Autodesk.AutoCAD.Geometry;
 using Elevator.AutoCAD.Common;
 using Elevator.AutoCAD.MachineRoom;
 using Elevator.AutoCAD.Plan;
-using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.SectionBB
 {

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Web.Script.Serialization;
 using Elevator.Core.Geometry;
 using Elevator.Core.Project;

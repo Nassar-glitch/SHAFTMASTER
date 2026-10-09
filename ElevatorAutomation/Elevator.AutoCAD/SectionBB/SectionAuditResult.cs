@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Elevator.Core.Geometry;
 using Elevator.Core.MachineRoom;

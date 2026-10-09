@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Web.Script.Serialization;
 using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 using Elevator.Core.Serialization;
