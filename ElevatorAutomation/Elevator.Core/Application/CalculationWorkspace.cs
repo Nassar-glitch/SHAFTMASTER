@@ -8,30 +8,11 @@ namespace Elevator.Core.Application
     // In-memory results only. Geometry is issued by the shared engine, never read from JSON.
     public sealed class CalculationWorkspace
     {
-        public ChassisCalculationGeometry Geometry
-        {
-            get; private set;
-        }
-
-        public ChassisCalculationResult Result
-        {
-            get; private set;
-        }
-
-        public ElevatorDesignResult SourceDesign
-        {
-            get; private set;
-        }
-
-        public int GeometryGenerationCount
-        {
-            get; private set;
-        }
-
-        public string DisplayStatus
-        {
-            get; private set;
-        }
+        public ChassisCalculationGeometry Geometry { get; private set; }
+        public ChassisCalculationResult Result { get; private set; }
+        public ElevatorDesignResult SourceDesign { get; private set; }
+        public int GeometryGenerationCount { get; private set; }
+        public string DisplayStatus { get; private set; }
 
         public CalculationWorkspace()
         {

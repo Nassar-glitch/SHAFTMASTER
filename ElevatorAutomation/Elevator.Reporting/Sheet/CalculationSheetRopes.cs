@@ -14,21 +14,11 @@ namespace Elevator.Reporting.Sheet
     // substitution, required, actual, OK / NOT OK. Remarks and explanations go to the Design Notes file only.
     public sealed partial class CalculationSheet
     {
-        public RopeTractionResult RopeTraction
-        {
-            get; private set;
-        }
-
-        public PresetLibrary Presets
-        {
-            get; private set;
-        }
+        public RopeTractionResult RopeTraction { get; private set; }
+        public PresetLibrary Presets { get; private set; }
 
         // NOT OK results, listed for the user before export (application only).
-        public List<string> NotOk
-        {
-            get; private set;
-        }
+        public List<string> NotOk { get; private set; }
 
         // Present when a substantive check exists (D/d, safety factor or traction), not for a rope diameter / count alone.
         public bool RopeTractionAvailable

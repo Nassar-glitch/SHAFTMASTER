@@ -24,50 +24,15 @@ namespace Elevator.Reporting.Sheet
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         public const string DesignBasis = "Design basis: EN 81-20:2014 and EN 81-50:2014.";
 
-        public ElevatorProject Project
-        {
-            get; private set;
-        }
-
-        public CalculationSheetInputs Inputs
-        {
-            get; private set;
-        }
-
-        public string Mode
-        {
-            get; private set;
-        }
-
-        public ChassisCalculationResult Chassis
-        {
-            get; private set;
-        }
-
-        public bool ChassisAvailable
-        {
-            get; private set;
-        }
-
-        public SafetyPitCalculationResult SafetyPit
-        {
-            get; private set;
-        }
-
-        public CarGuideForceResult CarGuideForces
-        {
-            get; private set;
-        }
-
-        public bool CarGuideForcesAvailable
-        {
-            get; private set;
-        }
-
-        public List<OmittedCalculation> Omitted
-        {
-            get; private set;
-        }
+        public ElevatorProject Project { get; private set; }
+        public CalculationSheetInputs Inputs { get; private set; }
+        public string Mode { get; private set; }
+        public ChassisCalculationResult Chassis { get; private set; }
+        public bool ChassisAvailable { get; private set; }
+        public SafetyPitCalculationResult SafetyPit { get; private set; }
+        public CarGuideForceResult CarGuideForces { get; private set; }
+        public bool CarGuideForcesAvailable { get; private set; }
+        public List<OmittedCalculation> Omitted { get; private set; }
 
         public bool HasContent
         {
@@ -352,30 +317,11 @@ namespace Elevator.Reporting.Sheet
 
         // Figures actually placed in the last Render, numbered in order; builder failures are recorded (and tested) instead of breaking the
         // export.
-        public List<Figure> Figures
-        {
-            get; private set;
-        }
-
-        public List<string> FigureErrors
-        {
-            get; private set;
-        }
-
-        public ElevatorParameters Plan
-        {
-            get; private set;
-        }
-
-        public IRailSection CarRail
-        {
-            get; private set;
-        }
-
-        public IRailSection CounterweightRail
-        {
-            get; private set;
-        }
+        public List<Figure> Figures { get; private set; }
+        public List<string> FigureErrors { get; private set; }
+        public ElevatorParameters Plan { get; private set; }
+        public IRailSection CarRail { get; private set; }
+        public IRailSection CounterweightRail { get; private set; }
 
         int figureNumber;
 

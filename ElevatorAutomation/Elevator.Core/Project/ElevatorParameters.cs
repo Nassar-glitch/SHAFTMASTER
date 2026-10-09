@@ -5,15 +5,8 @@ namespace Elevator.Core.Project
 {
     public sealed class ElevatorParameters
     {
-        public MachineRoomParameters MachineRoom
-        {
-            get; set;
-        }
-
-        public MachineRoomSectionParameters MachineRoomSection
-        {
-            get; set;
-        }
+        public MachineRoomParameters MachineRoom { get; set; }
+        public MachineRoomSectionParameters MachineRoomSection { get; set; }
 
         public double SW;
         public double SD;

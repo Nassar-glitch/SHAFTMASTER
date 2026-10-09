@@ -6,25 +6,10 @@ namespace Elevator.Reporting.Figures
 {
     public sealed class ProportionalRailSection : IRailSection
     {
-        public string Designation
-        {
-            get; private set;
-        }
-
-        public double BaseWidthMm
-        {
-            get; private set;
-        }
-
-        public double HeightMm
-        {
-            get; private set;
-        }
-
-        public double BladeWidthMm
-        {
-            get; private set;
-        }
+        public string Designation { get; private set; }
+        public double BaseWidthMm { get; private set; }
+        public double HeightMm { get; private set; }
+        public double BladeWidthMm { get; private set; }
 
         public bool Proportional
         {

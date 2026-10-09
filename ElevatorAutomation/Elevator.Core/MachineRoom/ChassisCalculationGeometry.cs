@@ -8,10 +8,7 @@ namespace Elevator.Core.MachineRoom
     {
         public string Recipe = "Advanced";
 
-        public ChassisGeometryProvenance Provenance
-        {
-            get; private set;
-        }
+        public ChassisGeometryProvenance Provenance { get; private set; }
 
         internal void BindSource(GeometrySourceSnapshot source)
         {

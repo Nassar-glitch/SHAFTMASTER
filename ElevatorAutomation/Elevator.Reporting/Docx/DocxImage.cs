@@ -7,16 +7,10 @@ namespace Elevator.Reporting.Docx
     // aspect ratio without WPF. Reusable for logos now and drawings later.
     public sealed class DocxImage
     {
-        public byte[] Data
-        {
-            get; private set;
-        }
+        public byte[] Data { get; private set; }
 
         // Optional vector version (SVG); Data is then its PNG fallback.
-        public byte[] SvgData
-        {
-            get; private set;
-        }
+        public byte[] SvgData { get; private set; }
 
         public static DocxImage WithSvg(DocxImage png, byte[] svg)
         {
@@ -33,25 +27,10 @@ namespace Elevator.Reporting.Docx
             };
         }
 
-        public string Extension
-        {
-            get; private set;
-        }
-
-        public string ContentType
-        {
-            get; private set;
-        }
-
-        public int PixelWidth
-        {
-            get; private set;
-        }
-
-        public int PixelHeight
-        {
-            get; private set;
-        }
+        public string Extension { get; private set; }
+        public string ContentType { get; private set; }
+        public int PixelWidth { get; private set; }
+        public int PixelHeight { get; private set; }
 
         public static DocxImage FromFile(string path)
         {

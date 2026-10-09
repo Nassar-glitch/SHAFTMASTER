@@ -20,36 +20,14 @@ namespace Elevator.Reporting.DesignNotes
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         public const string NoNotes = "No design notes for this project.";
 
-        public ElevatorProject Project
-        {
-            get; private set;
-        }
-
-        public CalculationSheetInputs Inputs
-        {
-            get; private set;
-        }
-
-        public RopeTractionResult RopeTraction
-        {
-            get; private set;
-        }
-
-        public List<string> Warnings
-        {
-            get; private set;
-        }
-
-        public List<string> Recommendations
-        {
-            get; private set;
-        }
+        public ElevatorProject Project { get; private set; }
+        public CalculationSheetInputs Inputs { get; private set; }
+        public RopeTractionResult RopeTraction { get; private set; }
+        public List<string> Warnings { get; private set; }
+        public List<string> Recommendations { get; private set; }
 
         // Quotations (DESIGN-FLOW 11a): the deflector D/d below 40, quoted once; not a warning.
-        public List<string> Notes
-        {
-            get; private set;
-        }
+        public List<string> Notes { get; private set; }
 
         public bool Empty
         {

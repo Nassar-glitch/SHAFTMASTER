@@ -8,25 +8,10 @@ namespace Elevator.Core.GuideRails
 {
     public sealed class CarGuideForceGeometry
     {
-        public double? InternalWidthMm
-        {
-            get; private set;
-        }
-
-        public double? InternalDepthMm
-        {
-            get; private set;
-        }
-
-        public string Status
-        {
-            get; private set;
-        }
-
-        public List<CalculationIssue> Issues
-        {
-            get; private set;
-        }
+        public double? InternalWidthMm { get; private set; }
+        public double? InternalDepthMm { get; private set; }
+        public string Status { get; private set; }
+        public List<CalculationIssue> Issues { get; private set; }
 
         internal readonly string SourceInputHash;
         internal readonly string SourceContextHash;

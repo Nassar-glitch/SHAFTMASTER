@@ -12,22 +12,13 @@ namespace Elevator.Core.Application
     {
         readonly DesignContext context;
 
-        public PresetLibrary Library
-        {
-            get; private set;
-        }
+        public PresetLibrary Library { get; private set; }
 
         // The reason the preset library could not be read (null when it was read).
-        public string Error
-        {
-            get; private set;
-        }
+        public string Error { get; private set; }
 
         // The rope sizing of the last full preset application or fill.
-        public RopeSizing LastRopeSizing
-        {
-            get; private set;
-        }
+        public RopeSizing LastRopeSizing { get; private set; }
 
         public PresetFlow(PresetLibrary library, string error, DesignContext context)
         {

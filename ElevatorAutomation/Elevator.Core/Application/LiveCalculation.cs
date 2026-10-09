@@ -27,36 +27,14 @@ namespace Elevator.Core.Application
             Chassis = new CalculationWorkspace();
         }
 
-        public CalculationWorkspace Chassis
-        {
-            get; private set;
-        }
-
-        public RopeTractionResult RopeTraction
-        {
-            get; set;
-        }
-
-        public SafetyPitCalculationResult SafetyPit
-        {
-            get; set;
-        }
-
-        public CarGuideForceGeometry CarGuideForceGeometry
-        {
-            get; private set;
-        }
-
-        public CarGuideForceResult CarGuideForces
-        {
-            get; set;
-        }
+        public CalculationWorkspace Chassis { get; private set; }
+        public RopeTractionResult RopeTraction { get; set; }
+        public SafetyPitCalculationResult SafetyPit { get; set; }
+        public CarGuideForceGeometry CarGuideForceGeometry { get; private set; }
+        public CarGuideForceResult CarGuideForces { get; set; }
 
         // The validation / generation design of the current inputs (null when an input changed).
-        public ElevatorDesignResult Design
-        {
-            get; set;
-        }
+        public ElevatorDesignResult Design { get; set; }
 
         // Typed text of the chassis inputs and the messages of the invalid ones (path → text / message).
         public readonly Dictionary<string, string> ChassisDrafts = new Dictionary<string, string>();
@@ -64,21 +42,11 @@ namespace Elevator.Core.Application
         public readonly Dictionary<string, string> SafetyPitDrafts = new Dictionary<string, string>();
         public readonly Dictionary<string, string> SafetyPitDraftErrors = new Dictionary<string, string>();
 
-        public string CarGuideForceDraft
-        {
-            get; set;
-        }
-
-        public string CarGuideForceDraftError
-        {
-            get; set;
-        }
+        public string CarGuideForceDraft { get; set; }
+        public string CarGuideForceDraftError { get; set; }
 
         // True while Recalculate runs (a scheduled run is skipped then).
-        public bool Running
-        {
-            get; private set;
-        }
+        public bool Running { get; private set; }
 
         // ---------- what an input change makes outdated ----------
         public static InputEffect EffectOf(string path)
