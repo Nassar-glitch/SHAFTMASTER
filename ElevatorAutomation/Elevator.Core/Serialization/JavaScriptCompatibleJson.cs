@@ -37,82 +37,13 @@ namespace Elevator.Core.Serialization
         {
             if (++depth > RecursionLimit)
                 throw new ArgumentException("RecursionLimit exceeded.");
-            if (o == null || o is DBNull)
-            {
-                b.Append("null");
+            if (WriteScalar(o, b))
                 return;
-            }
-            var s = o as string;
-            if (s != null)
-            {
-                Quote(s, b);
-                return;
-            }
-            if (o is char)
-            {
-                if ((char)o == '\0')
-                {
-                    b.Append("null");
-                    return;
-                }
-                Quote(o.ToString(), b);
-                return;
-            }
-            if (o is bool)
-            {
-                b.Append((bool)o ? "true" : "false");
-                return;
-            }
-            if (o is DateTime)
-            {
-                WriteDate((DateTime)o, b);
-                return;
-            }
-            if (o is DateTimeOffset)
-            {
-                WriteDate(((DateTimeOffset)o).UtcDateTime, b);
-                return;
-            }
-            if (o is Guid)
-            {
-                b.Append('"').Append(((Guid)o).ToString()).Append('"');
-                return;
-            }
-            var uri = o as Uri;
-            if (uri != null)
-            {
-                Quote(uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped), b);
-                return;
-            }
-            if (o is double)
-            {
-                b.Append(RoundTrip((double)o));
-                return;
-            }
-            if (o is float)
-            {
-                b.Append(RoundTrip((float)o));
-                return;
-            }
             var type = o.GetType();
-            if (type.IsPrimitive || o is decimal)
-            {
-                var c = o as IConvertible;
-                b.Append(c != null ? c.ToString(Inv) : o.ToString());
-                return;
-            }
-            if (type.IsEnum)
-            {
-                var u = Enum.GetUnderlyingType(type);
-                if (u == typeof(long) || u == typeof(ulong))
-                    throw new InvalidOperationException("Enumerations with a 64-bit underlying type are not supported.");
-                b.Append(((Enum)o).ToString("D"));
-                return;
-            }
             if (inUse.ContainsKey(o))
             {
                 throw new InvalidOperationException(
-                                    "A circular reference was detected while serializing an object of type '" + type.FullName + "'.");
+                    "A circular reference was detected while serializing an object of type '" + type.FullName + "'.");
             }
             inUse.Add(o, null);
             try
@@ -120,69 +51,166 @@ namespace Elevator.Core.Serialization
                 var dictionary = o as IDictionary;
                 if (dictionary != null)
                 {
-                    b.Append('{');
-                    bool first = true;
-                    foreach (DictionaryEntry e in dictionary)
-                    {
-                        var key = e.Key as string;
-                        if (key == null)
-                        {
-                            throw new ArgumentException("Type '"
-                                                            + type.FullName
-                                                            + "' is not supported for serialization/deserialization of a dictionary, keys "
-                                                            + "must be strings or objects.");
-                        }
-                        if (!first)
-                            b.Append(',');
-                        first = false;
-                        Quote(key, b);
-                        b.Append(':');
-                        Write(e.Value, b, depth, inUse);
-                    }
-                    b.Append('}');
+                    WriteDictionary(dictionary, type, b, depth, inUse);
                     return;
                 }
                 var list = o as IEnumerable;
                 if (list != null)
                 {
-                    b.Append('[');
-                    bool first = true;
-                    foreach (var item in list)
-                    {
-                        if (!first)
-                            b.Append(',');
-                        first = false;
-                        Write(item, b, depth, inUse);
-                    }
-                    b.Append(']');
+                    WriteList(list, b, depth, inUse);
                     return;
                 }
-                b.Append('{');
-                bool firstMember = true;
-                foreach (var f in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    if (!firstMember)
-                        b.Append(',');
-                    Quote(f.Name, b);
-                    b.Append(':');
-                    Write(f.GetValue(o), b, depth, inUse);
-                    firstMember = false;
-                }
-                foreach (var p in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty))
-                {
-                    var get = p.GetGetMethod();
-                    if (get == null || get.GetParameters().Length > 0)
-                        continue;
-                    if (!firstMember)
-                        b.Append(',');
-                    Quote(p.Name, b);
-                    b.Append(':');
-                    Write(get.Invoke(o, null), b, depth, inUse);
-                    firstMember = false;
-                }
-                b.Append('}');
+                WriteMembers(o, type, b, depth, inUse);
             }
-            finally { inUse.Remove(o); }
+            finally
+            {
+                inUse.Remove(o);
+            }
+        }
+
+        // Writes null, strings, numbers, booleans, dates, GUIDs, URIs and enumerations; false for objects and collections.
+        static bool WriteScalar(object o, StringBuilder b)
+        {
+            if (o == null || o is DBNull)
+            {
+                b.Append("null");
+                return true;
+            }
+            var s = o as string;
+            if (s != null)
+            {
+                Quote(s, b);
+                return true;
+            }
+            if (o is char)
+            {
+                if ((char)o == '\0')
+                {
+                    b.Append("null");
+                    return true;
+                }
+                Quote(o.ToString(), b);
+                return true;
+            }
+            if (o is bool)
+            {
+                b.Append((bool)o ? "true" : "false");
+                return true;
+            }
+            if (o is DateTime)
+            {
+                WriteDate((DateTime)o, b);
+                return true;
+            }
+            if (o is DateTimeOffset)
+            {
+                WriteDate(((DateTimeOffset)o).UtcDateTime, b);
+                return true;
+            }
+            if (o is Guid)
+            {
+                b.Append('"').Append(((Guid)o).ToString()).Append('"');
+                return true;
+            }
+            var uri = o as Uri;
+            if (uri != null)
+            {
+                Quote(uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped), b);
+                return true;
+            }
+            if (o is double)
+            {
+                b.Append(RoundTrip((double)o));
+                return true;
+            }
+            if (o is float)
+            {
+                b.Append(RoundTrip((float)o));
+                return true;
+            }
+            var type = o.GetType();
+            if (type.IsPrimitive || o is decimal)
+            {
+                var c = o as IConvertible;
+                b.Append(c != null ? c.ToString(Inv) : o.ToString());
+                return true;
+            }
+            if (type.IsEnum)
+            {
+                var u = Enum.GetUnderlyingType(type);
+                if (u == typeof(long) || u == typeof(ulong))
+                    throw new InvalidOperationException("Enumerations with a 64-bit underlying type are not supported.");
+                b.Append(((Enum)o).ToString("D"));
+                return true;
+            }
+            return false;
+        }
+
+        void WriteDictionary(IDictionary dictionary, Type type, StringBuilder b, int depth, Dictionary<object, object> inUse)
+        {
+            b.Append('{');
+            bool first = true;
+            foreach (DictionaryEntry e in dictionary)
+            {
+                var key = e.Key as string;
+                if (key == null)
+                {
+                    throw new ArgumentException("Type '"
+                        + type.FullName
+                        + "' is not supported for serialization/deserialization of a dictionary, keys "
+                        + "must be strings or objects.");
+                }
+                if (!first)
+                    b.Append(',');
+                first = false;
+                Quote(key, b);
+                b.Append(':');
+                Write(e.Value, b, depth, inUse);
+            }
+            b.Append('}');
+        }
+
+        void WriteList(IEnumerable list, StringBuilder b, int depth, Dictionary<object, object> inUse)
+        {
+            b.Append('[');
+            bool first = true;
+            foreach (var item in list)
+            {
+                if (!first)
+                    b.Append(',');
+                first = false;
+                Write(item, b, depth, inUse);
+            }
+            b.Append(']');
+        }
+
+        // Public instance fields, then public readable properties without parameters, in reflection order.
+        void WriteMembers(object o, Type type, StringBuilder b, int depth, Dictionary<object, object> inUse)
+        {
+            b.Append('{');
+            bool firstMember = true;
+            foreach (var f in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!firstMember)
+                    b.Append(',');
+                Quote(f.Name, b);
+                b.Append(':');
+                Write(f.GetValue(o), b, depth, inUse);
+                firstMember = false;
+            }
+            foreach (var p in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty))
+            {
+                var get = p.GetGetMethod();
+                if (get == null || get.GetParameters().Length > 0)
+                    continue;
+                if (!firstMember)
+                    b.Append(',');
+                Quote(p.Name, b);
+                b.Append(':');
+                Write(get.Invoke(o, null), b, depth, inUse);
+                firstMember = false;
+            }
+            b.Append('}');
         }
 
         static void WriteDate(DateTime d, StringBuilder b)
@@ -381,81 +409,91 @@ namespace Elevator.Core.Serialization
                 throw new ArgumentException("Invalid JSON primitive: .");
             char c = s[i];
             if (c == '{')
+                return ParseObject(s, ref i, depth);
+            if (c == '[')
+                return ParseArray(s, ref i, depth);
+            if (c == '"' || c == '\'')
+                return ParseString(s, ref i, c);
+            int start = i;
+            while (i < s.Length && s[i] != ',' && s[i] != '}' && s[i] != ']' && !Char.IsWhiteSpace(s[i]))
+                i++;
+            return Primitive(s.Substring(start, i - start));
+        }
+
+        static object ParseObject(string s, ref int i, int depth)
+        {
+            i++;
+            var d = new Dictionary<string, object>();
+            Skip(s, ref i);
+            if (i < s.Length && s[i] == '}')
             {
                 i++;
-                var d = new Dictionary<string, object>();
+                return d;
+            }
+            while (true)
+            {
                 Skip(s, ref i);
+                string key = MemberName(s, ref i);
+                Skip(s, ref i);
+                if (i >= s.Length || s[i] != ':')
+                    throw new ArgumentException("Invalid object passed in, ':' or '}' expected. (" + i + ")");
+                i++;
+                d[key] = Value(s, ref i, depth);
+                Skip(s, ref i);
+                if (i < s.Length && s[i] == ',')
+                {
+                    i++;
+                    continue;
+                }
                 if (i < s.Length && s[i] == '}')
                 {
                     i++;
                     return d;
                 }
-                while (true)
-                {
-                    Skip(s, ref i);
-                    string key = MemberName(s, ref i);
-                    Skip(s, ref i);
-                    if (i >= s.Length || s[i] != ':')
-                        throw new ArgumentException("Invalid object passed in, ':' or '}' expected. (" + i + ")");
-                    i++;
-                    d[key] = Value(s, ref i, depth);
-                    Skip(s, ref i);
-                    if (i < s.Length && s[i] == ',')
-                    {
-                        i++;
-                        continue;
-                    }
-                    if (i < s.Length && s[i] == '}')
-                    {
-                        i++;
-                        return d;
-                    }
-                    throw new ArgumentException("Invalid object passed in, ':' or '}' expected. (" + i + ")");
-                }
+                throw new ArgumentException("Invalid object passed in, ':' or '}' expected. (" + i + ")");
             }
-            if (c == '[')
+        }
+
+        static object ParseArray(string s, ref int i, int depth)
+        {
+            i++;
+            var l = new ArrayList();
+            Skip(s, ref i);
+            if (i < s.Length && s[i] == ']')
             {
                 i++;
-                var l = new ArrayList();
+                return l;
+            }
+            while (true)
+            {
+                l.Add(Value(s, ref i, depth));
                 Skip(s, ref i);
+                if (i < s.Length && s[i] == ',')
+                {
+                    i++;
+                    continue;
+                }
                 if (i < s.Length && s[i] == ']')
                 {
                     i++;
                     return l;
                 }
-                while (true)
-                {
-                    l.Add(Value(s, ref i, depth));
-                    Skip(s, ref i);
-                    if (i < s.Length && s[i] == ',')
-                    {
-                        i++;
-                        continue;
-                    }
-                    if (i < s.Length && s[i] == ']')
-                    {
-                        i++;
-                        return l;
-                    }
-                    throw new ArgumentException("Invalid array passed in, ',' expected. (" + i + ")");
-                }
+                throw new ArgumentException("Invalid array passed in, ',' expected. (" + i + ")");
             }
-            if (c == '"' || c == '\'')
+        }
+
+        // A quoted string; a "\/Date(ticks)\/" literal becomes a UTC DateTime.
+        static object ParseString(string s, ref int i, char c)
+        {
+            bool date = c == '"' && String.CompareOrdinal(s, i + 1, "\\/Date(", 0, 7) == 0;
+            string text = Str(s, ref i);
+            if (date)
             {
-                bool date = c == '"' && String.CompareOrdinal(s, i + 1, "\\/Date(", 0, 7) == 0;
-                string text = Str(s, ref i);
-                if (date)
-                {
-                    var m = System.Text.RegularExpressions.Regex.Match(text, @"^/Date\((-?[0-9]+)(?:[a-zA-Z]|(?:\+|-)[0-9]{4})?\)/$");
-                    if (m.Success)
-                        return new DateTime(Int64.Parse(m.Groups[1].Value, Inv) * 10000 + EpochTicks, DateTimeKind.Utc);
-                }
-                return text;
+                var m = System.Text.RegularExpressions.Regex.Match(text, @"^/Date\((-?[0-9]+)(?:[a-zA-Z]|(?:\+|-)[0-9]{4})?\)/$");
+                if (m.Success)
+                    return new DateTime(Int64.Parse(m.Groups[1].Value, Inv) * 10000 + EpochTicks, DateTimeKind.Utc);
             }
-            int start = i;
-            while (i < s.Length && s[i] != ',' && s[i] != '}' && s[i] != ']' && !Char.IsWhiteSpace(s[i]))
-                i++;
-            return Primitive(s.Substring(start, i - start));
+            return text;
         }
 
         static string MemberName(string s, ref int i)

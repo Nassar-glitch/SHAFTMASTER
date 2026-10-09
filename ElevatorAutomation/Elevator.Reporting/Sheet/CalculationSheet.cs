@@ -62,6 +62,22 @@ namespace Elevator.Reporting.Sheet
             var s = new CalculationSheet { Project = project, Inputs = inputs ?? new CalculationSheetInputs() };
             s.Mode = CalculationModes.Resolve(project.Calculations);
             // P1–P4: active workflow only.
+            BuildChassis(project, context, s);
+            // P5–P7: independent of P1–P4 availability.
+            BuildSafetyPit(project, s);
+            // FF1/FF2: independent workflow.
+            BuildCarGuideForces(project, context, s);
+            BuildPlan(project, context, s);
+            var profiles = new ElevatorDesignResult();
+            s.CarRail = ProportionalRailSection.Parse(profiles.CarRailProfile);
+            s.CounterweightRail = ProportionalRailSection.Parse(profiles.CounterweightRailProfile);
+            RecordOmissions(s);
+            s.BuildRopeTraction(context);
+            return s;
+        }
+
+        private static void BuildChassis(ElevatorProject project, DesignContext context, CalculationSheet s)
+        {
             if (s.Inputs.ChassisDraftErrors.Count > 0)
             {
                 s.Chassis = new ChassisCalculationResult { Mode = s.Mode, Status = "INVALID_INPUT" };
@@ -80,7 +96,10 @@ namespace Elevator.Reporting.Sheet
                     s.Chassis.Reactions = null;
                 }
             }
-            // P5–P7: independent of P1–P4 availability.
+        }
+
+        private static void BuildSafetyPit(ElevatorProject project, CalculationSheet s)
+        {
             s.SafetyPit = new SafetyPitCalculationEngine().Calculate(project);
             foreach (var error in s.Inputs.SafetyPitDraftErrors)
             {
@@ -108,7 +127,10 @@ namespace Elevator.Reporting.Sheet
                     load.Issues.Add(new CalculationIssue("Currency", "Result could not be verified current."));
                 }
             }
-            // FF1/FF2: independent workflow.
+        }
+
+        private static void BuildCarGuideForces(ElevatorProject project, DesignContext context, CalculationSheet s)
+        {
             var geometry = new ElevatorDesignEngine().CalculateCarGuideForceGeometry(project, context);
             s.CarGuideForces = new CarGuideForceCalculationEngine().Calculate(project, geometry, context);
             if (s.Inputs.CarGuideForceDraftError != null)
@@ -136,6 +158,10 @@ namespace Elevator.Reporting.Sheet
                 r.FF2DesignN = null;
                 r.Issues.Add(new CalculationIssue("Currency", "Result could not be verified current."));
             }
+        }
+
+        private static void BuildPlan(ElevatorProject project, DesignContext context, CalculationSheet s)
+        {
             try
             {
                 if (context != null
@@ -156,9 +182,10 @@ namespace Elevator.Reporting.Sheet
             if (s.Plan != null && s.CarGuideForcesAvailable && (Math.Abs(s.Plan.CarWidth - s.CarGuideForces.InternalWidthMm.Value) > 1e-6
                 || Math.Abs(s.Plan.CarDepth - s.CarGuideForces.InternalDepthMm.Value) > 1e-6))
                 s.Plan = null;
-            var profiles = new ElevatorDesignResult();
-            s.CarRail = ProportionalRailSection.Parse(profiles.CarRailProfile);
-            s.CounterweightRail = ProportionalRailSection.Parse(profiles.CounterweightRailProfile);
+        }
+
+        private static void RecordOmissions(CalculationSheet s)
+        {
             if (!s.ChassisAvailable)
                 s.Omit("P1–P4 machine-room bearing reactions and rope tensions (" + s.Mode + ")", s.Chassis.Issues);
             foreach (var load in s.Loads)
@@ -168,8 +195,6 @@ namespace Elevator.Reporting.Sheet
             }
             if (!s.CarGuideForcesAvailable)
                 s.Omit("FF1 / FF2 car guide-rail forces", s.CarGuideForces.Issues);
-            s.BuildRopeTraction(context);
-            return s;
         }
 
         void Omit(string name, IEnumerable<CalculationIssue> issues)

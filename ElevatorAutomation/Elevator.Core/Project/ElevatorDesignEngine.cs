@@ -66,55 +66,9 @@ namespace Elevator.Core.Project
                 }
                 result.Plan = DesignRules.Calculate(input.SW, input.SD, context.Equipment, context.CounterweightDepthMm);
                 result.LayoutStatus = ValidationStatus.PASS;
-                if ((views & ~DrawingViews.Plan) != 0)
-                {
-                    result.Plan.MachineRoom = MachineRoomRules.Calculate(input, result.Plan, context.RoomExtensions);
-                    result.CodeDiameterRatioStatus = Status(result.Plan.MachineRoom.CodeDiameterRatioStatus);
-                    if ((views & (DrawingViews.SectionBB | DrawingViews.SectionAA)) != 0)
-                    {
-                        if (context.SectionReference == null)
-                            throw new ArgumentException("Reviewed B-B template reference is required.");
-                        result.Plan.MachineRoomSection = MachineRoomSectionRules.Calculate(
-                            input,
-                            result.Plan,
-                            context.SectionReference,
-                            context.FrontSupportDepthMm,
-                            context.RearSupportOffsetMm,
-                            context.RetainedDeflectorPitchMm,
-                            context.RetainedDeflectorVisible);
-                        result.LayoutStatus = Status(result.Plan.MachineRoomSection.LayoutStatus);
-                    }
-                    result.WrapAngleStatus = Status(result.Plan.MachineRoom.Reeving.WrapAngleStatus);
-                    foreach (var rule in result.Plan.MachineRoom.Rules)
-                    {
-                        result.Validation.Add(new ValidationIssue
-                        {
-                            Code = rule.RuleId,
-                            Field = "Design",
-                            Status = Status(rule.Status),
-                            Message = rule.Status + ": " + rule.EngineeringNote,
-                            BlocksGeneration = false
-                        });
-                    }
-                }
+                CalculateMachineRoom(context, views, result, input);
                 result.Floors = basicGeometry ? new List<FloorElevation>() : ProjectFloors.Elevations(project.Building);
-                if ((views & DrawingViews.SectionAA) != 0)
-                {
-                    result.SectionAA = SectionAACalculator.Calculate(
-                        LegacyProjectAdapter.ToSectionAA(project),
-                        context.SectionReference.SourceSlabThickness);
-                    if (result.SectionAA.LayoutStatus.StartsWith("WARNING"))
-                    {
-                        result.LayoutStatus = ValidationStatus.WARNING;
-                        result.Validation.Add(new ValidationIssue
-                        {
-                            Code = "CW_POSE",
-                            Field = "Counterweight",
-                            Status = ValidationStatus.WARNING,
-                            Message = result.SectionAA.LayoutStatus
-                        });
-                    }
-                }
+                CalculateSectionAA(project, context, views, result);
             }
             catch (ArgumentException e) { Failure(result, e.Message); }
             catch (InvalidOperationException e) { Failure(result, e.Message); }
@@ -129,6 +83,62 @@ namespace Elevator.Core.Project
                 ? new Elevator.Core.Calculations.SimplifiedCalculationEngine().Calculate(project, result.ChassisGeometry, context)
                 : new Elevator.Core.MachineRoom.ChassisCalculationEngine().Calculate(project, result.ChassisGeometry, context);
             return result;
+        }
+
+        private void CalculateMachineRoom(DesignContext context, DrawingViews views, ElevatorDesignResult result, ProjectInput input)
+        {
+            if ((views & ~DrawingViews.Plan) != 0)
+            {
+                result.Plan.MachineRoom = MachineRoomRules.Calculate(input, result.Plan, context.RoomExtensions);
+                result.CodeDiameterRatioStatus = Status(result.Plan.MachineRoom.CodeDiameterRatioStatus);
+                if ((views & (DrawingViews.SectionBB | DrawingViews.SectionAA)) != 0)
+                {
+                    if (context.SectionReference == null)
+                        throw new ArgumentException("Reviewed B-B template reference is required.");
+                    result.Plan.MachineRoomSection = MachineRoomSectionRules.Calculate(
+                        input,
+                        result.Plan,
+                        context.SectionReference,
+                        context.FrontSupportDepthMm,
+                        context.RearSupportOffsetMm,
+                        context.RetainedDeflectorPitchMm,
+                        context.RetainedDeflectorVisible);
+                    result.LayoutStatus = Status(result.Plan.MachineRoomSection.LayoutStatus);
+                }
+                result.WrapAngleStatus = Status(result.Plan.MachineRoom.Reeving.WrapAngleStatus);
+                foreach (var rule in result.Plan.MachineRoom.Rules)
+                {
+                    result.Validation.Add(new ValidationIssue
+                    {
+                        Code = rule.RuleId,
+                        Field = "Design",
+                        Status = Status(rule.Status),
+                        Message = rule.Status + ": " + rule.EngineeringNote,
+                        BlocksGeneration = false
+                    });
+                }
+            }
+        }
+
+        private void CalculateSectionAA(ElevatorProject project, DesignContext context, DrawingViews views, ElevatorDesignResult result)
+        {
+            if ((views & DrawingViews.SectionAA) != 0)
+            {
+                result.SectionAA = SectionAACalculator.Calculate(
+                    LegacyProjectAdapter.ToSectionAA(project),
+                    context.SectionReference.SourceSlabThickness);
+                if (result.SectionAA.LayoutStatus.StartsWith("WARNING"))
+                {
+                    result.LayoutStatus = ValidationStatus.WARNING;
+                    result.Validation.Add(new ValidationIssue
+                    {
+                        Code = "CW_POSE",
+                        Field = "Counterweight",
+                        Status = ValidationStatus.WARNING,
+                        Message = result.SectionAA.LayoutStatus
+                    });
+                }
+            }
         }
 
         static void Failure(ElevatorDesignResult r, string message)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Elevator.Core.Car;
@@ -14,6 +15,35 @@ namespace Elevator.Core.Geometry
     public static class VerticalSectionCalculator
     {
         public static VerticalGeometry Calculate(VerticalProjectData d, VerticalSource s)
+        {
+            ValidateData(d, s);
+            var floors = d.Floors;
+            ValidateFloorStack(floors);
+            var normal = floors.Where(f => !f.IsRoof).ToArray();
+            var served = normal.Where(f => f.Served).ToArray();
+            ValidateServedLandings(normal, served);
+            var car = normal.SingleOrDefault(f => f.FloorId == d.CarReferenceFloorId);
+            if (car == null || !car.Served)
+                throw new ArgumentException("Select a served car reference landing.");
+            VerticalGeometry g = BuildStack(d, s, floors, normal, served, car);
+            PlaceCounterweight(d, s, g);
+            CheckEnvelopeFits(d, normal, g);
+            g.Brackets = BracketLayoutSolver.Solve(
+                g.PitFloorZ,
+                g.MRSlabUndersideZ,
+                d.RequestedBracketMaxSpacingMm,
+                g.Floors,
+                d.LandingSlabGraphicalThicknessMm,
+                d.DoorOpeningHeightMm);
+            AddReviewItems(d, s, g);
+            RunGenerators(d, s, g);
+            if (g.Entities.Select(e => e.Id).Distinct().Count() != g.Entities.Count
+                || g.Entities.Any(e => e.Points.Any(v => !FloorStackGenerator.Finite(v))))
+                throw new InvalidOperationException("Non-deterministic/invalid generated geometry.");
+            return g;
+        }
+
+        private static void ValidateData(VerticalProjectData d, VerticalSource s)
         {
             if (d == null || d.SchemaVersion != 1 || s == null || s.Plan == null || s.Section == null)
                 throw new ArgumentException("Supported vertical data and coordinated Plan/B-B results required.");
@@ -36,20 +66,27 @@ namespace Elevator.Core.Geometry
                 || d.CarOverallHeightMm - d.CarEnvelopeBottomBelowCarFFLMm < d.CarInternalHeightMm
                 || d.DoorOpeningHeightMm < d.DoorClearHeightMm)
                 throw new ArgumentException("Invalid vertical envelope/datum values.");
-            var floors = d.Floors;
+        }
+
+        private static void ValidateFloorStack(List<VerticalFloor> floors)
+        {
             if (floors == null
-                || floors.Count < 3
-                || floors.Any(
-                    f => String.IsNullOrWhiteSpace(f.FloorId) || String.IsNullOrWhiteSpace(f.Name) || !FloorStackGenerator.Finite(f.FflZ))
-                || floors.Select(f => f.FloorId).Distinct().Count() != floors.Count
-                || floors.Select(f => f.Name).Distinct().Count() != floors.Count
-                || floors.Count(f => f.IsRoof) != 1
-                || !floors.Last().IsRoof
-                || floors.Last().Served
-                || Math.Abs(floors[0].FflZ) > 1e-8)
+                            || floors.Count < 3
+                            || floors.Any(
+                                f => String.IsNullOrWhiteSpace(f.FloorId)
+                                    || String.IsNullOrWhiteSpace(f.Name)
+                                    || !FloorStackGenerator.Finite(f.FflZ))
+                            || floors.Select(f => f.FloorId).Distinct().Count() != floors.Count
+                            || floors.Select(f => f.Name).Distinct().Count() != floors.Count
+                            || floors.Count(f => f.IsRoof) != 1
+                            || !floors.Last().IsRoof
+                            || floors.Last().Served
+                            || Math.Abs(floors[0].FflZ) > 1e-8)
                 throw new ArgumentException("Invalid floor stack/identities; R is a distinct unserved structural level.");
-            var normal = floors.Where(f => !f.IsRoof).ToArray();
-            var served = normal.Where(f => f.Served).ToArray();
+        }
+
+        private static void ValidateServedLandings(VerticalFloor[] normal, VerticalFloor[] served)
+        {
             if (served.Length < 2)
                 throw new ArgumentException("At least two served landings required.");
             for (int i = 1; i < normal.Length; i++)
@@ -57,9 +94,16 @@ namespace Elevator.Core.Geometry
                 if (normal[i].FflZ <= normal[i - 1].FflZ)
                     throw new ArgumentException("Normal FFL elevations must increase.");
             }
-            var car = normal.SingleOrDefault(f => f.FloorId == d.CarReferenceFloorId);
-            if (car == null || !car.Served)
-                throw new ArgumentException("Select a served car reference landing.");
+        }
+
+        private static VerticalGeometry BuildStack(
+            VerticalProjectData d,
+            VerticalSource s,
+            List<VerticalFloor> floors,
+            VerticalFloor[] normal,
+            VerticalFloor[] served,
+            VerticalFloor car)
+        {
             var g = new VerticalGeometry
             {
                 Floors = floors.Select(f =>
@@ -78,6 +122,11 @@ namespace Elevator.Core.Geometry
             g.CarFloorZ = car.FflZ + d.LevelingOffsetMm;
             g.CarBottomZ = g.CarFloorZ - d.CarEnvelopeBottomBelowCarFFLMm;
             g.CarTopZ = g.CarBottomZ + d.CarOverallHeightMm;
+            return g;
+        }
+
+        private static void PlaceCounterweight(VerticalProjectData d, VerticalSource s, VerticalGeometry g)
+        {
             double calibration = d.CWBottomAbovePitFloorAtHighestServedLandingMm ?? d.ProvisionalCWCalibrationMm;
             if (!FloorStackGenerator.Finite(calibration) || calibration < 0)
                 throw new ArgumentException("CW reference must be a finite nonnegative height above finished pit floor.");
@@ -85,6 +134,10 @@ namespace Elevator.Core.Geometry
             g.CwTopZ = g.CwBottomZ + d.CounterweightOverallHeightMm;
             g.CWAbsolutePositionStatus = d.CWAbsolutePositionStatus;
             g.CodeDiameterRatioStatus = s.CodeDiameterRatioStatus;
+        }
+
+        private static void CheckEnvelopeFits(VerticalProjectData d, VerticalFloor[] normal, VerticalGeometry g)
+        {
             if (g.CarBottomZ < g.PitFloorZ || g.CarTopZ > g.MRSlabUndersideZ || g.CwBottomZ < g.PitFloorZ || g.CwTopZ > g.MRSlabUndersideZ)
             {
                 g.LayoutStatus = "WARNING";
@@ -99,18 +152,15 @@ namespace Elevator.Core.Geometry
                     g.ReviewItems.Add(normal[i].Name + ": opening intersects next slab/ceiling.");
                 }
             }
-            g.Brackets = BracketLayoutSolver.Solve(
-                g.PitFloorZ,
-                g.MRSlabUndersideZ,
-                d.RequestedBracketMaxSpacingMm,
-                g.Floors,
-                d.LandingSlabGraphicalThicknessMm,
-                d.DoorOpeningHeightMm);
+        }
+
+        private static void AddReviewItems(VerticalProjectData d, VerticalSource s, VerticalGeometry g)
+        {
             g.ReviewItems.Add("CW absolute position: "
-                + g.CWAbsolutePositionStatus
-                + "; provisional calibration, when missing = "
-                + d.ProvisionalCWCalibrationMm
-                + " mm (test drawing only).");
+                            + g.CWAbsolutePositionStatus
+                            + "; provisional calibration, when missing = "
+                            + d.ProvisionalCWCalibrationMm
+                            + " mm (test drawing only).");
             g.ReviewItems.Add("Car envelope offset: "
                 + d.CarEnvelopeBottomBelowCarFFLMm
                 + " mm; "
@@ -131,6 +181,10 @@ namespace Elevator.Core.Geometry
                 + (s.Section.Arrangement.CalculatedWrapAngleDeg.HasValue
                 ? s.Section.Arrangement.CalculatedWrapAngleDeg.Value.ToString("0.###", CultureInfo.InvariantCulture) + " deg"
                 : "unknown") + " / target >=152 deg. Slab clearance: " + s.Section.Arrangement.DeflectorSlabClearanceStatus + ".");
+        }
+
+        private static void RunGenerators(VerticalProjectData d, VerticalSource s, VerticalGeometry g)
+        {
             BuildingVerticalGenerator.Generate(g, d, s);
             ShaftVerticalGenerator.Generate(g, d, s);
             LandingGenerator.Generate(g, d, s);
@@ -144,10 +198,6 @@ namespace Elevator.Core.Geometry
             MachineRoomVerticalGenerator.Generate(g, d, s);
             VerticalDimensionGenerator.Generate(g, d, s);
             AnnotationLayoutEngine.Generate(g, d, s);
-            if (g.Entities.Select(e => e.Id).Distinct().Count() != g.Entities.Count
-                || g.Entities.Any(e => e.Points.Any(v => !FloorStackGenerator.Finite(v))))
-                throw new InvalidOperationException("Non-deterministic/invalid generated geometry.");
-            return g;
         }
     }
 }

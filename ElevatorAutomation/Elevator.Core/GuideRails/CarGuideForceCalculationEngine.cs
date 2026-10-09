@@ -196,34 +196,8 @@ namespace Elevator.Core.GuideRails
                     ? (double?)null
                     : p.Calculations.CarGuideForces.GuideShoeSpacingMm
             };
-            var sourceIssues = GeometryInputIssues(p, c);
-            if (sourceIssues.Count > 0)
-            {
-                r.Status = "INVALID_INPUT";
-                r.Issues.AddRange(sourceIssues);
+            if (!SourcesUsable(r, p, g, c))
                 return r;
-            }
-            if (g == null)
-            {
-                r.Issues.Add(new CalculationIssue(
-                    "Cabin.Geometry",
-                    "Shared source-bound internal cabin dimensions unavailable; regenerate through ElevatorDesignEngine."));
-                return r;
-            }
-            if (g.Status != "SOURCE_BOUND")
-            {
-                r.Status = g.Status;
-                r.Issues.AddRange(g.Issues);
-                return r;
-            }
-            if (!IsGeometryCurrent(g, p, c))
-            {
-                r.Status = "STALE_GEOMETRY";
-                r.Issues.Add(new CalculationIssue(
-                    "Cabin.Geometry",
-                    "Geometry-driving project/profile inputs changed; regenerate internal cabin dimensions before calculation."));
-                return r;
-            }
             r.InternalWidthMm = g.InternalWidthMm;
             r.InternalDepthMm = g.InternalDepthMm;
             Input(r, r.CapacityKg, "Elevator.CapacityKg", "Rated capacity (kg)");
@@ -234,6 +208,49 @@ namespace Elevator.Core.GuideRails
                 "Vertical upper-to-lower car guide-shoe spacing h (mm)");
             if (r.Issues.Count > 0)
                 return r;
+            if (!TryEvaluate(r))
+                return r;
+            AddDetails(r);
+            return r;
+        }
+
+        // Sets the status and issues of r and returns false when the source data or the geometry cannot be used.
+        private static bool SourcesUsable(CarGuideForceResult r, ElevatorProject p, CarGuideForceGeometry g, DesignContext c)
+        {
+            var sourceIssues = GeometryInputIssues(p, c);
+            if (sourceIssues.Count > 0)
+            {
+                r.Status = "INVALID_INPUT";
+                r.Issues.AddRange(sourceIssues);
+                return false;
+            }
+            if (g == null)
+            {
+                r.Issues.Add(new CalculationIssue(
+                    "Cabin.Geometry",
+                    "Shared source-bound internal cabin dimensions unavailable; regenerate through ElevatorDesignEngine."));
+                return false;
+            }
+            if (g.Status != "SOURCE_BOUND")
+            {
+                r.Status = g.Status;
+                r.Issues.AddRange(g.Issues);
+                return false;
+            }
+            if (!IsGeometryCurrent(g, p, c))
+            {
+                r.Status = "STALE_GEOMETRY";
+                r.Issues.Add(new CalculationIssue(
+                    "Cabin.Geometry",
+                    "Geometry-driving project/profile inputs changed; regenerate internal cabin dimensions before calculation."));
+                return false;
+            }
+            return true;
+        }
+
+        // Evaluates the note rule into r; false when the numerical range is exceeded.
+        private static bool TryEvaluate(CarGuideForceResult r)
+        {
             try
             {
                 var f = EvaluateNoteRule(r.CapacityKg.Value, r.InternalWidthMm.Value, r.InternalDepthMm.Value, r.GuideShoeSpacingMm.Value);
@@ -242,18 +259,22 @@ namespace Elevator.Core.GuideRails
                 r.FF2BaseN = f[2];
                 r.FF2DesignN = f[3];
                 r.Status = "CALCULATED_UNDER_NOTE_ASSUMPTIONS";
+                return true;
             }
             catch (ArgumentException e)
             {
-                r.Status =
-                "INVALID_INPUT";
+                r.Status = "INVALID_INPUT";
                 r.Issues.Add(new CalculationIssue("FF.NumericalRange", e.Message));
-                return r;
+                return false;
             }
+        }
+
+        private void AddDetails(CarGuideForceResult r)
+        {
             string q = r.CapacityKg.Value.ToString("0.###", CultureInfo.InvariantCulture), w =
-                r.InternalWidthMm.Value.ToString("0.###", CultureInfo.InvariantCulture), d =
-                r.InternalDepthMm.Value.ToString("0.###", CultureInfo.InvariantCulture), h =
-                    r.GuideShoeSpacingMm.Value.ToString("0.###", CultureInfo.InvariantCulture);
+                            r.InternalWidthMm.Value.ToString("0.###", CultureInfo.InvariantCulture), d =
+                            r.InternalDepthMm.Value.ToString("0.###", CultureInfo.InvariantCulture), h =
+                                r.GuideShoeSpacingMm.Value.ToString("0.###", CultureInfo.InvariantCulture);
             r.Details.Add("FF1 base = "
                 + q
                 + " kg × 10 N/kg × "
@@ -281,7 +302,6 @@ namespace Elevator.Core.GuideRails
             r.Details.Add(
                 "Irregular rated-load distribution inside car. No car/CW/machine mass, rope tension, roping ratio or P1–P7 load added. The "
                 + "adopted 10 N/kg is not replaced with g = 9.81. No guide strength or connection verification.");
-            return r;
         }
     }
 }

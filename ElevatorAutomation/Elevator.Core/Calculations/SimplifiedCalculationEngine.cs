@@ -68,90 +68,103 @@ namespace Elevator.Core.Calculations
                     "Select Basic explicitly; populated legacy Advanced projects are not converted automatically."));
                 return r;
             }
-            bool invalid = false;
-            var masses = new Dictionary<string, double>();
-            Action<string, string, double?, bool> add =
-                (field, label, value, required) =>
-                {
-                    if (!value.HasValue)
-                    {
-                        if (required)
-                        {
-                            r.Issues.Add(new CalculationIssue(
-                                            field,
-                                            "NOT PROVIDED; mass in kg required."));
-                        }
-                        else
-                        {
-                            masses[label + " (not included)"] =
-                                                0;
-                        }
-                        return;
-                    }
-                    if (!ChassisReactionSolver.Finite(
-                value.Value) || (required ? value.Value <= 0 : value.Value < 0))
-                    {
-                        invalid = true;
-                        r.Issues.Add(new CalculationIssue(
-                    field,
-                    "Finite " + (required ? "positive" : "nonnegative") + " mass required."));
-                        return;
-                    }
-                    masses[label] = value.Value;
-                };
-            add("Elevator.CapacityKg", "Rated capacity", p.Elevator.CapacityKg, true);
-            add("Calculations.CarMassKg", "Empty car", c.CarMassKg, true);
-            add("Calculations.CounterweightMassKg", "Counterweight", c.CounterweightMassKg, true);
-            add("Calculations.MachineMassKg", "Machine", c.MachineMassKg, true);
-            add(
+            var inputs = CollectMasses(p, c, r);
+            if (r.Issues.Count > 0)
+            {
+                r.Status = inputs.Invalid ? "INVALID_INPUT" : "MISSING_INPUT";
+                return r;
+            }
+            double mass = inputs.Masses.Values.Sum();
+            r = SimplifiedVerticalSolver.Solve(g, mass * ChassisCalculationEngine.GravityMetresPerSecondSquared);
+            r.TotalMassKg = mass;
+            r.MassCompositionKg = inputs.Masses;
+            r.InputFingerprint = Fingerprint(p, g);
+            if (r.Reactions != null)
+                AddRopeTensions(r, p, c);
+            return r;
+        }
+
+        // The masses of the Basic mode with their problems; optional blank additions count as zero and are labelled "not included".
+        static MassInputs CollectMasses(ElevatorProject p, ChassisCalculationInputs c, ChassisCalculationResult r)
+        {
+            var inputs = new MassInputs(r);
+            inputs.Add("Elevator.CapacityKg", "Rated capacity", p.Elevator.CapacityKg, true);
+            inputs.Add("Calculations.CarMassKg", "Empty car", c.CarMassKg, true);
+            inputs.Add("Calculations.CounterweightMassKg", "Counterweight", c.CounterweightMassKg, true);
+            inputs.Add("Calculations.MachineMassKg", "Machine", c.MachineMassKg, true);
+            inputs.Add(
                 "Calculations.CarSideAdditionalSuspendedMassKg",
                 "Effective car-side additions / compensation",
                 c.CarSideAdditionalSuspendedMassKg,
                 false);
-            add(
+            inputs.Add(
                 "Calculations.CounterweightSideAdditionalSuspendedMassKg",
                 "Effective CW-side additions / compensation",
                 c.CounterweightSideAdditionalSuspendedMassKg,
                 false);
             if (c.IncludeChassisSelfWeight == true)
-                add("Calculations.ChassisMassKg", "Chassis assembly", c.ChassisMassKg, true);
+                inputs.Add("Calculations.ChassisMassKg", "Chassis assembly", c.ChassisMassKg, true);
             else
-                masses["Chassis assembly (not included)"] = 0;
+                inputs.Masses["Chassis assembly (not included)"] = 0;
             if (c.IncludeHangerAssemblyWeight == true)
-                add("Calculations.HangerAssemblyMassKg", "Hanger assembly", c.HangerAssemblyMassKg, true);
+                inputs.Add("Calculations.HangerAssemblyMassKg", "Hanger assembly", c.HangerAssemblyMassKg, true);
             else
-                masses["Hanger assembly (not included)"] = 0;
+                inputs.Masses["Hanger assembly (not included)"] = 0;
             if (!p.Suspension.RopingRatio.HasValue || p.Suspension.RopingRatio.Value != 1)
             {
-                invalid = true;
+                inputs.Invalid = true;
                 r.Issues.Add(new CalculationIssue("Suspension.RopingRatio", "Only the supported explicit static 1:1 case is implemented."));
             }
-            if (r.Issues.Count > 0)
+            return inputs;
+        }
+
+        static void AddRopeTensions(ChassisCalculationResult r, ElevatorProject p, ChassisCalculationInputs c)
+        {
+            r.CarBundleTensionN = (p.Elevator.CapacityKg.Value + c.CarMassKg.Value + (c.CarSideAdditionalSuspendedMassKg ?? 0)) * 9.81;
+            r.CounterweightBundleTensionN = (c.CounterweightMassKg.Value + (c.CounterweightSideAdditionalSuspendedMassKg ?? 0)) * 9.81;
+            if (p.Suspension.RopeCount.HasValue && p.Suspension.RopeCount.Value > 0)
             {
-                r.Status = invalid ? "INVALID_INPUT" : "MISSING_INPUT";
-                return r;
+                r.CarPerRopeTensionN = r.CarBundleTensionN / p.Suspension.RopeCount.Value;
+                r.CounterweightPerRopeTensionN = r.CounterweightBundleTensionN / p.Suspension.RopeCount.Value;
             }
-            double mass = masses.Values.Sum();
-            r = SimplifiedVerticalSolver.Solve(g, mass * ChassisCalculationEngine.GravityMetresPerSecondSquared);
-            r.TotalMassKg = mass;
-            r.MassCompositionKg = masses;
-            r.InputFingerprint = Fingerprint(p, g);
-            if (r.Reactions != null)
+            r.Assumptions.Add(
+                "Optional blank side additions are not included; supplied effective masses are counted once, including compensation "
+                + "assigned to that side. Optional chassis/hanger mass is counted only when included; no automatic member weights "
+                + "without full properties/lengths. Rope tensions are separate informational results and are not added to the "
+                + "resultant again.");
+        }
+
+        // Collects the component masses and the problems found in them.
+        sealed class MassInputs
+        {
+            readonly ChassisCalculationResult result;
+
+            public MassInputs(ChassisCalculationResult result)
             {
-                r.CarBundleTensionN = (p.Elevator.CapacityKg.Value + c.CarMassKg.Value + (c.CarSideAdditionalSuspendedMassKg ?? 0)) * 9.81;
-                r.CounterweightBundleTensionN = (c.CounterweightMassKg.Value + (c.CounterweightSideAdditionalSuspendedMassKg ?? 0)) * 9.81;
-                if (p.Suspension.RopeCount.HasValue && p.Suspension.RopeCount.Value > 0)
+                this.result = result;
+            }
+
+            public readonly Dictionary<string, double> Masses = new Dictionary<string, double>();
+            public bool Invalid;
+
+            public void Add(string field, string label, double? value, bool required)
+            {
+                if (!value.HasValue)
                 {
-                    r.CarPerRopeTensionN = r.CarBundleTensionN / p.Suspension.RopeCount.Value;
-                    r.CounterweightPerRopeTensionN = r.CounterweightBundleTensionN / p.Suspension.RopeCount.Value;
+                    if (required)
+                        result.Issues.Add(new CalculationIssue(field, "NOT PROVIDED; mass in kg required."));
+                    else
+                        Masses[label + " (not included)"] = 0;
+                    return;
                 }
-                r.Assumptions.Add(
-                    "Optional blank side additions are not included; supplied effective masses are counted once, including compensation "
-                    + "assigned to that side. Optional chassis/hanger mass is counted only when included; no automatic member weights "
-                    + "without full properties/lengths. Rope tensions are separate informational results and are not added to the "
-                    + "resultant again.");
+                if (!ChassisReactionSolver.Finite(value.Value) || (required ? value.Value <= 0 : value.Value < 0))
+                {
+                    Invalid = true;
+                    result.Issues.Add(new CalculationIssue(field, "Finite " + (required ? "positive" : "nonnegative") + " mass required."));
+                    return;
+                }
+                Masses[label] = value.Value;
             }
-            return r;
         }
     }
 }

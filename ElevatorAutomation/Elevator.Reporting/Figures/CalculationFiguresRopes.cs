@@ -48,6 +48,16 @@ namespace Elevator.Reporting.Figures
             var x = r.Inputs;
             var g = r.Geometry;
             var f = new Figure { Id = "F10", Title = "Traction sheave — wrap angle and groove", Schematic = true };
+            DrawSheaveWrap(x, g, f);
+            // Groove detail.
+            DrawGrooveDetail(x, f);
+            var note = f.Text("T1 and T2 act on the rope runs at the traction sheave", Pt(4, 92), "start");
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawSheaveWrap(RopeTractionEffectiveInputs x, RopeTractionGeometry g, Figure f)
+        {
             var C = Pt(F10SheaveX, F10SheaveY);
             double R = F10SheaveR;
             double alpha =
@@ -121,7 +131,10 @@ namespace Elevator.Reporting.Figures
                     "dt",
                     Figure.Mm(x.SheavePitchDiameterMm.Value));
             }
-            // Groove detail.
+        }
+
+        private static void DrawGrooveDetail(RopeTractionEffectiveInputs x, Figure f)
+        {
             f.Line(Pt(108, 4), Pt(108, 88), FigureLayer.Thin, "view-split");
             f.Text("Groove detail", Pt(137, 8), "middle", FigureLayer.Text, 3.5, false, null, null, true);
             f.Text(
@@ -142,6 +155,15 @@ namespace Elevator.Reporting.Figures
             bool v = x.GrooveType != GrooveTypes.UndercutU;
             // Flanks: V-groove flanks tangent to the rope; U-groove seat follows the rope to its horizontal diameter, then the flanks open.
             double half = gamma / 2 * Math.PI / 180;
+            List<FigurePoint> profile = GrooveProfile(O, rr, beta, v, half);
+            f.Poly(profile, false, FigureLayer.Outline, "groove-profile");
+            // γ: groove angle between the flank directions (V) / at the rope centre between the flank starts (U); β: undercut angle at the
+            // rope centre.
+            DrawGrooveAngles(f, O, rr, gamma, beta, v, half);
+        }
+
+        private static List<FigurePoint> GrooveProfile(FigurePoint O, double rr, double beta, bool v, double half)
+        {
             var profile = new List<FigurePoint>();
             if (v)
             {
@@ -178,9 +200,11 @@ namespace Elevator.Reporting.Figures
                 profile.AddRange(Arc(O, rr + 0.4, beta > 0 ? 270 + beta / 2 : 270, 360, 16));
                 profile.Add(O + Pt(rr + Math.Tan(half) * 16, -16));
             }
-            f.Poly(profile, false, FigureLayer.Outline, "groove-profile");
-            // γ: groove angle between the flank directions (V) / at the rope centre between the flank starts (U); β: undercut angle at the
-            // rope centre.
+            return profile;
+        }
+
+        private static void DrawGrooveAngles(Figure f, FigurePoint O, double rr, double gamma, double beta, bool v, double half)
+        {
             if (gamma > 0)
             {
                 if (v)
@@ -234,9 +258,6 @@ namespace Elevator.Reporting.Figures
                     "groove-beta",
                     Figure.Num(beta, "0.##"));
             }
-            var note = f.Text("T1 and T2 act on the rope runs at the traction sheave", Pt(4, 92), "start");
-            Finish(f, note.At.Y);
-            return f;
         }
 
         static bool Positive(double? v)

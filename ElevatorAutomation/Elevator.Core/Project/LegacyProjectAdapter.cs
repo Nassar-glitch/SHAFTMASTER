@@ -15,6 +15,21 @@ namespace Elevator.Core.Project
             if (aa != null && aa.SchemaVersion != 1)
                 throw new ArgumentException("Unsupported legacy A-A schema.");
             var p = retained == null ? new ElevatorProject() : ProjectJson.Clone(retained);
+            CopyLegacyFields(old, retained, p);
+            // Legacy summary values were placeholders, not an authoritative floor stack. Preserve them
+            // as migration metadata only until actual SectionAA floor data exists.
+            if (aa == null && p.Building.Floors.Count == 0)
+            {
+                p.Extensions["legacy.stops"] = old.Stops;
+                p.Extensions["legacy.travel"] = old.Travel;
+                p.Extensions["legacy.floorHeights"] = old.FloorHeights;
+            }
+            ApplySectionAA(aa, p);
+            return p;
+        }
+
+        private static void CopyLegacyFields(ProjectInput old, ElevatorProject retained, ElevatorProject p)
+        {
             p.Info.Name = old.ProjectName;
             p.Elevator.LegacyFamily = old.ElevatorType;
             p.Elevator.TemplateId = old.TemplateId;
@@ -46,14 +61,10 @@ namespace Elevator.Core.Project
             p.MachineRoom.RearExtensionMm = old.MachineRoomRearExtension;
             p.MachineRoom.MinimumDeflectorSlabClearanceMm = old.MinimumDeflectorSlabClearanceMm;
             p.Extensions = old.Extensions == null ? new Dictionary<string, object>() : new Dictionary<string, object>(old.Extensions);
-            // Legacy summary values were placeholders, not an authoritative floor stack. Preserve them
-            // as migration metadata only until actual SectionAA floor data exists.
-            if (aa == null && p.Building.Floors.Count == 0)
-            {
-                p.Extensions["legacy.stops"] = old.Stops;
-                p.Extensions["legacy.travel"] = old.Travel;
-                p.Extensions["legacy.floorHeights"] = old.FloorHeights;
-            }
+        }
+
+        private static void ApplySectionAA(SectionAAProject aa, ElevatorProject p)
+        {
             if (aa != null)
             {
                 var normal = aa.Floors.Where(f => !f.IsRoof).ToArray();
@@ -83,7 +94,6 @@ namespace Elevator.Core.Project
                 p.Extensions.Remove("legacy.travel");
                 p.Extensions.Remove("legacy.floorHeights");
             }
-            return p;
         }
 
         public static ProjectInput ToLegacy(ElevatorProject p, bool includeFloorSummary = true)

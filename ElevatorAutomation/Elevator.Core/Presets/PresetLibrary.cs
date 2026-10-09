@@ -125,6 +125,18 @@ namespace Elevator.Core.Presets
 
         void ValidateProject(List<string> p)
         {
+            ValidateNewProject(p);
+            ValidateCapacityAndBalance(p);
+            ValidateRopeLadder(p);
+            ValidateSheaveSteps(p);
+            ValidateUndercutSteps(p);
+            ValidateBalanceSteps(p);
+            ValidateGuidesAndBuffers(p);
+            ValidateAdvanced(p);
+        }
+
+        private void ValidateNewProject(List<string> p)
+        {
             var n = NewProject;
             if (n == null)
                 p.Add("NewProject is required");
@@ -141,6 +153,10 @@ namespace Elevator.Core.Presets
                 if (!Positive(n.SpeedMps))
                     p.Add("NewProject.SpeedMps must be positive");
             }
+        }
+
+        private void ValidateCapacityAndBalance(List<string> p)
+        {
             if (!Positive(PersonMassKg))
                 p.Add("PersonMassKg must be positive");
             if (!Finite(CounterweightBalanceFactor) || CounterweightBalanceFactor.Value < 0 || CounterweightBalanceFactor.Value > 1)
@@ -153,6 +169,10 @@ namespace Elevator.Core.Presets
                 p.Add("CapacityTable capacities must be unique");
             if (!MaximumRopeCount.HasValue || MaximumRopeCount.Value < 4 || MaximumRopeCount.Value > 7)
                 p.Add("MaximumRopeCount must be 4–7 (project rope rule)");
+        }
+
+        private void ValidateRopeLadder(List<string> p)
+        {
             if (RopeLadder == null || RopeLadder.Count == 0)
                 p.Add("RopeLadder is required");
             else if (RopeLadder.Any(r => r == null))
@@ -177,6 +197,10 @@ namespace Elevator.Core.Presets
                         p.Add("RopeLadder diameter " + r.DiameterMm.ToString(CultureInfo.InvariantCulture) + " mm is not in Ropes.Table");
                 }
             }
+        }
+
+        private void ValidateSheaveSteps(List<string> p)
+        {
             if (!Positive(TractionSheavePitchDiameterMm))
                 p.Add("TractionSheavePitchDiameterMm must be positive");
             if (TractionSheavePitchSteps == null || TractionSheavePitchSteps.Count == 0 || TractionSheavePitchSteps.Any(v => !Positive(v)))
@@ -185,6 +209,10 @@ namespace Elevator.Core.Presets
                 p.Add("TractionSheavePitchSteps must increase");
             else if (TractionSheavePitchDiameterMm.HasValue && !TractionSheavePitchSteps.Contains(TractionSheavePitchDiameterMm.Value))
                 p.Add("TractionSheavePitchSteps must include TractionSheavePitchDiameterMm");
+        }
+
+        private void ValidateUndercutSteps(List<string> p)
+        {
             if (UndercutAngleStepsDeg == null || UndercutAngleStepsDeg.Count == 0)
                 p.Add("UndercutAngleStepsDeg is required");
             else if (UndercutAngleStepsDeg.Zip(UndercutAngleStepsDeg.Skip(1), (x, y) => y > x).Any(ok => !ok))
@@ -195,6 +223,10 @@ namespace Elevator.Core.Presets
             else if (Groove != null
                 && UndercutAngleStepsDeg.Any(v => GrooveTypes.AngleProblem(Groove.Type, v, Groove.GrooveAngleDeg) != null))
                 p.Add("UndercutAngleStepsDeg values must be valid undercut angles (0–105°)");
+        }
+
+        private void ValidateBalanceSteps(List<string> p)
+        {
             if (BalanceFactorSteps == null || BalanceFactorSteps.Count == 0)
                 p.Add("BalanceFactorSteps is required");
             else if (BalanceFactorSteps.Any(v => Double.IsNaN(v) || v <= 0 || v > 1))
@@ -204,6 +236,10 @@ namespace Elevator.Core.Presets
                 p.Add("BalanceFactorSteps must include CounterweightBalanceFactor");
             else if (BalanceFactorSteps.Distinct().Count() != BalanceFactorSteps.Count)
                 p.Add("BalanceFactorSteps must be unique");
+        }
+
+        private void ValidateGuidesAndBuffers(List<string> p)
+        {
             if (!Positive(GuideShoeSpacingMm))
                 p.Add("GuideShoeSpacingMm must be positive");
             if (!Positive(BracketMaximumSpacingMm))
@@ -218,6 +254,10 @@ namespace Elevator.Core.Presets
                 || Buffers.CounterweightCount > 4
                 || Buffers.Sharing != "EqualSharing")
                 p.Add("Buffers need a positive EnergyAccumulationUpToSpeedMps, counts 1–4 and Sharing EqualSharing");
+        }
+
+        private void ValidateAdvanced(List<string> p)
+        {
             var adv = Advanced;
             if (adv == null)
                 p.Add("Advanced is required");

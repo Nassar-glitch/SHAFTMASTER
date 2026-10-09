@@ -194,15 +194,28 @@ namespace Elevator.Core.MachineRoom
             // Explicit projection assumption: transverse bearing plane is B-B steel-bottom datum.
             g.BearingPlaneZMm = s.SteelBottomZ;
             g.HangerAttachmentZMm = s.SteelTopZ - s.Reference.HangerTopBelowSteelTop;
+            List<ChassisContour> target = MapContoursToDesign(evidence, design);
+            try
+            {
+                ReadBearings(g, target);
+                FindLongitudinalMembers(basic, g, s, target);
+                LocateSheaves(basic, g, s, target);
+            }
+            catch (ArgumentException ex) { g.Issues.Add(new CalculationIssue("Geometry.ContactOrMembers", ex.Message)); }
+            return g;
+        }
+
+        private static List<ChassisContour> MapContoursToDesign(ChassisGeometryEvidence evidence, ElevatorParameters design)
+        {
             var move = new MachineRoomGeometry(
-                design,
-                evidence.SW,
-                evidence.SD,
-                evidence.CarRow,
-                evidence.CwRow,
-                evidence.Pitch,
-                evidence.Extensions,
-                evidence.GovernorStartOffset);
+                            design,
+                            evidence.SW,
+                            evidence.SD,
+                            evidence.CarRow,
+                            evidence.CwRow,
+                            evidence.Pitch,
+                            evidence.Extensions,
+                            evidence.GovernorStartOffset);
             var target = evidence.Contours.Select(
                 c => new ChassisContour
                 {
@@ -216,57 +229,73 @@ namespace Elevator.Core.MachineRoom
                     : move.Move(p, c.Role))
                 .ToArray()
                 }).ToList();
-            try
+            return target;
+        }
+
+        private static void ReadBearings(ChassisCalculationGeometry g, List<ChassisContour> target)
+        {
+            foreach (string id in new[] { "P1", "P2", "P3", "P4" })
+                g.Bearings.Add(ReadContactSeat(id, target, g.BearingPlaneZMm));
+        }
+
+        private static void FindLongitudinalMembers(
+            bool basic,
+            ChassisCalculationGeometry g,
+            MachineRoomSectionParameters s,
+            List<ChassisContour> target)
+        {
+            double front = g.Bearings.Where(b => b.Id == "P2" || b.Id == "P4").Average(b => b.Centre.Y), rear =
+                                g.Bearings.Where(b => b.Id == "P1" || b.Id == "P3").Average(b => b.Centre.Y);
+            var spans = target.Where(c => c.Dependency != null
+                && (c.Dependency.Behavior == "SpanBetweenReferences" || c.Dependency.Behavior.StartsWith("Stretch"))).ToArray();
+            Func<ChassisContour, LocalPoint[]> leg =
+                c => c.Points.Skip(c.Points.Length == 3 && Math.Abs(c.Points[0].Y - c.Points[1].Y) < Tol ? 1 : 0).ToArray();
+            var fronts =
+                spans.Where(c => c.Dependency.References.Contains("FrontBeam")).OrderBy(c => leg(c).Average(p => p.X)).ToArray();
+            var rears = spans.Where(c => c.Dependency.References.Contains("RearBeam")).OrderBy(c => leg(c).Average(p => p.X)).ToArray();
+            if (!basic && (fronts.Length != 9 || rears.Length != 9))
+                throw new ArgumentException("Reviewed three-profile chassis topology changed; member identification requires review.");
+            for (int i = 0; i < (fronts.Length == 9 && rears.Length == 9 ? 3 : 0); i++)
             {
-                foreach (string id in new[] { "P1", "P2", "P3", "P4" })
-                    g.Bearings.Add(ReadContactSeat(id, target, g.BearingPlaneZMm));
-                double front = g.Bearings.Where(b => b.Id == "P2" || b.Id == "P4").Average(b => b.Centre.Y), rear =
-                    g.Bearings.Where(b => b.Id == "P1" || b.Id == "P3").Average(b => b.Centre.Y);
-                var spans = target.Where(c => c.Dependency != null
-                    && (c.Dependency.Behavior == "SpanBetweenReferences" || c.Dependency.Behavior.StartsWith("Stretch"))).ToArray();
-                Func<ChassisContour, LocalPoint[]> leg =
-                    c => c.Points.Skip(c.Points.Length == 3 && Math.Abs(c.Points[0].Y - c.Points[1].Y) < Tol ? 1 : 0).ToArray();
-                var fronts =
-                    spans.Where(c => c.Dependency.References.Contains("FrontBeam")).OrderBy(c => leg(c).Average(p => p.X)).ToArray();
-                var rears = spans.Where(c => c.Dependency.References.Contains("RearBeam")).OrderBy(c => leg(c).Average(p => p.X)).ToArray();
-                if (!basic && (fronts.Length != 9 || rears.Length != 9))
-                    throw new ArgumentException("Reviewed three-profile chassis topology changed; member identification requires review.");
-                for (int i = 0; i < (fronts.Length == 9 && rears.Length == 9 ? 3 : 0); i++)
+                Func<ChassisContour, double, double> axisAt = (c, y) =>
                 {
-                    Func<ChassisContour, double, double> axisAt = (c, y) =>
-                    {
-                        var p = leg(c);
-                        var a = p.OrderBy(v => v.Y).First();
-                        var b =
-                        p.OrderBy(v => v.Y).Last();
-                        return a.X + (b.X - a.X) * (y - a.Y) / (b.Y - a.Y);
-                    };
-                    double xf = (axisAt(fronts[i * 3], front) + axisAt(fronts[i * 3 + 2], front)) / 2;
-                    double xr = (axisAt(rears[i * 3], rear) + axisAt(rears[i * 3 + 2], rear)) / 2;
-                    g.LongitudinalMembers.Add(new ChassisMember
-                    {
-                        Id = "Longitudinal." + new[] { "Left", "Middle", "Right" }[i],
-                        Front = new LocalPoint(xf, front, s.SteelTopZ),
-                        Rear = new LocalPoint(xr, rear, s.SteelTopZ),
-                        Evidence = "Reviewed three-edge profile midline (not CG): " + String.Join(
-                            ";",
-                            fronts.Skip(i * 3).Take(3).Concat(rears.Skip(i * 3).Take(3)).Select(c => c.Id).Distinct())
-                    });
-                }
-                double tx = PitchPlane(
-                    target,
-                    "MachineRoom.TractionSheave.",
-                    s.Arrangement.Reeving == null ? 520 : s.Arrangement.Reeving.TractionSheavePitchDiameterMm);
-                double dx = basic ? tx : PitchPlane(target, "MachineRoom.DeflectorSheave.", s.DeflectorPitchMm);
-                if (!basic && Math.Abs(tx - dx) > Tol)
-                    throw new ArgumentException("Sheave pitch planes differ; planar reeving forces are not applicable.");
-                g.TractionCentre = new LocalPoint(tx, -s.TractionX, s.TractionZ);
-                g.DeflectorCentre = new LocalPoint(dx, -s.DeflectorX, s.DeflectorZ);
-                g.NativeMachineMountingContours =
-                    target.Where(c => c.Id.StartsWith("MachineRoom.MachineChassis.")).SelectMany(c => c.Points).ToArray();
+                    var p = leg(c);
+                    var a = p.OrderBy(v => v.Y).First();
+                    var b =
+                    p.OrderBy(v => v.Y).Last();
+                    return a.X + (b.X - a.X) * (y - a.Y) / (b.Y - a.Y);
+                };
+                double xf = (axisAt(fronts[i * 3], front) + axisAt(fronts[i * 3 + 2], front)) / 2;
+                double xr = (axisAt(rears[i * 3], rear) + axisAt(rears[i * 3 + 2], rear)) / 2;
+                g.LongitudinalMembers.Add(new ChassisMember
+                {
+                    Id = "Longitudinal." + new[] { "Left", "Middle", "Right" }[i],
+                    Front = new LocalPoint(xf, front, s.SteelTopZ),
+                    Rear = new LocalPoint(xr, rear, s.SteelTopZ),
+                    Evidence = "Reviewed three-edge profile midline (not CG): " + String.Join(
+                        ";",
+                        fronts.Skip(i * 3).Take(3).Concat(rears.Skip(i * 3).Take(3)).Select(c => c.Id).Distinct())
+                });
             }
-            catch (ArgumentException ex) { g.Issues.Add(new CalculationIssue("Geometry.ContactOrMembers", ex.Message)); }
-            return g;
+        }
+
+        private static void LocateSheaves(
+            bool basic,
+            ChassisCalculationGeometry g,
+            MachineRoomSectionParameters s,
+            List<ChassisContour> target)
+        {
+            double tx = PitchPlane(
+                                target,
+                                "MachineRoom.TractionSheave.",
+                                s.Arrangement.Reeving == null ? 520 : s.Arrangement.Reeving.TractionSheavePitchDiameterMm);
+            double dx = basic ? tx : PitchPlane(target, "MachineRoom.DeflectorSheave.", s.DeflectorPitchMm);
+            if (!basic && Math.Abs(tx - dx) > Tol)
+                throw new ArgumentException("Sheave pitch planes differ; planar reeving forces are not applicable.");
+            g.TractionCentre = new LocalPoint(tx, -s.TractionX, s.TractionZ);
+            g.DeflectorCentre = new LocalPoint(dx, -s.DeflectorX, s.DeflectorZ);
+            g.NativeMachineMountingContours =
+                target.Where(c => c.Id.StartsWith("MachineRoom.MachineChassis.")).SelectMany(c => c.Points).ToArray();
         }
 
         static double PitchPlane(List<ChassisContour> cs, string prefix, double diameter)

@@ -205,6 +205,18 @@ namespace Elevator.Core.SafetyGear
             }
             var c = project.Calculations;
             var s = c.SafetyPit ?? new SafetyPitInputs();
+            AddCarEventMasses(project, r, c, s);
+            AddCounterweightEventMass(r, c, s);
+            CheckSafetyGearInputs(r, s);
+            r.P5.ComponentCount = s.CarGuideCount;
+            Buffers(r.P6, s.CarBufferCount, s.CarBufferSharing);
+            Buffers(r.P7, s.CounterweightBufferCount, s.CounterweightBufferSharing);
+            CalculateLoads(r);
+            return r;
+        }
+
+        private void AddCarEventMasses(ElevatorProject project, SafetyPitCalculationResult r, ChassisCalculationInputs c, SafetyPitInputs s)
+        {
             foreach (var l in new[] { r.P5, r.P6 })
             {
                 var capacity = Mass(l, project.Elevator.CapacityKg, "Elevator.CapacityKg", false);
@@ -230,6 +242,10 @@ namespace Elevator.Core.SafetyGear
                         + " kg. Machine, chassis and hanger masses excluded.");
                 }
             }
+        }
+
+        private void AddCounterweightEventMass(SafetyPitCalculationResult r, ChassisCalculationInputs c, SafetyPitInputs s)
+        {
             var cw = Mass(r.P7, c.CounterweightMassKg, "Calculations.CounterweightMassKg", false);
             var cwadd = Additional(
                 r.P7,
@@ -249,6 +265,10 @@ namespace Elevator.Core.SafetyGear
                     + r.P7.ParticipatingMassKg
                     + " kg. Capacity/car/machine/chassis/hanger excluded.");
             }
+        }
+
+        private void CheckSafetyGearInputs(SafetyPitCalculationResult r, SafetyPitInputs s)
+        {
             if (s.SafetyGearType == null)
                 Issue(r.P5, "SafetyPit.SafetyGearType", "Select the physical car safety-gear type.", "MISSING_INPUT");
             else if (s.SafetyGearType != "Progressive")
@@ -277,9 +297,10 @@ namespace Elevator.Core.SafetyGear
                                     "Only the confirmed two-car-guide arrangement is supported.",
                                     "UNSUPPORTED_CONFIGURATION");
             }
-            r.P5.ComponentCount = s.CarGuideCount;
-            Buffers(r.P6, s.CarBufferCount, s.CarBufferSharing);
-            Buffers(r.P7, s.CounterweightBufferCount, s.CounterweightBufferSharing);
+        }
+
+        private void CalculateLoads(SafetyPitCalculationResult r)
+        {
             foreach (var l in new[] { r.P5, r.P6, r.P7 })
             {
                 if (l.Issues.Count > 0)
@@ -326,7 +347,6 @@ namespace Elevator.Core.SafetyGear
                     + "adopted value, not a supplied manufacturer rating. No chassis reactions or rope-tension/roping-ratio factors "
                     + "added.");
             }
-            return r;
         }
     }
 }

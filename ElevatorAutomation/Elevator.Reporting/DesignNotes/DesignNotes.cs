@@ -85,6 +85,31 @@ namespace Elevator.Reporting.DesignNotes
             var r = n.RopeTraction = engine.Calculate(project, context, presets);
             var x = r.Inputs;
             // ---------- warnings: NOT OK results, each with a computed recommendation ----------
+            AddCheckWarnings(project, context, n, presets, engine, r, x);
+            AddTractionWarnings(n, r);
+            // Checks that could not be done because the layout is not valid: one note with the cause and the valid range.
+            AddOmissionWarnings(n, r);
+            // EN 81-20 5.4.2.1, Table 6: car available area against the rated load (shared internal car dimensions).
+            AddCarAreaNote(project, n, r);
+            // Rope / groove / balance / sheave selection (project presets): nothing passes on 1:1. One recommendation: the limiting check,
+            // 2:1 roping, and the minimum rope MBL that would satisfy the safety factor at 7 ropes (same engine, 7 ropes of this diameter).
+            AddRopeSelectionRecommendation(project, context, n, presets, engine);
+            // Deflector smaller than 40·d (DESIGN-FLOW 11a): one quotation; Sf already uses the actual deflector (Kp).
+            AddDeflectorNote(n, r, x);
+            // ---------- recommendations: what is needed to complete a check ----------
+            AddMissingInputRecommendations(n, r);
+            return n;
+        }
+
+        private static void AddCheckWarnings(
+            ElevatorProject project,
+            DesignContext context,
+            DesignNotes n,
+            PresetLibrary presets,
+            RopeTractionCalculationEngine engine,
+            RopeTractionResult r,
+            RopeTractionEffectiveInputs x)
+        {
             foreach (var c in r.Checks.Where(c => c.Ok == false))
             {
                 if (c.Id == "rope-diameter")
@@ -115,6 +140,10 @@ namespace Elevator.Reporting.DesignNotes
                                             + SafetyFactorRemedy(project, context, presets, engine, x));
                 }
             }
+        }
+
+        private static void AddTractionWarnings(DesignNotes n, RopeTractionResult r)
+        {
             foreach (var t in r.Traction.Where(t => !t.Ok))
             {
                 var gov = t.Positions.First(pos => Math.Abs(pos.Ratio - t.Ratio) < 1e-12);
@@ -162,7 +191,10 @@ namespace Elevator.Reporting.DesignNotes
                                             + ", or limit traction by an electric safety device (EN 81-20 5.5.3 c) 2)).");
                 }
             }
-            // Checks that could not be done because the layout is not valid: one note with the cause and the valid range.
+        }
+
+        private static void AddOmissionWarnings(DesignNotes n, RopeTractionResult r)
+        {
             if (r.Omissions.Any(o => o.Kind == "INVALID_GEOMETRY"))
             {
                 double tz = r.Geometry.TzMm ?? 0;
@@ -172,7 +204,10 @@ namespace Elevator.Reporting.DesignNotes
             }
             foreach (var o in r.Omissions.Where(o => o.Kind == "INVALID_INPUT"))
                 n.Warnings.Add(o.Item + " not calculated: " + o.Reason.TrimEnd('.') + " (" + ClauseOf(o.Item) + ").");
-            // EN 81-20 5.4.2.1, Table 6: car available area against the rated load (shared internal car dimensions).
+        }
+
+        private static void AddCarAreaNote(ElevatorProject project, DesignNotes n, RopeTractionResult r)
+        {
             double? q = project.Elevator == null ? null : project.Elevator.CapacityKg;
             if (r.Geometry.CarWidthMm.HasValue && r.Geometry.CarDepthMm.HasValue && q.HasValue && q.Value > 0)
             {
@@ -195,8 +230,15 @@ namespace Elevator.Reporting.DesignNotes
             }
             else if (!q.HasValue || q.Value <= 0)
                 n.Recommendations.Add("Enter the rated load to check the car area (EN 81-20 Table 6).");
-            // Rope / groove / balance / sheave selection (project presets): nothing passes on 1:1. One recommendation: the limiting check,
-            // 2:1 roping, and the minimum rope MBL that would satisfy the safety factor at 7 ropes (same engine, 7 ropes of this diameter).
+        }
+
+        private static void AddRopeSelectionRecommendation(
+            ElevatorProject project,
+            DesignContext context,
+            DesignNotes n,
+            PresetLibrary presets,
+            RopeTractionCalculationEngine engine)
+        {
             var sizing = ProjectPresets.Outcome(project, presets, context);
             if (sizing != null
                 && sizing.Status == "NoPass"
@@ -223,7 +265,10 @@ namespace Elevator.Reporting.DesignNotes
                         + " kN each")
                     + " (EN 81-20 5.5; EN 81-50 5.11, 5.12).");
             }
-            // Deflector smaller than 40·d (DESIGN-FLOW 11a): one quotation; Sf already uses the actual deflector (Kp).
+        }
+
+        private static void AddDeflectorNote(DesignNotes n, RopeTractionResult r, RopeTractionEffectiveInputs x)
+        {
             if (r.DpOverDr.HasValue && r.DpOverDr.Value < 40 - 1e-9 && r.Geometry.DeflectorPitchMm.HasValue && x.RopeDiameterMm.HasValue)
             {
                 n.Notes.Add("Deflector pitch diameter "
@@ -236,7 +281,10 @@ namespace Elevator.Reporting.DesignNotes
                                     + L(40 * x.RopeDiameterMm.Value)
                                     + " mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12).");
             }
-            // ---------- recommendations: what is needed to complete a check ----------
+        }
+
+        private static void AddMissingInputRecommendations(DesignNotes n, RopeTractionResult r)
+        {
             foreach (var o in r.Omissions.Where(o => o.Kind == "MISSING_INPUT"))
             {
                 const string prefix = "Not provided: ";
@@ -253,7 +301,6 @@ namespace Elevator.Reporting.DesignNotes
                 else
                     n.Recommendations.Add(o.Item + " not calculated: " + o.Reason.TrimEnd('.') + ".");
             }
-            return n;
         }
 
         // Smallest rope count (up to 7, the project rope range) or next listed rope diameter that gives an OK safety factor,

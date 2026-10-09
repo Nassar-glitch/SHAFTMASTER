@@ -89,39 +89,13 @@ namespace Elevator.Core.Suspension
         public static VerticalArrangementResult SolveVertical(VerticalArrangementInput p)
         {
             var result = new VerticalArrangementResult();
-            foreach (double value in new[] { p.CarDropX,
-                p.CwDropX,
-                p.TractionDiameterMm,
-                p.DeflectorDiameterMm,
-                p.MachineCenterAboveSteelMm,
-                p.FixedLevelingDepthMm,
-                p.SteelDepthMm,
-                p.HangerTopBelowSteelTopMm,
-                p.HangerBottomAboveDeflectorCenterMm,
-                p.MinConcreteHeightMm,
-                p.MaxConcreteHeightMm,
-                p.TargetWrapAngleDeg })
-            {
-                if (!Finite(value))
-                    throw new ArgumentException("Vertical arrangement inputs must be finite.");
-            }
+            ValidateFinite(p);
             if (!p.AdjustableDeflectorHangerConfirmed)
             {
                 result.Status = "SUPPORT DEPENDENCY CONFIRMATION REQUIRED";
                 return result;
             }
-            if (p.TractionDiameterMm <= 0 || p.TargetWrapAngleDeg <= 0 || p.TargetWrapAngleDeg >= 180)
-                throw new ArgumentException("Invalid traction diameter or wrap target.");
-            if (p.DeflectorDiameterMm != 250 && p.DeflectorDiameterMm != 400)
-                throw new ArgumentException("Only 250 and 400 mm deflectors are available.");
-            if (p.StackedSteelLevels < 1
-                || p.SteelDepthMm <= 0
-                || p.MinConcreteHeightMm < 350
-                || p.MaxConcreteHeightMm > 1000
-                || p.MinConcreteHeightMm > p.MaxConcreteHeightMm)
-                throw new ArgumentException("Invalid support arrangement constraints.");
-            if (p.PreferredHeightIncrementMm.HasValue)
-                throw new ArgumentException("No rounding increment has been approved.");
+            ValidateConstraints(p);
             double r = p.TractionDiameterMm / 2, s = p.DeflectorDiameterMm / 2;
             double tx = p.CarDropX - r, dx = p.CwDropX + s, h = tx - dx;
             if (h <= 0)
@@ -171,6 +145,42 @@ namespace Elevator.Core.Suspension
             result.Status =
                 result.Reeving.GeometryStatus == "PASS" && result.Reeving.WrapAngleStatus == "PASS" ? "PASS" : "REEVING REDESIGN REQUIRED";
             return result;
+        }
+
+        private static void ValidateFinite(VerticalArrangementInput p)
+        {
+            foreach (double value in new[] { p.CarDropX,
+                p.CwDropX,
+                p.TractionDiameterMm,
+                p.DeflectorDiameterMm,
+                p.MachineCenterAboveSteelMm,
+                p.FixedLevelingDepthMm,
+                p.SteelDepthMm,
+                p.HangerTopBelowSteelTopMm,
+                p.HangerBottomAboveDeflectorCenterMm,
+                p.MinConcreteHeightMm,
+                p.MaxConcreteHeightMm,
+                p.TargetWrapAngleDeg })
+            {
+                if (!Finite(value))
+                    throw new ArgumentException("Vertical arrangement inputs must be finite.");
+            }
+        }
+
+        private static void ValidateConstraints(VerticalArrangementInput p)
+        {
+            if (p.TractionDiameterMm <= 0 || p.TargetWrapAngleDeg <= 0 || p.TargetWrapAngleDeg >= 180)
+                throw new ArgumentException("Invalid traction diameter or wrap target.");
+            if (p.DeflectorDiameterMm != 250 && p.DeflectorDiameterMm != 400)
+                throw new ArgumentException("Only 250 and 400 mm deflectors are available.");
+            if (p.StackedSteelLevels < 1
+                || p.SteelDepthMm <= 0
+                || p.MinConcreteHeightMm < 350
+                || p.MaxConcreteHeightMm > 1000
+                || p.MinConcreteHeightMm > p.MaxConcreteHeightMm)
+                throw new ArgumentException("Invalid support arrangement constraints.");
+            if (p.PreferredHeightIncrementMm.HasValue)
+                throw new ArgumentException("No rounding increment has been approved.");
         }
     }
 }

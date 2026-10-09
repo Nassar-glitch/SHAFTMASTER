@@ -105,80 +105,116 @@ namespace Elevator.Core.MachineRoom
             DesignContext currentContext = null)
         {
             var result = new GeometryProvenanceValidation();
-            Action<string, string, string> reject =
-                (status, field, message) => { result.Status = status; result.Issues.Add(new CalculationIssue(field, message)); };
+            if (!MachineAccepted(p, result))
+                return result;
+            if (g == null)
+            {
+                Reject(result, "MISSING_INPUT", "Geometry", "Calculated native geometry unavailable.");
+                return result;
+            }
+            if (!FingerprintsCurrent(p, g, currentContext, result))
+                return result;
+            CheckTractionDatum(g, result);
+            return result;
+        }
+
+        static void Reject(GeometryProvenanceValidation result, string status, string field, string message)
+        {
+            result.Status = status;
+            result.Issues.Add(new CalculationIssue(field, message));
+        }
+
+        // The canonical machine inputs must exist and, when a traction sheave is supplied, match the reviewed 520 mm machine.
+        static bool MachineAccepted(ElevatorProject p, GeometryProvenanceValidation result)
+        {
             if (p == null || p.Machine == null)
             {
-                reject("MISSING_INPUT", "Machine", "Canonical machine inputs unavailable.");
-                return result;
+                Reject(result, "MISSING_INPUT", "Machine", "Canonical machine inputs unavailable.");
+                return false;
             }
             var diameter = p.Machine.TractionSheavePitchDiameterMm;
             if (diameter.HasValue && (!ChassisReactionSolver.Finite(diameter.Value) || Math.Abs(diameter.Value - 520) > .02))
             {
-                reject(
+                Reject(
+                    result,
                     "INVALID_INPUT",
                     "Machine.TractionSheavePitchDiameterMm",
                     "Only the reviewed 520 mm traction machine is supported; independent calculation API validation requires finite 520 mm "
                     + "input when supplied.");
-                return result;
+                return false;
             }
-            if (g == null)
-            {
-                reject("MISSING_INPUT", "Geometry", "Calculated native geometry unavailable.");
-                return result;
-            }
+            return true;
+        }
+
+        // The geometry must carry its provenance and still match the inputs, the context and the payload it was generated from.
+        static bool FingerprintsCurrent(
+            ElevatorProject p,
+            ChassisCalculationGeometry g,
+            DesignContext currentContext,
+            GeometryProvenanceValidation result)
+        {
             var source = g.Provenance;
             if (source == null)
             {
-                reject(
+                Reject(
+                    result,
                     "STALE_GEOMETRY",
                     "Geometry.Provenance",
                     "Source provenance unavailable. Generate chassis geometry through ElevatorDesignEngine; raw/older geometry cannot be "
                     + "paired with current inputs.");
-                return result;
+                return false;
             }
             string currentInputs = InputHash(p);
             if (currentInputs == null || source.inputFingerprint == null || currentInputs != source.inputFingerprint)
             {
-                reject(
+                Reject(
+                    result,
                     "STALE_GEOMETRY",
                     "Geometry.SourceInputs",
                     "Geometry-driving project inputs differ from the inputs captured before shared drawing generation. Regenerate geometry "
                     + "first.");
-                return result;
+                return false;
             }
             // The two-argument API also detects mutations of its originating live context.
             // Supply currentContext when replacing that context with another instance.
             string context = CalculationFingerprint.Hash(currentContext ?? source.originContext);
             if (context == null || source.contextFingerprint == null || context != source.contextFingerprint)
             {
-                reject(
+                Reject(
+                    result,
                     "STALE_GEOMETRY",
                     "Geometry.SourceContext",
                     "Equipment profile, native evidence or section/reference context differs from the generation snapshot. Regenerate "
                     + "geometry first.");
-                return result;
+                return false;
             }
             string payload = GeometryHash(g);
             if (payload == null || source.geometryFingerprint == null || payload != source.geometryFingerprint)
             {
-                reject(
+                Reject(
+                    result,
                     "STALE_GEOMETRY",
                     "Geometry.GeneratedPayload",
                     "Generated geometry was changed after generation. Regenerate through the shared design engine; do not restamp edited "
                     + "or retained geometry.");
-                return result;
+                return false;
             }
+            return true;
+        }
+
+        static void CheckTractionDatum(ChassisCalculationGeometry g, GeometryProvenanceValidation result)
+        {
             if (g.Recipe == "Basic")
             {
                 if (g.Section == null || g.Section.Reference == null || !ChassisReactionSolver.Finite(g.TractionCentre))
                 {
-                    reject(
-                                            "INVALID_GEOMETRY_OR_LOAD",
-                                            "Geometry.MachineDatum",
-                                            "Calculated native traction datum/reference is unavailable.");
+                    Reject(
+                        result,
+                        "INVALID_GEOMETRY_OR_LOAD",
+                        "Geometry.MachineDatum",
+                        "Calculated native traction datum/reference is unavailable.");
                 }
-                return result; // Basic does not use rope tangencies or deflector actions.
+                return; // Basic does not use rope tangencies or deflector actions.
             }
             if (g.Section == null
                 || g.Section.Arrangement == null
@@ -186,12 +222,12 @@ namespace Elevator.Core.MachineRoom
                 || !ChassisReactionSolver.Finite(g.Section.Arrangement.Reeving.TractionSheavePitchDiameterMm)
                 || Math.Abs(g.Section.Arrangement.Reeving.TractionSheavePitchDiameterMm - 520) > .02)
             {
-                reject(
+                Reject(
+                    result,
                     "INVALID_GEOMETRY_OR_LOAD",
                     "Geometry.TractionSheavePitchDiameterMm",
                     "Calculated geometry does not contain the reviewed 520 mm traction sheave.");
             }
-            return result;
         }
     }
 }

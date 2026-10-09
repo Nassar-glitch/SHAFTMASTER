@@ -17,15 +17,7 @@ namespace Elevator.Core.MachineRoom
             bool retainedVisible)
         {
             double rearSupportDepth = shared.SD + rearSupportOffset;
-            if (!input.Capacity.HasValue)
-                throw new ArgumentException("Section requires stored Capacity (kg). Run ELEVATORREEVINGDATA once.");
-            SuspensionProjectRules.Validate(input.SuspensionRopeDiameterMm, input.NumberOfSuspensionRopes);
-            if (input.TractionSheavePitchDiameterMm.HasValue && Math.Abs(input.TractionSheavePitchDiameterMm.Value - 520) > .02)
-            {
-                throw new ArgumentException(
-                                    "The coordinated native machine has a 520 mm traction projection; another machine requires a reviewed "
-                                    + "template.");
-            }
+            ValidateInput(input);
             var m = shared.MachineRoom;
             var p = new MachineRoomSectionParameters
             {
@@ -38,8 +30,39 @@ namespace Elevator.Core.MachineRoom
                 CwOpeningWidth = r.CwOpeningWidth
             };
             p.Beam = new PreliminaryMachineBeamSelector().Select(input.Capacity.Value, rearSupportDepth - frontSupportDepth);
+            SelectDeflector(retainedPitch, retainedVisible, m, p);
+            double fixedStack = r.SourceSteelBottomZ - r.SourceStandBottomZ, machineOffset = r.SourceTractionZ - r.SourceSteelTopZ;
+            SolveArrangement(input, r, m, p, fixedStack, machineOffset);
+            p.SteelBottomZ = p.ConcreteHeight + fixedStack;
+            p.SteelTopZ = p.SteelBottomZ + p.Beam.NominalDepthMm;
+            p.TractionX = p.CarDropX - 260;
+            p.DeflectorX = p.CwDropX + p.DeflectorPitchMm / 2;
+            StoreCalculatedReeving(m, p);
+            AddSectionRules(input, shared, m, p);
+            return p;
+        }
+
+        private static void ValidateInput(ProjectInput input)
+        {
+            if (!input.Capacity.HasValue)
+                throw new ArgumentException("Section requires stored Capacity (kg). Run ELEVATORREEVINGDATA once.");
+            SuspensionProjectRules.Validate(input.SuspensionRopeDiameterMm, input.NumberOfSuspensionRopes);
+            if (input.TractionSheavePitchDiameterMm.HasValue && Math.Abs(input.TractionSheavePitchDiameterMm.Value - 520) > .02)
+            {
+                throw new ArgumentException(
+                                    "The coordinated native machine has a 520 mm traction projection; another machine requires a reviewed "
+                                    + "template.");
+            }
+        }
+
+        private static void SelectDeflector(
+            double retainedPitch,
+            bool retainedVisible,
+            MachineRoomParameters m,
+            MachineRoomSectionParameters p)
+        {
             p.DeflectorVisible =
-                m.Deflector.SelectionStatus == "REQUIRES TRACTION/REEVING REVIEW" ? retainedVisible : m.Deflector.IsRequired;
+                            m.Deflector.SelectionStatus == "REQUIRES TRACTION/REEVING REVIEW" ? retainedVisible : m.Deflector.IsRequired;
             p.DeflectorPitchMm = m.Deflector.PitchDiameterMm ?? retainedPitch;
             if (Math.Abs(p.DeflectorPitchMm - 250) < .02)
                 p.DeflectorPitchMm = 250;
@@ -47,7 +70,16 @@ namespace Elevator.Core.MachineRoom
                 p.DeflectorPitchMm = 400;
             if (p.DeflectorPitchMm != 250 && p.DeflectorPitchMm != 400)
                 throw new ArgumentException("Retained deflector is outside the supported 250/400 market sizes.");
-            double fixedStack = r.SourceSteelBottomZ - r.SourceStandBottomZ, machineOffset = r.SourceTractionZ - r.SourceSteelTopZ;
+        }
+
+        private static void SolveArrangement(
+            ProjectInput input,
+            SectionReference r,
+            MachineRoomParameters m,
+            MachineRoomSectionParameters p,
+            double fixedStack,
+            double machineOffset)
+        {
             if (m.Deflector.PitchDiameterMm.HasValue)
             {
                 p.Arrangement = ReevingSolver.SolveVertical(new VerticalArrangementInput
@@ -86,10 +118,10 @@ namespace Elevator.Core.MachineRoom
                     : "DIRECT ROPE ROUTING REVIEW - TZ IS SMALLER THAN THE 520 MM TRACTION DIAMETER";
                 p.Arrangement = new VerticalArrangementResult { Status = p.ReevingGeometryStatus, ConcreteBeamHeightMm = 350 };
             }
-            p.SteelBottomZ = p.ConcreteHeight + fixedStack;
-            p.SteelTopZ = p.SteelBottomZ + p.Beam.NominalDepthMm;
-            p.TractionX = p.CarDropX - 260;
-            p.DeflectorX = p.CwDropX + p.DeflectorPitchMm / 2;
+        }
+
+        private static void StoreCalculatedReeving(MachineRoomParameters m, MachineRoomSectionParameters p)
+        {
             if (p.HasCalculatedPath)
             {
                 var s = p.Arrangement.Reeving;
@@ -111,6 +143,14 @@ namespace Elevator.Core.MachineRoom
                     "NOT YET EVALUABLE - STANDARD DEPENDENCY: EN 81-50 REQUIRED; loads, friction/grooves, rope construction and safety "
                     + "factors are not verified by wrap geometry.";
             }
+        }
+
+        private static void AddSectionRules(
+            ProjectInput input,
+            ElevatorParameters shared,
+            MachineRoomParameters m,
+            MachineRoomSectionParameters p)
+        {
             m.Rules = MachineRoomRuleRegistry.Evaluate(input, shared, m);
             m.Rules.Add(new EngineeringRule
             {
@@ -151,7 +191,6 @@ namespace Elevator.Core.MachineRoom
                     "No minimum is invented. Pitch-circle separation is not a manufacturer outer-envelope clearance check; hanger "
                     + "mechanical design remains under review."
             });
-            return p;
         }
     }
 }
