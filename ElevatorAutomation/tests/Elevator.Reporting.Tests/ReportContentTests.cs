@@ -60,13 +60,10 @@ namespace Elevator.Reporting.Tests
             public byte[] Png(Figure f, double dpi) { return OnePixelPng; }
         }
         sealed class Rendered { public CalculationSheet Sheet; public byte[] SheetDocx; public byte[] NotesDocx; public List<string> Svgs = new List<string>(); }
-        // One render per fixture, shared by the tests that use it; fixtures render in parallel.
-        static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Rendered>> cache = new System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Rendered>>();
+        // One render per fixture, shared by the tests that use it; the first request renders all fixtures in parallel.
+        static readonly WarmCache<Rendered> cache = new WarmCache<Rendered>(() => Fixtures().Select(x => (string)x[0]), RenderThread);
         static readonly object setup = new object();
-        static Rendered Render(string name)
-        {
-            return cache.GetOrAdd(name, n => new Lazy<Rendered>(() => RenderThread(n))).Value;
-        }
+        static Rendered Render(string name) { return cache.Get(name); }
         static Rendered RenderThread(string name)
         {
             Rendered r = null; Exception error = null;

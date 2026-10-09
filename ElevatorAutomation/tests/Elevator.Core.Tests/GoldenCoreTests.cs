@@ -111,7 +111,9 @@ namespace Elevator.Core.Tests
         }
 
         // ---------- the same capture as tests/golden/GoldenTests.cs (Core part) ----------
-        static Dictionary<string, byte[]> Capture(string name)
+        static readonly WarmCache<Dictionary<string, byte[]>> Captured = new WarmCache<Dictionary<string, byte[]>>(() => FixtureNames().Select(x => (string)x[0]), CaptureNow);
+        static Dictionary<string, byte[]> Capture(string name) { return Captured.Get(name); }
+        static Dictionary<string, byte[]> CaptureNow(string name)
         {
             var result = new Dictionary<string, byte[]>();
             var lib = Lib.Value; var ctx = Ctx.Value;

@@ -16,5 +16,11 @@ namespace Elevator.Core.Suspension
         public double? WrapAngleDeg;
         public double? CarWidthMm;
         public double? CarDepthMm;
+
+        /// <summary>A copy, so that a cached geometry is never shared between callers.</summary>
+        public RopeTractionGeometry Copy()
+        {
+            return (RopeTractionGeometry)MemberwiseClone();
+        }
     }
 }

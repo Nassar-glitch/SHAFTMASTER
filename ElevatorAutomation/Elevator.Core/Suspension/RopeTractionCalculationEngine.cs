@@ -58,8 +58,40 @@ namespace Elevator.Core.Suspension
             }
         }
 
+        // The design engine run behind the geometry is the most expensive step of a rope trial and depends only on the project and the
+        // context: results are kept by project fingerprint (bounded, locked), valid for the same context object.
+        const int GeometryCacheLimit = 256;
+        static readonly object geometryGate = new object();
+        static readonly Dictionary<string, KeyValuePair<DesignContext, RopeTractionGeometry>> geometryCache =
+            new Dictionary<string, KeyValuePair<DesignContext, RopeTractionGeometry>>();
+
         /// <summary>The shared geometry for the rope and traction checks.</summary>
         public static RopeTractionGeometry Geometry(ElevatorProject p, DesignContext c)
+        {
+            string key = p == null || c == null ? null : CalculationFingerprint.Hash(p);
+            if (key != null)
+            {
+                lock (geometryGate)
+                {
+                    KeyValuePair<DesignContext, RopeTractionGeometry> entry;
+                    if (geometryCache.TryGetValue(key, out entry) && Object.ReferenceEquals(c, entry.Key))
+                        return entry.Value.Copy();
+                }
+            }
+            var g = ComputeGeometry(p, c);
+            if (key != null)
+            {
+                lock (geometryGate)
+                {
+                    if (geometryCache.Count >= GeometryCacheLimit)
+                        geometryCache.Clear();
+                    geometryCache[key] = new KeyValuePair<DesignContext, RopeTractionGeometry>(c, g.Copy());
+                }
+            }
+            return g;
+        }
+
+        static RopeTractionGeometry ComputeGeometry(ElevatorProject p, DesignContext c)
         {
             var g = new RopeTractionGeometry();
             try

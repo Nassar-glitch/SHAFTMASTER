@@ -143,16 +143,24 @@ namespace Elevator.Core.Tests
         [MemberData(nameof(GoldenCoreTests.FixtureNames), MemberType = typeof(GoldenCoreTests))]
         public void Results_and_fingerprints_are_the_same(string name)
         {
-            var ctx = TestData.Context(); var lib = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
-            string path = Path.Combine(TestData.Root, "tests", "golden", "fixtures", name + ".elevator.json");
-            object[] viaJss = Results(path, ctx, lib);
-            object[] viaCompat;
-            using (CoreJson.UseScoped(() => new JavaScriptCompatibleJson())) { viaCompat = Results(path, ctx, PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"))); }
+            var pair = Results2.Get(name);
+            object[] viaJss = pair.Item1, viaCompat = pair.Item2;
             for (int i = 0; i < viaJss.Length; i++)
             {
                 Same(viaJss[i], name + " result " + i);
                 AssertJson(Jss.Serialize(viaJss[i]), Jss.Serialize(viaCompat[i]));
             }
+        }
+        static readonly WarmCache<Tuple<object[], object[]>> Results2 = new WarmCache<Tuple<object[], object[]>>(
+            () => GoldenCoreTests.FixtureNames().Select(x => (string)x[0]), BothResults);
+        static Tuple<object[], object[]> BothResults(string name)
+        {
+            var ctx = TestData.Context(); var lib = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
+            string path = Path.Combine(TestData.Root, "tests", "golden", "fixtures", name + ".elevator.json");
+            object[] viaJss = Results(path, ctx, lib);
+            object[] viaCompat;
+            using (CoreJson.UseScoped(() => new JavaScriptCompatibleJson())) { viaCompat = Results(path, ctx, PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"))); }
+            return Tuple.Create(viaJss, viaCompat);
         }
         static object[] Results(string path, DesignContext ctx, PresetLibrary lib)
         {

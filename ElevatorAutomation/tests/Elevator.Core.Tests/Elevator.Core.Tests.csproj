@@ -9,7 +9,6 @@
     <!-- Test code only: the shipped assemblies stay C# 5. -->
     <LangVersion>latest</LangVersion>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-    <!-- The hosted console suites have their own Main methods. -->
     <GenerateProgramFile>false</GenerateProgramFile>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
     <OutDir>$(ArtifactsRoot)tests\Elevator.Core.Tests\$(TargetFramework)\</OutDir>
@@ -28,12 +27,6 @@
   <ItemGroup>
     <!-- The golden JSON member sort. -->
     <Compile Include="..\golden\JsonMembers.cs" Link="Linked\JsonMembers.cs" />
-    <!-- The console suites, run unchanged inside xUnit (the console runners stay until P7). -->
-    <Compile Include="..\solution\RopeTractionTests.cs" Link="Suites\RopeTractionTests.cs" />
-    <Compile Include="..\solution\CarGuideForceTests.cs" Link="Suites\CarGuideForceTests.cs" />
-    <Compile Include="..\solution\SafetyPitTests.cs" Link="Suites\SafetyPitTests.cs" />
-    <!-- Needs the Design Notes, which are in Elevator.Reporting since P3: runs on net8.0 too. -->
-    <Compile Include="..\solution\PresetsTests.cs" Link="Suites\PresetsTests.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.Web.Extensions" />
