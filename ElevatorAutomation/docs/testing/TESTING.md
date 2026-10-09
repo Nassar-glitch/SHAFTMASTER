@@ -149,4 +149,4 @@ On net48 the figures use the application's WPF rasterizer; on net8.0 a test rast
 
 **Fix (test harness, no product change).** The test owns its window: a close request it did not make is refused and logged (`ui-trace.log`, with the call stack), the window opens without activation (`ShowActivated = false`), and only the test's own `finally` closes it after writing the result. With the fix, the same injected `WM_CLOSE` is refused and the run passes.
 
-**Proof.** 20 consecutive runs after the fix: 20 PASS (22–23 s each). Log: [docs/evidence/basic-ui-flake-proof-20261009.txt](evidence/basic-ui-flake-proof-20261009.txt).
+**Proof.** 20 consecutive runs after the fix: 20 PASS (22–23 s each). Log: [docs/testing/evidence/basic-ui-flake-proof-20261009.txt](evidence/basic-ui-flake-proof-20261009.txt).

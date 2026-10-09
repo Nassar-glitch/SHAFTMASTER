@@ -4,7 +4,7 @@ Refactored from the working `ElevatorPlanGenerator` AutoCAD 2023 plugin. The ori
 
 ## ShaftMaster desktop application
 
-The current release is `bin-shaftmaster-v03/ShaftMaster.exe` (SHA-256 `9CFD5FAB…`). Its changes are in `bin-shaftmaster-v03/RELEASE-NOTES.md`, the checksums in `bin-shaftmaster-v03/SHA256SUMS.txt`, and the application in [ShaftMaster UI results](docs/SHAFTMASTER-UI-RESULTS.md). v01 and v02 are kept unchanged. `./tools/build.ps1` (dotnet build of `ElevatorAutomation.sln`; `build-solution.ps1` is a thin wrapper) builds into `artifacts/bin` by default; it refuses to write into a release folder (`bin-shaftmaster-v*`) unless `-Release` is given. Tests: `./tools/test.ps1 -Tier 1|2|3` ([testing](docs/TESTING.md)).
+The current release is `bin-shaftmaster-v03/ShaftMaster.exe` (SHA-256 `9CFD5FAB…`). Its changes are in `bin-shaftmaster-v03/RELEASE-NOTES.md`, the checksums in `bin-shaftmaster-v03/SHA256SUMS.txt`, and the application in [ShaftMaster UI results](docs/releases/SHAFTMASTER-UI-RESULTS.md). v01 and v02 are kept unchanged. `./tools/build.ps1` (dotnet build of `ElevatorAutomation.sln`; `build-solution.ps1` is a thin wrapper) builds into `artifacts/bin` by default; it refuses to write into a release folder (`bin-shaftmaster-v*`) unless `-Release` is given. Tests: `./tools/test.ps1 -Tier 1|2|3` ([testing](docs/testing/TESTING.md)).
 
 ## AutoCAD workflow
 
@@ -119,11 +119,11 @@ No default equipment callouts were rewritten: P5/P6/P7, T70/65/9, T50/50/5, SPEE
 
 ## Second view: Machine Room Plan
 
-The current chassis correction is documented in [Chassis dependencies, audit and verification](docs/CHASSIS_DEPENDENCY_CORRECTION.md). The earlier two-view release used **bin-chassis/Elevator.AutoCAD.dll**; the previous bin DLL was locked by a running process and was preserved. The current suite has 32 machine-room records. Use ELEVATORMRAUDIT to check the final native geometry independently of UPDATEALL. This correction supersedes the earlier rigid chassis/support grouping described below and in the initial implementation report.
+The current chassis correction is documented in [Chassis dependencies, audit and verification](docs/architecture/CHASSIS_DEPENDENCY_CORRECTION.md). The earlier two-view release used **bin-chassis/Elevator.AutoCAD.dll**; the previous bin DLL was locked by a running process and was preserved. The current suite has 32 machine-room records. Use ELEVATORMRAUDIT to check the final native geometry independently of UPDATEALL. This correction supersedes the earlier rigid chassis/support grouping described below and in the initial implementation report.
 
 Run ELEVATORPROJECT, then ELEVATORMACHINEROOM once to place the prepared native view from `Templates/MachineRoom_Master.dwg`. Run UPDATEALL for subsequent updates of both views from the same Core result. ELEVATORUPDATE remains Plan-only. The third-view release below adds the native Section B-B.
 
-Read [Machine room implementation and exact workflow](docs/MACHINE_ROOM_IMPLEMENTATION.md) and [code requirements and unresolved engineering inputs](docs/MACHINE_ROOM_CODE_REQUIREMENTS.md). The 250 mm project-selected suspension sheave is explicitly flagged as conflicting with the supplied EN 81-20:2014 minimum rope diameter and diameter-ratio requirements. Outputs are reference layouts requiring the documented engineering review.
+Read [Machine room implementation and exact workflow](docs/architecture/MACHINE_ROOM_IMPLEMENTATION.md) and [code requirements and unresolved engineering inputs](docs/architecture/MACHINE_ROOM_CODE_REQUIREMENTS.md). The 250 mm project-selected suspension sheave is explicitly flagged as conflicting with the supplied EN 81-20:2014 minimum rope diameter and diameter-ratio requirements. Outputs are reference layouts requiring the documented engineering review.
 
 `tests/run-tests.ps1` now includes the machine-room suite: 20 native records and 39 additional Core checks, alongside all original plan regressions. The complete run passed on 14 September 2026.
 
@@ -131,7 +131,7 @@ The engineering report keeps LayoutStatus, WrapAngleStatus and CodeDiameterRatio
 
 ## Third view: Machine Room Section B-B
 
-Use **bin-section/Elevator.AutoCAD.dll** after restarting AutoCAD. This build includes all previous Plan and Machine Room behavior plus the coordinated native section. Read [Section implementation, engineering limits and exact workflow](docs/SECTION_BB_IMPLEMENTATION.md), [reference inspection](docs/SECTION_BB_INSPECTION.md), and [generated comparison](tests/section/comparison.png).
+Use **bin-section/Elevator.AutoCAD.dll** after restarting AutoCAD. This build includes all previous Plan and Machine Room behavior plus the coordinated native section. Read [Section implementation, engineering limits and exact workflow](docs/architecture/SECTION_BB_IMPLEMENTATION.md), [reference inspection](docs/architecture/SECTION_BB_INSPECTION.md), and [generated comparison](tests/section/comparison.png).
 
 Run ELEVATORPROJECT, ELEVATORMACHINEROOM (once), ELEVATORMRSECTION (once), then UPDATEALL. ELEVATORREEVINGDATA edits capacity, rope diameter/count and an optional specified slab-clearance minimum. No minimum is assumed when omitted. ELEVATORMRSECTIONAUDIT checks native section geometry. UPDATEALL uses one shared calculation for all installed views and saves a separate DWG. ELEVATORUPDATE remains Plan-only; use UPDATEALL for coordinated work.
 

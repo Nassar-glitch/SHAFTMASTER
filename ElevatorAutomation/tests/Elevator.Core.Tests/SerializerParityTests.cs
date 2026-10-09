@@ -75,7 +75,7 @@ namespace Elevator.Core.Tests
             foreach (var m in new decimal[] { 0m, 1.50m, -2.25m, 79228162514264337593543950335m, 0.0000001m }) Same(m, "decimal");
             foreach (var v in new object[] { 1, -1, int.MaxValue, long.MinValue, (short)3, (byte)4, uint.MaxValue, ulong.MaxValue, true, false, null, RopeTractionCalculationEngine.TractionCase.Braking, DrawingViews.All, Guid.Parse("b2cbbdda-983f-4d17-bb56-afbefa196127"), new DateTime(2026, 10, 9, 12, 0, 0, DateTimeKind.Utc) }) Same(v, "value " + v);
             output.WriteLine("Doubles compared: " + (n + special.Length));
-            // Known difference (reported in docs/TESTING.md): .NET Framework "R" picks 15 or 17 digits with its own inexact
+            // Known difference (reported in docs/testing/TESTING.md): .NET Framework "R" picks 15 or 17 digits with its own inexact
             // conversion, so a small share of doubles gets the other (equally exact) text. This test records the share.
             Assert.True(unexpected.Count == 0, "Differences other than 15 vs 17 digits: " + string.Join("; ", unexpected.Take(5)));
         }
