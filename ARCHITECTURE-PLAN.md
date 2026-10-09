@@ -77,7 +77,7 @@ Names: assembly and namespace names stay `Elevator.*` during the refactor, becau
 | **P7 Test consolidation** | Port the remaining console tests to xUnit where they do not need AutoCAD/Word. One entry point, `tools/test.ps1 -Tier 1|2|3`. Retire the duplicated runners. Remove the Word render from tiers 1–2 (keep 3–4 representative sheets in tier 3). | Local + cloud | 1 + 2 + 3 |
 | **P8 Repository polish** | `docs/` reorganised (architecture, design flow, calculations, presets, releases), a README per project, CHANGELOG, `tools/release.ps1`, v03 as a GitHub Release asset. Legacy outputs under `legacy/` removed from tracking. Optional `Elevator.*` → `ShaftMaster.*` rename. | Local | all |
 
-Feature work (DESIGN-FLOW stages 3+) resumes after P4. From then on, every feature lands in the new structure with tier-1 tests.
+Feature work (DESIGN-FLOW stages 3+) resumes only after the whole refactor (P4–P8) is finished, released (v04) and stable. The user then decides the next features (decision of 2026-10-09). From then on, every feature lands in the new structure with tier-1 tests.
 
 ## 4a. Product architecture target (agreed 2026-10-09)
 
