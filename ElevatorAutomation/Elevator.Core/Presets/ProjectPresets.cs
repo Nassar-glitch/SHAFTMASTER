@@ -598,27 +598,8 @@ namespace Elevator.Core.Presets
                 && lib.UndercutAngleStepsDeg != null
                 && lib.UndercutAngleStepsDeg.Count > 0;
             bool qFree = !cwField.IsEdited(p) && lib.BalanceFactorSteps != null && lib.BalanceFactorSteps.Count > 0;
-            // The search always starts from the presets: previous β / q selections are cleared first (a locked value keeps none).
-            if (p.Calculations != null && p.Calculations.RopeTraction != null)
-            {
-                p.Calculations.RopeTraction.SelectedUndercutAngleDeg = null;
-                p.Calculations.RopeTraction.SelectedBalanceFactor = null;
-            }
-            if (qFree)
-                SetBalance(p, lib, lib.CounterweightBalanceFactor);
-            // An emptied group is the same as no group (keeps the cache key stable).
-            if (p.Calculations != null
-                && p.Calculations.RopeTraction != null
-                && typeof(RopeTractionInputs).GetFields().All(f => f.GetValue(p.Calculations.RopeTraction) == null))
-                p.Calculations.RopeTraction = null;
-            var outcome = new RopeSizing
-            {
-                StartCount = p.Suspension.RopeCount,
-                StartDiameterMm = p.Suspension.RopeDiameterMm,
-                StartSheaveMm = p.Machine.TractionSheavePitchDiameterMm,
-                StartUndercutAngleDeg = lib.Groove.UndercutAngleDeg,
-                StartBalanceFactor = lib.CounterweightBalanceFactor
-            };
+            ResetSelections(p, lib, qFree);
+            var outcome = StartOutcome(p, lib);
             if (ctx == null
                 || !(countFree || diameterFree || betaFree || sheaveFree || qFree)
                 || !p.Suspension.RopeCount.HasValue
@@ -640,14 +621,25 @@ namespace Elevator.Core.Presets
             });
             if (key != null && key == cacheKey && cacheValue != null && Object.ReferenceEquals(ctx, cacheContext))
                 return Finish(p, lib, cacheValue.Copy(), betaFree, qFree);
-            var engine = new RopeTractionCalculationEngine();
             var clock = System.Diagnostics.Stopwatch.StartNew();
             int n0 = p.Suspension.RopeCount.Value;
-            double d0 = p.Suspension.RopeDiameterMm.Value;
             double? s0 = p.Machine.TractionSheavePitchDiameterMm;
             var effectiveBeta = betaField.Effective(new PresetContext { Project = p, Library = lib });
             double? b0 =
                 effectiveBeta == null ? (double?)null : Convert.ToDouble(effectiveBeta, System.Globalization.CultureInfo.InvariantCulture);
+            var search = new RopeSearch
+            {
+                Project = p,
+                Library = lib,
+                Context = ctx,
+                Outcome = outcome,
+                BetaFree = betaFree,
+                QFree = qFree,
+                DiameterFree = diameterFree,
+                D0 = p.Suspension.RopeDiameterMm.Value,
+                S0 = s0,
+                B0 = b0
+            };
             var sheaves = sheaveFree && s0.HasValue
                 ? new[] { s0.Value }.Concat(lib.TractionSheavePitchSteps.Where(v => v > s0.Value + 1e-9)).ToList()
                 : new List<double> { s0 ?? 0 };
@@ -658,124 +650,217 @@ namespace Elevator.Core.Presets
                 v => Math.Abs(v - lib.CounterweightBalanceFactor.Value) > 1e-12)).ToList() : new List<double> { Double.NaN };
             var counts = countFree ? Enumerable.Range(4, Math.Max(1, lib.MaximumRopeCount.Value - 3)).ToList() : new List<int> { n0 };
             // Reference trial: the ladder values as they stand.
-            var reference = engine.Calculate(p, ctx, lib);
+            var reference = search.Engine.Calculate(p, ctx, lib);
             outcome.Trials++;
             if (!reference.HasResults || !reference.Checks.Any(k => k.Id == "safety-factor"))
             {
                 outcome.Status = "NotEvaluable";
-                goto done;
             }
-            if (!Passes(reference))
-                outcome.LimitingCheck = FirstFailure(reference);
-            var failures = new Dictionary<string, int>();
-            // The shared geometry depends on the sheave and on the rope diameter (validation) only, not on n, β or q: computed
-            // once per (Dt, d) and reused for every trial of that pair.
-            var geometries = new Dictionary<string, RopeTractionGeometry>();
-            // Diameters for a sheave: from the ladder diameter downwards (largest d ≤ ladder d first), then larger ones only
-            // if nothing passes; all with d ≤ Dt / 40.
-            Func<double, List<double>> diametersFor = dt =>
+            else
             {
-                if (!diameterFree)
-                    return new List<double> { d0 };
-                double limit = (dt > 0 ? dt : Double.MaxValue) / 40;
-                var table = lib.Ropes.Table.Select(r => r.DiameterMm).Where(v => v <= limit + 1e-9).ToList();
-                return table.Where(v => v <= d0 + 1e-9)
-                    .OrderByDescending(v => v)
-                    .Concat(table.Where(v => v > d0 + 1e-9).OrderBy(v => v))
-                    .ToList();
-            };
-            foreach (var dt in sheaves)
-            {
-                foreach (var q in qs)
+                if (!Passes(reference))
+                    outcome.LimitingCheck = FirstFailure(reference);
+                if (!SearchSheaves(search, sheaves, qs, betas, counts))
                 {
-                    // Within one sheave and q: after the first β only the combinations that failed on traction alone are tried
-                    // again: a larger β raises Nequiv(t) (EN 81-50 Table 2) and so the required Sf, and leaves D/d unchanged.
-                    List<Tuple<double, int>> tractionOnly = null;
-                    foreach (var beta in betas)
-                    {
-                        bool tractionFailed = false;
-                        bool firstBeta = tractionOnly == null;
-                        var next = new List<Tuple<double, int>>();
-                        var combos = firstBeta
-                            ? diametersFor(dt).SelectMany(dd => counts.Select(nn => Tuple.Create(dd, nn))).ToList()
-                            : tractionOnly;
-                        double skipDiameter = Double.NaN;
-                        foreach (var combo in combos)
-                        {
-                            double d = combo.Item1;
-                            int n = combo.Item2;
-                            if (d == skipDiameter)
-                                continue;
-                            var trial = ProjectJson.Clone(p);
-                            trial.Suspension.RopeCount = n;
-                            trial.Suspension.RopeDiameterMm = d;
-                            if (s0.HasValue)
-                                trial.Machine.TractionSheavePitchDiameterMm = dt;
-                            if (betaFree)
-                                SelectBeta(trial, beta);
-                            if (qFree)
-                                SetBalance(trial, lib, q);
-                            string gk = dt.ToString("R") + "|" + d.ToString("R");
-                            RopeTractionGeometry geo;
-                            if (!geometries.TryGetValue(gk, out geo))
-                            {
-                                geo = RopeTractionCalculationEngine.Geometry(trial, ctx);
-                                geometries[gk] = geo;
-                            }
-                            var r = engine.Calculate(trial, ctx, lib, geo);
-                            outcome.Trials++;
-                            if (Passes(r))
-                            {
-                                outcome.Status = "Selected";
-                                outcome.RopeCount = n;
-                                outcome.RopeDiameterMm = d;
-                                outcome.SheaveMm = s0.HasValue ? dt : (double?)null;
-                                outcome.UndercutAngleDeg = betaFree ? beta : b0;
-                                outcome.BalanceFactor = qFree ? q : (double?)null;
-                                goto done;
-                            }
-                            // A sheave the layout cannot use (invalid geometry or input) gives no result for any rope: next sheave.
-                            if (r.Omissions.Any(o => o.Kind == "INVALID_GEOMETRY" || o.Kind == "INVALID_INPUT"))
-                                goto nextSheave;
-                            bool dOnly = r.Checks.Any(k => (k.Id == "rope-diameter" || k.Id == "dd-sheave") && k.Ok == false);
-                            // Limiting check of the search: what fails in the candidates that meet the minimum diameter and sheave D/d.
-                            if (!dOnly)
-                            {
-                                foreach (var f in Failures(r))
-                                {
-                                    int c;
-                                    failures.TryGetValue(f, out c);
-                                    failures[f] = c + 1;
-                                }
-                            }
-                            if (r.Traction.Any(t => !t.Ok))
-                            {
-                                tractionFailed = true;
-                                if (!r.Checks.Any(k => k.Ok == false))
-                                    next.Add(combo);
-                            }
-                            // Checks that depend on d only (minimum diameter, sheave D/d) fail for every count: next d.
-                            if (dOnly)
-                                skipDiameter = d;
-                        }
-                        tractionOnly = next;
-                        // β is stepped only while a traction case is NOT OK; it cannot help the rope checks.
-                        if (!tractionFailed || tractionOnly.Count == 0)
-                            break;
-                    }
+                    outcome.Status = "NoPass";
+                    if (search.Failures.Count > 0)
+                        outcome.LimitingCheck = search.Failures.OrderByDescending(x => x.Value).First().Key;
                 }
-            nextSheave:
-                ;
             }
-            outcome.Status = "NoPass";
-            if (failures.Count > 0)
-                outcome.LimitingCheck = failures.OrderByDescending(x => x.Value).First().Key;
-            done:
             outcome.Milliseconds = clock.ElapsedMilliseconds;
             cacheKey = key;
             cacheValue = outcome.Copy();
             cacheContext = ctx;
             return Finish(p, lib, outcome, betaFree, qFree);
+        }
+
+        // The search always starts from the presets: previous β / q selections are cleared first (a locked value keeps none).
+        static void ResetSelections(ElevatorProject p, PresetLibrary lib, bool qFree)
+        {
+            if (p.Calculations != null && p.Calculations.RopeTraction != null)
+            {
+                p.Calculations.RopeTraction.SelectedUndercutAngleDeg = null;
+                p.Calculations.RopeTraction.SelectedBalanceFactor = null;
+            }
+            if (qFree)
+                SetBalance(p, lib, lib.CounterweightBalanceFactor);
+            // An emptied group is the same as no group (keeps the cache key stable).
+            if (p.Calculations != null
+                && p.Calculations.RopeTraction != null
+                && typeof(RopeTractionInputs).GetFields().All(f => f.GetValue(p.Calculations.RopeTraction) == null))
+                p.Calculations.RopeTraction = null;
+        }
+
+        static RopeSizing StartOutcome(ElevatorProject p, PresetLibrary lib)
+        {
+            return new RopeSizing
+            {
+                StartCount = p.Suspension.RopeCount,
+                StartDiameterMm = p.Suspension.RopeDiameterMm,
+                StartSheaveMm = p.Machine.TractionSheavePitchDiameterMm,
+                StartUndercutAngleDeg = lib.Groove.UndercutAngleDeg,
+                StartBalanceFactor = lib.CounterweightBalanceFactor
+            };
+        }
+
+        enum TrialStatus
+        {
+            Continue,
+            Selected,
+            NextSheave
+        }
+
+        // The fixed inputs and the running state of one rope search.
+        sealed class RopeSearch
+        {
+            public ElevatorProject Project;
+            public PresetLibrary Library;
+            public DesignContext Context;
+            public RopeSizing Outcome;
+            public bool BetaFree;
+            public bool QFree;
+            public bool DiameterFree;
+            public double D0;
+            public double? S0;
+            public double? B0;
+            public readonly RopeTractionCalculationEngine Engine = new RopeTractionCalculationEngine();
+            public readonly Dictionary<string, int> Failures = new Dictionary<string, int>();
+
+            // The shared geometry depends on the sheave and on the rope diameter (validation) only, not on n, β or q: computed
+            // once per (Dt, d) and reused for every trial of that pair.
+            public readonly Dictionary<string, RopeTractionGeometry> Geometries = new Dictionary<string, RopeTractionGeometry>();
+
+            // Diameters for a sheave: from the ladder diameter downwards (largest d ≤ ladder d first), then larger ones only
+            // if nothing passes; all with d ≤ Dt / 40.
+            public List<double> DiametersFor(double dt)
+            {
+                if (!DiameterFree)
+                    return new List<double> { D0 };
+                double limit = (dt > 0 ? dt : Double.MaxValue) / 40;
+                var table = Library.Ropes.Table.Select(r => r.DiameterMm).Where(v => v <= limit + 1e-9).ToList();
+                return table.Where(v => v <= D0 + 1e-9)
+                    .OrderByDescending(v => v)
+                    .Concat(table.Where(v => v > D0 + 1e-9).OrderBy(v => v))
+                    .ToList();
+            }
+        }
+
+        // True when a combination passed (the outcome then holds the selection).
+        static bool SearchSheaves(RopeSearch s, List<double> sheaves, List<double> qs, List<double> betas, List<int> counts)
+        {
+            foreach (var dt in sheaves)
+            {
+                if (SearchSheave(s, dt, qs, betas, counts) == TrialStatus.Selected)
+                    return true;
+            }
+            return false;
+        }
+
+        static TrialStatus SearchSheave(RopeSearch s, double dt, List<double> qs, List<double> betas, List<int> counts)
+        {
+            foreach (var q in qs)
+            {
+                var status = SearchBetas(s, dt, q, betas, counts);
+                if (status != TrialStatus.Continue)
+                    return status;
+            }
+            return TrialStatus.Continue;
+        }
+
+        static TrialStatus SearchBetas(RopeSearch s, double dt, double q, List<double> betas, List<int> counts)
+        {
+            // Within one sheave and q: after the first β only the combinations that failed on traction alone are tried
+            // again: a larger β raises Nequiv(t) (EN 81-50 Table 2) and so the required Sf, and leaves D/d unchanged.
+            List<Tuple<double, int>> tractionOnly = null;
+            foreach (var beta in betas)
+            {
+                bool tractionFailed = false;
+                bool firstBeta = tractionOnly == null;
+                var next = new List<Tuple<double, int>>();
+                var combos = firstBeta
+                    ? s.DiametersFor(dt).SelectMany(dd => counts.Select(nn => Tuple.Create(dd, nn))).ToList()
+                    : tractionOnly;
+                double skipDiameter = Double.NaN;
+                foreach (var combo in combos)
+                {
+                    if (combo.Item1 == skipDiameter)
+                        continue;
+                    var status = RunTrial(s, dt, q, beta, combo, next, ref tractionFailed, ref skipDiameter);
+                    if (status != TrialStatus.Continue)
+                        return status;
+                }
+                tractionOnly = next;
+                // β is stepped only while a traction case is NOT OK; it cannot help the rope checks.
+                if (!tractionFailed || tractionOnly.Count == 0)
+                    break;
+            }
+            return TrialStatus.Continue;
+        }
+
+        static TrialStatus RunTrial(
+            RopeSearch s,
+            double dt,
+            double q,
+            double beta,
+            Tuple<double, int> combo,
+            List<Tuple<double, int>> next,
+            ref bool tractionFailed,
+            ref double skipDiameter)
+        {
+            double d = combo.Item1;
+            int n = combo.Item2;
+            var trial = ProjectJson.Clone(s.Project);
+            trial.Suspension.RopeCount = n;
+            trial.Suspension.RopeDiameterMm = d;
+            if (s.S0.HasValue)
+                trial.Machine.TractionSheavePitchDiameterMm = dt;
+            if (s.BetaFree)
+                SelectBeta(trial, beta);
+            if (s.QFree)
+                SetBalance(trial, s.Library, q);
+            string gk = dt.ToString("R") + "|" + d.ToString("R");
+            RopeTractionGeometry geo;
+            if (!s.Geometries.TryGetValue(gk, out geo))
+            {
+                geo = RopeTractionCalculationEngine.Geometry(trial, s.Context);
+                s.Geometries[gk] = geo;
+            }
+            var r = s.Engine.Calculate(trial, s.Context, s.Library, geo);
+            s.Outcome.Trials++;
+            if (Passes(r))
+            {
+                s.Outcome.Status = "Selected";
+                s.Outcome.RopeCount = n;
+                s.Outcome.RopeDiameterMm = d;
+                s.Outcome.SheaveMm = s.S0.HasValue ? dt : (double?)null;
+                s.Outcome.UndercutAngleDeg = s.BetaFree ? beta : s.B0;
+                s.Outcome.BalanceFactor = s.QFree ? q : (double?)null;
+                return TrialStatus.Selected;
+            }
+            // A sheave the layout cannot use (invalid geometry or input) gives no result for any rope: next sheave.
+            if (r.Omissions.Any(o => o.Kind == "INVALID_GEOMETRY" || o.Kind == "INVALID_INPUT"))
+                return TrialStatus.NextSheave;
+            bool dOnly = r.Checks.Any(k => (k.Id == "rope-diameter" || k.Id == "dd-sheave") && k.Ok == false);
+            // Limiting check of the search: what fails in the candidates that meet the minimum diameter and sheave D/d.
+            if (!dOnly)
+            {
+                foreach (var f in Failures(r))
+                {
+                    int c;
+                    s.Failures.TryGetValue(f, out c);
+                    s.Failures[f] = c + 1;
+                }
+            }
+            if (r.Traction.Any(t => !t.Ok))
+            {
+                tractionFailed = true;
+                if (!r.Checks.Any(k => k.Ok == false))
+                    next.Add(combo);
+            }
+            // Checks that depend on d only (minimum diameter, sheave D/d) fail for every count: next d.
+            if (dOnly)
+                skipDiameter = d;
+            return TrialStatus.Continue;
         }
 
         public const string CounterweightKey = "Calculations.CounterweightMassKg";

@@ -313,6 +313,28 @@ namespace Elevator.Core.Suspension
             int? n = x.RopeCount.HasValue && x.RopeCount.Value > 0 ? x.RopeCount : null;
             double? dt = Positive(x.SheavePitchDiameterMm) ? x.SheavePitchDiameterMm : null;
             // EN 81-20 5.5.1.2 a) nominal rope diameter.
+            AddRopeDiameterCheck(r, d);
+            // EN 81-20 5.5.1.3 number of ropes.
+            AddRopeCountCheck(r, n);
+            // EN 81-20 5.5.2.1 D/d ≥ 40 for the traction sheave (a check). The deflector D/d is a value only (DESIGN-FLOW 11a).
+            AddSheaveRatioCheck(r, d, dt);
+            bool deflectorKnown = CheckSharedGeometry(r, g, d);
+            // Masses and lengths. Planner decision A6: hanging rope length H = travel + overhead; travelling cable over the travel.
+            double? P = Positive(x.CarMassKg) ? x.CarMassKg : null, Q =
+                Positive(x.CapacityKg) ? x.CapacityKg : null, M = Positive(x.CounterweightMassKg) ? x.CounterweightMassKg : null;
+            double? w = Positive(x.RopeMassKgPerM) ? x.RopeMassKgPerM : null, mbl =
+                Positive(x.MinimumBreakingLoadKn) ? x.MinimumBreakingLoadKn : null;
+            SetRopeLengths(r, g, x);
+            // EN 81-20 5.5.2.2 safety factor; EN 81-50 5.12 minimum.
+            AddSafetyFactorCheck(r, g, x, grooveProblem, rr, d, n, dt, deflectorKnown, P, Q, w, mbl);
+            // EN 81-20 5.5.2.3 terminations: computed requirement.
+            AddTerminationCheck(r, mbl);
+            Traction(r, g, x, P, Q, M, w, n, grooveProblem);
+            return Finish(r);
+        }
+
+        private void AddRopeDiameterCheck(RopeTractionResult r, double? d)
+        {
             if (d.HasValue)
             {
                 r.Checks.Add(new RopeCheck
@@ -332,7 +354,10 @@ namespace Elevator.Core.Suspension
             }
             else
                 Omit(r, "Nominal rope diameter", "MISSING_INPUT", "Rope diameter not provided.");
-            // EN 81-20 5.5.1.3 number of ropes.
+        }
+
+        private void AddRopeCountCheck(RopeTractionResult r, int? n)
+        {
             if (n.HasValue)
             {
                 r.Checks.Add(new RopeCheck
@@ -351,7 +376,10 @@ namespace Elevator.Core.Suspension
             }
             else
                 Omit(r, "Number of ropes", "MISSING_INPUT", "Rope count not provided.");
-            // EN 81-20 5.5.2.1 D/d ≥ 40 for the traction sheave (a check). The deflector D/d is a value only (DESIGN-FLOW 11a).
+        }
+
+        private void AddSheaveRatioCheck(RopeTractionResult r, double? d, double? dt)
+        {
             if (dt.HasValue && d.HasValue)
             {
                 r.DtOverDr = dt.Value / d.Value;
@@ -377,6 +405,10 @@ namespace Elevator.Core.Suspension
                                     "MISSING_INPUT",
                                     dt.HasValue ? "Rope diameter not provided." : "Traction sheave pitch diameter not provided.");
             }
+        }
+
+        private bool CheckSharedGeometry(RopeTractionResult r, RopeTractionGeometry g, double? d)
+        {
             bool deflectorKnown = g.Available && (!g.DeflectorPresent || g.DeflectorPitchMm.HasValue);
             if (!g.Available)
                 Omit(r, "Safety factor and traction", "MISSING_INPUT", "Shared geometry unavailable: " + g.Problem);
@@ -395,16 +427,32 @@ namespace Elevator.Core.Suspension
                 if (d.HasValue)
                     r.DpOverDr = g.DeflectorPitchMm.Value / d.Value;
             }
-            // Masses and lengths. Planner decision A6: hanging rope length H = travel + overhead; travelling cable over the travel.
-            double? P = Positive(x.CarMassKg) ? x.CarMassKg : null, Q =
-                Positive(x.CapacityKg) ? x.CapacityKg : null, M = Positive(x.CounterweightMassKg) ? x.CounterweightMassKg : null;
-            double? w = Positive(x.RopeMassKgPerM) ? x.RopeMassKgPerM : null, mbl =
-                Positive(x.MinimumBreakingLoadKn) ? x.MinimumBreakingLoadKn : null;
+            return deflectorKnown;
+        }
+
+        private void SetRopeLengths(RopeTractionResult r, RopeTractionGeometry g, RopeTractionEffectiveInputs x)
+        {
             if (g.Available && g.TravelMm.HasValue)
                 r.TravelM = g.TravelMm.Value / 1000;
             if (g.Available && g.TravelMm.HasValue && Positive(x.OverheadMm))
                 r.HangingLengthM = (g.TravelMm.Value + x.OverheadMm.Value) / 1000;
-            // EN 81-20 5.5.2.2 safety factor; EN 81-50 5.12 minimum.
+        }
+
+        private void AddSafetyFactorCheck(
+            RopeTractionResult r,
+            RopeTractionGeometry g,
+            RopeTractionEffectiveInputs x,
+            string grooveProblem,
+            double rr,
+            double? d,
+            int? n,
+            double? dt,
+            bool deflectorKnown,
+            double? P,
+            double? Q,
+            double? w,
+            double? mbl)
+        {
             var sfMissing = new List<string>();
             if (!mbl.HasValue)
                 sfMissing.Add("rope MBL");
@@ -474,7 +522,10 @@ namespace Elevator.Core.Suspension
                     Ok = r.SfActual.Value >= r.SfRequired.Value * (1 - 1e-12)
                 });
             }
-            // EN 81-20 5.5.2.3 terminations: computed requirement.
+        }
+
+        private void AddTerminationCheck(RopeTractionResult r, double? mbl)
+        {
             if (mbl.HasValue)
             {
                 r.Checks.Add(new RopeCheck
@@ -493,8 +544,6 @@ namespace Elevator.Core.Suspension
             }
             else
                 Omit(r, "Rope termination strength", "MISSING_INPUT", "Rope MBL not provided.");
-            Traction(r, g, x, P, Q, M, w, n, grooveProblem);
-            return Finish(r);
         }
 
         void Traction(
@@ -521,23 +570,7 @@ namespace Elevator.Core.Suspension
             }
             if (grooveProblem != null)
                 return;
-            var missing = new List<string>();
-            if (!P.HasValue)
-                missing.Add("car mass");
-            if (!Q.HasValue)
-                missing.Add("rated load");
-            if (!M.HasValue)
-                missing.Add("counterweight mass");
-            if (!w.HasValue)
-                missing.Add("rope mass per metre");
-            if (!n.HasValue)
-                missing.Add("rope count");
-            if (!r.HangingLengthM.HasValue)
-                missing.Add("travel and overhead");
-            if (x.GrooveType == null)
-                missing.Add("groove type");
-            if (!Positive(x.TravellingCableKgPerM))
-                missing.Add("travelling cable mass");
+            var missing = MissingTractionInputs(r, x, P, Q, M, w, n);
             if (missing.Count > 0)
             {
                 Omit(r, "Traction", "MISSING_INPUT", "Not provided: " + String.Join(", ", missing) + ".");
@@ -569,39 +602,10 @@ namespace Elevator.Core.Suspension
                 };
             };
             // 1) Car loading, 125 % Q at the lowest landing (5.11.2.2.1; Annex D).
-            {
-                var t = make(TractionCase.Loading, "loading", "Car loading (125 % Q)", "EN 81-50 5.11.2.2.1", "≤");
-                t.MuEquation = "μ = 0.1";
-                double t1 = (P.Value + 1.25 * Q.Value) / rr * Gn + msrCarLow * Gn, t2 = M.Value / rr * Gn;
-                t.Positions.Add(new TractionPosition
-                {
-                    Name = "Car at the lowest landing",
-                    T1N = t1,
-                    T2N = t2,
-                    Ratio = t1 / t2,
-                    T1Equation = "T1 = (P + 1.25 Q) · gn + MSRcar · gn = ("
-                        + F(P.Value)
-                        + " + 1.25 × "
-                        + F(Q.Value)
-                        + ") × 9.81 + "
-                        + F(msrCarLow)
-                        + " × 9.81 = "
-                        + F2(t1)
-                        + " N",
-                    T2Equation = "T2 = Mcwt · gn = " + F(M.Value) + " × 9.81 = " + F2(t2) + " N"
-                });
-                Close(t);
-                r.Traction.Add(t);
-            }
+            AddLoadingCase(r, P, Q, M, rr, msrCarLow, make);
             // 2) Emergency braking (5.11.2.2.2): rated load at the lowest landing retarding downwards; empty car at the highest landing
             // retarding upwards.
-            var brakingMissing = new List<string>();
-            if (!Positive(x.SpeedMps))
-                brakingMissing.Add("rated speed");
-            if (!x.BrakingRetardationMps2.HasValue)
-                brakingMissing.Add("braking retardation");
-            if (g.DeflectorPresent && !Positive(x.DeflectorMassKg))
-                brakingMissing.Add("deflector mass");
+            var brakingMissing = MissingBrakingInputs(g, x);
             if (x.BrakingRetardationMps2.HasValue && x.BrakingRetardationMps2.Value < TractionRules.MinimumBrakingRetardationMps2)
             {
             }
@@ -609,79 +613,7 @@ namespace Elevator.Core.Suspension
                 Omit(r, "Emergency braking", "MISSING_INPUT", "Not provided: " + String.Join(", ", brakingMissing) + ".");
             else
             {
-                double a = x.BrakingRetardationMps2.Value;
-                // Planner A2: mDP = J/R² · (v_pulley/v)², J = ½·m·R² (solid sheave); 1:1 → mDP = m/2. Counterweight side (term II).
-                double mdp = g.DeflectorPresent ? x.DeflectorMassKg.Value / 2 : 0;
-                r.MdpKg = g.DeflectorPresent ? mdp : (double?)null;
-                var t = make(TractionCase.Braking, "braking", "Emergency braking", "EN 81-50 5.11.2.2.2", "≤");
-                t.MuEquation = "μ = 0.1 / (1 + v/10) = 0.1 / (1 + " + F(x.SpeedMps.Value) + "/10) = " + t.Mu.ToString("0.####", Inv);
-                double t1 = (P.Value + Q.Value) / rr * (Gn + a) + msrCarLow * (Gn + a), t2 = M.Value / rr * (Gn - a) - mdp * a / rr;
-                t.Positions.Add(new TractionPosition
-                {
-                    Name = "Rated load, lowest landing, retarding downwards",
-                    T1N = t1,
-                    T2N = t2,
-                    Ratio = t1 / t2,
-                    T1Equation = "T1 = (P + Q) · (gn + a) + MSRcar · (gn + a) = ("
-                        + F(P.Value)
-                        + " + "
-                        + F(Q.Value)
-                        + ") × (9.81 + "
-                        + F(a)
-                        + ") + "
-                        + F(msrCarLow)
-                        + " × (9.81 + "
-                        + F(a)
-                        + ") = "
-                        + F2(t1)
-                        + " N",
-                    T2Equation = "T2 = Mcwt · (gn − a) − mDP · a = "
-                        + F(M.Value)
-                        + " × (9.81 − "
-                        + F(a)
-                        + ") − "
-                        + F(mdp)
-                        + " × "
-                        + F(a)
-                        + " = "
-                        + F2(t2)
-                        + " N"
-                });
-                // Empty car (Note 1: delete Q; T1 and T2 exchange): counterweight side is T1.
-                double e1 = M.Value / rr * (Gn + a) + msrCwtHigh * (Gn + a) + mdp * a / rr, e2 = (P.Value + mtravHigh) / rr * (Gn - a);
-                t.Positions.Add(new TractionPosition
-                {
-                    Name = "Empty car, highest landing, retarding upwards",
-                    T1N = e1,
-                    T2N = e2,
-                    Ratio = e1 / e2,
-                    T1Equation = "T1 = Mcwt · (gn + a) + MSRcwt · (gn + a) + mDP · a = "
-                        + F(M.Value)
-                        + " × (9.81 + "
-                        + F(a)
-                        + ") + "
-                        + F(msrCwtHigh)
-                        + " × (9.81 + "
-                        + F(a)
-                        + ") + "
-                        + F(mdp)
-                        + " × "
-                        + F(a)
-                        + " = "
-                        + F2(e1)
-                        + " N",
-                    T2Equation = "T2 = (P + MTrav) · (gn − a) = ("
-                        + F(P.Value)
-                        + " + "
-                        + F(mtravHigh)
-                        + ") × (9.81 − "
-                        + F(a)
-                        + ") = "
-                        + F2(e2)
-                        + " N"
-                });
-                Close(t);
-                r.Traction.Add(t);
+                AddBrakingCase(r, g, x, P, Q, M, rr, msrCarLow, msrCwtHigh, mtravHigh, make);
             }
             // 3) Stalled: counterweight on its buffers, empty car at the highest position (5.11.2.2.3; Annex D). Only with rope slip.
             if (x.TractionLimitingMethod == TractionLimitingMethods.ElectricSafetyDevice)
@@ -696,21 +628,194 @@ namespace Elevator.Core.Suspension
                 Omit(r, "Car stalled (counterweight on buffers)", "MISSING_INPUT", "Traction limiting method not provided.");
             else
             {
-                var t = make(TractionCase.Stalled, "stalled", "Car stalled (counterweight on buffers)", "EN 81-50 5.11.2.2.3", "≥");
-                t.MuEquation = "μ = 0.2";
-                double t1 = (P.Value + mtravHigh) / rr * Gn, t2 = msrCwtHigh * Gn;
-                t.Positions.Add(new TractionPosition
-                {
-                    Name = "Empty car at the highest position",
-                    T1N = t1,
-                    T2N = t2,
-                    Ratio = t1 / t2,
-                    T1Equation = "T1 = (P + MTrav) · gn = (" + F(P.Value) + " + " + F(mtravHigh) + ") × 9.81 = " + F2(t1) + " N",
-                    T2Equation = "T2 = MSRcwt · gn = " + F(msrCwtHigh) + " × 9.81 = " + F2(t2) + " N"
-                });
-                Close(t);
-                r.Traction.Add(t);
+                AddStalledCase(r, P, rr, msrCwtHigh, mtravHigh, make);
             }
+        }
+
+        static List<string> MissingTractionInputs(
+            RopeTractionResult r,
+            RopeTractionEffectiveInputs x,
+            double? P,
+            double? Q,
+            double? M,
+            double? w,
+            int? n)
+        {
+            var missing = new List<string>();
+            if (!P.HasValue)
+                missing.Add("car mass");
+            if (!Q.HasValue)
+                missing.Add("rated load");
+            if (!M.HasValue)
+                missing.Add("counterweight mass");
+            if (!w.HasValue)
+                missing.Add("rope mass per metre");
+            if (!n.HasValue)
+                missing.Add("rope count");
+            if (!r.HangingLengthM.HasValue)
+                missing.Add("travel and overhead");
+            if (x.GrooveType == null)
+                missing.Add("groove type");
+            if (!Positive(x.TravellingCableKgPerM))
+                missing.Add("travelling cable mass");
+            return missing;
+        }
+
+        static List<string> MissingBrakingInputs(RopeTractionGeometry g, RopeTractionEffectiveInputs x)
+        {
+            var missing = new List<string>();
+            if (!Positive(x.SpeedMps))
+                missing.Add("rated speed");
+            if (!x.BrakingRetardationMps2.HasValue)
+                missing.Add("braking retardation");
+            if (g.DeflectorPresent && !Positive(x.DeflectorMassKg))
+                missing.Add("deflector mass");
+            return missing;
+        }
+
+        private void AddLoadingCase(
+            RopeTractionResult r,
+            double? P,
+            double? Q,
+            double? M,
+            double rr,
+            double msrCarLow,
+            Func<TractionCase, string, string, string, string, TractionCaseResult> make)
+        {
+            var t = make(TractionCase.Loading, "loading", "Car loading (125 % Q)", "EN 81-50 5.11.2.2.1", "≤");
+            t.MuEquation = "μ = 0.1";
+            double t1 = (P.Value + 1.25 * Q.Value) / rr * Gn + msrCarLow * Gn, t2 = M.Value / rr * Gn;
+            t.Positions.Add(new TractionPosition
+            {
+                Name = "Car at the lowest landing",
+                T1N = t1,
+                T2N = t2,
+                Ratio = t1 / t2,
+                T1Equation = "T1 = (P + 1.25 Q) · gn + MSRcar · gn = ("
+                    + F(P.Value)
+                    + " + 1.25 × "
+                    + F(Q.Value)
+                    + ") × 9.81 + "
+                    + F(msrCarLow)
+                    + " × 9.81 = "
+                    + F2(t1)
+                    + " N",
+                T2Equation = "T2 = Mcwt · gn = " + F(M.Value) + " × 9.81 = " + F2(t2) + " N"
+            });
+            Close(t);
+            r.Traction.Add(t);
+        }
+
+        private void AddBrakingCase(
+            RopeTractionResult r,
+            RopeTractionGeometry g,
+            RopeTractionEffectiveInputs x,
+            double? P,
+            double? Q,
+            double? M,
+            double rr,
+            double msrCarLow,
+            double msrCwtHigh,
+            double mtravHigh,
+            Func<TractionCase, string, string, string, string, TractionCaseResult> make)
+        {
+            double a = x.BrakingRetardationMps2.Value;
+            // Planner A2: mDP = J/R² · (v_pulley/v)², J = ½·m·R² (solid sheave); 1:1 → mDP = m/2. Counterweight side (term II).
+            double mdp = g.DeflectorPresent ? x.DeflectorMassKg.Value / 2 : 0;
+            r.MdpKg = g.DeflectorPresent ? mdp : (double?)null;
+            var t = make(TractionCase.Braking, "braking", "Emergency braking", "EN 81-50 5.11.2.2.2", "≤");
+            t.MuEquation = "μ = 0.1 / (1 + v/10) = 0.1 / (1 + " + F(x.SpeedMps.Value) + "/10) = " + t.Mu.ToString("0.####", Inv);
+            double t1 = (P.Value + Q.Value) / rr * (Gn + a) + msrCarLow * (Gn + a), t2 = M.Value / rr * (Gn - a) - mdp * a / rr;
+            t.Positions.Add(new TractionPosition
+            {
+                Name = "Rated load, lowest landing, retarding downwards",
+                T1N = t1,
+                T2N = t2,
+                Ratio = t1 / t2,
+                T1Equation = "T1 = (P + Q) · (gn + a) + MSRcar · (gn + a) = ("
+                    + F(P.Value)
+                    + " + "
+                    + F(Q.Value)
+                    + ") × (9.81 + "
+                    + F(a)
+                    + ") + "
+                    + F(msrCarLow)
+                    + " × (9.81 + "
+                    + F(a)
+                    + ") = "
+                    + F2(t1)
+                    + " N",
+                T2Equation = "T2 = Mcwt · (gn − a) − mDP · a = "
+                    + F(M.Value)
+                    + " × (9.81 − "
+                    + F(a)
+                    + ") − "
+                    + F(mdp)
+                    + " × "
+                    + F(a)
+                    + " = "
+                    + F2(t2)
+                    + " N"
+            });
+            // Empty car (Note 1: delete Q; T1 and T2 exchange): counterweight side is T1.
+            double e1 = M.Value / rr * (Gn + a) + msrCwtHigh * (Gn + a) + mdp * a / rr, e2 = (P.Value + mtravHigh) / rr * (Gn - a);
+            t.Positions.Add(new TractionPosition
+            {
+                Name = "Empty car, highest landing, retarding upwards",
+                T1N = e1,
+                T2N = e2,
+                Ratio = e1 / e2,
+                T1Equation = "T1 = Mcwt · (gn + a) + MSRcwt · (gn + a) + mDP · a = "
+                    + F(M.Value)
+                    + " × (9.81 + "
+                    + F(a)
+                    + ") + "
+                    + F(msrCwtHigh)
+                    + " × (9.81 + "
+                    + F(a)
+                    + ") + "
+                    + F(mdp)
+                    + " × "
+                    + F(a)
+                    + " = "
+                    + F2(e1)
+                    + " N",
+                T2Equation = "T2 = (P + MTrav) · (gn − a) = ("
+                    + F(P.Value)
+                    + " + "
+                    + F(mtravHigh)
+                    + ") × (9.81 − "
+                    + F(a)
+                    + ") = "
+                    + F2(e2)
+                    + " N"
+            });
+            Close(t);
+            r.Traction.Add(t);
+        }
+
+        private void AddStalledCase(
+            RopeTractionResult r,
+            double? P,
+            double rr,
+            double msrCwtHigh,
+            double mtravHigh,
+            Func<TractionCase, string, string, string, string, TractionCaseResult> make)
+        {
+            var t = make(TractionCase.Stalled, "stalled", "Car stalled (counterweight on buffers)", "EN 81-50 5.11.2.2.3", "≥");
+            t.MuEquation = "μ = 0.2";
+            double t1 = (P.Value + mtravHigh) / rr * Gn, t2 = msrCwtHigh * Gn;
+            t.Positions.Add(new TractionPosition
+            {
+                Name = "Empty car at the highest position",
+                T1N = t1,
+                T2N = t2,
+                Ratio = t1 / t2,
+                T1Equation = "T1 = (P + MTrav) · gn = (" + F(P.Value) + " + " + F(mtravHigh) + ") × 9.81 = " + F2(t1) + " N",
+                T2Equation = "T2 = MSRcwt · gn = " + F(msrCwtHigh) + " × 9.81 = " + F2(t2) + " N"
+            });
+            Close(t);
+            r.Traction.Add(t);
         }
 
         static void Close(TractionCaseResult t)
