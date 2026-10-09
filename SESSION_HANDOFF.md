@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete, awaiting Planner (2026-10-09): ARCHITECTURE-PLAN P5 "Core clean-up" on branch `refactor/p5-core` (from `main` `8ae78cd`, 24 commits). Not merged, not pushed.
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN P5 "Core clean-up" merged into `main` (`08a4382`, --no-ff) after the Planner review; tier 1 PASS on the branch before the merge (2077 s on a slow machine). Not pushed.
 - **Goal:** P5: formatting standard (.editorconfig, 140 columns), Elevator.Core and Elevator.Reporting reformatted, one type per file, Core regrouped by lift component, long methods split, dead code removed, short XML docs on public APIs. No behaviour change.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; P5)
 - **Completed:**
