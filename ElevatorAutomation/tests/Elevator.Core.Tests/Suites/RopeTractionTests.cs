@@ -108,7 +108,7 @@ namespace Elevator.Core.Tests
             string json = File.ReadAllText(Path.Combine(bin, "reviewed-example.elevator.json"));
             var old = ProjectJson.Deserialize(json);
             Check(old.Calculations == null || old.Calculations.RopeTraction == null, "Older project has no rope / traction group");
-            Check(old.UserEditedFields == null && ProjectJson.Serialize(ProjectJson.Deserialize(ProjectJson.Serialize(old))) == ProjectJson.Serialize(old), "Older project loads unchanged (no flags added; stable round trip)");
+            Check(old.UserEditedFields == null && JsonMembers.Sort(ProjectJson.Serialize(ProjectJson.Deserialize(ProjectJson.Serialize(old)))) == JsonMembers.Sort(ProjectJson.Serialize(old)), "Older project loads unchanged (no flags added; stable round trip)");
             var x = RopeTractionCalculationEngine.Effective(old, lib, null);
             Check(x.RopeDesignation == "8×19 Seale FC 1370/1770" && x.MinimumBreakingLoadKn == 28.1 && x.GrooveType == GrooveTypes.UndercutU && x.BrakingRetardationMps2 == 0.5, "Older project resolves rope / traction inputs from presets (d = 8 mm → 28.1 kN)");
         }

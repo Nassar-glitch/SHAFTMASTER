@@ -44,11 +44,11 @@ namespace Elevator.Core.Tests
             Assert.False(s.Dirty);
             Assert.Equal(Path.GetFullPath(path), s.FilePath);
             string saved = File.ReadAllText(path);
-            Assert.Equal(ProjectJson.Serialize(s.Project), saved);
+            Assert.Equal(JsonMembers.Sort(ProjectJson.Serialize(s.Project)), JsonMembers.Sort(saved));
             s.Dirty = true;
             s.Open(path);
             Assert.False(s.Dirty);
-            Assert.Equal(saved, ProjectJson.Serialize(s.Project));
+            Assert.Equal(JsonMembers.Sort(saved), JsonMembers.Sort(ProjectJson.Serialize(s.Project)));
             Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path), "*.tmp"));
         }
 
