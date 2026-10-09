@@ -378,9 +378,24 @@ namespace Elevator.Reporting.DesignNotes
                 d.Paragraph(NoNotes);
                 return d;
             }
-            foreach (var group in new[] { new { Title = "Warnings", Notes = Warnings },
-                new { Title = "Recommendations", Notes = Recommendations },
-                new { Title = "Notes", Notes = Notes } })
+            foreach (var group in new[]
+            {
+                new
+{
+    Title = "Warnings",
+    Notes = Warnings
+},
+                new
+{
+    Title = "Recommendations",
+    Notes = Recommendations
+},
+                new
+{
+    Title = "Notes",
+    Notes = Notes
+}
+            })
             {
                 if (group.Notes.Count == 0)
                     continue;

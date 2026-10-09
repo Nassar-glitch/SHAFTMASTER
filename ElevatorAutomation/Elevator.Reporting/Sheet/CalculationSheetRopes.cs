@@ -247,12 +247,15 @@ namespace Elevator.Reporting.Sheet
                 .ToList();
             if (term != null)
             {
-                rows.Add(new[] { term.Title,
+                rows.Add(new[]
+                {
+                    term.Title,
                     term.Clause,
                     term.Equation,
                     "0.8 × MBL = " + L(term.RequiredValue.Value) + " kN",
                     "MBL = " + L(x.MinimumBreakingLoadKn.Value) + " kN",
-                    "Required strength" });
+                    "Required strength"
+                });
             }
             d.Table(
                 new[] { "Check", "Clause", "Equation", "Required", "Actual", "Result" },
@@ -265,9 +268,16 @@ namespace Elevator.Reporting.Sheet
                 d.Paragraph("Traction", "Heading2");
                 d.Equations(
                     true,
-                    new[]{"T1 / T2 ≤ e^(f·α) for car loading and emergency braking;   T1 / T2 ≥ e^(f·α) for the stalled condition (EN "
-                        + "81-50 5.11.2.1)",
-     "α = "+L(r.Traction[0].AlphaDeg)+"° = "+(r.Traction[0].AlphaDeg*Math.PI/180).ToString("0.####",Inv)+" rad;   gn = 9.81 m/s²"});
+                    new[]
+                    {
+                        "T1 / T2 ≤ e^(f·α) for car loading and emergency braking;   T1 / T2 ≥ e^(f·α) for the stalled condition (EN "
+                            + "81-50 5.11.2.1)",
+                        "α = "
+                            + L(r.Traction[0].AlphaDeg)
+                            + "° = "
+                            + (r.Traction[0].AlphaDeg * Math.PI / 180).ToString("0.####", Inv)
+                            + " rad;   gn = 9.81 m/s²"
+                    });
                 foreach (var t in r.Traction)
                 {
                     d.Paragraph(t.Title + " — " + t.Clause, "Heading3", null, true);
@@ -286,12 +296,15 @@ namespace Elevator.Reporting.Sheet
                     d.Equations(true, eq);
                     d.Table(
                         new[] { "Position", "T1 (N)", "T2 (N)", "T1 / T2", "Required", "Result" },
-                        t.Positions.Select(q => new[] { q.Name,
-                        L(q.T1N),
-                        L(q.T2N),
-                        q.Ratio.ToString("0.###", Inv),
-                        t.Condition + " " + t.EFAlpha.ToString("0.###", Inv),
-                        (t.Condition == "≤" ? q.Ratio <= t.EFAlpha * (1 + 1e-12) : q.Ratio >= t.EFAlpha * (1 - 1e-12)) ? "OK" : "NOT OK" })
+                        t.Positions.Select(q => new[]
+                        {
+                            q.Name,
+                            L(q.T1N),
+                            L(q.T2N),
+                            q.Ratio.ToString("0.###", Inv),
+                            t.Condition + " " + t.EFAlpha.ToString("0.###", Inv),
+                            (t.Condition == "≤" ? q.Ratio <= t.EFAlpha * (1 + 1e-12) : q.Ratio >= t.EFAlpha * (1 - 1e-12)) ? "OK" : "NOT OK"
+                        })
                             .ToList(), new[] { 3438, 1300, 1300, 1100, 1300, 1200 }, new HashSet<int> { 0, 5 });
                 }
             }

@@ -534,30 +534,44 @@ namespace Elevator.Reporting.Sheet
             var rows = new List<string[]>();
             if (ChassisAvailable)
             {
-                rows.Add(new[] { "P1–P4 machine-room bearing reactions",
-                    String.Join("; ", Chassis.Reactions.OrderBy(b => b.Id).Select(b => b.Id + " " + KN(b.UpwardN) + " kN")) });
+                rows.Add(new[]
+                {
+                    "P1–P4 machine-room bearing reactions",
+                    String.Join("; ", Chassis.Reactions.OrderBy(b => b.Id).Select(b => b.Id + " " + KN(b.UpwardN) + " kN"))
+                });
             }
             if (RopeTensionsAvailable)
             {
-                rows.Add(new[] { "Suspension rope tensions", "Car side "
-                    + KN(Chassis.CarBundleTensionN)
-                    + " kN; counterweight side "
-                    + KN(Chassis.CounterweightBundleTensionN)
-                    + " kN" });
+                rows.Add(new[]
+                {
+                    "Suspension rope tensions",
+                    "Car side "
+                        + KN(Chassis.CarBundleTensionN)
+                        + " kN; counterweight side "
+                        + KN(Chassis.CounterweightBundleTensionN)
+                        + " kN"
+                });
             }
             if (RopeTractionAvailable)
                 rows.Add(new[] { RopeTractionSectionTitle, RopeSummary() });
             foreach (var load in Loads.Where(Available))
             {
-                rows.Add(new[] { LoadTitle(load), load.Id == "P5"
-                    ? KN(load.PerComponentLoadN) + " kN per car guide rail"
-                    : KN(load.PerComponentLoadN) + " kN per buffer; " + KN(load.GroupLoadN) + " kN total" });
+                rows.Add(new[]
+                {
+                    LoadTitle(load),
+                    load.Id == "P5"
+                        ? KN(load.PerComponentLoadN) + " kN per car guide rail"
+                        : KN(load.PerComponentLoadN) + " kN per buffer; " + KN(load.GroupLoadN) + " kN total"
+                });
             }
             var f = CarGuideForces;
             if (CarGuideForcesAvailable)
             {
-                rows.Add(new[] { "FF1 / FF2 car guide-rail forces",
-                    "FF1 " + KN(f.FF1DesignN) + " kN; FF2 " + KN(f.FF2DesignN) + " kN (design, per guide rail)" });
+                rows.Add(new[]
+                {
+                    "FF1 / FF2 car guide-rail forces",
+                    "FF1 " + KN(f.FF1DesignN) + " kN; FF2 " + KN(f.FF2DesignN) + " kN (design, per guide rail)"
+                });
             }
             d.Table(new[] { "Calculation", "Key result" }, rows, new[] { 3900, 5738 }, new HashSet<int> { 0 });
         }
@@ -628,22 +642,28 @@ namespace Elevator.Reporting.Sheet
             var rows = masses.Select(m => new[] { MassName(m.Key), L(m.Value) + " kg" }).ToList();
             rows.Add(new[] { "Total Σm", L(r.TotalMassKg.Value) + " kg" });
             d.Table(new[] { "Mass", "Value" }, rows, TwoCol, null, NullFills(rows.Count, true));
-            d.Equations(new[] { "W = Σm × g = ("
-                + String.Join(" + ", masses.Select(m => L(m.Value)))
-                + ") kg × 9.81 m/s² = "
-                + N(r.TotalVerticalLoadN)
-                + " N" });
+            d.Equations(new[]
+            {
+                "W = Σm × g = ("
+                    + String.Join(" + ", masses.Select(m => L(m.Value)))
+                    + ") kg × 9.81 m/s² = "
+                    + N(r.TotalVerticalLoadN)
+                    + " N"
+            });
             d.Paragraph("Load position and bearing positions", "Heading2");
             d.Paragraph(
                 "Machine-room axes in mm: +X to the right, +Y from the entrance towards the rear, +Z above the machine-room slab.",
                 "Small",
                 null,
                 true);
-            var pos = new List<string[]> { new[] { "Load W",
+            var pos = new List<string[]> { new[]
+            {
+                "Load W",
                 "Traction-sheave centre",
                 L(g.LoadReference.X),
                 L(g.LoadReference.Y),
-                L(g.LoadReference.Z) } };
+                L(g.LoadReference.Z)
+            } };
             foreach (var b in r.Reactions.OrderBy(b => b.Id))
                 pos.Add(new[] { b.Id, Bearing(b.Id), L(b.PositionMm.X), L(b.PositionMm.Y), L(b.PositionMm.Z) });
             d.Table(
@@ -653,51 +673,73 @@ namespace Elevator.Reporting.Sheet
                 new HashSet<int> { 0 });
             var x = r.Reactions.ToDictionary(b => b.Id, b => b.PositionMm);
             d.Paragraph("Equations", "Heading2");
-            d.Equations(new[]{
-    "L = y(rear row) − y(front row) = "+S(g.RearRowY)+" − "+S(g.FrontRowY)+" = "+L(g.LongitudinalSpanMm)+" mm",
-    "a = y(W) − y(front row) = "+L(g.LoadFromFrontMm)+" mm      b = y(rear row) − y(W) = "+L(g.LoadToRearMm)+" mm",
-    "F(front) = W × b / L = "+N(r.TotalVerticalLoadN)+" × "+S(g.LoadToRearMm)+" / "+S(g.LongitudinalSpanMm)+" = "+L(g.FrontLoadN)+" N",
-    "F(rear) = W × a / L = "+N(r.TotalVerticalLoadN)+" × "+S(g.LoadFromFrontMm)+" / "+S(g.LongitudinalSpanMm)+" = "+L(g.RearLoadN)+" N"});
-            d.Equations(new[]{
-    "s(f) = x(P2) − x(P4) = "+S(x["P2"].X)+" − "+S(x["P4"].X)+" = "+L(g.FrontTransverseSpanMm)+" mm",
-    "P2 = F(front) × (x(W) − x(P4)) / s(f) = "
-        +S(g.FrontLoadN)
-        +" × "
-        +S(g.FrontLoadFromLeftMm)
-        +" / "
-        +S(g.FrontTransverseSpanMm)
-        +" = "
-        +N(R("P2"))
-        +" N",
-    "P4 = F(front) × (x(P2) − x(W)) / s(f) = "
-        +S(g.FrontLoadN)
-        +" × "
-        +S(g.FrontLoadToRightMm)
-        +" / "
-        +S(g.FrontTransverseSpanMm)
-        +" = "
-        +N(R("P4"))
-        +" N"});
-            d.Equations(new[]{
-    "s(r) = x(P1) − x(P3) = "+S(x["P1"].X)+" − "+S(x["P3"].X)+" = "+L(g.RearTransverseSpanMm)+" mm",
-    "P1 = F(rear) × (x(W) − x(P3)) / s(r) = "
-        +S(g.RearLoadN)
-        +" × "
-        +S(g.RearLoadFromLeftMm)
-        +" / "
-        +S(g.RearTransverseSpanMm)
-        +" = "
-        +N(R("P1"))
-        +" N",
-    "P3 = F(rear) × (x(P1) − x(W)) / s(r) = "
-        +S(g.RearLoadN)
-        +" × "
-        +S(g.RearLoadToRightMm)
-        +" / "
-        +S(g.RearTransverseSpanMm)
-        +" = "
-        +N(R("P3"))
-        +" N"});
+            d.Equations(new[]
+            {
+                "L = y(rear row) − y(front row) = " + S(g.RearRowY) + " − " + S(g.FrontRowY) + " = " + L(g.LongitudinalSpanMm) + " mm",
+                "a = y(W) − y(front row) = " + L(g.LoadFromFrontMm) + " mm      b = y(rear row) − y(W) = " + L(g.LoadToRearMm) + " mm",
+                "F(front) = W × b / L = "
+                    + N(r.TotalVerticalLoadN)
+                    + " × "
+                    + S(g.LoadToRearMm)
+                    + " / "
+                    + S(g.LongitudinalSpanMm)
+                    + " = "
+                    + L(g.FrontLoadN)
+                    + " N",
+                "F(rear) = W × a / L = "
+                    + N(r.TotalVerticalLoadN)
+                    + " × "
+                    + S(g.LoadFromFrontMm)
+                    + " / "
+                    + S(g.LongitudinalSpanMm)
+                    + " = "
+                    + L(g.RearLoadN)
+                    + " N"
+            });
+            d.Equations(new[]
+            {
+                "s(f) = x(P2) − x(P4) = " + S(x["P2"].X) + " − " + S(x["P4"].X) + " = " + L(g.FrontTransverseSpanMm) + " mm",
+                "P2 = F(front) × (x(W) − x(P4)) / s(f) = "
+                    + S(g.FrontLoadN)
+                    + " × "
+                    + S(g.FrontLoadFromLeftMm)
+                    + " / "
+                    + S(g.FrontTransverseSpanMm)
+                    + " = "
+                    + N(R("P2"))
+                    + " N",
+                "P4 = F(front) × (x(P2) − x(W)) / s(f) = "
+                    + S(g.FrontLoadN)
+                    + " × "
+                    + S(g.FrontLoadToRightMm)
+                    + " / "
+                    + S(g.FrontTransverseSpanMm)
+                    + " = "
+                    + N(R("P4"))
+                    + " N"
+            });
+            d.Equations(new[]
+            {
+                "s(r) = x(P1) − x(P3) = " + S(x["P1"].X) + " − " + S(x["P3"].X) + " = " + L(g.RearTransverseSpanMm) + " mm",
+                "P1 = F(rear) × (x(W) − x(P3)) / s(r) = "
+                    + S(g.RearLoadN)
+                    + " × "
+                    + S(g.RearLoadFromLeftMm)
+                    + " / "
+                    + S(g.RearTransverseSpanMm)
+                    + " = "
+                    + N(R("P1"))
+                    + " N",
+                "P3 = F(rear) × (x(P1) − x(W)) / s(r) = "
+                    + S(g.RearLoadN)
+                    + " × "
+                    + S(g.RearLoadToRightMm)
+                    + " / "
+                    + S(g.RearTransverseSpanMm)
+                    + " = "
+                    + N(R("P3"))
+                    + " N"
+            });
             Reactions(d);
             // Text first, then the figures: a figure moves to the next page only when it does not fit.
             AddFigure(d, () => CalculationFigures.ChassisPlan(r, true));
@@ -764,30 +806,43 @@ namespace Elevator.Reporting.Sheet
             var rows = new List<string[]>();
             if (Finite(c.MachineCgOffsetXMm) && Finite(c.MachineCgOffsetYMm) && Finite(c.MachineCgOffsetZMm))
             {
-                rows.Add(new[] { "Machine centre of gravity from traction-sheave centre", "ΔX "
-                    + L(c.MachineCgOffsetXMm.Value)
-                    + " mm · ΔY "
-                    + L(c.MachineCgOffsetYMm.Value)
-                    + " mm · ΔZ "
-                    + L(c.MachineCgOffsetZMm.Value)
-                    + " mm" });
+                rows.Add(new[]
+                {
+                    "Machine centre of gravity from traction-sheave centre",
+                    "ΔX "
+                        + L(c.MachineCgOffsetXMm.Value)
+                        + " mm · ΔY "
+                        + L(c.MachineCgOffsetYMm.Value)
+                        + " mm · ΔZ "
+                        + L(c.MachineCgOffsetZMm.Value)
+                        + " mm"
+                });
             }
             if (!String.IsNullOrWhiteSpace(c.MachineCgSource))
                 rows.Add(new[] { "Machine centre of gravity basis", c.MachineCgSource.Trim() });
             if (!String.IsNullOrWhiteSpace(c.LeftCarryingMemberId))
             {
                 rows.Add(
-                                    new[] { "Carrying members (left / right)",
-                                        Member(c.LeftCarryingMemberId) + " / " + Member(c.RightCarryingMemberId) });
+                                    new[]
+                                    {
+                                        "Carrying members (left / right)",
+                                        Member(c.LeftCarryingMemberId) + " / " + Member(c.RightCarryingMemberId)
+                                    });
             }
-            rows.Add(new[] { "Load transfer",
-                "Upper members simply supported on front and rear transverse members, rigid spreader to the bearing seats" });
+            rows.Add(new[]
+            {
+                "Load transfer",
+                "Upper members simply supported on front and rear transverse members, rigid spreader to the bearing seats"
+            });
             if (!String.IsNullOrWhiteSpace(c.TransferAssumptionSource))
                 rows.Add(new[] { "Load transfer basis", c.TransferAssumptionSource.Trim() });
             if (Finite(c.HangerAttachmentOffsetXMm) && Finite(c.HangerAttachmentOffsetYMm))
             {
-                rows.Add(new[] { "Hanger attachment from deflector centre",
-                    "ΔX " + L(c.HangerAttachmentOffsetXMm.Value) + " mm · ΔY " + L(c.HangerAttachmentOffsetYMm.Value) + " mm" });
+                rows.Add(new[]
+                {
+                    "Hanger attachment from deflector centre",
+                    "ΔX " + L(c.HangerAttachmentOffsetXMm.Value) + " mm · ΔY " + L(c.HangerAttachmentOffsetYMm.Value) + " mm"
+                });
             }
             if (!String.IsNullOrWhiteSpace(c.HangerAttachmentSource))
                 rows.Add(new[] { "Hanger attachment basis", c.HangerAttachmentSource.Trim() });
@@ -1039,17 +1094,22 @@ namespace Elevator.Reporting.Sheet
         {
             var f = CarGuideForces;
             d.Heading(n + "  Car guide-rail forces FF1 / FF2", 1);
-            d.Mixed(new[] { Plain(
-                "FF1 and FF2 are the horizontal forces on the car guide rails from rated load distributed irregularly in the car. "),
+            d.Mixed(new[]
+            {
+                Plain("FF1 and FF2 are the horizontal forces on the car guide rails from rated load distributed irregularly in the car. "),
                 Bold("FF1"),
                 Plain(" acts along the car-rail line, in the car-width direction. "),
                 Bold("FF2"),
+                Plain(" acts perpendicular to the car-rail line, in the car-depth direction. Both are forces per guide rail at one "
+                    + "guide-shoe level.")
+            });
+            d.Mixed(new[]
+            {
+                Bold("h"),
                 Plain(
-                    " acts perpendicular to the car-rail line, in the car-depth direction. Both are forces per guide rail at one "
-                    + "guide-shoe level.") });
-            d.Mixed(new[] { Bold("h"), Plain(
-                " is the vertical centre-to-centre distance between the upper and lower car guide shoes. W and D are the internal car "
-                + "width and depth.") },
+                    " is the vertical centre-to-centre distance between the upper and lower car guide shoes. W and D are the internal car "
+                    + "width and depth.")
+            },
                     null,
                     true);
             string q =
@@ -1060,24 +1120,16 @@ namespace Elevator.Reporting.Sheet
         new[]{"Internal car depth D",dd+" mm"},
         new[]{"Guide-shoe spacing h",h+" mm"}}, TwoCol, new HashSet<int> { 0 });
             d.Paragraph("Equations", "Heading2");
-            d.Equations(true, new[] { "FF1 = Q × 10 N/kg × W / (4 h) = "
-                + q
-                + " × 10 × "
-                + w
-                + " / (4 × "
-                + h
-                + ") = "
-                + N(f.FF1BaseN)
-                + " N", "FF1(design) = 2 × FF1 = 2 × " + N(f.FF1BaseN) + " = " + N(f.FF1DesignN) + " N" });
-            d.Equations(true, new[] { "FF2 = Q × 10 N/kg × D / (8 h) = "
-                + q
-                + " × 10 × "
-                + dd
-                + " / (8 × "
-                + h
-                + ") = "
-                + N(f.FF2BaseN)
-                + " N", "FF2(design) = 2 × FF2 = 2 × " + N(f.FF2BaseN) + " = " + N(f.FF2DesignN) + " N" });
+            d.Equations(true, new[]
+            {
+                "FF1 = Q × 10 N/kg × W / (4 h) = " + q + " × 10 × " + w + " / (4 × " + h + ") = " + N(f.FF1BaseN) + " N",
+                "FF1(design) = 2 × FF1 = 2 × " + N(f.FF1BaseN) + " = " + N(f.FF1DesignN) + " N"
+            });
+            d.Equations(true, new[]
+            {
+                "FF2 = Q × 10 N/kg × D / (8 h) = " + q + " × 10 × " + dd + " / (8 × " + h + ") = " + N(f.FF2BaseN) + " N",
+                "FF2(design) = 2 × FF2 = 2 × " + N(f.FF2BaseN) + " = " + N(f.FF2DesignN) + " N"
+            });
             d.Paragraph("Results", "Heading2");
             d.Table(new[] { "Force", "Direction", "FF (N)", "FF design (N)", "FF design (kN)" }, new List<string[]>{
     new[]{"FF1","Along the car-rail line (car width)",N(f.FF1BaseN),N(f.FF1DesignN),KN(f.FF1DesignN)},

@@ -204,11 +204,14 @@ namespace Elevator.Core.Application
             if (CalculationModes.Resolve(project.Calculations) != "Basic")
                 return ChassisDraftErrors;
             var c = project.Calculations;
-            var fields = new[] { "CarMassKg",
+            var fields = new[]
+            {
+                "CarMassKg",
                 "CounterweightMassKg",
                 "MachineMassKg",
                 "CarSideAdditionalSuspendedMassKg",
-                "CounterweightSideAdditionalSuspendedMassKg" }.Select(f => "Calculations." + f).ToList();
+                "CounterweightSideAdditionalSuspendedMassKg"
+            }.Select(f => "Calculations." + f).ToList();
             if (c.IncludeChassisSelfWeight == true)
                 fields.Add("Calculations.ChassisMassKg");
             if (c.IncludeHangerAssemblyWeight == true)
@@ -219,10 +222,13 @@ namespace Elevator.Core.Application
         public Dictionary<string, string> RelevantSafetyPitDraftErrors(ElevatorProject project)
         {
             var errors = new Dictionary<string, string>();
-            foreach (string field in new[] { "CarMassKg",
+            foreach (string field in new[]
+            {
+                "CarMassKg",
                 "CounterweightMassKg",
                 "CarSideAdditionalSuspendedMassKg",
-                "CounterweightSideAdditionalSuspendedMassKg" })
+                "CounterweightSideAdditionalSuspendedMassKg"
+            })
             {
                 string path = "Calculations." + field, message;
                 if (ChassisDraftErrors.TryGetValue(path, out message))

@@ -87,12 +87,15 @@ namespace Elevator.Reporting.Figures
             }
             if (door)
             {
-                f.Poly(Map(v, new[] { Pt(dl, -Wall),
+                f.Poly(Map(v, new[]
+                {
+                    Pt(dl, -Wall),
                     Pt(-Wall, -Wall),
                     Pt(-Wall, p.SD + Wall),
                     Pt(p.SW + Wall, p.SD + Wall),
                     Pt(p.SW + Wall, -Wall),
-                    Pt(dr, -Wall) }), false, FigureLayer.Thin);
+                    Pt(dr, -Wall)
+                }), false, FigureLayer.Thin);
                 f.Poly(
                     Map(v, new[] { Pt(dl, 0), Pt(0, 0), Pt(0, p.SD), Pt(p.SW, p.SD), Pt(p.SW, 0), Pt(dr, 0) }),
                     false,
@@ -126,10 +129,13 @@ namespace Elevator.Reporting.Figures
                 true,
                 FigureLayer.Secondary,
                 "car").Value = Figure.Mm(p.CarWidth) + "," + Figure.Mm(p.CarDepth);
-            f.Poly(Map(v, new[] { Pt(p.X("cwLeft"), p.CwFront),
+            f.Poly(Map(v, new[]
+            {
+                Pt(p.X("cwLeft"), p.CwFront),
                 Pt(p.X("cwRight"), p.CwFront),
                 Pt(p.X("cwRight"), p.CwRear),
-                Pt(p.X("cwLeft"), p.CwRear) }), true, FigureLayer.Secondary, "counterweight");
+                Pt(p.X("cwLeft"), p.CwRear)
+            }), true, FigureLayer.Secondary, "counterweight");
             // Car rail line (centre line) and simplified T-profile rails at their positions, blades towards the car / counterweight.
             f.Line(v.P(-Wall - 60, p.CarRow), v.P(p.SW + Wall + 60, p.CarRow), FigureLayer.Centre, "car-rail-line").Value =
                 Figure.Mm(p.CarRow);
@@ -623,8 +629,25 @@ namespace Elevator.Reporting.Figures
                 "load-q-ff1",
                 Figure.Num(s1, "0"));
             // FF1 couple, both outward: the upper shoe pushes the rail on the loaded side, the lower shoe the opposite rail.
-            foreach (var lv in new[] { new { Side = s1, Y = yu, Tag = "force-ff1-upper", Dy = -2.6, Dy2 = -6.0 },
-                new { Side = -s1, Y = yl, Tag = "force-ff1-lower", Dy = 5.2, Dy2 = 8.6 } })
+            foreach (var lv in new[]
+            {
+                new
+{
+    Side = s1,
+    Y = yu,
+    Tag = "force-ff1-upper",
+    Dy = -2.6,
+    Dy2 = -6.0
+},
+                new
+{
+    Side = -s1,
+    Y = yl,
+    Tag = "force-ff1-lower",
+    Dy = 5.2,
+    Dy2 = 8.6
+}
+            })
             {
                 double face = lv.Side < 0 ? xl : xr;
                 f.Load(
@@ -652,8 +675,21 @@ namespace Elevator.Reporting.Figures
             f.Line(Pt(fx - 12, yu), Pt(rx + 12, yu), FigureLayer.Centre);
             f.Line(Pt(fx - 12, yl), Pt(rx + 12, yl), FigureLayer.Centre);
             // FF2 couple on the same rail: upper shoe towards the loaded side (rear for s2 = +1, as in F4), lower shoe the other way.
-            foreach (var lv in new[] { new { Dir = s2, Y = yu, Tag = "force-ff2-upper" },
-                new { Dir = -s2, Y = yl, Tag = "force-ff2-lower" } })
+            foreach (var lv in new[]
+            {
+                new
+{
+    Dir = s2,
+    Y = yu,
+    Tag = "force-ff2-upper"
+},
+                new
+{
+    Dir = -s2,
+    Y = yl,
+    Tag = "force-ff2-lower"
+}
+            })
             {
                 double face = lv.Dir > 0 ? fx : rx;
                 f.Load(

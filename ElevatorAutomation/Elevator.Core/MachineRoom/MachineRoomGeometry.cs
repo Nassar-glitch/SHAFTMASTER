@@ -125,7 +125,9 @@ namespace Elevator.Core.MachineRoom
 
         public bool Flexible(string role)
         {
-            return new[] { "room",
+            return new[]
+            {
+                "room",
                 "dimension",
                 "mainAxis",
                 "shaftLeft",
@@ -133,7 +135,8 @@ namespace Elevator.Core.MachineRoom
                 "frontBeam",
                 "carAxis",
                 "cwAxis",
-                "deflectorProfile" }.Contains(role);
+                "deflectorProfile"
+            }.Contains(role);
         }
     }
 }

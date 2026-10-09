@@ -69,7 +69,9 @@ namespace Elevator.Core.Geometry
 
         public bool IsFlexible(string role)
         {
-            return new[] { "wall",
+            return new[]
+            {
+                "wall",
                 "cabin",
                 "entrance",
                 "cwOutline",
@@ -80,7 +82,8 @@ namespace Elevator.Core.Geometry
                 "cwCL",
                 "mainCL",
                 "doorSpan",
-                "doorLeader" }.Contains(role);
+                "doorLeader"
+            }.Contains(role);
         }
 
         public LocalPoint MapPoint(LocalPoint world, string role)

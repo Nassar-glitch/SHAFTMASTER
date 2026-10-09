@@ -500,12 +500,15 @@ namespace Elevator.Core.Presets
         {
             if (CalculationModes.Resolve(p.Calculations) == "Advanced")
                 return true;
-            return new[] { "Calculations.CarMassKg",
+            return new[]
+            {
+                "Calculations.CarMassKg",
                 "Calculations.MachineMassKg",
                 "Calculations.CounterweightMassKg",
                 "Calculations.IncludeChassisSelfWeight",
                 "Calculations.IncludeHangerAssemblyWeight",
-                "Calculations.CarGuideForces.GuideShoeSpacingMm" }.Contains(key) || key.StartsWith("Calculations.SafetyPit.");
+                "Calculations.CarGuideForces.GuideShoeSpacingMm"
+            }.Contains(key) || key.StartsWith("Calculations.SafetyPit.");
         }
 
         static bool FloorsBlank(ElevatorProject p)

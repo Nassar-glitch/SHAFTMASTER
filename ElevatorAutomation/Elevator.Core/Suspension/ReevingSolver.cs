@@ -149,7 +149,9 @@ namespace Elevator.Core.Suspension
 
         private static void ValidateFinite(VerticalArrangementInput p)
         {
-            foreach (double value in new[] { p.CarDropX,
+            foreach (double value in new[]
+            {
+                p.CarDropX,
                 p.CwDropX,
                 p.TractionDiameterMm,
                 p.DeflectorDiameterMm,
@@ -160,7 +162,8 @@ namespace Elevator.Core.Suspension
                 p.HangerBottomAboveDeflectorCenterMm,
                 p.MinConcreteHeightMm,
                 p.MaxConcreteHeightMm,
-                p.TargetWrapAngleDeg })
+                p.TargetWrapAngleDeg
+            })
             {
                 if (!Finite(value))
                     throw new ArgumentException("Vertical arrangement inputs must be finite.");

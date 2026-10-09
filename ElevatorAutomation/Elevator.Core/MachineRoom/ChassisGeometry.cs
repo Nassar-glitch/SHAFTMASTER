@@ -145,10 +145,13 @@ namespace Elevator.Core.MachineRoom
                         || vs[i].High < top - Tol
                         || vs[j].High < top - Tol)
                         continue;
-                    var p = new[] { new LocalPoint(left, bottom, bearingZ),
+                    var p = new[]
+                    {
+                        new LocalPoint(left, bottom, bearingZ),
                         new LocalPoint(right, bottom, bearingZ),
                         new LocalPoint(right, top, bearingZ),
-                        new LocalPoint(left, top, bearingZ) };
+                        new LocalPoint(left, top, bearingZ)
+                    };
                     candidates.Add(new BearingSeat
                     {
                         Id = id,
