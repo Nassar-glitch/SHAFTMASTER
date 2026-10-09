@@ -1,7 +1,7 @@
 param([switch]$SkipMainBuild)
 $ErrorActionPreference='Stop'
 $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-if(-not $SkipMainBuild){& (Join-Path $root 'build.ps1') -BinDirectory bin-vertical-experiment}
+if(-not $SkipMainBuild){& (Join-Path $root 'tools/build.ps1') -Bin bin-vertical-experiment}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $bin=Join-Path $root 'bin-vertical-experiment'
 $refs=@('/reference:System.Web.Extensions.dll')

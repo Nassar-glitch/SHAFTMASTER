@@ -4,7 +4,7 @@ param([string[]]$Tier=@('1'),[string]$Bin='artifacts/bin',[switch]$NoBuild)
 #   2  programmatic WPF suites;
 #   3  native AutoCAD, Word render, STEP-input and affected-regression suites.
 # Usage: ./tools/test.ps1 -Tier 1   or   ./tools/test.ps1 -Tier 1,2,3
-# Builds into -Bin first (build-solution.ps1) unless -NoBuild. Every run writes into a fresh folder
+# Builds into -Bin first (tools/build.ps1) unless -NoBuild. Every run writes into a fresh folder
 # artifacts/test-results/<timestamp>/ (one subfolder per suite, logs, summary.json and summary.md) and prints the time per tier.
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
@@ -35,7 +35,7 @@ $times=[ordered]@{}
 if(-not $NoBuild){
  $t=Get-Date;Write-Output "Build into $Bin"
  if(Get-Process ShaftMaster -ErrorAction SilentlyContinue | Where-Object {$_.Path -and $_.Path.StartsWith((Join-Path $root $Bin),[StringComparison]::OrdinalIgnoreCase)}){throw "ShaftMaster is running from $Bin; close it before the build."}
- & powershell -ExecutionPolicy Bypass -File (Join-Path $root 'build-solution.ps1') -BinDirectory $Bin *> (Join-Path $run 'build.log')
+ & powershell -ExecutionPolicy Bypass -File (Join-Path $root 'tools/build.ps1') -Bin $Bin *> (Join-Path $run 'build.log')
  if($LASTEXITCODE){throw "Build failed; see $run/build.log"}
  $times['build']=[int]((Get-Date)-$t).TotalSeconds;Write-Output ("  build {0}s" -f $times['build'])
 }

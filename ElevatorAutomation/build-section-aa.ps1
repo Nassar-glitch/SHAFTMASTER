@@ -1,6 +1,7 @@
 param([string]$AutoCADDirectory='C:\Program Files\Autodesk\AutoCAD 2023')
 $ErrorActionPreference='Stop'
-& (Join-Path $PSScriptRoot 'build.ps1') -AutoCADDirectory $AutoCADDirectory -BinDirectory 'bin-section-aa'
+# The solution build is tools/build.ps1; this script then adds the Section A-A test libraries.
+& (Join-Path $PSScriptRoot 'tools\build.ps1') -Bin 'bin-section-aa' -AutoCADDir $AutoCADDirectory
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $bin=Join-Path $PSScriptRoot 'bin-section-aa'
 $refs=@('/r:System.Web.Extensions.dll',('/r:'+(Join-Path $bin 'Elevator.Core.dll')),('/r:'+(Join-Path $bin 'Elevator.AutoCAD.dll')))

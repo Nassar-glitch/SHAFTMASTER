@@ -1,7 +1,7 @@
 param([string]$AutoCADDirectory='C:\Program Files\Autodesk\AutoCAD 2023',[string]$BinDirectory='bin')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
-& (Join-Path $root 'build.ps1') -AutoCADDirectory $AutoCADDirectory -BinDirectory $BinDirectory
+& (Join-Path $root 'tools/build.ps1') -Bin $BinDirectory -AutoCADDir $AutoCADDirectory
 $generated=Join-Path $PSScriptRoot 'generated'
 New-Item -ItemType Directory -Path $generated -Force|Out-Null
 $started=Get-Date
