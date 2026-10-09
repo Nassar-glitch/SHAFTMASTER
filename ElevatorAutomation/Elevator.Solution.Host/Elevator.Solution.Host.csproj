@@ -1,0 +1,9 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <PropertyGroup><Configuration Condition="'$(Configuration)'==''">Release</Configuration><ProjectGuid>{15C80021-B101-490A-9B21-4AA645800102}</ProjectGuid><OutputType>Library</OutputType><AssemblyName>Elevator.Solution.Host</AssemblyName><TargetFrameworkVersion>v4.8</TargetFrameworkVersion><OutputPath>..\bin-solution-v01\</OutputPath><AutoCADDirectory Condition="'$(AutoCADDirectory)'==''">C:\Program Files\Autodesk\AutoCAD 2023</AutoCADDirectory></PropertyGroup>
+ <ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Web.Extensions"/>
+ <Reference Include="AcDbMgd"><HintPath>$(AutoCADDirectory)\AcDbMgd.dll</HintPath><Private>False</Private></Reference><Reference Include="AcCoreMgd"><HintPath>$(AutoCADDirectory)\AcCoreMgd.dll</HintPath><Private>False</Private></Reference><Reference Include="AcMgd"><HintPath>$(AutoCADDirectory)\AcMgd.dll</HintPath><Private>False</Private></Reference>
+ <ProjectReference Include="..\Elevator.Core\Elevator.Core.csproj"><Project>{99365D36-B338-4E58-AF13-B1B24F6D0322}</Project><Name>Elevator.Core</Name></ProjectReference>
+ <ProjectReference Include="..\Elevator.AutoCAD\Elevator.AutoCAD.csproj"><Project>{36C00810-FC07-46F0-9B6D-647594816C84}</Project><Name>Elevator.AutoCAD</Name></ProjectReference>
+ <ProjectReference Include="..\Elevator.Solution.Bridge\Elevator.Solution.Bridge.csproj"><Project>{15C80021-B101-490A-9B21-4AA645800101}</Project><Name>Elevator.Solution.Bridge</Name></ProjectReference><Compile Include="*.cs"/></ItemGroup>
+ <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+</Project>

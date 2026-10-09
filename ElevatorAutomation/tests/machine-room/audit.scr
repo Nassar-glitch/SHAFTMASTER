@@ -1,0 +1,8 @@
+(setq mrSecure (getvar "SECURELOAD"))
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/.dwg-inspection/DwgStructureAudit.dll"
+(setvar "SECURELOAD" mrSecure)
+CODEX_STRUCTURE_AUDIT
+_.QUIT
+_Y

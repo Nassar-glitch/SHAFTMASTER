@@ -1,0 +1,2737 @@
+{
+  "TemplateSha256": "5F2CE6B190811338D1E446EEEAC9F17E0EE3B6A8DF563654EB98F324B4649447",
+  "ExpectedEntityCount": 521,
+  "Entities": [
+    {
+      "Key": "Plan.Wall.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.CwMark.Part001",
+      "Type": "LINE",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "Plan.CwMark.Part002",
+      "Type": "LINE",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "Plan.CwMark.Part003",
+      "Type": "MTEXT",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "Plan.CwMark.Part004",
+      "Type": "LWPOLYLINE",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "Plan.CwLeft.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part002",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part004",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part005",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwMark.Part005",
+      "Type": "MTEXT",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "Plan.CounterweightGuides.Left.Contact",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part007",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part008",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part009",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part010",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part011",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part012",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part013",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part014",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part015",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part016",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part017",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part018",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part019",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part020",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part021",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part022",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part023",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part024",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part025",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part026",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part027",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part028",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part029",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part030",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part031",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part032",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part033",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part034",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part035",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part036",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part037",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part038",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part039",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part040",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part041",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part042",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part043",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part044",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part045",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part046",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part047",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part048",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part049",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part050",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part051",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part052",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part053",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part054",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part055",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part056",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part057",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part058",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part059",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part060",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part061",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part062",
+      "Type": "ARC",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part063",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part064",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part065",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part066",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part067",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part068",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part069",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part070",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part071",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part072",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part073",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part074",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part075",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part076",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part077",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part078",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part079",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part080",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part081",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part082",
+      "Type": "LINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part083",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part084",
+      "Type": "HATCH",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part085",
+      "Type": "HATCH",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwRight.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part002",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part004",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part005",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CounterweightGuides.Right.Contact",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part007",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part008",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part009",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part010",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part011",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part012",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part013",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part014",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part015",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part016",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part017",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part018",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part019",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part020",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part021",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part022",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part023",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part024",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part025",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part026",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part027",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part028",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part029",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part030",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part031",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part032",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part033",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part034",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part035",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part036",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part037",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part038",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part039",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part040",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part041",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part042",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part043",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part044",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part045",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part046",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part047",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part048",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part049",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part050",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part051",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part052",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part053",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part054",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part055",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part056",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part057",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part058",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part059",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part060",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part061",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part062",
+      "Type": "ARC",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part063",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part064",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part065",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part066",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part067",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part068",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part069",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part070",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part071",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part072",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part073",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part074",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part075",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part076",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part077",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part078",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part079",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part080",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part081",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part082",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part083",
+      "Type": "HATCH",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part084",
+      "Type": "HATCH",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.Dimension.Part001",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "center",
+      "Band": "rear"
+    },
+    {
+      "Key": "Plan.Dimension.Part002",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailRight",
+      "B": "center",
+      "Band": "rear"
+    },
+    {
+      "Key": "Plan.Dimension.Part003",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "cwRailRight",
+      "Band": "rear"
+    },
+    {
+      "Key": "Plan.Dimension.Part004",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "left",
+      "Band": "rear"
+    },
+    {
+      "Key": "Plan.Dimension.Part005",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailRight",
+      "B": "right",
+      "Band": "rear"
+    },
+    {
+      "Key": "Plan.CwRight.Part085",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part086",
+      "Type": "LINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.Counterweight.Outline",
+      "Type": "LWPOLYLINE",
+      "Role": "cwOutline"
+    },
+    {
+      "Key": "Plan.Wall.Part002",
+      "Type": "LINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Wall.Part003",
+      "Type": "LINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Cabin.Inner.Front",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Part002",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Part003",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Part004",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Inner.Rear",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Outer.Rear",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Reference.Centerline",
+      "Type": "LINE",
+      "Role": "mainCL"
+    },
+    {
+      "Key": "Plan.Cabin.Inner.Right",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Part008",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.CarGuides.ReferenceRow",
+      "Type": "LINE",
+      "Role": "carCL"
+    },
+    {
+      "Key": "Plan.CarMark.Part001",
+      "Type": "LINE",
+      "Role": "carMark"
+    },
+    {
+      "Key": "Plan.CarMark.Part002",
+      "Type": "LINE",
+      "Role": "carMark"
+    },
+    {
+      "Key": "Plan.CarMark.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "carMark"
+    },
+    {
+      "Key": "Plan.CarMark.Part004",
+      "Type": "MTEXT",
+      "Role": "carMark"
+    },
+    {
+      "Key": "Plan.CarRight.Part001",
+      "Type": "MTEXT",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarMark.Part005",
+      "Type": "MTEXT",
+      "Role": "carMark"
+    },
+    {
+      "Key": "Plan.CarSpan.Part001",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarSpan.Part002",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarSpan.Part003",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarSpan.Part004",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarSpan.Part005",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarSpan.Part006",
+      "Type": "LINE",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "Plan.CarRight.Part002",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part004",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part005",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part006",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part007",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part008",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part009",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part010",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part011",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part012",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part013",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part014",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part015",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part016",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part017",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part018",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part019",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part020",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part021",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part022",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part023",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part024",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part025",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part026",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part027",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part028",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part029",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part030",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part031",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part032",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part033",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part034",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part035",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part036",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part037",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part038",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part039",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part040",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part041",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part042",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part043",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part044",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part045",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part046",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part047",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part048",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part049",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part050",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part051",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part052",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part053",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part054",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part055",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part056",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part057",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part058",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part059",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part060",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part061",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part062",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part063",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part064",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part065",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part066",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part067",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part068",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part069",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part070",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part071",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part072",
+      "Type": "ARC",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part073",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part074",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part075",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part076",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part077",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part078",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part079",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part080",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part081",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part082",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part083",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part084",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part085",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part086",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part087",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part088",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarGuides.Right.Contact",
+      "Type": "LINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part090",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part091",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarSupportRight.Part001",
+      "Type": "LINE",
+      "Role": "carSupportRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part092",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part093",
+      "Type": "LWPOLYLINE",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarSupportRight.Part002",
+      "Type": "LINE",
+      "Role": "carSupportRight"
+    },
+    {
+      "Key": "Plan.CarRight.Part094",
+      "Type": "MTEXT",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.CarLeft.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part002",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part004",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part005",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part006",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part007",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part008",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part009",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part010",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part011",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part012",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part013",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part014",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part015",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part016",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part017",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part018",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part019",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part020",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part021",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part022",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part023",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part024",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part025",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part026",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part027",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part028",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part029",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part030",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part031",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part032",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part033",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part034",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part035",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part036",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part037",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part038",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part039",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part040",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part041",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part042",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part043",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part044",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part045",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part046",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part047",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part048",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part049",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part050",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part051",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part052",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part053",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part054",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part055",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part056",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part057",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part058",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part059",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part060",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part061",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part062",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part063",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part064",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part065",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part066",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part067",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part068",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part069",
+      "Type": "ARC",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part070",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part071",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part072",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part073",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part074",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part075",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part076",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part077",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part078",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part079",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part080",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part081",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part082",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part083",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part084",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part085",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarGuides.Left.Contact",
+      "Type": "LINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part087",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part088",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarSupportLeft.Part001",
+      "Type": "LINE",
+      "Role": "carSupportLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part089",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part090",
+      "Type": "LWPOLYLINE",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.CarSupportLeft.Part002",
+      "Type": "LINE",
+      "Role": "carSupportLeft"
+    },
+    {
+      "Key": "Plan.CarLeft.Part091",
+      "Type": "MTEXT",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "Plan.Cabin.Inner.Left",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Cabin.Part010",
+      "Type": "LINE",
+      "Role": "cabin"
+    },
+    {
+      "Key": "Plan.Door.Opening",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part002",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part003",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part004",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part005",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part006",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.Entrance.Part007",
+      "Type": "LINE",
+      "Role": "entrance"
+    },
+    {
+      "Key": "Plan.DoorRight.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.DoorRight.Part002",
+      "Type": "LWPOLYLINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.CenterFront.Part001",
+      "Type": "HATCH",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part002",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part004",
+      "Type": "HATCH",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part005",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part006",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part007",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part008",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part009",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part010",
+      "Type": "LWPOLYLINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part011",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part012",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.DoorLeft.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "Plan.DoorLeft.Part002",
+      "Type": "LWPOLYLINE",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "Plan.DoorSpan.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "Plan.DoorSpan.Part002",
+      "Type": "LINE",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "Plan.DoorSpan.Part003",
+      "Type": "LINE",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "Plan.DoorRight.Part003",
+      "Type": "LWPOLYLINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.DoorRight.Part004",
+      "Type": "LWPOLYLINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.DoorLeft.Part003",
+      "Type": "LINE",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "Plan.Dimension.Part006",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "center",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Dimension.Part007",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "doorRight",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.DoorLeader.Part001",
+      "Type": "MULTILEADER",
+      "Role": "doorLeader"
+    },
+    {
+      "Key": "Plan.DoorRight.Part005",
+      "Type": "LINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.DoorRight.Part006",
+      "Type": "LINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.Dimension.Part008",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "doorRight",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.DoorRight.Part007",
+      "Type": "LINE",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "Plan.DoorLeft.Part004",
+      "Type": "LINE",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "Plan.Dimension.Part009",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "carLeft",
+      "B": "doorLeft",
+      "Band": "carFront"
+    },
+    {
+      "Key": "Plan.Dimension.Part010",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "doorRight",
+      "Band": "carFront"
+    },
+    {
+      "Key": "Plan.Dimension.Part011",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorRight",
+      "B": "carRight",
+      "Band": "carFront"
+    },
+    {
+      "Key": "Plan.Dimension.Part012",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorRight",
+      "B": "right",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Dimension.Part013",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "left",
+      "B": "doorLeft",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Wall.Part004",
+      "Type": "LINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Wall.Part005",
+      "Type": "LWPOLYLINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Wall.Part006",
+      "Type": "LWPOLYLINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Shaft.InnerOutline.EntranceDatum",
+      "Type": "LWPOLYLINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Dimension.Part014",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "left",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Dimension.Part015",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "right",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Dimension.Part016",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "right",
+      "B": "left",
+      "Band": "front"
+    },
+    {
+      "Key": "Plan.Dimension.Part017",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRow",
+      "B": "rear",
+      "Band": "right"
+    },
+    {
+      "Key": "Plan.Wall.Part008",
+      "Type": "LINE",
+      "Role": "wall"
+    },
+    {
+      "Key": "Plan.Dimension.Part018",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "front",
+      "Band": "right"
+    },
+    {
+      "Key": "Plan.Dimension.Part019",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "cwRow",
+      "Band": "right"
+    },
+    {
+      "Key": "Plan.Dimension.Part020",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part021",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "carRow",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part022",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part023",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRow",
+      "B": "rear",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part024",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "railLeft",
+      "B": "railRight",
+      "Band": "carRow"
+    },
+    {
+      "Key": "Plan.Dimension.Part025",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "carLeft",
+      "B": "carRight",
+      "Band": "carRear"
+    },
+    {
+      "Key": "Plan.Governor.Part001",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part002",
+      "Type": "SPLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part003",
+      "Type": "SPLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part004",
+      "Type": "SPLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part005",
+      "Type": "SPLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part006",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part007",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part008",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part009",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part010",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part011",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part012",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part013",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part014",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part015",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part016",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part017",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part018",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part019",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part020",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part021",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part022",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part023",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part024",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part025",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part026",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part027",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part028",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part029",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part030",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part031",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part032",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part033",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part034",
+      "Type": "LINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part035",
+      "Type": "LINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part036",
+      "Type": "LWPOLYLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.Governor.Part037",
+      "Type": "MTEXT",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.CenterFront.Part013",
+      "Type": "MTEXT",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part014",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part015",
+      "Type": "HATCH",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part016",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part017",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part018",
+      "Type": "LINE",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterFront.Part019",
+      "Type": "MTEXT",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "Plan.CenterRear.Part001",
+      "Type": "LINE",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.CenterRear.Part002",
+      "Type": "HATCH",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.CenterRear.Part003",
+      "Type": "LINE",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.CenterRear.Part004",
+      "Type": "LINE",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.CenterRear.Part005",
+      "Type": "LINE",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.CenterRear.Part006",
+      "Type": "MTEXT",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "Plan.Dimension.Part026",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "front",
+      "B": "rear",
+      "Band": "right"
+    },
+    {
+      "Key": "Plan.Governor.Part038",
+      "Type": "SPLINE",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.CarRight.Part095",
+      "Type": "MULTILEADER",
+      "Role": "carRight"
+    },
+    {
+      "Key": "Plan.Governor.Part039",
+      "Type": "MULTILEADER",
+      "Role": "governor"
+    },
+    {
+      "Key": "Plan.CounterweightGuides.ReferenceRow",
+      "Type": "LINE",
+      "Role": "cwCL"
+    },
+    {
+      "Key": "Plan.Dimension.Part027",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRear",
+      "B": "cwRow",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part028",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRear",
+      "B": "cwFront",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part029",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwFront",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.Dimension.Part030",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRear",
+      "B": "rear",
+      "Band": "left"
+    },
+    {
+      "Key": "Plan.CwRight.Part087",
+      "Type": "MTEXT",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part088",
+      "Type": "MULTILEADER",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwRight.Part089",
+      "Type": "LWPOLYLINE",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "Plan.CwLeft.Part086",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.CwLeft.Part087",
+      "Type": "LWPOLYLINE",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "Plan.Dimension.Part031",
+      "Type": "DIMENSION",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "front",
+      "Band": "left"
+    }
+  ],
+  "SchemaVersion": 1,
+  "TemplateId": "existing-plan-v1"
+}

@@ -1,0 +1,22 @@
+(setq eaSecure (getvar "SECURELOAD"))
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"{ROOT}/bin/Elevator.AutoCAD.dll"
+_.NETLOAD
+"{ROOT}/bin/Elevator.Automation.Tests.dll"
+(setvar "SECURELOAD" eaSecure)
+ELEVATORPROJECT
+ExistingPlan
+1450
+1600
+ELEVATORUPDATE
+ELEVATORUPDATE
+UPDATEALL
+ELEVATORPROJECT
+ExistingPlan
+1800
+2000
+UPDATEALL
+ELEVATORWORKFLOWCHECK
+_.QUIT
+_Y

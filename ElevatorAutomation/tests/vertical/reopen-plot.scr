@@ -1,0 +1,11 @@
+(setvar "SECURELOAD" 0)
+(setvar "BACKGROUNDPLOT" 0)
+_.NETLOAD
+"{ROOT}/bin-vertical-experiment/Elevator.AutoCAD.dll"
+_.NETLOAD
+"{ROOT}/bin-vertical-experiment/Elevator.Vertical.Tests.dll"
+VERTICALTESTREOPEN
+VERTICALTESTPLOT
+_.QUIT
+_Y
+

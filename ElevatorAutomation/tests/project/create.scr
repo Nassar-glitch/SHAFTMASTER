@@ -1,0 +1,7 @@
+_.NETLOAD
+"{ROOT}/bin-phase1/Elevator.AutoCAD.dll"
+_.NETLOAD
+"{ROOT}/bin-phase1/ProjectNativeTests.dll"
+PROJECTFOUNDATIONCREATE
+_.QUIT
+_Y

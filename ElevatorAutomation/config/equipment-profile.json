@@ -1,0 +1,16 @@
+{
+  "Version": "user-rules-v1",
+  "CarRailSideAllowanceMm": 150,
+  "CarWidthDeductionMm": 100,
+  "CarFrontAllowanceMm": 125,
+  "CarRearAllowanceMm": 150,
+  "ShaftRearAllowanceMm": 125,
+  "TzAdditionMm": 150,
+  "CounterweightRailRearAllowanceMm": 125,
+  "CounterweightRailSideAllowanceMm": 205,
+  "CounterweightRailToFrameEndMm": 20,
+  "MinimumCabinDoorReturnMm": 75,
+  "DoorJambWidthMm": 135,
+  "PreferredCounterweightDbgMm": [1040, 940, 900, 840, 800, 740, 700, 640, 600],
+  "PreferredDoorWidthsMm": [600, 700, 800, 900, 1000]
+}

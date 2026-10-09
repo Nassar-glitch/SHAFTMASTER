@@ -1,0 +1,10 @@
+{
+  "SourceSW":1450,"SourceSD":1600,"SourceCarRow":675,"SourceCwRow":1475,
+  "FrontMemberEnds":[-168.679,-158.672,-63.342],
+  "RearMemberEnds":[1663.342,1758.534,1758.555,1758.557,1758.661,1768.679],
+  "MachineFrontEnd":362.147,"MachineRearEnd":1220.650,
+  "ExpectedFullSpans":3,"ExpectedFrontSpans":6,"ExpectedRearSpans":6,
+  "RearSupportLabelWindows":[[1107.40,1550.74,1165.88,1585.53],[416.73,1546.64,478.37,1581.95]],
+  "ExpectedRearLabelContours":16,
+  "Evidence":"Reviewed native straight-edge topology: three continuous longitudinal edges connect front/rear end rows; six interrupted front edges terminate at the common machine crosspiece; five rear edges start at its opposite crosspiece. End values are shaft-local source measurements, never world coordinates or hardware sizing rules."
+}

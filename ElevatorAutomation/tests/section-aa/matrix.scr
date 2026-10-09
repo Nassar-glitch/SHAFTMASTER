@@ -1,0 +1,9 @@
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/ElevatorAutomation/bin-section-aa/Elevator.AutoCAD.dll"
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/ElevatorAutomation/bin-section-aa/AATests.dll"
+AATESTMATRIX
+_.QUIT
+_Y
+

@@ -1,0 +1,967 @@
+# Shared session handoff
+
+This file is the shared status channel between the user's Planner chat and Executor chat. Chat transcripts remain separate; each session must read this file and the current workspace. Keep the status factual and concise.
+
+## Long-term calculation goal
+
+- The user's goal is to implement the remaining applicable calculations in `Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx`, in stages. FF1/FF2 was one milestone, not the endpoint.
+- After the current FF candidate review, inventory the exact note sections and compare them with the current calculation code/docs to find the next unfinished, sufficiently defined calculation.
+- Preserve the existing release and FF candidate separately while progressing. The current release-target decision applies to promotion of FF1/FF2; it does not cancel the longer calculation goal.
+- The FF1/FF2 axis, guide-count and shoe-contact questions were resolved by a user-approved design interpretation on 2026-10-07; see `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md`. It applies to FF1/FF2 only. Do not extend it to unrelated calculations without a separate decision.
+- Track the note inventory and dependencies in `CALCULATION_ROADMAP.md`. Do not guess the remaining scope from memory.
+
+## Current task
+
+- **Status:** Complete (2026-10-09): release v03 and repository hygiene. `ElevatorAutomation/bin-shaftmaster-v03/` = unchanged copy of the presets candidate (`ShaftMaster.exe` `9CFD5FAB…`), with release notes and SHA256SUMS. The Git history is now one clean initial commit on `main` (remote `origin` kept, nothing pushed); standards, third-party renders, inspection data and the root drawings are no longer in any commit and stay on disk, ignored. The heavy-load selection before it is also complete (below).
+- **Goal:** Release v03; clean the repository for the private GitHub push (not pushed).
+- **Last updated:** 2026-10-09 (Claude Code, Executor role; v03 release and repository hygiene)
+- **Completed:**
+  - Release v03 and repository hygiene (2026-10-09):
+    - **v03:** pre-checks passed (candidate `9CFD5FAB…`; v03 did not exist). `bin-shaftmaster-presets-candidate/` copied unchanged (51 files, all hashes equal), plus `RELEASE-NOTES.md` and `SHA256SUMS.txt` (52 entries, 0 mismatches). `docs/SHAFTMASTER-UI-RESULTS.md` and `ElevatorAutomation/README.md` point to v03; v01 / v02 unchanged.
+    - **Open point (v03 docs):** the candidate, and so v03, carries the deflector-policy versions of `PRESETS.md` and `ROPE-TRACTION-CALCULATIONS.md` (the build does not copy them; the updated versions are in `ElevatorAutomation/docs/`). The copy was kept unchanged as instructed.
+    - **Remote:** `git ls-remote origin` returned nothing (empty), so the history was rewritten. Nothing was pushed.
+    - **Removed from the repository** (index and history; kept on disk; added to `.gitignore`): `ElevatorAutomation/Standards/` (EN 81-20 PDF), `ElevatorAutomation/tests/machine-room/en-page-*.png` (5), `ElevatorAutomation/tests/machine-room/standard.txt` (full extracted text of BS EN 81-20, found by the scan; no test reads it), `review_internal/` (159 files), `.audit_independent/` (3), `.dwg-inspection/` (16), the 5 root `*.dwg`, `acad.err` (was not tracked).
+    - **Legacy:** `ElevatorPlanGenerator/` → `legacy/ElevatorPlanGenerator/` (git mv). References fixed: `CLAUDE.md`, `ElevatorAutomation/README.md`, `tests/CadIntegrationTests.cs`, `tests/ArchitectureTests.cs`, `tests/run-tests.ps1`, `tests/project/run-phase1.ps1`, `tests/solution/generated-run-phase1.ps1`, `tests/section/summarize-results.ps1`, and the legacy `.scr` files, `CadIntegrationTests.cs` and `generate-bindings.ps1`. Not changed: `DESIGN-FLOW.md` (not to be edited), the "proposed layout" block in `DWG_STRUCTURE_REPORT.md` (historical proposal), and recorded evidence JSON (`tests/section/source-hashes.json`, `verification-summary.json`, legacy run records).
+    - **Tests that read removed local files** now skip with a clear message when the file is absent: the machine-room native suite (`Machine room codex.dwg`; `MachineRoomTests.MRTESTPREPARE` and `run-tests.ps1`), the source-drawing hashes in `summarize-results.ps1`, the root-drawing copies in both phase-1 runners, legacy `ELEVATORCHECK` (`plan codex.dwg`) and legacy `generate-bindings.ps1` (`.dwg-inspection`). `tests/machine-room/audit.scr` (manual helper, not run by any script) still loads the DLL from the local `.dwg-inspection/`.
+    - **Scan findings:** no secrets (passwords, tokens, keys). No other standard text or other companies' documents found in the kept files. Kept and reported: `Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx` (the source calculation note; python-docx generated, last modified by "AbdAllah AbdAlfatah", no company branding; its origin is for the user to confirm). Byte-identical copies of two removed root drawings remain as tracked test fixtures (`tests/machine-room/audit-input.dwg`, `tests/section/audit-input.dwg` = `Machine room codex.dwg`; `tests/section/reference-copy.dwg` = `Vert MR and Reeving codex.dwg`), and `.dwg-inspection/inspection-copy.dwg` equals the legacy template and generated test inputs; these were left in place.
+    - **New files:** root `README.md` (what ShaftMaster is, prerequisites, build / run, structure, pointer to DESIGN-FLOW.md) and `LICENSE` (proprietary, all rights reserved, owner "Abdullah Nassar": name to be confirmed by the user).
+    - **History:** one commit on `main` (the old `4d86aab` is unreachable and pruned); `git rev-list --objects --all` reaches none of the removed paths. 440 tracked files, 40.0 MB, no tracked file > 5 MB (largest `tests/machine-room/structure.json` 2.04 MB). A bundle of the old history is kept locally in `ElevatorAutomation/output/git-history-backup-20261009/` (ignored; it contains the removed files).
+    - **Fresh clone** (temp folder): ﻿`git clone` of the clean repository into `C:\Users\…\Temp\smclone2-20261009` (441 files). `build-solution.ps1 -BinDirectory bin-clone` PASS (STEP-input tests 7 and the rule / machine-room / reeving checks), then core tests all PASS: presets 160, rope 60 + 10 hand-check fixtures, calculation sheet 8285, FF 131, safety/pit 117, calculation workflow 25. Evidence: `ElevatorAutomation/output/repo-hygiene-20261009/clean-clone3/`. Two problems were found and fixed on the way: (1) a clone into the long scratchpad path failed on Windows path length (legacy test file names; the README now says to clone into a short folder; failed attempt `clean-clone/`); (2) five tests (calculation sheet, FF, safety/pit, Basic, Basic UI) read the synthetic fixture `SYNTHETIC.elevator.json` from the ignored `output/calculation-ui-20261006/delivery-ui/` folder: the identical file is now tracked as `ElevatorAutomation/tests/fixtures/SYNTHETIC.elevator.json` and the five tests read it there (one path each; failed run `clean-clone2/`). The clone build gives a different `ShaftMaster.exe` hash (`BA5B989C…`) because compiled output depends on the build path and time; v03 is the packaged candidate, not rebuilt.
+  - Heavy-load selection (2026-10-09). Full description: `ElevatorAutomation/docs/PRESETS.md`.
+    - **Joint selection** (`ProjectPresets.SizeRopes`): when the ladder ropes do not pass, the unlocked levers are searched together, in order of preference (least change first):
+      - (a) the rope arrangement (current rules: d ≤ Dt/40, ladder d downwards, then the smallest n);
+      - (b) β steps 95 → 100 → 105°;
+      - (c) balance factor q steps 0.50 → 0.45 (`BalanceFactorSteps` in `config/presets.json`; CW = P + q·Q while the CW is unlocked; a stepped q is stored as `RopeTractionInputs.SelectedBalanceFactor`, not a user value);
+      - (d) Dt steps 520 → 560 → 620 (invalid in the native B-B section, so skipped).
+      - The first passing combination is taken. Locked values never change.
+    - **Speed:** new engine overload `RopeTractionCalculationEngine.Calculate(p, ctx, lib, geometry)` reuses the geometry per (Dt, d). This is a refactor, not an equation change; a test shows equal results with and without reuse (Q 630, 1600). An all-empty `RopeTraction` group is normalised to null so the selection cache key stays stable.
+    - **Capacity table:** car mass P 1000 → 1100, 1275 → 1350, 1600 → 1650 kg; other rows unchanged.
+    - **No pass on 1:1:** one Design Notes recommendation: the limiting check, "2:1 roping is recommended for this rated load", and the minimum rope MBL at 7 ropes of the kept diameter.
+    - **Live timer:** the tick is guarded (an exception sets the status bar instead of escaping); `BasicUiTests` logs unhandled exceptions to `ui-crash.json`. This was added after a Basic UI flake in `final` (no result file, no crash event; 5/5 PASS when run alone); `final2` passed with no crash file.
+    - **Q sweep** (`output/presets-heavy-20261009/final2/presets-core/q-sweep.md`):
+      - Survey shaft 1500×1800: 320 → 4×10; 480 → 5×8; 630 → 4×11 β 100; 800 → 6×11 β 105; 1000 → 6×12 β 100; 1275 → 7×12 β 95, q 0.45, CW 1923.75; all OK. 1600 → NoPass (Sf 13.66 < 16.21), recommendation MBL ≥ 75.1 kN at 7 × 12.
+      - Table 6 shafts: 320 (1300×1400, 250 mm deflector, D/d 25 quotation) → 4×10; 480 → 5×8; 630 → 4×11 β 100; 800 → 6×11 β 105; 1000 → 7×12 β 105; all OK. 1275 (2200×2000) → NoPass (Sf), MBL ≥ 60.9 kN; 1600 (2200×2200) → NoPass, MBL ≥ 75.1 kN. Each NoPass has exactly one 2:1 recommendation.
+      - New project Q 630 unchanged: 4 × 11, β 100, q 0.5.
+    - **Open point:** the two updated docs (`docs/PRESETS.md`, `docs/ROPE-TRACTION-CALCULATIONS.md`) were not copied into the candidate folder; the candidate still has the deflector-policy versions of these two files.
+  - Deflector policy, DESIGN-FLOW 11a (2026-10-08):
+    - **Engine** (`RopeTractionCalculation.cs`): no `dd-deflector` check row. `RopeTractionResult.DpOverDr` holds the value; Kp = (Dt/Dp)^4 is unchanged. `RopeTractionRules.Apply` still records MR-ROPE-001 using the value. MachineRoomRules (drawing side) and MR-DS-001 are untouched.
+    - **Rope search** (`ProjectPresets.SizeRopes`):
+      - d ≤ Dt/40 only. Start at the ladder d for Q: the largest d ≤ the ladder d that passes, then the smallest n; a larger d only if nothing passes.
+      - Then the sheave steps, then the β steps.
+    - **Design Notes:** one quotation under "Notes" when Dp/d < 40 (e.g. "Deflector pitch diameter 250 mm gives D/d = 25 for 10 mm ropes; EN 81-20 5.5.2.1 requires D/d ≥ 40 for pulleys (≥ 400 mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12)."). The deflector D/d warning is removed.
+    - **Sheet / app:** no deflector D/d row; the sheet shows "Deflector sheave pitch diameter" as a value.
+    - **Q sweep** (`output/presets-deflectorpolicy-20261008/final/presets-core/q-sweep.md`):
+      - Survey shaft: 320 → 4×10, 480 → 5×8, 630 → 4×11 (β 100), 800 → 6×11 (β 105), all OK. 1000 / 1275 / 1600 → NoPass (braking traction, or Sf at 1600), one recommendation each.
+      - Table 6 shafts: 1300×1400 (250 mm deflector) at Q 320 → 4×10 OK with the D/d 25 quotation; 480 / 630 / 800 OK; 1000+ NoPass as on the survey shaft.
+    - **Reviewed example project:** its only rope result was the deflector D/d, so it now has no rope section (tests updated).
+  - Stage-2 selection fix (2026-10-08). Full description: `ElevatorAutomation/docs/PRESETS.md`.
+    - **Rope selection** (`ProjectPresets.SizeRopes`):
+      - Searches n 4–7 and d from the rope table with d ≤ min(Dt, Dp) / 40, ordered by smallest d, then n. The first combination with every check OK wins (diameter, count, Sf, both D/d, all traction cases, no omission).
+      - Then β steps 95 → 100 → 105° (`UndercutAngleStepsDeg`, stored as `RopeTractionInputs.SelectedUndercutAngleDeg` while β is unlocked). Then sheave steps; Dt ≠ 520 is invalid in the native B-B section and is skipped.
+      - If nothing passes: the ladder values stay, and one Design Notes recommendation names the limiting check.
+      - Locked values never change. Cached by a canonical project hash.
+    - **Capacity table:** P 450 / 550 / 700 / 850 / 1000 / 1250 / 1500 kg; machine masses and q unchanged.
+    - **Live calculation:**
+      - 300 ms debounce after any input on any page. The Calculate buttons and the "not calculated / stale" states are removed.
+      - Only results whose inputs changed are recalculated.
+      - An invalid entry shows its field message and the section shows nothing.
+    - **UI:**
+      - Status codes are shown as words everywhere, including the status bar and messages.
+      - Basic lever arms are shown as a table in mm with 0–1 decimals.
+      - The long h label in messages is shortened.
+    - **Q sweep** (`output/presets-selectfix-20261008/final/presets-core/q-sweep.md`):
+      - Survey shaft: Q 320–800 all OK (4×8, 5×8, 6×8 β100, 6×10 β105). Q 1000 / 1275 / 1600 have no passing combination: braking traction, rope Sf, and d ≤ 10 by the 400 mm deflector. Each has exactly one recommendation.
+      - Table 6 shafts: Q 480 / 630 / 800 OK. Q 320 needs SD 1400 for a small enough car, which gives a 250 mm deflector, so d ≤ 6.25 mm < 8 mm minimum and no pass. Q ≥ 1000 as on the survey shaft.
+  - DESIGN-FLOW stage 2, "Flow foundation" (2026-10-08). Full description: `ElevatorAutomation/docs/PRESETS.md`.
+    - **Presets** (`config/presets.json`, validated by the Core loader):
+      - Survey example: 1500 × 1800, pit 1300, OH 4200, 5 stops at 3000 mm; new floors 3000 mm.
+      - Q 630 with persons = floor(Q/75); v 1.0.
+      - Capacity table (interpolated, clamped) for P and machine mass; CW = P + 0.5·Q.
+      - Rope ladder 4×10 / 5×11 / 6×12 / 7×12; sheave 520 (steps 560 / 620); h 2800.
+      - Gear and buffer rules by v; 2 guide rails; 1 / 1 buffers, equal sharing; brackets 1500.
+      - Basic exclusions; Advanced offsets 0, transfer model and load case.
+    - **Mechanism** (`Elevator.Core/Project/ProjectPresets.cs`):
+      - Materialized `PresetField`s and `ElevatorProject.FollowsPresets`.
+      - `Apply` writes unlocked fields; editing locks a field; Reset unlocks it.
+      - The UI refreshes the fields that follow while the user types; the rope sizing runs on Commit.
+    - **Rope auto-upsize** (`SizeRopes`):
+      - Steps the count up to 7, then the next ladder diameter; the sheave steps only for a sheave D/d failure; locked values never change.
+      - If nothing passes, the ladder values are kept and the Design Notes add a recommendation.
+      - New project: 5 × 11 kept (deflector D/d 36.4 and braking traction are NOT OK, and ropes cannot fix them).
+    - **Older projects:** open unchanged; their values count as edited and blanks stay blank.
+      - "Fill blanks from presets": one action per page (shown when the page has blanks) and one global action in the Project toolbar.
+      - Stage-1 rope / traction data fields keep their stage-1 behaviour.
+    - **UI cleanup:**
+      - Hints, guidance notes, disclaimers, read-only metadata fields and the source / assumption fields removed (the values stay in the model).
+      - Validation page: plain status words.
+      - Design Notes: "(project rule MR-DS-001)" removed.
+      - Full list: `output/presets-20261008/final2/REMOVED-UI-STRINGS.md`.
+    - **New fields:** `ElevatorProject.FollowsPresets`, `SafetyPitInputs.BufferType` (not used by equations), and the safety-gear choice "Instantaneous" (P5 then unavailable, as for any non-progressive type).
+  - Design Notes / sheet fix (2026-10-08):
+    - **Design Notes** (`DesignNotes.cs`, rewritten): headings "Warnings" / "Recommendations", shown only when they have notes; one- or two-line notes with the clause in brackets. No intro, no check table, no basis, no notes about passed checks. With nothing to say: the single line "No design notes for this project."
+    - **Warnings, each with a computed recommendation:**
+      - Table 6: minimum rated load by inverse interpolation (new `CarAreaRules.MinimumRatedLoadKg`; 2.31 m² → 955 kg).
+      - Rope Sf NOT OK: the smallest rope count up to 7 and the next listed rope diameter with OK Sf and D/d, both from the same engine on a project copy.
+      - D/d NOT OK: minimum pitch diameter 40·d.
+      - Traction NOT OK: case, position, e^(fα) margin, and the α or f it needs.
+      - Invalid layout: TZ, with the valid range 520–1100 mm.
+      - Rope diameter or count below the minimum.
+    - **Recommendations:** inputs needed to complete a check.
+    - **Sheet:**
+      - Termination row: required "0.8 × MBL = 35.2 kN", actual "MBL = 44 kN", result "Required strength".
+      - Rope / traction section flows (`DocxDocument.Flow`: equation lines and table rows not chained; headings keep with their first line).
+      - Basic P1–P4 figures F2/F3 placed after the results ("text first, then figures").
+      - Pagination enforced and passing for 01, 12, 14 and 15.
+  - Rope / traction checks (2026-10-08); full details in `ElevatorAutomation/docs/ROPE-TRACTION-CALCULATIONS.md`.
+    - Core (`Elevator.Core/Calculations/RopeTractionCalculation.cs`, rule `EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1`, own fingerprint):
+      - checks: d ≥ 8 mm; n ≥ 2; D/d ≥ 40 for the sheave and the deflector; Sf = MBL/Tmax ≥ max(12/16, EN 81-50 5.12 with Nequiv from Table 2 and Kp); termination 0.8·MBL;
+      - traction: car loading at 125 % Q; emergency braking, loaded at the lowest landing and empty at the highest, with mDP; stalled with the counterweight on its buffers;
+      - μ, f per groove type, e^(fα), T1/T2 per EN 81-50 5.11.3 a) with the Annex D positions.
+      - `CarAreaRules` implements EN 81-20 Table 6.
+      - `RopeTractionRules.Apply` evaluates MR-ROPE-MIN-001, MR-ROPE-001 and MR-TRACTION-001 from the results.
+    - Presets (`Elevator.Core/Project/Presets.cs`, `config/presets.json`, shipped to the bin):
+      - Core loader with validation.
+      - Generic `PresetField` lock / follow / reset, with flags in `ElevatorProject.UserEditedFields`, backward-compatible.
+      - Applied only to the new inputs: rope designation, MBL and kg/m by diameter, groove (U β 95° γ 30°), travelling cable 0.5 kg/m, a 0.5 m/s², deflector mass by pitch (400/520/620 → 45/70/95 kg), traction limiting method.
+    - Application:
+      - Suspension page "Rope and traction data" editors: no preset wording; context menu "Reset to preset"; β/γ shown per groove type; unsafe values rejected with a short message.
+      - Calculations page "Ropes and traction" panel (Basic and Advanced) with "Calculate ropes & traction", results and equations.
+      - Workflow → "Export Design Notes…".
+      - The calculation-sheet export dialog also lists NOT OK checks.
+    - Calculation sheet:
+      - Section "Suspension rope and traction checks" after the rope tensions: geometry table (Htr, H, Dp, α, mDP); equations with substitution; check table; traction cases.
+      - Summary row, for example "Rope Sf 17.89 ≥ 12.56 OK; D/d OK; traction NOT OK", and the new input rows.
+      - F10 traction sheave: α dimensioned from the reeving geometry, T1/T2 arrows, groove detail with β/γ.
+      - The sheet stays clean.
+    - Design Notes (`DesignNotes.cs`):
+      - same title block and page frame as the sheet;
+      - code checks with clause, requirement, value and status, including EN 81-20 Table 6 (480 kg / 1100 × 2100 → 2.31 m² > 1.36 m² NOT OK);
+      - NOT OK items with an explanation; checks not calculated, with the reason; basis.
+    - Sheet layout kept within the pagination rule: F4 narrowed slightly with tighter notes, F10 compact.
+  - Rope/traction task, standards review only (2026-10-08). Read from `D:\CAD DATA---------------------\AHM Folder\CODES\` (EN 81-20-2014.pdf; bs_en_81_t50_e_d01_14.pdf, formulas read from page images):
+    - EN 81-20:
+      - 5.5.1.2 a: rope d ≥ 8 mm.
+      - 5.5.1.3: at least 2 ropes.
+      - 5.5.2.1: pitch diameter / d ≥ 40 for sheaves and pulleys.
+      - 5.5.2.2:
+        - Sf ≥ 12 (traction, 3 or more ropes) or ≥ 16 (2 ropes), and ≥ the EN 81-50 5.12 value.
+        - Definition: Sf = MBL of one rope / maximum force in that rope, with the car stationary at the lowest landing with rated load.
+      - 5.5.2.3: terminations ≥ 80 % MBL.
+      - 5.5.3: the three traction conditions.
+    - EN 81-50, traction (5.11):
+      - 5.11.2.1: T1/T2 ≤ e^(fα) for loading and braking; T1/T2 ≥ e^(fα) for stalled.
+      - 5.11.2.2: car loading at 125 % Q, worst position; braking empty or rated load, a ≥ 0.5 m/s² (normal case); stalled empty car.
+      - 5.11.2.3.1, groove friction factor:
+        - U/undercut: f = μ·4(cos γ/2 − sin β/2)/(π − β − γ − sin β + sin γ), with β ≤ 105° and γ ≥ 25°.
+        - V unhardened: f = μ·4(1 − sin β/2)/(π − β − sin β).
+        - V hardened, and every V groove when stalled: f = μ/sin(γ/2), with γ ≥ 35°.
+      - 5.11.2.3.2: μ = 0.1 (loading), 0.1/(1 + v/10) (braking), 0.2 (stalled).
+      - 5.11.3 a: general T1/T2 for machinery above, with MSR = ns·(0.5H ± y)·w and MTrav = nt·(0.25H ± 0.5y)·w.
+    - EN 81-50, rope safety factor (5.12):
+      - Nequiv = Nequiv(t) + Kp·(Nps + 4·Npr), with Kp = (Dt/Dp)^4.
+      - Table 2 gives Nequiv(t): V γ 35/36/38/40/42/45/50° → 18.5/16/12/10/8/6.5/5; U-undercut β 75/80/85/90/95/100/105° → 2.5/3.0/3.8/5.0/6.7/10.0/15.2; U without undercut = 1; linear interpolation allowed.
+      - Sf(required) = 10^(2.6834 − log(695.85·10^6·Nequiv/(Dt/dr)^8.567) / log(77.09·(Dt/dr)^−2.894)).
+    - Annex D/E settle several items:
+      - Positions: car loading and loaded braking at the lowest landing; empty braking and stalled at the highest landing.
+      - Stalled case: T1 = (P + MTrav)·g/r, T2 = MSRcwt·g (CW mass dropped).
+      - y sign convention: at the lowest landing MSRcar = ns·H·w, MSRcwt = 0, MTrav = 0.
+      - Figure E.2 (1:1 with deflector) gives Nps = 1, Npr = 0, consistent with the project's external-tangent reeving.
+    - Project data present:
+      - rated speed: `Elevator.SpeedMetresPerSecond`;
+      - travel: shared vertical geometry;
+      - α with a deflector: `ReevingSolver.CalculatedWrapAngleDeg` through `MachineRoomSectionRules` and the reviewed context;
+      - deflector: required when TZ ≥ 520, pitch 250/400.
+  - v02 promotion (2026-10-08):
+    - Pre-checks passed: the candidate `ShaftMaster.exe` = `57FBE447C633F648…`, and v02 did not exist.
+    - `bin-shaftmaster-calcsheet-candidate/` copied unchanged to `ElevatorAutomation/bin-shaftmaster-v02/` (42 files, not rebuilt). Added `RELEASE-NOTES.md` and `SHA256SUMS.txt`, for 44 files in total.
+    - `SHA256SUMS.txt` lists 43 entries (every file except itself). All verify: 42 equal the candidate's files, and `RELEASE-NOTES.md` exists only in v02.
+    - `ElevatorAutomation/docs/SHAFTMASTER-UI-RESULTS.md` now names v02 as the current release, with v01 kept unchanged as the previous release.
+  - Release check (2026-10-08):
+    - Fixes:
+      - F9 (document Figure 6): per-buffer arrows on each buffer's centre line, down to the pit floor at the base, labelled "P6 39.2 kN" / "P7 14.8 kN"; totals line kept.
+      - FF equations panel: the Definitions paragraph is shown once (`CarGuideForcePage.cs`, text only).
+      - `CalculationUiTests.cs:48`: not a UI defect. At 760 × 640 every Calculate button (P1–P4 ×2, P5–P7, FF1 / FF2) scrolls fully into view (screenshots `calculation-ui/07b-narrow-calculate-1..4.png`). The old check assumed the last P1–P4 button sits at the page bottom, which stopped holding once FF was added below. Only the test changed: it now brings each button into view and asserts full visibility.
+    - New test `tests/solution/ReportFieldsNativeTests.cs`: native four-view DWGs with report fields blank vs filled. Entity counts, geometry JSON and statuses are identical, and the fields survive reopen.
+  - FF1 direction and Phase B figures (2026-10-08); details in `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md`:
+    - FF1/FF2 convention, forces drawn on the rail:
+      - Load towards +X: at the upper level the loaded-side (right) rail is pushed outward; at the lower level the left rail is pushed outward.
+      - FF2, load towards +Y: at the upper level both rails go towards the rear; the lower level is reversed (unchanged).
+      - `GuideForcePlan`/`GuideForceElevation` take the offset signs and derive every arrow from them; the sheet uses +1/+1.
+      - F5a shows "Q at W/4" on the loaded side.
+      - During the work, the new moment test caught an FF2 sign slip in the refactor; it was fixed before the final run.
+    - F1:
+      - Rails at true scale, enlarged about the blade tip only below 3 mm on paper (`MinRailSymbolMm`).
+      - Leader labels "car rail T70/65/9" and "CW rail T50/50/5". The old "Rails: …" note is removed.
+    - F7 suspension:
+      - 1:1 roping elevation: traction sheave over the car drop.
+      - Deflector only when `MachineRoomRules.SelectDeflector(TZ).IsRequired`.
+      - T(car)/T(cwt) arrows with all-rope and per-rope values, "n = 6 ropes, 1:1", and the sheave pitch label when `Machine.TractionSheavePitchDiameterMm` is set.
+      - Omitted without the shared plan.
+    - F8 safety gear: front elevation of the lower car frame, with one rail, safety-gear block and downward P5 arrow per car guide rail, "per car guide rail" and the rail count; plan detail of the jaws on the blade.
+    - F9 pit buffers:
+      - Car and CW buffers by count, positions schematic.
+      - A downward per-buffer arrow onto the pit floor at each base.
+      - P6/P7 totals labelled; pit depth dimensioned only when `Shaft.PitDepthMm` is set.
+    - Placement: F7 after the rope table, F8 after P5, F9 after P6/P7.
+    - F6 and F9 compacted, so the complete sheet is 9 pages with no page except the last over 40 % empty.
+    - Notes in the new figures avoid commas after letters (Word SVG glyph issue) and word hyphens.
+  - Figfix (2026-10-07); details in `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md`:
+    - F5 is now two views.
+      - a) Front elevation: both car rails. FF1 is a couple: the upper shoe pushes the left rail outward and the lower shoe pushes the right rail outward. Labelled "upper shoe level" and "lower shoe level", with h dimensioned.
+      - b) Side view of one rail: FF2 is a couple on the blade side faces, upper towards the rear and lower towards the front, with h dimensioned.
+      - FF2 is never drawn in view a.
+    - F4 level labels.
+      - FF1: "upper level" on one rail and "lower level" on the other, both outward.
+      - FF2: "upper level" on both rails, plus "forces reverse at the lower level".
+      - Notes: "FF1 / FF2: force per guide rail at one guide shoe level" and "Directions reverse between the upper and lower shoe levels".
+      - The shoes are taller and the FF1 arrows sit 3 mm off the rail line, so they clear the resultant marker.
+    - F1 additions:
+      - filled T rail symbols;
+      - car DBG (`CarDbg`) and CW DBG (`CwDbg`) dimensions, with "W …" / "D …" labels;
+      - an entrance opening in the front wall, with jamb lines and "ENTRANCE", taken from `DoorWidth` / `doorLeft` / `doorRight`.
+    - Hyphens: `Figure.Text` turns a hyphen between letters into a space, because Word's SVG renderer spaces U+002D and ISOCPEUR has no U+2011. Labels were rephrased, and trailing full stops and semicolons were removed from the notes.
+    - Pagination:
+      - In the FF section the text (inputs, equations, results) now comes before F4–F6.
+      - F4 and F5 are about 106 mm tall, so they share a page.
+      - Keep-with-next remains only between a heading or caption and its own content.
+      - New check `tests/solution/check_pagination.py`. Complete fixture: 8 pages (was 9), worst non-last page 22 % empty.
+  - Page layout and figures (2026-10-07); details in `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md` and `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md`:
+    - Page border frame: thin 0.5 pt outer line, thick 1.5 pt inner line, about 10 mm from the edge.
+    - Header title block on every page: logo | company over title | Project/Client | Doc. No./Rev./Page X of Y. Fixed geometry; blank rows dropped.
+    - Footer band: Prepared with ShaftMaster · date | Doc. No. · Rev.
+    - Page 1 body: title, project table, design basis, approval block. The logo is in the header only.
+    - Figure engine (`FigureModel.cs`, `FigureRender.cs`, `CalculationFigures.cs`):
+      - layers, hatch, dimensions, load arrows and text placement that avoids overlaps;
+      - SVG plus a 300 dpi PNG fallback via WPF, embedded with svgBlip;
+      - each figure framed with a caption strip, numbered in order of appearance, and present only with its section.
+    - Rail profile: drawn proportionally behind `IRailSection`, so a future rail table can replace it.
+  - Title block / approval block (2026-10-07 ~14:45); details in `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`:
+    - Company settings: company name and logo in `%AppData%\ShaftMaster\` via General → Company / report settings… (Browse, Remove, preview).
+    - New optional project group `ElevatorProject.Report`, edited on the General page under Calculation sheet details.
+    - Page 1:
+      - logo and company name;
+      - the title;
+      - the project table with filled rows only;
+      - the design-basis line;
+      - the approval block: Prepared/Checked/Approved by × Name | Signature | Date. It is always present; signature and date cells are empty.
+    - Running header: company · title · project, with a small logo. Footer: Doc. No. · Rev · Prepared with ShaftMaster · date · Page X of Y. Blank parts are dropped and no placeholder is printed.
+    - `DocxImage` / `DocxDocument.Image` / `ImageAndText` / `HeaderImage`: a reusable PNG/JPEG inline image API, sized in mm with the aspect ratio kept.
+  - Clean client sheet (2026-10-07 ~13:30); details in `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`:
+    - Title block, then the exact line "Design basis: EN 81-20:2014 and EN 81-50:2014."
+    - Header `Elevator Calculation Sheet · <project>`; footer `Prepared with ShaftMaster · <date> · Page X of Y`.
+    - Summary is Calculation | Key result; inputs are Input | Value.
+    - Each section has a technical description, equations with substitutions, and a results table.
+    - All preliminary/incomplete/certification text, source-note name/hash/paragraphs, rule IDs, GUID, application name, "adopted"/interpretation labels, Section 7 and "not included" statements were removed, along with the Basis/Status/Page/Used-by columns and the duplicated FF paragraph.
+    - Unavailable calculations are omitted entirely and the remaining sections renumbered. Inputs are listed only when supplied, valid and used. The per-rope column is omitted without a rope count.
+    - App: an "Export anyway / Cancel" dialog lists omitted calculations and their inputs; export is blocked with an explanation when nothing is available.
+    - Internal traceability is kept in `CALCULATION-SHEET-EXPORT.md` and `CAR-GUIDE-FORCES.md`.
+  - Calculation-sheet export (2026-10-07 ~02:20); details in `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`:
+    - Workflow → "Export Calculation Sheet…" (compact "Calc Sheet…" label in narrow windows) opens a Save As dialog with a suggested `<project> - Calculation Sheet.docx`.
+    - The .docx is written with System.IO.Packaging; Word is not required.
+    - Every section is recalculated and fingerprint-checked at export.
+    - Missing inputs show as NOT PROVIDED; malformed text shows as INVALID TEXT; never zero.
+    - The INCOMPLETE — NOT FOR ISSUE banner and header appear when any of P1–P4, P5, P6, P7 or FF is unavailable. Sections are independent.
+    - Complete sheets still say PRELIMINARY / engineering review required / not certified.
+    - The adopted FF equations are unchanged.
+  - FF1/FF2 implementation (earlier session, 2026-10-06 21:24–21:29; transcript not available here):
+    - The Calculations page has an FF1/FF2 section in Basic and Advanced modes. The only input is `h` (vertical upper-to-lower car guide-shoe spacing, mm), stored as `ElevatorProject.Calculations.CarGuideForces.GuideShoeSpacingMm`. `h` has no default.
+    - Capacity and internal cabin width/depth are reused through the shared `DesignRules.Calculate` and shown read-only.
+    - The candidate was built with `build-solution.ps1 -BinDirectory bin-shaftmaster-ff-candidate`.
+  - Native/STEP integration regression (this session, 2026-10-07 00:56): `tests/solution/run-ff-integration.ps1` was run with default parameters against the unchanged candidate. **PASS, 22 assertions.**
+  - `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md` has a new "Native/STEP integration" section.
+  - FF audit (2026-10-07 ~01:35):
+    - Equations, 10 N/kg, ×2 once, the fixture (1100/2200, 1050/2100 N), h meaning, reused internal width/depth and invalidation all match the note, code and tests.
+    - There is no rail/shoe division and no group sum.
+    - Defect fixed: the UI results note and engine `Definitions` still said the interpretation was unresolved. They now show the approved interpretation (`ApprovedInterpretation` constant, added to result details). The math, inputs, persistence, schema and `RuleVersion` are unchanged.
+    - Regression checks were added, and the candidate was rebuilt.
+  - Engineering interpretation recorded (2026-10-07, documentation only): the new section "Engineering interpretation (user-approved 2026-10-07)" in `CAR-GUIDE-FORCES.md` replaces the "unresolved" wording. The bundled copy in the candidate is identical (SHA-256 `8BC248AC…E4AA8`). `CALCULATION_ROADMAP.md` is updated.
+- **Decisions:**
+  - DESIGN-FLOW stage 2: Executor interpretations, documented in `docs/PRESETS.md`, for the Planner to confirm:
+    - **"Keep the last values" when nothing passes:** read as the values before upsizing (the ladder values), not the last combination tried. This matches the expected 5 × 11 for the new project.
+    - **New project rope sizing:** NoPass. The deflector D/d (400 / 11) and the braking traction case fail, and ropes cannot fix either. The upsize stops after the first trial when the deflector D/d fails, because a larger d only lowers Dp/d.
+    - **Sheave step 520 → 560 → 620:** implemented, but it cannot trigger with ladder diameters ≤ 12 mm, and the native B-B section accepts only 520 mm.
+    - **Older projects:** the stage-1 rope / traction data fields (MBL, kg/m, groove, cable, a, deflector mass, limiting method) keep their stage-1 behaviour (they follow presets). All new stage-2 fields count as edited until "Fill blanks".
+    - **Advanced:** the carrying-member pair has no preset (not in the Planner list); it remains a selection. The hidden basis texts are neutral ("Traction sheave centre", "Released two-stage beams with rigid spreader", "Deflector centre", "Not included") and print on the Advanced sheet.
+    - **Validation page:** the Core rule messages are kept as real validation messages, with plain status words. "NOT YET EVALUABLE" and "NOT PROVIDED" are reworded, and bracketed rule IDs removed. Long rule texts such as "SELECTED BY PROJECT RULE: …" are kept.
+    - **BufferType:** a selection only, not used by the equations; the sheet does not print it.
+  - Rope / traction (Planner A1–A6 applied as given). Executor choices within them, documented in `ROPE-TRACTION-CALCULATIONS.md`:
+    - P and Mcwt include the optional car-side and counterweight-side additional suspended masses, as in the rope tensions section.
+    - Rope MBL and kg/m presets apply to an exact diameter match only. An unlisted diameter has no preset, so the dependent checks are omitted.
+    - The deflector-mass preset uses the nearest end outside the table, so a 250 mm deflector gets 45 kg.
+    - A deflector without a valid path (TZ > 1100, no size selected) also omits the deflector D/d and the EN 81-50 Sf, because both need a selected deflector. Traction is omitted per A3.
+    - The travelling cable mass uses the travel height. Rope masses use H = travel + overhead (A6).
+    - Rope / traction section availability:
+      - The section appears only when a D/d, Sf or traction result exists.
+      - Its omissions form one grouped "Suspension rope and traction checks" entry in the export dialog.
+      - The reviewed example project (8 mm ropes on the 250 mm deflector) now has a D/d NOT OK rope section, so it is no longer "nothing available".
+    - The existing project rope-count rule (4–7) blocks the shared geometry for 2–3 ropes. Geometry-dependent checks are then omitted, so the 2-rope Sf minimum of 16 is never reached in the live project.
+    - Test fixture 01 (`BasicComplete`) now also sets Dt = 520 and v = 1.0. All P1–P7 and FF numbers are unchanged (asserted).
+  - Figures (this task, no new engineering decisions):
+    - F3 is drawn for Basic only, because Advanced has no single resultant. Advanced F2 shows its load points and L, s(f), s(r).
+    - The F1 walls are a symbolic 200 mm hatched band, not dimensioned.
+    - F4 does not repeat D, which is dimensioned in F1 and listed in the FF inputs table.
+    - The F6 rail is dimensioned with b1, h1 and k only; other features are proportional (foot 0.12·h1, edge 0.09·h1, root 0.8·k). F3, F5 and F6 are marked NTS.
+    - SVG user unit = 0.1 mm, to avoid Word's glyph-spacing problem at small user-unit font sizes.
+  - Title block (this task):
+    - A blank project name is also omitted from the project table and header (the suggested file name still uses "Untitled project").
+    - Viewing the General page creates an empty `Report` group (all fields null); it is not marked dirty.
+    - `tests/project/SchemaGenerator.cs` treats `Report` as optional, like `Calculations`.
+  - Clean sheet (user direction 2026-10-07): the client document holds calculation content only.
+    - Missing data is never mentioned in the document; it is reported only in the application.
+    - Supplied zero offsets (Advanced Δ values) are shown as data.
+    - Inputs are listed only when used by a calculation that is present.
+  - Calculation sheet (this task, no new engineering decisions):
+    - P1–P4 are labelled as ShaftMaster project models (Basic single resultant vs Advanced rope/member actions); P5–P7 and FF are labelled as adopted note rules.
+    - Basic rope tensions are shown as informational only.
+    - Equations are formatted text, not Word equation objects.
+    - Word is used only as a test renderer.
+  - **User-approved engineering interpretation (2026-10-07).** This is a design interpretation by the user as responsible design engineer, not certification. Basis: EN 81-50:2014 Annex C.2.1 (informative).
+    - FF1 = Fy, along the car-rail line (project car-width direction; rails at `railLeft`/`railRight`). It acts on the blade tip and bends the rail about x-x.
+    - FF2 = Fx, perpendicular to the rail line (car-depth direction), on the blade side. It bends the rail about y-y (the weaker axis).
+    - Each value is the force per guide rail at one shoe level. It is not divided by rails/shoes and not summed. For bending it is applied at mid-span (M = 3·F·l/16).
+    - h is the centre-to-centre distance between the upper and lower car guide shoes. It stays a manual input with no default.
+    - Valid for 2 rails with a centrally guided car only.
+    - The note values (about 2× EN, conservative) are adopted.
+    - Not covered: k2 normal running, Fs sill loading, and the rail check itself.
+  - Earlier decisions, recorded in the docs:
+  - Adopted source-note rules from `Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx` (paragraphs 77–87):
+    - `FF1 base = Q × 10 × internal width / (4h)`
+    - `FF2 base = Q × 10 × internal depth / (8h)`
+    - Design force = base × 2, applied once.
+  - The 10 N/kg coefficient is kept separate from g = 9.81.
+  - Missing/invalid input makes the forces unavailable, never zero, and does not block P1–P7 or drawing generation.
+  - The FF input is excluded from the chassis and safety/pit fingerprints.
+  - The implementation still reports scalar FF1/FF2 only. Since the audit, the UI and result details display the approved interpretation text. No calculation changed, and there is no certification claim.
+- **Changed files (v03 release and repository hygiene, 2026-10-09):**
+  - New: `ElevatorAutomation/bin-shaftmaster-v03/` (candidate copy + `RELEASE-NOTES.md`, `SHA256SUMS.txt`); root `README.md`, `LICENSE`.
+  - Moved: `ElevatorPlanGenerator/` → `legacy/ElevatorPlanGenerator/`.
+  - Edited: `.gitignore`, `CLAUDE.md` (legacy path only), `SESSION_HANDOFF.md`, `ElevatorAutomation/README.md`, `ElevatorAutomation/docs/SHAFTMASTER-UI-RESULTS.md`, `ElevatorAutomation/docs/PRESETS.md` (Q sweep path → `final2`), `ElevatorAutomation/tests/{MachineRoomTests.cs, CadIntegrationTests.cs, ArchitectureTests.cs, run-tests.ps1, project/run-phase1.ps1, solution/generated-run-phase1.ps1, section/summarize-results.ps1}`, `legacy/ElevatorPlanGenerator/{LOAD_ELEVATOR.scr, tests/first-run.scr, tests/preview.scr, tests/integration-run.scr, tests/CadIntegrationTests.cs, tests/generate-bindings.ps1}`.
+  - New fixture: `ElevatorAutomation/tests/fixtures/SYNTHETIC.elevator.json` (copy of the synthetic file in `output/calculation-ui-20261006/delivery-ui/`); one path changed in each of `tests/solution/{CalculationSheetTests, CarGuideForceTests, SafetyPitTests, SimplifiedTests, BasicUiTests}.cs`.
+  - Git: history rebuilt as one commit; no file deleted from disk.
+- **Changed files (heavy-load selection, 2026-10-09):**
+  - `ElevatorAutomation/Elevator.Core/Project/ProjectPresets.cs` (joint search, q selection, cache key, geometry reuse)
+  - `ElevatorAutomation/Elevator.Core/Project/Presets.cs` (`BalanceFactorSteps` and its validation)
+  - `ElevatorAutomation/Elevator.Core/Calculations/RopeTractionCalculation.cs` (`SelectedBalanceFactor`; Calculate overload with geometry)
+  - `ElevatorAutomation/config/presets.json` (P table, `BalanceFactorSteps`); `ElevatorAutomation/config/ElevatorProject.schema.json` (regenerated)
+  - `ElevatorAutomation/Elevator.Solution.Desktop/DesignNotes.cs` (2:1 recommendation with MBL), `PresetFlow.cs` (guarded live timer)
+  - `ElevatorAutomation/tests/solution/PresetsTests.cs`, `PresetsUiTests.cs`, `BasicUiTests.cs`
+  - `ElevatorAutomation/docs/PRESETS.md`, `ElevatorAutomation/docs/ROPE-TRACTION-CALCULATIONS.md`
+  - Rebuilt: `ElevatorAutomation/bin-shaftmaster-presets-candidate/` (`9CFD5FAB…`)
+- **Changed files (deflector policy 11a, 2026-10-08):**
+  - Core: `Elevator.Core/Calculations/RopeTractionCalculation.cs` (no deflector check row, `DpOverDr`, omission wording, rule record), `Elevator.Core/Project/ProjectPresets.cs` (search order and constraint).
+  - Desktop: `Elevator.Solution.Desktop/DesignNotes.cs` ("Notes" quotation, wording).
+  - Tests: `PresetsTests.cs` (brute-force order, sweep with Dp and all Design Notes lines), `PresetsUiTests.cs`, `PresetsNativeTests.cs`, `RopeTractionTests.cs`, `RopeTractionUiTests.cs`, `CalculationSheetTests.cs`, `CalculationSheetUiTests.cs`.
+  - Docs: `PRESETS.md` (`7F1CB05F…`), `ROPE-TRACTION-CALCULATIONS.md`; copied into the candidate.
+  - Candidate:
+    - `ShaftMaster.exe` `E230246192C0DB1A8D9364657A45CB33010930115255B0FB23928F14865077D9`
+    - `Elevator.Core.dll` `300FDBA93178C610…`
+    - `Elevator.Solution.Bridge.dll` `13772A3CC8F7D9DF…`
+  - Unchanged: `presets.json` `1D8CF412…`, schema `80670A5C…`.
+  - Unchanged, verified: v01 `DC8A76A3…`; v02 `57FBE447…` (SHA256SUMS 0 mismatches); calc-sheet; FF; safety/pit; ropes.
+- **Changed files (stage-2 selection fix, 2026-10-08):**
+  - Core:
+    - `Project/ProjectPresets.cs`: selection, β, limiting check, canonical cache key.
+    - `Project/Presets.cs`: `UndercutAngleStepsDeg` and validation; β preset reads the selection.
+    - `Calculations/RopeTractionCalculation.cs`: `SelectedUndercutAngleDeg` field only.
+  - Config: `config/presets.json` (`1D8CF412…`); schema `80670A5C…`.
+  - Desktop:
+    - `PresetFlow.cs`: live calculation, `StatusWord` / `Plain`.
+    - Also changed: `App.cs`, `Chrome.cs`, `BasicCalculationsPage.cs`, `CalculationsPage.cs`, `SafetyPitPage.cs`, `CarGuideForcePage.cs`, `RopeTractionPage.cs`, `DesignNotes.cs`.
+  - Tests:
+    - `PresetsTests.cs` (+ sweep, brute-force order check), `PresetsUiTests.cs` (live edits, status-code scan), `PresetsNativeTests.cs`.
+    - Calculate-button / status-code updates in `CalculationUiTests.cs`, `BasicUiTests.cs`, `SafetyPitUiTests.cs`, `SafetyPitDraftUiTests.cs`, `CarGuideForceUiTests.cs`, `CalculationSheetUiTests.cs`, `RopeTractionUiTests.cs`.
+    - `run-presets-core.ps1` now references `ShaftMaster.exe`.
+  - Docs: `PRESETS.md`, `ROPE-TRACTION-CALCULATIONS.md`, `CAR-GUIDE-FORCES.md`, `SAFETY-PIT-CALCULATIONS.md`, `SIMPLIFIED-CALCULATIONS.md` (copied into the candidate).
+  - Candidate:
+    - `ShaftMaster.exe` `E617312BA6C8C41C1B74DE86103FD6F465B3B027A42249B67936D9E83184F04A`
+    - `Elevator.Core.dll` `DC89207B6D909A8F…`
+    - `Elevator.Solution.Bridge.dll` `23FFBC090463F7E8…`
+  - Unchanged, verified: v01 `DC8A76A3…`; v02 `57FBE447…` (SHA256SUMS 0 mismatches); calc-sheet `57FBE447…`; FF `D3111222…`; safety/pit `EA9B1F5E…`; ropes `519984A1…`.
+- **Changed files (DESIGN-FLOW stage 2 presets, 2026-10-08):**
+  - Core:
+    - `Elevator.Core/Project/ProjectPresets.cs` (new).
+    - `Presets.cs`: library sections, validation, `MassesFor` / `RopesFor` / `PersonsFor` / `CounterweightFor`, `PresetField.Materialized` / `Page` / `IsBlank`.
+    - `ElevatorProject.cs`: `FollowsPresets`.
+    - `SafetyPitCalculationEngine.cs`: `BufferType` field only.
+  - Desktop:
+    - `PresetFlow.cs` (new).
+    - Changed: `App.cs`, `Chrome.cs`, `BasicCalculationsPage.cs`, `CalculationsPage.cs`, `SafetyPitPage.cs`, `CarGuideForcePage.cs`, `RopeTractionPage.cs`, `CompanySettingsWindow.cs`, `CalculationSheetExport.cs`, `CalculationWorkspace.cs`, `ProjectSession.cs`, `DesignNotes.cs`.
+  - Config: `config/presets.json` (4083B365…); schema regenerated (`config/ElevatorProject.schema.json` 3B310A22…).
+  - Tests:
+    - New: `tests/solution/PresetsTests.cs`, `PresetsUiTests.cs`, `PresetsNativeTests.cs`, `run-presets-core.ps1`, `run-presets-ui.ps1`.
+    - Updated for the new behaviour: `CalculationUiTests.cs`, `SafetyPitUiTests.cs`, `CarGuideForceUiTests.cs`, `BasicUiTests.cs`, `tests/project/SchemaGenerator.cs`.
+  - Docs:
+    - New: `docs/PRESETS.md`.
+    - Updated where "no default" was stated: `CAR-GUIDE-FORCES.md`, `SAFETY-PIT-CALCULATIONS.md`, `ROPE-TRACTION-CALCULATIONS.md`, `SIMPLIFIED-CALCULATIONS.md`, `ELEVATOR_PROJECT_MODEL.md`.
+    - Copied into the candidate.
+  - Candidate `bin-shaftmaster-presets-candidate` (new):
+    - `ShaftMaster.exe` `5152F49FEC6EF503BD8E7BB3D715E7A31BDDA17104126B1C56A05C031E779FB7`
+    - `Elevator.Core.dll` `1C47DE7885ECADA5…`
+    - `Elevator.Solution.Bridge.dll` `A379D36F77A1C949…`
+  - Unchanged, verified:
+    - v01 `DC8A76A3…`; v02 `57FBE447…` (SHA256SUMS 0 mismatches).
+    - Candidates: calc-sheet `57FBE447…`, FF `D3111222…`, safety/pit `EA9B1F5E…`, ropes `519984A1…` (presets.json `B6FBD967…`).
+- **Changed files (Design Notes / pagination fix, 2026-10-08):**
+  - `ElevatorAutomation/Elevator.Solution.Desktop/DesignNotes.cs` (rewritten, `82D81B78…`).
+  - `CalculationSheetRopes.cs`: Flow, termination row.
+  - `CalculationSheet.cs`: F2/F3 after the P1–P4 results.
+  - `DocxWriter.cs`: `Flow`.
+  - `RopeTractionPage.cs`: status text.
+  - `Elevator.Core/Calculations/RopeTractionCalculation.cs`: added `CarAreaRules.MinimumRatedLoadKg`; no equation changed.
+  - Tests: `tests/solution/CalculationSheetTests.cs` (fixtures 16–19 Design Notes, termination row, helpers `Body` / `DesignNotesClean`), `RopeTractionUiTests.cs`.
+  - Docs: `ROPE-TRACTION-CALCULATIONS.md` (`EB503F61…`), `CALCULATION-SHEET-EXPORT.md` (`56A384FB…`), copied into the candidate.
+  - Candidate rebuilt:
+    - `ShaftMaster.exe` `519984A125B91E2F09B6AEF0CC8F211A925A1B27C4EA0CFA26B3DD8409BC3536`
+    - `Elevator.Core.dll` `96B80197E3A2E6F9…`
+    - `Elevator.Solution.Bridge.dll` `B0E53D99BC0FE08B…`
+  - Backup: `ElevatorAutomation/output/ropes-20261008/pre-notesfix-backup/` (previous `84E556C9…`).
+  - Evidence: `ElevatorAutomation/output/ropes-notesfix-20261008/final/`
+    - suites: `rope-core`, `rope-ui`, `calc-sheet-core`, `calc-sheet-ui`, `ff-core`, `safety-pit-core`
+    - renders: `calc-sheet-rendered`, `calc-sheet-rendered-ui`, `calc-sheet-overview`, `review200`
+  - Housekeeping: 50 intermediate folders moved to the Windows Recycle Bin (recoverable). The list is in `output/ropes-20261008/housekeeping-recycled-folders.txt`.
+    - `output/ropes-20261008/`: `dev-*` (37), `run1`, `final`, `final2`, `final3`, `final4`.
+    - `output/ropes-notesfix-20261008/`: this task's own `dev-*` (8), so that folder holds only the final run.
+    - Kept: `final5`, `pre-notesfix-backup`.
+  - Unchanged, verified: v01 `DC8A76A3…`, v02 `57FBE447…` (SHA256SUMS 0 mismatches), calc-sheet `57FBE447…`, FF `D3111222…`, safety/pit `EA9B1F5E…`, schema `EE9E959B…`, presets `B6FBD967…`.
+- **Changed files (rope / traction, 2026-10-08):**
+  - New Core: `Elevator.Core/Calculations/RopeTractionCalculation.cs`, `Elevator.Core/Project/Presets.cs`.
+  - Edited Core:
+    - `ElevatorProject.cs`: `UserEditedFields`.
+    - `CalculationModels.cs`: `Calculations.RopeTraction`.
+    - `CalculationFingerprint.cs`: RopeTraction excluded from the P1–P4 fingerprint.
+    - No existing equation changed.
+  - New config: `config/presets.json` (`B6FBD967…`). `build-solution.ps1` copies it to the bin.
+  - Desktop:
+    - New: `RopeTractionPage.cs`, `CalculationSheetRopes.cs`, `CalculationFiguresRopes.cs` (F10), `DesignNotes.cs`.
+    - Edited: `App.cs` (presets load, Suspension page, invalidation), `CalculationsPage.cs`, `BasicCalculationsPage.cs`, `Chrome.cs` (Design Notes button), `CalculationSheet.cs` (partial; section, summary, inputs), `CalculationSheetExport.cs` (NOT OK list), `CalculationFigures.cs` (partial; F4 compact).
+  - Tests:
+    - New: `RopeTractionTests.cs`, `run-rope-traction-core.ps1`, `verify_rope_traction.py`, `RopeTractionUiTests.cs`, `run-rope-traction-ui.ps1`.
+    - Edited: `CalculationSheetTests.cs` (computed section order, fixtures 14–17), `CalculationSheetUiTests.cs`, `run-calculation-sheet.ps1` (sources), `tests/project/SchemaGenerator.cs` (new optional fields).
+  - Docs: new `ElevatorAutomation/docs/ROPE-TRACTION-CALCULATIONS.md` (`67720A46…`); updated `CALCULATION-SHEET-EXPORT.md` (`EFC1EFFE…`) and `CALCULATION-SHEET-FIGURES.md` (`BE019806…`). All copied into the candidate.
+  - Candidate `bin-shaftmaster-ropes-candidate` (new, built from the current source):
+    - `ShaftMaster.exe` `84E556C96B8EB5E3A7C2150EE303C458B2555795DC22F0308DE4E8253939119D`
+    - `Elevator.Core.dll` `5988565F38CAFD34…`
+    - `Elevator.Solution.Bridge.dll` `A4FBB785F52FB175…`
+  - Schema: `config/ElevatorProject.schema.json` is now `EE9E959B…`; it was `117B4A03…` before the new optional `RopeTraction` / `UserEditedFields` fields.
+  - Evidence: `ElevatorAutomation/output/ropes-20261008/final5/`
+    - suites: `rope-core` (with `hand-check-report.json`), `rope-ui`, `calc-sheet-core`, `calc-sheet-ui`, `ff-core`, `safety-pit-core`, `calculation-ui`, `affected-regressions`
+    - renders: `calc-sheet-rendered`, `calc-sheet-rendered-ui`, `calc-sheet-overview`, `review200`
+    - `runners/`, `logs/`
+  - Earlier `final`…`final4` and `dev-*` folders are superseded iterations.
+  - Unchanged, verified: v01 `DC8A76A3…`, v02 `57FBE447…` (SHA256SUMS 0 mismatches), calc-sheet candidate `57FBE447…`, FF `D3111222…`, safety/pit `EA9B1F5E…`. Not touched: CAD templates, original DWGs, planning files, DESIGN-FLOW.md.
+- **Changed files (v02 promotion, 2026-10-08):**
+  - New: `ElevatorAutomation/bin-shaftmaster-v02/` (copy of the candidate, plus `RELEASE-NOTES.md` and `SHA256SUMS.txt`).
+  - Edited: `ElevatorAutomation/docs/SHAFTMASTER-UI-RESULTS.md` (current release section).
+  - Unchanged, verified: v01 `DC8A76A3…`, safety/pit candidate `EA9B1F5E…`, FF candidate `D3111222…`, calc-sheet candidate `57FBE447…`.
+- **Changed files (release check, 2026-10-08):**
+  - Source: `ElevatorAutomation/Elevator.Solution.Desktop/CalculationFigures.cs` (F9 arrows), `CarGuideForcePage.cs` (Definitions once; `using System.Linq`).
+  - Tests: `ElevatorAutomation/tests/solution/CalculationSheetTests.cs` (F9 axis/label checks), `CalculationUiTests.cs` (per-button viewport check), new `ReportFieldsNativeTests.cs`.
+  - Candidate rebuilt in place:
+    - `ShaftMaster.exe` `57FBE447C633F648…`
+    - `Elevator.Core.dll` `29D7F3C749843F59…` (Core source unchanged)
+    - `Elevator.Solution.Bridge.dll` `AB56147A1CE0F466…`
+  - Backup: `ElevatorAutomation/output/calcsheet-20261007/pre-release-check-backup/` (previous `F212F0F9…`).
+  - Evidence: `ElevatorAutomation/output/release-check-20261008/`. One fresh folder per suite, plus `logs/`, `runners/`, `figure6-review200/` and `RELEASE-CHECK.md`.
+  - Protected binaries unchanged: release `DC8A76A3…`, safety/pit `EA9B1F5E…`, FF `D3111222…`. Schema `117B4A03…`.
+- **Changed files (FF1 direction + Phase B, 2026-10-08):**
+  - Source:
+    - `ElevatorAutomation/Elevator.Solution.Desktop/CalculationFigures.cs` (`ACDDA15B…`): F1, F4, F5, F6 compaction, F7–F9.
+    - `CalculationSheet.cs` (`134B88E3…`): F7–F9 placement.
+  - Tests:
+    - `ElevatorAutomation/tests/solution/CalculationSheetTests.cs` (`9C65DEFC…`): moment balance, F1 leaders/size, F7–F9 values, counts fixture 13, no unsourced numbers; `using Elevator.Core`.
+    - `CalculationSheetUiTests.cs` (`3976EDA0…`): nine SVG figures.
+  - Docs: `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md` (`470C0393…`; convention section and F7–F9 tables), `CALCULATION-SHEET-EXPORT.md` (`3339B1C4…`). Both copied into the candidate.
+  - Candidate rebuilt: `ShaftMaster.exe` `F212F0F90A36E760…`, `Elevator.Core.dll` `CEE591E463CAECF0…` (recompiled, Core source unchanged).
+  - Backup before rebuild: `ElevatorAutomation/output/calcsheet-20261007/pre-phaseB-backup/` (previous build `61015D45…`).
+  - Evidence: `ElevatorAutomation/output/calcsheet-phaseB-20261007/`
+    - `core` (with `previews/`), `rendered` (with `pagination-report.json`), `overview`, `review200`
+    - `ui` (first run, failed on the old six-figure count), `ui-rerun` and `rendered-ui-rerun` (after the fix)
+    - `regressions/ff-core`, `regressions/ff-ui`, `regressions/safety-pit-core`
+  - Dev iterations are in `output/calcsheet-20261007/pb-dev-*`.
+  - Protected binaries unchanged: release `DC8A76A3…`, FF `D3111222…`, safety/pit `EA9B1F5E…`. Schema content `117B4A03…`.
+- **Changed files (figfix, 2026-10-07):**
+  - Source: `ElevatorAutomation/Elevator.Solution.Desktop/CalculationFigures.cs` (`0A7AD14B…`), `FigureModel.cs` (`C0CA45ED…`, hyphen rule), `CalculationSheet.cs` (`95DCCDDD…`, FF figure order).
+  - Tests: `ElevatorAutomation/tests/solution/CalculationSheetTests.cs` (`6BC9048D…`); new `tests/solution/check_pagination.py` (`A9285546…`).
+  - Docs: `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md` (`A602B422…`), `CALCULATION-SHEET-EXPORT.md` (`9E1D32E2…`; pagination, and the stale "no figures" limitation removed). Both copied into the candidate.
+  - Candidate rebuilt: `ShaftMaster.exe` `61015D45D434B14B…`, `Elevator.Core.dll` `E30511AFCA8D583D…` (recompiled, Core source unchanged).
+  - Backup before rebuild: `ElevatorAutomation/output/calcsheet-20261007/pre-figfix-backup/` (previous build `EAD0C9E6…`).
+  - Evidence: `ElevatorAutomation/output/calcsheet-figfix-20261007/`
+    - `core` (with `previews/`), `ui`
+    - `rendered` (with `pagination-report.json`), `rendered-ui`, `overview`
+    - `review200` (200 % crops of every figure: complete, changed geometry, advanced)
+    - `regressions/ff-core`, `regressions/ff-ui`, `regressions/safety-pit-core`
+  - Dev iterations are in `output/calcsheet-20261007/ff-dev-*`.
+  - Protected binaries unchanged: release `DC8A76A3…`, FF `D3111222…`, safety/pit `EA9B1F5E…`. Schema content `117B4A03…`.
+- **Changed files (page layout and figures, 2026-10-07):**
+  - New source: `ElevatorAutomation/Elevator.Solution.Desktop/FigureModel.cs` (`44FFDA1F…`), `FigureRender.cs` (`215D4766…`), `CalculationFigures.cs` (`7F84E138…`).
+  - Edited:
+    - `DocxWriter.cs` (`C8128D4E…`): SVG images, figure frame, title-block header, footer band, page frame, margins.
+    - `CalculationSheet.cs` (`75AAEDF0…`): page-1 body, title block, plan/rail data, figure placement.
+  - Tests:
+    - `ElevatorAutomation/tests/solution/CalculationSheetTests.cs`: layout, title-block and figure checks, previews; `[STAThread]`.
+    - `CalculationSheetUiTests.cs`: header checks.
+    - `run-calculation-sheet.ps1`: WPF references and the figure sources.
+  - Docs: new `ElevatorAutomation/docs/CALCULATION-SHEET-FIGURES.md` (`1792510B…`); updated `CALCULATION-SHEET-EXPORT.md` (`8A835E8D…`). Both are copied into the candidate.
+  - Candidate rebuilt: `ShaftMaster.exe` `EAD0C9E6…6B7B`, `Elevator.Core.dll` `7681823F…63CD4` (recompiled, Core source unchanged).
+  - Backup before rebuild: `ElevatorAutomation/output/calcsheet-20261007/pre-figures-backup/` (previous build `329969FB…`).
+  - Evidence: `ElevatorAutomation/output/calcsheet-figures-20261007/`
+    - `core` (with `previews/` PNG and SVG of F1–F6 for the default and changed cases), `ui`
+    - `rendered`, `rendered-ui`, `overview`
+    - `regressions/ff-core`, `regressions/ff-ui`, `regressions/safety-pit-core`
+  - The schema was rewritten by the safety/pit runner; its content is unchanged (`117B4A03…`).
+  - Not touched: Elevator.Core sources and equations, release, FF and safety/pit candidates, CAD templates, original DWGs, roadmap.
+- **Changed files (title block, 2026-10-07 ~14:45):**
+  - Core: `ElevatorAutomation/Elevator.Core/Project/ElevatorProject.cs` adds the `Report` field and `ProjectReportDetails`. No equation or engine change.
+  - Desktop:
+    - `DocxWriter.cs`: image API, row height, header image.
+    - `CalculationSheet.cs`: title block, approval block, header and footer.
+    - `CalculationSheetExport.cs`: passes the company settings to the export.
+    - `App.cs`: report fields skip calculation invalidation; adds the General-page section call.
+    - New: `CompanyReportSettings.cs`, `CompanySettingsWindow.cs`.
+  - Schema: `ElevatorAutomation/tests/project/SchemaGenerator.cs` (Report optional). `ElevatorAutomation/config/ElevatorProject.schema.json` regenerated: only the Report group was added (`117B4A03…`).
+  - Tests:
+    - `tests/solution/CalculationSheetTests.cs`, `CalculationSheetUiTests.cs`.
+    - `run-calculation-sheet.ps1`: adds System.Drawing and `CompanyReportSettings.cs`.
+  - Doc: `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`, copied into the candidate (`C4B7F137…`).
+  - Candidate rebuilt: `ShaftMaster.exe` `329969FB…6F26`, `Elevator.Core.dll` `E0B965B0…21F3`.
+  - Backup before rebuild: `ElevatorAutomation/output/calcsheet-20261007/pre-titleblock-backup/` (previous build `B74AB61F…`, plus the previous sources and schema).
+  - Evidence: `ElevatorAutomation/output/calcsheet-titleblock-20261007/`
+    - `core`, `ui`, `rendered`, `rendered-ui`, `page1-overview.png`
+    - `regressions/ff-core`, `regressions/ff-ui`, `regressions/safety-pit-core`, `regressions/ff-native-step`
+  - Not touched: release, FF and safety/pit candidates, CAD templates, original DWGs, roadmap. The real `%AppData%\ShaftMaster` was not created (tests redirect it).
+- **Changed files (clean client sheet, 2026-10-07 ~13:30):**
+  - Rewritten `ElevatorAutomation/Elevator.Solution.Desktop/CalculationSheet.cs` (render only; Build/currency logic kept). SHA-256 `9AFC13BF…BE80`.
+  - `ElevatorAutomation/Elevator.Solution.Desktop/CalculationSheetExport.cs`: omission dialog and blocked export. SHA-256 `7590E408…E622`.
+  - `ElevatorAutomation/Elevator.Solution.Desktop/DocxWriter.cs`: single-line footer, no Subject. SHA-256 `F8F1648F…6582`.
+  - Tests: `ElevatorAutomation/tests/solution/CalculationSheetTests.cs` and `CalculationSheetUiTests.cs`.
+  - Doc: `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`, copied into the candidate.
+  - Rebuilt candidate `bin-shaftmaster-calcsheet-candidate/`: `ShaftMaster.exe` `B74AB61F…600A`, `Elevator.Core.dll` `BC7B241E…EC59` (recompiled, source unchanged).
+  - Backup before rebuild: `ElevatorAutomation/output/calcsheet-20261007/pre-clean-backup/` (previous candidate `AD1DE13E…`, plus the previous sources).
+  - Evidence: `ElevatorAutomation/output/calcsheet-clean-20261007/`
+    - `core`, `ui`, `ui-run2`, `rendered`, `rendered-ui`, `overview`
+    - `regressions/ff-core`, `regressions/ff-ui`, `regressions/safety-pit-core`
+  - `config/ElevatorProject.schema.json` was rewritten by the safety/pit runner; its content is byte-identical.
+  - Not touched: release, FF and safety/pit candidates, Elevator.Core sources, CAD templates, original DWGs, roadmap.
+- **Changed files (calculation-sheet export, 2026-10-07 ~02:20):**
+  - New source:
+    - `ElevatorAutomation/Elevator.Solution.Desktop/DocxWriter.cs`
+    - `ElevatorAutomation/Elevator.Solution.Desktop/CalculationSheet.cs`
+    - `ElevatorAutomation/Elevator.Solution.Desktop/CalculationSheetExport.cs`
+  - Edited: `ElevatorAutomation/Elevator.Solution.Desktop/Chrome.cs` (toolbar button and responsive label).
+  - New tests and scripts in `ElevatorAutomation/tests/solution/`:
+    - `CalculationSheetTests.cs`, `CalculationSheetUiTests.cs`
+    - `run-calculation-sheet.ps1`, `run-calculation-sheet-ui.ps1`
+    - `render-calculation-sheets.ps1` (test-only Word PDF render)
+    - `rasterise_calculation_sheets.py`, `contact_sheets.py`
+  - New doc: `ElevatorAutomation/docs/CALCULATION-SHEET-EXPORT.md`, copied with `CAR-GUIDE-FORCES.md` into the candidate.
+  - New candidate: `ElevatorAutomation/bin-shaftmaster-calcsheet-candidate/` (`ShaftMaster.exe` `AD1DE13E…A51B`, `Elevator.Core.dll` `F87432DE…DF08`).
+  - Evidence: `ElevatorAutomation/output/calcsheet-20261007/`
+    - `core`, `ui`, `rendered`, `rendered-ui`, `overview`, `regressions`
+    - `baseline-ff-bin`, a copy of the FF candidate used only for the baseline UI check
+  - New job folders under `output/solution-v01/jobs/`.
+  - `config/ElevatorProject.schema.json` was regenerated by the safety/pit runner; its content is byte-identical.
+  - Not touched:
+    - release `bin-shaftmaster-v01` (`DC8A76A3…`)
+    - safety/pit candidate (`EA9B1F5E…`)
+    - FF candidate (`D3111222…`)
+    - core engines and equations
+    - CAD templates and original DWGs
+- **Changed files (FF audit, 2026-10-07 ~01:35):**
+  - Source:
+    - `ElevatorAutomation/Elevator.Core/Calculations/CarGuideForceCalculationEngine.cs`: `Definitions` text, new `ApprovedInterpretation`, added to `Details`, comment.
+    - `ElevatorAutomation/Elevator.Solution.Desktop/CarGuideForcePage.cs`: results note text.
+  - Tests:
+    - `ElevatorAutomation/tests/solution/CarGuideForceTests.cs`: +5 checks.
+    - `ElevatorAutomation/tests/solution/CarGuideForceUiTests.cs`: +2 checks.
+  - Docs: `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md`, with an audit section and an implementation-note update. The copy in `bin-shaftmaster-ff-candidate/` is identical (SHA-256 `A485E351…681D`).
+  - Candidate rebuilt in place, `ElevatorAutomation/bin-shaftmaster-ff-candidate/`, so all binaries were rebuilt:
+    - New `ShaftMaster.exe` `D3111222…292E`.
+    - New `Elevator.Core.dll` `492E23D8…6A69`.
+    - The previous binaries are backed up in the session scratchpad only.
+  - New evidence: `ElevatorAutomation/output/ff-audit-20261007/{core,wpf,integration}`, plus 2 new job folders under `output/solution-v01/jobs/`.
+  - `output/step-export-tests/` was rewritten by the build, with identical content.
+  - Not touched: the release, the safety/pit candidate, the schema, original DWGs and earlier evidence folders.
+- **Changed files (earlier this session, documentation-only interpretation task):**
+  - `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md`: interpretation section added, and the "unresolved" wording replaced.
+  - `ElevatorAutomation/bin-shaftmaster-ff-candidate/CAR-GUIDE-FORCES.md`: identical copy.
+  - `CALCULATION_ROADMAP.md`.
+  - `SESSION_HANDOFF.md`.
+  - No source, schema, test, UI, binary or rebuild change. The four protected binary hashes were re-verified unchanged.
+- **Changed files (earlier this session, integration run):**
+  - `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md`: appended the "Native/STEP integration" section.
+  - `ElevatorAutomation/bin-shaftmaster-ff-candidate/CAR-GUIDE-FORCES.md`: synced copy.
+  - `ElevatorAutomation/bin-shaftmaster-ff-candidate/CarGuideForceIntegrationTests.exe`: new, compiled by the test script.
+  - `ElevatorAutomation/output/ff-ui-20261006/integration/`: new evidence folder.
+  - `ElevatorAutomation/output/solution-v01/jobs/4c07190d8fdf41c7baa3b9a9f4480b03/` and `ElevatorAutomation/output/solution-v01/jobs/1cab7f761133412f9e8ee1361801afeb/`: new job folders.
+  - `SESSION_HANDOFF.md`.
+  - No source, schema, test, binary rebuild, release, safety/pit candidate or original DWG was touched.
+- **Changed files (FF work, from timestamps, not a diff; the directory is not a Git repository):**
+  - Source: `Elevator.Core` (rebuilt `Elevator.Core.dll`), desktop UI sources (rebuilt `ShaftMaster.exe`) and `config/ElevatorProject.schema.json` (regenerated 21:28:59).
+  - Tests: `tests/solution/CarGuideForceTests.cs`, `CarGuideForceUiTests.cs`, `CarGuideForceIntegrationTests.cs`, `run-car-guide-force-core.ps1`, `run-ff-ui.ps1`, `run-ff-integration.ps1`, `verify_car_guide_force_note.py`.
+  - Docs: `docs/CAR-GUIDE-FORCES.md`.
+  - Outputs: `bin-shaftmaster-ff-candidate/`, `output/ff-ui-20261006/`, `output/ff-source-review-20261006/`.
+- **Checks:**
+  - v03 / repository hygiene (2026-10-09):
+    - v03 `SHA256SUMS.txt` 52 entries, 0 mismatches; v02 43 entries, 0 mismatches. Unchanged: v01 `DC8A76A3…`, v02 `57FBE447…`, presets `9CFD5FAB…`, calc-sheet `57FBE447…`, FF `D3111222…`, safety/pit `EA9B1F5E…`, ropes `519984A1…`, basic `CE1BFF69…`, calculations `1CB9FD4F…`.
+    - `git ls-remote origin`: empty. `git rev-list --objects --all`: no removed path reachable; old commit pruned.
+    - Fresh clone: build and core tests PASS (see Completed).
+    - Not run: the native AutoCAD suites after the legacy move and the skip changes (`tests/run-tests.ps1`, phase-1 runners, legacy `integration-run.scr`), UI suites from the clone, SOLIDWORKS STEP export.
+  - Heavy-load selection, `output/presets-heavy-20261009/final2` (2026-10-09), all PASS:
+    - presets core 160 (with the Q sweep), presets UI 59, presets native 6;
+    - rope core 60 + hand check 10 fixtures, rope UI 33;
+    - sheet core 8285, sheet UI 63, Word render / raster / pagination PASS;
+    - calculation UI 25, Basic 49, safety/pit 117, safety/pit draft UI 117;
+    - FF core 131, FF UI 126, FF integration 22;
+    - affected regressions PASS (32 protected files unchanged).
+    - The earlier run `final` is kept as evidence of the Basic UI flake (every other suite PASS).
+  - Hashes (2026-10-09): candidate `9CFD5FAB73A444FB…`; unchanged: v01 `DC8A76A3…`, v02 `57FBE447…`, calc-sheet `57FBE447…`, FF `D3111222…`, safety/pit `EA9B1F5E…`, ropes `519984A1…`.
+  - Not run: SOLIDWORKS STEP export by hand; interactive dialogs.
+  - Deflector policy. Definitive run `output/presets-deflectorpolicy-20261008/final/` (runners in `final/runners/`), all PASS:
+
+    | Suite | Result |
+    |---|---|
+    | Presets core | 148 |
+    | Presets UI | 59 |
+    | Presets native | 6 |
+    | Rope core | 60 + 10 hand-check fixtures |
+    | Rope UI | 33 |
+    | Sheet core | 8285 |
+    | Sheet UI | 63 |
+    | Calculation UI | 29 + 25 |
+    | Basic | 49 + 18 |
+    | Safety/pit | 117 + 35 |
+    | Safety/pit draft | 117 |
+    | FF core | 131 |
+    | FF UI | 126 |
+    | FF integration | 22 |
+    | Affected regressions | 43 + 6 + 39 + 102 + 24 + 200; four views equal the release; 32 protected files |
+
+    - Pagination PASS. Visual-tree scan clean (850 / 807 / 847 strings).
+    - Not run: SOLIDWORKS STEP export; interactive dialogs.
+  - Stage-2 selection fix. Definitive run `output/presets-selectfix-20261008/final/`, all PASS:
+
+    | Suite | Result |
+    |---|---|
+    | Presets core (incl. Q sweep + brute-force order check) | 134 |
+    | Presets UI | 58 |
+    | Presets native | 6 |
+    | Rope core | 60 + 10 hand-check fixtures |
+    | Rope UI | 33 |
+    | Sheet core | 8285 |
+    | Sheet UI | 63 |
+    | Calculation UI | 29 rendered + 25 workflow |
+    | Basic | 49 + 18 |
+    | Safety/pit | 117 + 35 |
+    | Safety/pit draft | 117 |
+    | FF core | 131 |
+    | FF UI | 126 |
+    | FF integration | 22 |
+    | Affected regressions | 43 + 6 + 39 + 102 + 24 + 200; four views equal the release; 32 protected files |
+
+    - Pagination PASS.
+    - Visual-tree scan, removed strings and UPPER_SNAKE_CASE codes: none found (852 / 809 / 849 strings; new project, older project, after live edits).
+    - Dev runs `dev-1` … `dev-11` are kept.
+  - Runner scripts: the scratchpad was cleared by the system during the run. The scripts were recovered from earlier evidence and are kept in `final/runners/`.
+  - Not run: SOLIDWORKS STEP export; interactive dialogs.
+  - DESIGN-FLOW stage 2 presets, final build. Definitive run `output/presets-20261008/final3/`, all PASS:
+
+    | Suite | Result |
+    |---|---|
+    | Presets core | 101 assertions |
+    | Presets UI | 45 |
+    | Presets native (new project → all four views) | 6 |
+    | Rope / traction core | 60 + hand check 10 fixtures |
+    | Rope / traction UI | 32 |
+    | Calc sheet core | 8285 |
+    | Calc sheet UI | 63 |
+    | Calculation UI | 30 rendered + 25 workflow |
+    | Basic | 49 core + 18 UI |
+    | Safety/pit | 117 core + 35 UI |
+    | Safety/pit draft UI | 117 |
+    | FF core | 131 |
+    | FF UI | 126 |
+    | FF native / STEP integration | 22 |
+    | Affected regressions | 43 rule + 6 annotation + 39 machine-room + 102 reeving + 24 project + 200 calculation; four-view snapshots equal the release; 32 protected files unchanged |
+
+    - Pagination PASS (01 / 12 / 14 / 15). Word render: the new-project sheet is 11 pages and its Design Notes 1 page.
+    - Visual-tree scan, removed strings: none found (844 strings, new project; 772 strings, older project; plus the Advanced page).
+    - Sheet and Design Notes from a new project contain no forbidden string.
+  - Earlier full runs, kept as evidence:
+    - `final`: found a real regression. Editing a preset field cleared every result: a pit-only or h-only edit dropped the current P1–P4. Fixed in `PresetFlow.ManagedEdited`; that run's safety/pit UI and FF UI failures are fixed.
+    - `final2`: Basic UI ended once without a result file (no crash event logged). It passed on the rerun, in `final3`, and in 3 more repeats (`dev-10` to `dev-13`). Cause not identified.
+    - The status-bar texts "Review independent engineering statuses…" and "Engineering reviews remain independent." were removed after `final2`.
+  - Intermediate folders `output/presets-20261008/dev-1` … `dev-13` are kept (nothing deleted).
+  - Not run: SOLIDWORKS STEP export; manual interactive dialogs (the Save As dialog is not automated).
+  - Design Notes / pagination fix, final build. Fresh folder `output/ropes-notesfix-20261008/final/`, all PASS:
+
+    | Suite | Result |
+    |---|---|
+    | Rope / traction core | 60 assertions |
+    | Hand check | 10 fixtures |
+    | Rope / traction UI | 32 |
+    | Calc sheet core | 8285 |
+    | Calc sheet UI | 63 |
+    | FF core | 131 |
+    | Safety/pit core | 116 |
+
+    - Sheet core covers:
+      - Design Notes: no forbidden wording ("not credited", "basis", "code checks", "status", …), no body tables, no OK items, notes ≤ 2 lines;
+      - Table 6 → 955 kg; the rope upsize (6 ropes / 10 mm); the traction margin; the clean "No design notes" case;
+      - the termination row.
+    - Word render: 23 + 5 documents, 169 + 36 pages, none outside margins. Pagination PASS for 01, 12, 14, 15 (worst non-last page 39 %).
+    - Design Notes (fixtures 16–19) and the rope pages reviewed at 200 %.
+    - Not run: calculation UI / affected regressions (not requested this time); SOLIDWORKS; manual dialogs.
+  - Rope / traction, final candidate build. Each suite in a fresh folder under `output/ropes-20261008/final5/`, all PASS:
+
+    | Suite | Result |
+    |---|---|
+    | Rope / traction core | 60 assertions |
+    | Independent Python hand check | 10 fixtures; every engine value matches the EN 81-50 formulas |
+    | Rope / traction UI | 32 |
+    | Calc sheet core | 8240 (P1–P7 and FF numbers unchanged) |
+    | Calc sheet UI | 63 |
+    | FF core | 131 |
+    | Safety/pit core | 116 |
+    | Calculation workflow | 25 |
+    | Calculation UI | 30 |
+    | Affected regressions | four-view snapshots equal the release; 32 protected files unchanged |
+
+    - Word render: 21 + 5 sheets, 169 + 36 pages, none outside margins. Pagination PASS for 01 and 12.
+    - Fixtures 14/15 have a P1–P4 page at 50/58 % empty: the existing F2 flow for those shaft depths, ahead of the new section, and not part of the enforced pair.
+    - New sheet pages, F10 and both Design Notes reviewed at 200 % (`review200/`).
+    - Not run: SOLIDWORKS export; manual file dialogs; native DWG generation for this candidate beyond the calculation-UI run; Basic/safety-pit/FF UI suites (not requested).
+  - Release check, rebuilt calc-sheet candidate, all PASS. Each suite in a fresh folder under `output/release-check-20261008/`.
+
+    | Suite | Assertions |
+    |---|---|
+    | Build STEP-input | 7 |
+    | Calc sheet core | 6823 |
+    | Calc sheet UI | 62 |
+    | Calculation workflow | 25 |
+    | Calculation UI | 29 |
+    | Basic | 49 |
+    | Basic UI | 18 |
+    | Safety/pit core | 116 |
+    | Safety/pit UI | 35 |
+    | Safety/pit draft UI | 117 |
+    | FF core | 131 |
+    | FF UI | 126 |
+    | FF native/STEP integration | 22 |
+    | Report-field native | 13 |
+
+    - Affected-regression set: rules 43, annotation 6, machine room 39, reeving 102, project 24, calculations 200; four-view snapshots equal to the release; 32 protected artifacts unchanged.
+    - Word render: 137 + 36 pages, none outside margins. Pagination PASS.
+    - Not run:
+      - SOLIDWORKS export;
+      - manual file dialogs;
+      - the full AutoCAD Phase 1 native matrix (`tests/run-tests.ps1`, `tests/project/run-phase1.ps1`), which writes to fixed, reused folders and was not part of the reference set.
+  - FF1 direction + Phase B, final candidate build, fresh folder `output/calcsheet-phaseB-20261007/`:
+    - Sheet core: PASS 6805 assertions. Covers:
+      - the FF1/FF2 moment balance from the drawn arrows (F4 FF1/FF2, F5a FF1, F5b FF2) for loads at ±X/±Y in fixtures 01 and 12, plus detection of a reversed arrow;
+      - F7–F9 present with their sections and omitted with them (fixtures 03/04/05/13);
+      - labels: T(car) 9.614, T(cwt) 7.259, per rope 1.602/1.21, P5 9.8 per rail, P6 39.2, P7 14.8 per buffer and 29.6 total;
+      - counts follow the inputs: 4 ropes, 2 car and 3 CW buffers, and 3 rails via the builder; 4 rails make P5/F8 unavailable;
+      - only sourced numbers and dimensions; no text overlap; no U+002D between letters; unchanged calculation numbers.
+    - Sheet UI: first run FAIL on the stale "six SVG figures" assertion. Corrected to nine, then rerun: PASS 62.
+    - FF core 131, FF UI 126, safety/pit core 116: all PASS.
+    - Word render (test viewer only): 17 core sheets, 137 pages; 5 UI sheets, 36 pages. All OK and unchanged by Word.
+    - Pagination: PASS for 01 and 12 (worst non-last page 27 %). Fixture 13 (not enforced) has page 7 at 48 %.
+    - Every figure was reviewed at 200 % (01, 12, 13, 02).
+    - Not run: the FF native/STEP integration; Basic/calculation/safety-pit UI suites; manual dialogs.
+  - Figfix, final candidate build, fresh folder `output/calcsheet-figfix-20261007/`:
+    - Sheet core: PASS 4495 assertions. New checks cover:
+      - F5 two views: FF1 arrows on opposite rails at the upper/lower levels, pointing outward; FF2 in the side view only; every arrow ends on a rail face with its tail outside the rail;
+      - F4 level labels and notes;
+      - F1 T symbols, DBG = CarDbg/CwDbg, W/D labels, entrance;
+      - no U+002D between letters in any figure text;
+      - unchanged numbers.
+    - Sheet UI: PASS 62. FF core 131, FF UI 126, safety/pit core 116: all PASS.
+    - Word render (test viewer only): 16 core sheets, 116 pages; 5 UI sheets, 33 pages. All OK and unchanged by Word.
+    - Pagination: PASS for 01-basic-complete and 12-changed-geometry (pages 20/3/5/14/16/22/1–2/47 % empty; the last page is exempt). Not enforced for incomplete fixtures, where one page each exceeds 40 %: 04 p4, 05 p1, 08 p5.
+    - Every figure was reviewed at 200 % in the Word render.
+    - Not run: the FF native/STEP integration; Basic/calculation/safety-pit UI suites; manual dialogs.
+  - Page layout and figures, final candidate build (each run into a fresh folder):
+    - Sheet core: PASS 3198. Covers:
+      - layout: A4, page border, one default header on every page, PAGE/NUMPAGES fields, fixed title-block geometry, keep-with-next, figure/caption kept together;
+      - title-block cases: complete, all blank, logo only, company only, older project; the logo in the header only, no placeholders;
+      - figures: present or omitted with their sections; SVG and PNG parts; SVG labels and coordinates matching the calculation (P1–P4 kN; FF 2.2 / 2.1 kN; h 1200; W 1100; D 2100; SW/SD; rail tips at railLeft/railRight; car-rail line at CarRow);
+      - no overlapping text, everything inside the figure frame, text 2.5 / 3.5 mm;
+      - a changed-geometry case (SW 1650, SD 2600, Q 630, h 1000);
+      - unchanged numbers (FF 2200/2100 N, P5 9800 N, P6 39200 N, P7 29600/14800 N).
+    - Sheet UI: PASS 62. FF core 131, FF UI 126, safety/pit core 116: all PASS.
+    - 21 sheets rendered through Word, test viewer only: 161 pages, sources unchanged, no text outside margins. Pages reviewed via overviews and page renders; figures reviewed at 200% in the Word render and as 300 dpi previews.
+    - Not run: the FF native/STEP integration (not requested this time); Basic/calculation/safety-pit UI suites; manual dialogs.
+    - Known cosmetic issue (fixed by figfix): Word's SVG renderer added space around hyphens in figure text.
+  - Title block, final candidate build (each run into a fresh folder):
+    - Sheet core: PASS 1198. Covers:
+      - five title-block cases (complete, all blank incl. whitespace, logo only (JPEG), company only, older project without the group);
+      - shown and hidden rows, no placeholders, the approval block with empty signature/date cells;
+      - the logo part only when set, with the aspect ratio kept in body and header;
+      - unchanged numbers (FF 2200/2100, P5 9800, P6 39200, P7 29600/14800 N);
+      - Basic/Advanced P1–P4, P5–P7 and FF still current after report edits; STEP parameters and plan geometry unchanged;
+      - save/reopen, the schema, and the settings copy/replace/remove/reject cases.
+    - Sheet UI: PASS 61. Covers:
+      - the General-page section with blank editors;
+      - report edits that keep UI results current;
+      - the settings dialog with preview and save;
+      - export with the company name and logo;
+      - Save/reopen through the real Save handler;
+      - an omission dialog that does not mention title-block fields.
+    - FF core 131, FF UI 126, safety/pit core 116, FF native/STEP integration 22: all PASS.
+    - 20 sheets rendered through Word, test viewer only: 70 pages; sources unchanged; no clipping. Page 1 of each was reviewed (`page1-overview.png`).
+    - Not run:
+      - A native DWG round trip with filled report fields. The integration test uses the reference project (Report null); STEP/plan equality with filled fields is covered in the core test.
+      - Basic/calculation UI and safety/pit UI suites (not requested).
+      - Manual Browse file picker and Save As dialog clicks.
+  - Clean sheet, final candidate build (each run into a fresh folder):
+    - Sheet core: PASS 700. This covers the removed-text list in document, header, footer and docProps; no zero placeholders; renumbering; and unchanged numbers (FF 2200/2100 N, P5 9800 N, P6 39200 N, P7 29600/14800 N).
+    - Sheet UI: PASS 35, rerun PASS 35 in `ui-run2` for a corrected dialog screenshot. Covers the omission dialog content, Cancel / Export anyway, and the blocked export.
+    - FF core: PASS 131. FF UI: PASS 126. Safety/pit core: PASS 116.
+    - 14 sheets rendered through Word, test viewer only: 40 pages; sources unchanged; no text outside margins. Every page was reviewed.
+    - Not run this time: Basic/calculation UI, safety/pit UI and native/STEP integration (not requested).
+  - Calculation-sheet candidate (2026-10-07 ~02:20, final build):
+    - Sheet tests: PASS 92.
+    - WPF export: PASS 19.
+    - FF fixture through the live project: 1100/2200 N, 1050/2100 N.
+    - 16 sheets rendered through Word, test viewer only: 4–6 pages each; sources unchanged; no text outside margins; every page reviewed.
+    - FF core 131, FF WPF 126, safety/pit 116 + 35, safety/pit draft 117, Basic 49 + 18, native DWG + STEP parameters 22: all PASS.
+    - Build STEP-input tests: PASS.
+    - `run-calculation-ui.ps1` stops at the pre-existing check "Bottom calculate control lies within viewport". The unchanged FF candidate fails the same check, so it is not caused by this task. Workflow 25: PASS.
+    - Not run: SOLIDWORKS STEP export; manual Save As dialog click-through.
+  - FF audit run (2026-10-07 ~01:35), on the rebuilt candidate:
+    - Build: design-rule/STEP-input tests PASS.
+    - Core: PASS, 131 assertions.
+    - Rendered WPF: PASS, 126 assertions, including the two new interpretation checks. Screenshots are in `output/ff-audit-20261007/wpf/`.
+    - Integration: PASS, 22 assertions. The STEP parameters are byte-identical to the 2026-10-06 integration run.
+    - Release `DC8A76A3…2AE7` and safety/pit `EA9B1F5E…E396` are unchanged.
+    - Not re-run after the rebuild: the broader affected-regression set (604 assertions) and the safety/pit UI regressions. The change is display text only.
+    - Known cosmetic issue, pre-existing and not fixed: the expanded equations panel shows the `Definitions` paragraph twice.
+  - Integration run (2026-10-07): PASS, 22 assertions.
+    - STEP: `StepInputFactory.Create` parameters are unchanged for an absent FF group and h = null, 1200, 0, −1, NaN, +∞. `step-parameters-without-ff.json` and `step-parameters-with-ff.json` are byte-identical (SHA-256 `9A998E24…95C4`). **No SOLIDWORKS export was run.**
+    - Native: the two four-view DWGs `StoredFFInput` (h = 1200) and `MissingOrMalformedDraftCanonicalH` (h = null) were generated with AutoCAD 2023 Core Console, then reopened and audited in a fresh process. Input hashes match, h and Basic mode are read back correctly, and the entity counts match (Plan 521 / MachineRoomPlan 1354 / SectionBB 709 / SectionAA 3045).
+    - Every `verify.log` ends with Core Console's "Can't delete temp file … errno=13". This is pre-existing shutdown noise: it appears in 145 of 153 job logs. It is not a test failure.
+  - Hashes before and after the run are unchanged:
+    - FF candidate `ShaftMaster.exe` `1FAD9185…DFC1E`
+    - FF candidate `Elevator.Core.dll` `41252572…9417`
+    - Release `bin-shaftmaster-v01/ShaftMaster.exe` `DC8A76A3…2AE7`
+    - Safety/pit candidate `ShaftMaster.exe` `EA9B1F5E…E396`
+  - Earlier evidence (2026-10-06):
+    - Note verification: PASS.
+    - Core tests: PASS, 126 assertions.
+    - WPF tests: PASS, 124 assertions (programmatic, not interactive).
+    - Affected regressions: 604 assertions; four-view snapshots equal the release.
+  - Not run: an end-to-end SOLIDWORKS STEP export for FF.
+- **Blockers:**
+  - (Resolved 2026-10-08 by Planner decisions A1–A6; kept for traceability.) Rope/traction task questions:
+    1. **Emergency-braking retardation a.**
+       - EN 81-50 5.11.2.2.2 gives only a minimum: 0.5 m/s² in the normal case, higher for reduced-stroke buffers. The project has no retardation or buffer-stroke data.
+       - Question: use a = 0.5 m/s² (normal buffer stroke assumed), or add an input a ≥ 0.5 m/s²?
+    2. **Deflector reduced mass mDP** (EN 81-50 5.11.3, counterweight-side term II in T2 for braking; mDP = J_DP·(v_pulley/v)²/R²).
+       - The project has no deflector inertia, and leaving the term out is non-conservative for the loaded-car braking case.
+       - Question: add an optional input (mDP in kg, or J_DP in kg·m²) and omit the braking case while it is blank, or neglect the term (to be stated in the sheet)?
+    3. **Wrap angle α without a deflector.** When TZ < 520 the project's section rules give no α ("DIRECT ROPE ROUTING REVIEW"); the same applies when TZ > 1100 or there is no calculated path.
+       - Question: omit the traction checks when α is unavailable, or use α = 180°?
+    4. **Friction forces FRcar / FRcwt.** EN 81-50 5.11.3 says they "should be deleted … if a minimum friction force cannot be ensured". The project has no friction data.
+       - Proposal: set them to zero (conservative). Please confirm.
+    5. **Nequiv(t) outside Table 2** (V γ > 50°, U undercut β < 75°). The standard allows interpolation only within the table.
+       - Question: omit the EN 81-50 required Sf (and so the Sf check) in that case?
+    6. **Minor definitions, proposed:**
+       - Proposal: the "travelling cable mass per metre" input is the total of all cables (= nt·w).
+       - Proposal: T_max for Sf = (P + Q + ns·H·w)·gn / (ns·r), with H the travel height as instructed. The real hanging length also includes the sheave-to-top-landing distance, which is not in the project data. Please confirm this approximation.
+       - Proposal: the stalled check covers only the counterweight-on-buffers case (μ = 0.2 is given for "counterweight stalled"; EN 81-50 5.11.2.2.3 also mentions the lowest position). It applies only where EN 81-20 5.5.3 c) 1) traction limiting is used, not the 5.5.3 c) 2) electric safety device.
+  1. Release target is the user's decision: keep FF as a separate candidate, combine it with the safety/pit candidate, or replace `bin-shaftmaster-v01`. This applies to release promotion and does not block planning or implementing the next calculation in a separate candidate.
+  2. ~~Open FF engineering questions~~: resolved by the user decision on 2026-10-07 (user-approved interpretation; see `CAR-GUIDE-FORCES.md`).
+- **Next step:** Awaiting Planner
+
+## Decisions and constraints
+
+- Planner chat: discuss/review the project and produce prompts for the Executor. Do not implement unless the user explicitly asks.
+- Executor chat: implement the user's approved request, then update this file before wrapping up or pausing.
+- Keep both chats attached to `D:\CAD DATA---------------------\DWGs\2026\dwg plan codex`.
+- Preserve original DWGs/backups and previously delivered binaries. Treat candidate builds separately from releases.
+- For engineering work, record source assumptions and unresolved physical interpretations; do not silently guess.
+
+## Executor update template
+
+Replace the current-task fields and add a short entry to Recent updates whenever the Executor makes meaningful progress:
+
+- **Status:** Not started / In progress / Blocked / Complete
+- **Goal:** What the current implementation request is
+- **Completed:** What is actually done
+- **Decisions:** Relevant user-approved choices and assumptions
+- **Changed files:** Exact paths, or “none”
+- **Checks:** What ran and the result, or “not run” with reason
+- **Blockers:** What is waiting on user input or an external condition, or “none”
+- **Next step:** The single next action
+
+## Recent updates
+
+- 2026-10-09: Executor released v03 (`bin-shaftmaster-v03`, `9CFD5FAB…`) and cleaned the repository: one clean commit on `main`, standards / third-party / inspection files and root drawings out of Git (kept on disk), legacy plugin under `legacy/`. Not pushed. Awaiting Planner.
+- 2026-10-09: Executor finished the heavy-load selection (joint β / q / Dt search, heavier car masses, 2:1 recommendation). Candidate `9CFD5FAB…`, `final2` all PASS. Awaiting Planner.
+- 2026-10-08: Executor applied DESIGN-FLOW 11a (deflector D/d as a Design Notes quotation only; ladder-first rope search). New project 4 × 11 mm, β 100°, all OK. All suites PASS in `presets-deflectorpolicy-20261008/final`. Candidate `E2302461…`. Awaiting Planner.
+- 2026-10-08: Executor selection fix: the new project opens with every check OK (6 × 8 mm, β 100°, P 700, CW 1015). Rope / groove search, live calculation, no status codes. All suites PASS in `presets-selectfix-20261008/final`. Candidate `E617312B…`. Awaiting Planner.
+- 2026-10-08: Executor completed DESIGN-FLOW stage 2 "Flow foundation" in the new `bin-shaftmaster-presets-candidate` (`5152F49F…`):
+  - New project complete from presets; lock / follow / Reset; rope auto-upsize; Fill blanks; UI text cleanup. No equation change.
+  - Presets 101 / 45 / 6 native; sheet 8285 / 63; rope 60 + 10 / 32; FF 131 / 126 / 22; safety/pit 117 / 35 / 117; Basic 49 / 18; calc UI 30 + 25; affected regressions; all PASS in `final3`.
+  - Awaiting Planner.
+- 2026-10-08: Executor rewrote the Design Notes as short advisory notes (DESIGN-FLOW 7) with computed recommendations:
+  - Table 6 955 kg; rope upsize; D/d 40·d; traction margin; TZ range.
+  - Termination row fixed. The rope section flows and pagination passes for 01/12/14/15.
+  - Sheet 8285 / 63, rope 60 + 10 / 32, FF 131, safety/pit 116: all PASS. Candidate `519984A1…`.
+  - 50 intermediate folders moved to the Recycle Bin. Awaiting Planner.
+- 2026-10-08: Executor completed the rope / traction checks in the new `bin-shaftmaster-ropes-candidate` (`84E556C9…`):
+  - EN 81-20 5.5 and EN 81-50 5.11/5.12 with Planner decisions A1–A6;
+  - `config/presets.json` with generic lock/follow;
+  - sheet section and F10; Design Notes export with Table 6.
+  - Core 60 + hand check 10, UI 32, sheet 8240/63, FF 131, safety/pit 116, calculation 25/30, affected regressions: all PASS. v01 and v02 unchanged. Awaiting Planner.
+- 2026-10-08: The Planner added `DESIGN-FLOW.md` (the agreed design flow, presets, ladders and build stages), referenced it from `CLAUDE.md` with a product principle, and narrowed the "do not guess" constraint to engineering interpretation. No code changes. The answers to the rope/traction blockers come in the next Planner prompt.
+- 2026-10-08: Executor reviewed EN 81-20 5.5 and EN 81-50 5.11/5.12 (with Annexes D/E) for the rope/traction task. No code or candidate was created. Stopped on 5 engineering questions (braking retardation, deflector inertia, α without a deflector, Table 2 range; FR = 0 to be confirmed) plus 3 definition confirmations. See Blockers. Awaiting Planner.
+- 2026-10-08: Executor promoted the release-checked calc-sheet candidate to v02 (`bin-shaftmaster-v02`, `57FBE447…`). It was copied unchanged, and the SHA256SUMS verify. v01 is unchanged. Awaiting Planner.
+- 2026-10-08: Executor ran the final fixes and a full release check of the calc-sheet candidate. Not promoted.
+  - Fixes: F9 arrows on the buffer axes; FF Definitions shown once; per-button viewport test.
+  - All suites PASS (`output/release-check-20261008/RELEASE-CHECK.md`).
+  - Candidate `57FBE447…`. Awaiting Planner.
+- 2026-10-08: Executor fixed the FF1 direction (statics convention from the load-offset sign) and added the Phase B figures.
+  - Tests: moment-balance test; F1 true-scale rails with leaders.
+  - New figures: F7 suspension, F8 safety gear, F9 pit buffers.
+  - Sheet core 6805, UI 62, FF 131/126, safety/pit 116: all PASS.
+  - Candidate `F212F0F9…`. Awaiting Planner.
+- 2026-10-07: Executor applied the figfix corrections.
+  - F5: front and side views with FF1/FF2 couples.
+  - F4: level labels.
+  - F1: T rails, DBG dimensions, entrance.
+  - No word hyphens in figure text; FF figures after the FF text, so the complete sheet is 8 pages with no page over 40 % empty.
+  - Sheet core 4495, UI 62, FF 131/126, safety/pit 116: all PASS.
+  - Candidate `61015D45…`. Awaiting Planner.
+- 2026-10-07: Executor added the CAD-style page layout and Phase A figures F1–F6 to the calculation sheet.
+  - Page frame, title-block header on every page, footer band.
+  - Figures as SVG with PNG fallback, in caption frames, built from the calculation data.
+  - Sheet core 3198, UI 62, FF 131/126, safety/pit 116: all PASS. 161 rendered pages reviewed.
+  - Candidate rebuilt (`EAD0C9E6…`), previous build backed up.
+- 2026-10-07 ~14:45: Executor added the optional title block and approval block to the calculation sheet.
+  - Company name/logo come from application settings; client, document no., revision and prepared/checked/approved by come from the new optional `Report` project group.
+  - Added a reusable DocxWriter image API.
+  - Sheet core 1198, UI 61, FF 131/126, safety/pit 116, FF native/STEP 22: all PASS.
+  - Candidate rebuilt (`329969FB…`), previous build backed up.
+- 2026-10-07 ~13:30: Executor made the calculation sheet a clean client-facing report (text and layout only).
+  - Disclaimers, traceability and missing-data rows removed; unavailable calculations omitted with renumbering.
+  - Export-anyway/Cancel dialog added, and the export is blocked when nothing is available.
+  - Sheet core 700, UI 35, FF 131/126, safety/pit 116: all PASS. 40 rendered pages reviewed.
+  - Candidate rebuilt (`B74AB61F…`), with the previous build backed up.
+- 2026-10-07 ~02:20: Executor added the Word calculation-sheet export in the new `bin-shaftmaster-calcsheet-candidate`.
+  - 92 + 19 new assertions; 16 sheets rendered and reviewed page by page.
+  - FF, safety/pit, Basic and native/STEP regressions PASS on the candidate.
+  - The pre-existing calculation-UI viewport check fails on both this candidate and the FF candidate.
+  - Release and the other candidates are untouched.
+- 2026-10-07 ~01:35: Executor audited FF1/FF2 against the note, code, tests and UI.
+  - Equations and fixture are correct.
+  - Fixed the stale "unresolved interpretation" UI/engine text so it shows the approved interpretation. Text only; math unchanged.
+  - Added 7 regression checks and rebuilt the FF candidate.
+  - Core 131, WPF 126 and integration 22: all PASS.
+  - Word export not started.
+- 2026-10-07 ~01:20: The Planner removed the Codex-era transition summary `CLAUDE_HANDOFF.md` at the user's request, because it was stale and still listed the FF questions as open. Its pointer was also removed from `CLAUDE.md`. `CALCULATION_ROADMAP.md` is kept. No code or docs were changed.
+- 2026-10-07 ~01:10: Executor recorded the user-approved FF1/FF2 engineering interpretation (EN 81-50 C.2.1 basis; FF1 = Fy, FF2 = Fx, per rail per shoe level, h = shoe centre-to-centre). Updated `CAR-GUIDE-FORCES.md` and its bundled copy (SHA-256 `8BC248AC…E4AA8`, identical) and `CALCULATION_ROADMAP.md`, which now lists the guide-rail check as the Pending next stage. Documentation only. Remaining blocker: release target.
+- 2026-10-07 ~01:00: Executor ran the FF native/STEP integration regression: PASS, 22 assertions. STEP parameters are identical with and without h, and both DWGs were generated, reopened and read h back correctly. Docs and the bundled copy were updated, and the protected hashes are unchanged. The release decision remains with the user.
+- 2026-10-07: Claude Code session ran a read-only review of the FF1/FF2 candidate and recorded its state. The FF integration run was found to be never executed.
+- 2026-10-07: Handoff protocol created.
+- 2026-10-06 21:24–21:29: FF1/FF2 candidate built, with core/WPF/regression evidence in `output/ff-ui-20261006/` and `output/ff-source-review-20261006/`. This entry comes from file timestamps; that session's transcript is not available here.

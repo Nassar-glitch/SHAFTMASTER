@@ -1,0 +1,3777 @@
+{
+  "TemplateSha256": "5F2CE6B190811338D1E446EEEAC9F17E0EE3B6A8DF563654EB98F324B4649447",
+  "ExpectedEntityCount": 521,
+  "Entities": [
+    {
+      "Key": "468",
+      "Handle": "468",
+      "Type": "LWPOLYLINE",
+      "Layer": "Wall",
+      "Role": "wall"
+    },
+    {
+      "Key": "469",
+      "Handle": "469",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "46A",
+      "Handle": "46A",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "46B",
+      "Handle": "46B",
+      "Type": "MTEXT",
+      "Layer": "7",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "46C",
+      "Handle": "46C",
+      "Type": "LWPOLYLINE",
+      "Layer": "DL",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "46D",
+      "Handle": "46D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "46E",
+      "Handle": "46E",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "46F",
+      "Handle": "46F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "470",
+      "Handle": "470",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "471",
+      "Handle": "471",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "472",
+      "Handle": "472",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "cwMark"
+    },
+    {
+      "Key": "473",
+      "Handle": "473",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "474",
+      "Handle": "474",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "475",
+      "Handle": "475",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "476",
+      "Handle": "476",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "477",
+      "Handle": "477",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "478",
+      "Handle": "478",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "479",
+      "Handle": "479",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47A",
+      "Handle": "47A",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47B",
+      "Handle": "47B",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47C",
+      "Handle": "47C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47D",
+      "Handle": "47D",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47E",
+      "Handle": "47E",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "47F",
+      "Handle": "47F",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "480",
+      "Handle": "480",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "481",
+      "Handle": "481",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "482",
+      "Handle": "482",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "483",
+      "Handle": "483",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "484",
+      "Handle": "484",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "485",
+      "Handle": "485",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "486",
+      "Handle": "486",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "487",
+      "Handle": "487",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "488",
+      "Handle": "488",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "489",
+      "Handle": "489",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48A",
+      "Handle": "48A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48B",
+      "Handle": "48B",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48C",
+      "Handle": "48C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48D",
+      "Handle": "48D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48E",
+      "Handle": "48E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "48F",
+      "Handle": "48F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "490",
+      "Handle": "490",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "491",
+      "Handle": "491",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "492",
+      "Handle": "492",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "493",
+      "Handle": "493",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "494",
+      "Handle": "494",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "495",
+      "Handle": "495",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "496",
+      "Handle": "496",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "497",
+      "Handle": "497",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "498",
+      "Handle": "498",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "499",
+      "Handle": "499",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49A",
+      "Handle": "49A",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49B",
+      "Handle": "49B",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49C",
+      "Handle": "49C",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49D",
+      "Handle": "49D",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49E",
+      "Handle": "49E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "49F",
+      "Handle": "49F",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A0",
+      "Handle": "4A0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A1",
+      "Handle": "4A1",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A2",
+      "Handle": "4A2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A3",
+      "Handle": "4A3",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A4",
+      "Handle": "4A4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A5",
+      "Handle": "4A5",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A6",
+      "Handle": "4A6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A7",
+      "Handle": "4A7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A8",
+      "Handle": "4A8",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4A9",
+      "Handle": "4A9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AA",
+      "Handle": "4AA",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AB",
+      "Handle": "4AB",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AC",
+      "Handle": "4AC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AD",
+      "Handle": "4AD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AE",
+      "Handle": "4AE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4AF",
+      "Handle": "4AF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B0",
+      "Handle": "4B0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B1",
+      "Handle": "4B1",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B2",
+      "Handle": "4B2",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B3",
+      "Handle": "4B3",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B4",
+      "Handle": "4B4",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B5",
+      "Handle": "4B5",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B6",
+      "Handle": "4B6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B7",
+      "Handle": "4B7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B8",
+      "Handle": "4B8",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4B9",
+      "Handle": "4B9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BA",
+      "Handle": "4BA",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BB",
+      "Handle": "4BB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BC",
+      "Handle": "4BC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BD",
+      "Handle": "4BD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BE",
+      "Handle": "4BE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4BF",
+      "Handle": "4BF",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4C0",
+      "Handle": "4C0",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4C1",
+      "Handle": "4C1",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4C2",
+      "Handle": "4C2",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "4C3",
+      "Handle": "4C3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C4",
+      "Handle": "4C4",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C5",
+      "Handle": "4C5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C6",
+      "Handle": "4C6",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C7",
+      "Handle": "4C7",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C8",
+      "Handle": "4C8",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4C9",
+      "Handle": "4C9",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CA",
+      "Handle": "4CA",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CB",
+      "Handle": "4CB",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CC",
+      "Handle": "4CC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CD",
+      "Handle": "4CD",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CE",
+      "Handle": "4CE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4CF",
+      "Handle": "4CF",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D0",
+      "Handle": "4D0",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D1",
+      "Handle": "4D1",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D2",
+      "Handle": "4D2",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D3",
+      "Handle": "4D3",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D4",
+      "Handle": "4D4",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D5",
+      "Handle": "4D5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D6",
+      "Handle": "4D6",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D7",
+      "Handle": "4D7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D8",
+      "Handle": "4D8",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4D9",
+      "Handle": "4D9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DA",
+      "Handle": "4DA",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DB",
+      "Handle": "4DB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DC",
+      "Handle": "4DC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DD",
+      "Handle": "4DD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DE",
+      "Handle": "4DE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4DF",
+      "Handle": "4DF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E0",
+      "Handle": "4E0",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E1",
+      "Handle": "4E1",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E2",
+      "Handle": "4E2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E3",
+      "Handle": "4E3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E4",
+      "Handle": "4E4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E5",
+      "Handle": "4E5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E6",
+      "Handle": "4E6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E7",
+      "Handle": "4E7",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E8",
+      "Handle": "4E8",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4E9",
+      "Handle": "4E9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4EA",
+      "Handle": "4EA",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4EB",
+      "Handle": "4EB",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4EC",
+      "Handle": "4EC",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4ED",
+      "Handle": "4ED",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4EE",
+      "Handle": "4EE",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4EF",
+      "Handle": "4EF",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F0",
+      "Handle": "4F0",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F1",
+      "Handle": "4F1",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F2",
+      "Handle": "4F2",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F3",
+      "Handle": "4F3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F4",
+      "Handle": "4F4",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F5",
+      "Handle": "4F5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F6",
+      "Handle": "4F6",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F7",
+      "Handle": "4F7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F8",
+      "Handle": "4F8",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4F9",
+      "Handle": "4F9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FA",
+      "Handle": "4FA",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FB",
+      "Handle": "4FB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FC",
+      "Handle": "4FC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FD",
+      "Handle": "4FD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FE",
+      "Handle": "4FE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "4FF",
+      "Handle": "4FF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "500",
+      "Handle": "500",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "501",
+      "Handle": "501",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "502",
+      "Handle": "502",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "503",
+      "Handle": "503",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "504",
+      "Handle": "504",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "505",
+      "Handle": "505",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "506",
+      "Handle": "506",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "507",
+      "Handle": "507",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "508",
+      "Handle": "508",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "509",
+      "Handle": "509",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50A",
+      "Handle": "50A",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50B",
+      "Handle": "50B",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50C",
+      "Handle": "50C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50D",
+      "Handle": "50D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50E",
+      "Handle": "50E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "50F",
+      "Handle": "50F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "510",
+      "Handle": "510",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "511",
+      "Handle": "511",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "512",
+      "Handle": "512",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "513",
+      "Handle": "513",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "514",
+      "Handle": "514",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "515",
+      "Handle": "515",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "516",
+      "Handle": "516",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "517",
+      "Handle": "517",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "center",
+      "Band": "rear"
+    },
+    {
+      "Key": "518",
+      "Handle": "518",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailRight",
+      "B": "center",
+      "Band": "rear"
+    },
+    {
+      "Key": "519",
+      "Handle": "519",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "cwRailRight",
+      "Band": "rear"
+    },
+    {
+      "Key": "51A",
+      "Handle": "51A",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailLeft",
+      "B": "left",
+      "Band": "rear"
+    },
+    {
+      "Key": "51B",
+      "Handle": "51B",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "cwRailRight",
+      "B": "right",
+      "Band": "rear"
+    },
+    {
+      "Key": "51C",
+      "Handle": "51C",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "51D",
+      "Handle": "51D",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "51E",
+      "Handle": "51E",
+      "Type": "LWPOLYLINE",
+      "Layer": "step&guides",
+      "Role": "cwOutline"
+    },
+    {
+      "Key": "51F",
+      "Handle": "51F",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "wall"
+    },
+    {
+      "Key": "520",
+      "Handle": "520",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "wall"
+    },
+    {
+      "Key": "521",
+      "Handle": "521",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "522",
+      "Handle": "522",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "523",
+      "Handle": "523",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "524",
+      "Handle": "524",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "525",
+      "Handle": "525",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "526",
+      "Handle": "526",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "527",
+      "Handle": "527",
+      "Type": "LINE",
+      "Layer": "CL",
+      "Role": "mainCL"
+    },
+    {
+      "Key": "528",
+      "Handle": "528",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "529",
+      "Handle": "529",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "52A",
+      "Handle": "52A",
+      "Type": "LINE",
+      "Layer": "CL",
+      "Role": "carCL"
+    },
+    {
+      "Key": "52B",
+      "Handle": "52B",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "carMark"
+    },
+    {
+      "Key": "52C",
+      "Handle": "52C",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "carMark"
+    },
+    {
+      "Key": "52D",
+      "Handle": "52D",
+      "Type": "LWPOLYLINE",
+      "Layer": "DL",
+      "Role": "carMark"
+    },
+    {
+      "Key": "52E",
+      "Handle": "52E",
+      "Type": "MTEXT",
+      "Layer": "7",
+      "Role": "carMark"
+    },
+    {
+      "Key": "52F",
+      "Handle": "52F",
+      "Type": "MTEXT",
+      "Layer": "7",
+      "Role": "carRight"
+    },
+    {
+      "Key": "530",
+      "Handle": "530",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "carMark"
+    },
+    {
+      "Key": "531",
+      "Handle": "531",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "532",
+      "Handle": "532",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "533",
+      "Handle": "533",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "534",
+      "Handle": "534",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "535",
+      "Handle": "535",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "536",
+      "Handle": "536",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "carSpan"
+    },
+    {
+      "Key": "537",
+      "Handle": "537",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "538",
+      "Handle": "538",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "539",
+      "Handle": "539",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53A",
+      "Handle": "53A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53B",
+      "Handle": "53B",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53C",
+      "Handle": "53C",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53D",
+      "Handle": "53D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53E",
+      "Handle": "53E",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "53F",
+      "Handle": "53F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "540",
+      "Handle": "540",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "541",
+      "Handle": "541",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "542",
+      "Handle": "542",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "543",
+      "Handle": "543",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "544",
+      "Handle": "544",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "545",
+      "Handle": "545",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "546",
+      "Handle": "546",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "547",
+      "Handle": "547",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "548",
+      "Handle": "548",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "549",
+      "Handle": "549",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54A",
+      "Handle": "54A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54B",
+      "Handle": "54B",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54C",
+      "Handle": "54C",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54D",
+      "Handle": "54D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54E",
+      "Handle": "54E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "54F",
+      "Handle": "54F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "550",
+      "Handle": "550",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "551",
+      "Handle": "551",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "552",
+      "Handle": "552",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "553",
+      "Handle": "553",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "554",
+      "Handle": "554",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "555",
+      "Handle": "555",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "556",
+      "Handle": "556",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "557",
+      "Handle": "557",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "558",
+      "Handle": "558",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "559",
+      "Handle": "559",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55A",
+      "Handle": "55A",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55B",
+      "Handle": "55B",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55C",
+      "Handle": "55C",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55D",
+      "Handle": "55D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55E",
+      "Handle": "55E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "55F",
+      "Handle": "55F",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "560",
+      "Handle": "560",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "561",
+      "Handle": "561",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "562",
+      "Handle": "562",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "563",
+      "Handle": "563",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "564",
+      "Handle": "564",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "565",
+      "Handle": "565",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "566",
+      "Handle": "566",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "567",
+      "Handle": "567",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "568",
+      "Handle": "568",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "569",
+      "Handle": "569",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56A",
+      "Handle": "56A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56B",
+      "Handle": "56B",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56C",
+      "Handle": "56C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56D",
+      "Handle": "56D",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56E",
+      "Handle": "56E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "56F",
+      "Handle": "56F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "570",
+      "Handle": "570",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "571",
+      "Handle": "571",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "572",
+      "Handle": "572",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "573",
+      "Handle": "573",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "574",
+      "Handle": "574",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "575",
+      "Handle": "575",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "576",
+      "Handle": "576",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "577",
+      "Handle": "577",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "578",
+      "Handle": "578",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "579",
+      "Handle": "579",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57A",
+      "Handle": "57A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57B",
+      "Handle": "57B",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57C",
+      "Handle": "57C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57D",
+      "Handle": "57D",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57E",
+      "Handle": "57E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "57F",
+      "Handle": "57F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "580",
+      "Handle": "580",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "581",
+      "Handle": "581",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "582",
+      "Handle": "582",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "583",
+      "Handle": "583",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "584",
+      "Handle": "584",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "585",
+      "Handle": "585",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "586",
+      "Handle": "586",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "587",
+      "Handle": "587",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "588",
+      "Handle": "588",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "589",
+      "Handle": "589",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58A",
+      "Handle": "58A",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58B",
+      "Handle": "58B",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58C",
+      "Handle": "58C",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58D",
+      "Handle": "58D",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58E",
+      "Handle": "58E",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "58F",
+      "Handle": "58F",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "590",
+      "Handle": "590",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "591",
+      "Handle": "591",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carSupportRight"
+    },
+    {
+      "Key": "592",
+      "Handle": "592",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "593",
+      "Handle": "593",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "594",
+      "Handle": "594",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carSupportRight"
+    },
+    {
+      "Key": "595",
+      "Handle": "595",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "596",
+      "Handle": "596",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "597",
+      "Handle": "597",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "598",
+      "Handle": "598",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "599",
+      "Handle": "599",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59A",
+      "Handle": "59A",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59B",
+      "Handle": "59B",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59C",
+      "Handle": "59C",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59D",
+      "Handle": "59D",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59E",
+      "Handle": "59E",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "59F",
+      "Handle": "59F",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A0",
+      "Handle": "5A0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A1",
+      "Handle": "5A1",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A2",
+      "Handle": "5A2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A3",
+      "Handle": "5A3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A4",
+      "Handle": "5A4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A5",
+      "Handle": "5A5",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A6",
+      "Handle": "5A6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A7",
+      "Handle": "5A7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A8",
+      "Handle": "5A8",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5A9",
+      "Handle": "5A9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AA",
+      "Handle": "5AA",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AB",
+      "Handle": "5AB",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AC",
+      "Handle": "5AC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AD",
+      "Handle": "5AD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AE",
+      "Handle": "5AE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5AF",
+      "Handle": "5AF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B0",
+      "Handle": "5B0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B1",
+      "Handle": "5B1",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B2",
+      "Handle": "5B2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B3",
+      "Handle": "5B3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B4",
+      "Handle": "5B4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B5",
+      "Handle": "5B5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B6",
+      "Handle": "5B6",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B7",
+      "Handle": "5B7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B8",
+      "Handle": "5B8",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5B9",
+      "Handle": "5B9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BA",
+      "Handle": "5BA",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BB",
+      "Handle": "5BB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BC",
+      "Handle": "5BC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BD",
+      "Handle": "5BD",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BE",
+      "Handle": "5BE",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5BF",
+      "Handle": "5BF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C0",
+      "Handle": "5C0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C1",
+      "Handle": "5C1",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C2",
+      "Handle": "5C2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C3",
+      "Handle": "5C3",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C4",
+      "Handle": "5C4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C5",
+      "Handle": "5C5",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C6",
+      "Handle": "5C6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C7",
+      "Handle": "5C7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C8",
+      "Handle": "5C8",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5C9",
+      "Handle": "5C9",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CA",
+      "Handle": "5CA",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CB",
+      "Handle": "5CB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CC",
+      "Handle": "5CC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CD",
+      "Handle": "5CD",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CE",
+      "Handle": "5CE",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5CF",
+      "Handle": "5CF",
+      "Type": "ARC",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D0",
+      "Handle": "5D0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D1",
+      "Handle": "5D1",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D2",
+      "Handle": "5D2",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D3",
+      "Handle": "5D3",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D4",
+      "Handle": "5D4",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D5",
+      "Handle": "5D5",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D6",
+      "Handle": "5D6",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D7",
+      "Handle": "5D7",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D8",
+      "Handle": "5D8",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5D9",
+      "Handle": "5D9",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DA",
+      "Handle": "5DA",
+      "Type": "ARC",
+      "Layer": "PDF_gide rail",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DB",
+      "Handle": "5DB",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DC",
+      "Handle": "5DC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DD",
+      "Handle": "5DD",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DE",
+      "Handle": "5DE",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5DF",
+      "Handle": "5DF",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E0",
+      "Handle": "5E0",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E1",
+      "Handle": "5E1",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E2",
+      "Handle": "5E2",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E3",
+      "Handle": "5E3",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E4",
+      "Handle": "5E4",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E5",
+      "Handle": "5E5",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E6",
+      "Handle": "5E6",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E7",
+      "Handle": "5E7",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E8",
+      "Handle": "5E8",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5E9",
+      "Handle": "5E9",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5EA",
+      "Handle": "5EA",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5EB",
+      "Handle": "5EB",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5EC",
+      "Handle": "5EC",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5ED",
+      "Handle": "5ED",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5EE",
+      "Handle": "5EE",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carSupportLeft"
+    },
+    {
+      "Key": "5EF",
+      "Handle": "5EF",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5F0",
+      "Handle": "5F0",
+      "Type": "LWPOLYLINE",
+      "Layer": "PDF_0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5F1",
+      "Handle": "5F1",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "carSupportLeft"
+    },
+    {
+      "Key": "5F2",
+      "Handle": "5F2",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "carLeft"
+    },
+    {
+      "Key": "5F3",
+      "Handle": "5F3",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "5F4",
+      "Handle": "5F4",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "cabin"
+    },
+    {
+      "Key": "5F5",
+      "Handle": "5F5",
+      "Type": "LINE",
+      "Layer": "DL",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5F6",
+      "Handle": "5F6",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5F7",
+      "Handle": "5F7",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5F8",
+      "Handle": "5F8",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5F9",
+      "Handle": "5F9",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5FA",
+      "Handle": "5FA",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5FB",
+      "Handle": "5FB",
+      "Type": "LINE",
+      "Layer": "step&guides",
+      "Role": "entrance"
+    },
+    {
+      "Key": "5FC",
+      "Handle": "5FC",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "5FD",
+      "Handle": "5FD",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "5FE",
+      "Handle": "5FE",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "5FF",
+      "Handle": "5FF",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "600",
+      "Handle": "600",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "601",
+      "Handle": "601",
+      "Type": "HATCH",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "602",
+      "Handle": "602",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "603",
+      "Handle": "603",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "604",
+      "Handle": "604",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "605",
+      "Handle": "605",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "606",
+      "Handle": "606",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "607",
+      "Handle": "607",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "608",
+      "Handle": "608",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "609",
+      "Handle": "609",
+      "Type": "LINE",
+      "Layer": "6",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "60A",
+      "Handle": "60A",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "60B",
+      "Handle": "60B",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "60C",
+      "Handle": "60C",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "60D",
+      "Handle": "60D",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "60E",
+      "Handle": "60E",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorSpan"
+    },
+    {
+      "Key": "60F",
+      "Handle": "60F",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "610",
+      "Handle": "610",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "611",
+      "Handle": "611",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "612",
+      "Handle": "612",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "center",
+      "Band": "front"
+    },
+    {
+      "Key": "615",
+      "Handle": "615",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "doorRight",
+      "Band": "front"
+    },
+    {
+      "Key": "618",
+      "Handle": "618",
+      "Type": "MULTILEADER",
+      "Layer": "CL",
+      "Role": "doorLeader"
+    },
+    {
+      "Key": "619",
+      "Handle": "619",
+      "Type": "LINE",
+      "Layer": "CL",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "61A",
+      "Handle": "61A",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "61B",
+      "Handle": "61B",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "doorRight",
+      "Band": "front"
+    },
+    {
+      "Key": "61C",
+      "Handle": "61C",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorRight"
+    },
+    {
+      "Key": "61D",
+      "Handle": "61D",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "doorLeft"
+    },
+    {
+      "Key": "61E",
+      "Handle": "61E",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "carLeft",
+      "B": "doorLeft",
+      "Band": "carFront"
+    },
+    {
+      "Key": "61F",
+      "Handle": "61F",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorLeft",
+      "B": "doorRight",
+      "Band": "carFront"
+    },
+    {
+      "Key": "620",
+      "Handle": "620",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorRight",
+      "B": "carRight",
+      "Band": "carFront"
+    },
+    {
+      "Key": "623",
+      "Handle": "623",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "doorRight",
+      "B": "right",
+      "Band": "front"
+    },
+    {
+      "Key": "624",
+      "Handle": "624",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "left",
+      "B": "doorLeft",
+      "Band": "front"
+    },
+    {
+      "Key": "625",
+      "Handle": "625",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "wall"
+    },
+    {
+      "Key": "626",
+      "Handle": "626",
+      "Type": "LWPOLYLINE",
+      "Layer": "Wall",
+      "Role": "wall"
+    },
+    {
+      "Key": "627",
+      "Handle": "627",
+      "Type": "LWPOLYLINE",
+      "Layer": "Wall",
+      "Role": "wall"
+    },
+    {
+      "Key": "628",
+      "Handle": "628",
+      "Type": "LWPOLYLINE",
+      "Layer": "Wall",
+      "Role": "wall"
+    },
+    {
+      "Key": "629",
+      "Handle": "629",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "left",
+      "Band": "front"
+    },
+    {
+      "Key": "62A",
+      "Handle": "62A",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "center",
+      "B": "right",
+      "Band": "front"
+    },
+    {
+      "Key": "62B",
+      "Handle": "62B",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "right",
+      "B": "left",
+      "Band": "front"
+    },
+    {
+      "Key": "62E",
+      "Handle": "62E",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRow",
+      "B": "rear",
+      "Band": "right"
+    },
+    {
+      "Key": "62F",
+      "Handle": "62F",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "wall"
+    },
+    {
+      "Key": "630",
+      "Handle": "630",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "front",
+      "Band": "right"
+    },
+    {
+      "Key": "631",
+      "Handle": "631",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "cwRow",
+      "Band": "right"
+    },
+    {
+      "Key": "633",
+      "Handle": "633",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "634",
+      "Handle": "634",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "carRow",
+      "Band": "left"
+    },
+    {
+      "Key": "637",
+      "Handle": "637",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRow",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "638",
+      "Handle": "638",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRow",
+      "B": "rear",
+      "Band": "left"
+    },
+    {
+      "Key": "639",
+      "Handle": "639",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "railLeft",
+      "B": "railRight",
+      "Band": "carRow"
+    },
+    {
+      "Key": "63C",
+      "Handle": "63C",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "x",
+      "A": "carLeft",
+      "B": "carRight",
+      "Band": "carRear"
+    },
+    {
+      "Key": "63F",
+      "Handle": "63F",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "640",
+      "Handle": "640",
+      "Type": "SPLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "641",
+      "Handle": "641",
+      "Type": "SPLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "642",
+      "Handle": "642",
+      "Type": "SPLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "643",
+      "Handle": "643",
+      "Type": "SPLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "644",
+      "Handle": "644",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "645",
+      "Handle": "645",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "646",
+      "Handle": "646",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "647",
+      "Handle": "647",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "648",
+      "Handle": "648",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "649",
+      "Handle": "649",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64A",
+      "Handle": "64A",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64B",
+      "Handle": "64B",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64C",
+      "Handle": "64C",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64D",
+      "Handle": "64D",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64E",
+      "Handle": "64E",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "64F",
+      "Handle": "64F",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "650",
+      "Handle": "650",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "651",
+      "Handle": "651",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "652",
+      "Handle": "652",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "653",
+      "Handle": "653",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "654",
+      "Handle": "654",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "655",
+      "Handle": "655",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "656",
+      "Handle": "656",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "657",
+      "Handle": "657",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "658",
+      "Handle": "658",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "659",
+      "Handle": "659",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65A",
+      "Handle": "65A",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65B",
+      "Handle": "65B",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65C",
+      "Handle": "65C",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65D",
+      "Handle": "65D",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65E",
+      "Handle": "65E",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "65F",
+      "Handle": "65F",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "660",
+      "Handle": "660",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "661",
+      "Handle": "661",
+      "Type": "LINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "662",
+      "Handle": "662",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "663",
+      "Handle": "663",
+      "Type": "MTEXT",
+      "Layer": "7",
+      "Role": "governor"
+    },
+    {
+      "Key": "664",
+      "Handle": "664",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "665",
+      "Handle": "665",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "666",
+      "Handle": "666",
+      "Type": "HATCH",
+      "Layer": "Car",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "667",
+      "Handle": "667",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "668",
+      "Handle": "668",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "669",
+      "Handle": "669",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "66A",
+      "Handle": "66A",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "centerFront"
+    },
+    {
+      "Key": "66B",
+      "Handle": "66B",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "66C",
+      "Handle": "66C",
+      "Type": "HATCH",
+      "Layer": "Car",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "66D",
+      "Handle": "66D",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "66E",
+      "Handle": "66E",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "66F",
+      "Handle": "66F",
+      "Type": "LINE",
+      "Layer": "Car",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "670",
+      "Handle": "670",
+      "Type": "MTEXT",
+      "Layer": "0",
+      "Role": "centerRear"
+    },
+    {
+      "Key": "671",
+      "Handle": "671",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "front",
+      "B": "rear",
+      "Band": "right"
+    },
+    {
+      "Key": "672",
+      "Handle": "672",
+      "Type": "SPLINE",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "673",
+      "Handle": "673",
+      "Type": "MULTILEADER",
+      "Layer": "0",
+      "Role": "carRight"
+    },
+    {
+      "Key": "674",
+      "Handle": "674",
+      "Type": "MULTILEADER",
+      "Layer": "0",
+      "Role": "governor"
+    },
+    {
+      "Key": "675",
+      "Handle": "675",
+      "Type": "LINE",
+      "Layer": "CL",
+      "Role": "cwCL"
+    },
+    {
+      "Key": "676",
+      "Handle": "676",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carRear",
+      "B": "cwRow",
+      "Band": "left"
+    },
+    {
+      "Key": "677",
+      "Handle": "677",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRear",
+      "B": "cwFront",
+      "Band": "left"
+    },
+    {
+      "Key": "67A",
+      "Handle": "67A",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwFront",
+      "B": "carRear",
+      "Band": "left"
+    },
+    {
+      "Key": "67D",
+      "Handle": "67D",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "cwRear",
+      "B": "rear",
+      "Band": "left"
+    },
+    {
+      "Key": "67E",
+      "Handle": "67E",
+      "Type": "MTEXT",
+      "Layer": "7",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "67F",
+      "Handle": "67F",
+      "Type": "MULTILEADER",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "680",
+      "Handle": "680",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "cwRight"
+    },
+    {
+      "Key": "681",
+      "Handle": "681",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "682",
+      "Handle": "682",
+      "Type": "LWPOLYLINE",
+      "Layer": "0",
+      "Role": "cwLeft"
+    },
+    {
+      "Key": "683",
+      "Handle": "683",
+      "Type": "DIMENSION",
+      "Layer": "0",
+      "Role": "dimension",
+      "Axis": "y",
+      "A": "carFront",
+      "B": "front",
+      "Band": "left"
+    }
+  ]
+}

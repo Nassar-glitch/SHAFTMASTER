@@ -1,0 +1,78 @@
+{
+  "Status": "PASS",
+  "VerifiedUtc": "2026-09-14T13:32:32.1690299Z",
+  "NativeRecords": 105,
+  "PureAssertions": 190,
+  "Reports": [
+    {
+      "Report": "cad-test-results.json",
+      "Passed": 17,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T12:59:31.9172433Z"
+    },
+    {
+      "Report": "architecture-results.json",
+      "Passed": 14,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T12:59:33.2639070Z"
+    },
+    {
+      "Report": "workflow-results.json",
+      "Passed": 1,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T12:59:34.6151805Z"
+    },
+    {
+      "Report": "plan-results.json",
+      "Passed": 7,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T12:59:36.0636626Z"
+    },
+    {
+      "Report": "machine-room-results.json",
+      "Passed": 32,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T13:20:02.9292441Z"
+    },
+    {
+      "Report": "section-results.json",
+      "Passed": 32,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T13:31:34.8389633Z"
+    },
+    {
+      "Report": "section-reopen-results.json",
+      "Passed": 2,
+      "Failed": 0,
+      "LastWriteTimeUtc": "2026-09-14T13:31:39.0287410Z"
+    }
+  ],
+  "OriginalDrawings": [
+    {
+      "Path": "D:\\CAD DATA---------------------\\DWGs\\2026\\dwg plan codex\\Machine room codex.dwg",
+      "SHA256": "288E4F513A7B3350F6E2DD390E753E3200B7A46B52401FFC1BDAB42F8A643675",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\CAD DATA---------------------\\DWGs\\2026\\dwg plan codex\\ElevatorPlanGenerator\\templates\\plan codex.dwg",
+      "SHA256": "5F2CE6B190811338D1E446EEEAC9F17E0EE3B6A8DF563654EB98F324B4649447",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\CAD DATA---------------------\\DWGs\\2026\\dwg plan codex\\Vert MR and Reeving codex.dwg",
+      "SHA256": "B57E042BE9E36DB3F61471923035E00FCAB66E014FD019D40342020E1584D0BC",
+      "Unchanged": true
+    },
+    {
+      "Path": "D:\\CAD DATA---------------------\\DWGs\\2026\\dwg plan codex\\plan codex.dwg",
+      "SHA256": "DA5449721797C26D3D0CDE3836AA9F5FD76CA2F49D6B1AE83C6DC23F17578C9A",
+      "Unchanged": true
+    }
+  ],
+  "DLL": {
+    "Algorithm": "SHA256",
+    "Hash": "85F00131ECEAA82ACBB1A204DBA0302B88AB6036E4017672950AEB9B57B123F4",
+    "Path": "D:\\CAD DATA---------------------\\DWGs\\2026\\dwg plan codex\\ElevatorAutomation\\bin-section\\Elevator.AutoCAD.dll"
+  },
+  "Scope": "Scoped CAD geometry regression; engineering clearances, hanger mechanics, structural adequacy and full traction compliance remain separately reviewable."
+}

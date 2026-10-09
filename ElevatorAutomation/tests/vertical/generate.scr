@@ -1,0 +1,9 @@
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"{ROOT}/bin-vertical-experiment/Elevator.AutoCAD.dll"
+_.NETLOAD
+"{ROOT}/bin-vertical-experiment/Elevator.Vertical.Tests.dll"
+VERTICALTESTGENERATE
+_.QUIT
+_Y
+

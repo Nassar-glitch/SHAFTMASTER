@@ -1,0 +1,40 @@
+# Build outputs
+bin/
+obj/
+bin-*/
+.vs/
+*.user
+*.suo
+packages/
+
+# Generated outputs (regenerable, ~1.8 GB)
+ElevatorAutomation/output/
+
+# AutoCAD temp / backup / log files
+*.bak
+*.dwl
+*.dwl2
+*.err
+*.log
+*.pid
+plot.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Office lock files
+~$*
+
+# Local reference material kept outside the repository: copyrighted standards, renders and text of
+# standard pages and third-party notes, DWG inspection data. Tests that need them skip when absent.
+ElevatorAutomation/Standards/
+ElevatorAutomation/tests/machine-room/en-page-*.png
+ElevatorAutomation/tests/machine-room/standard.txt
+review_internal/
+.audit_independent/
+.dwg-inspection/
+
+# Root project drawings (local originals) and AutoCAD error file
+/*.dwg
+acad.err

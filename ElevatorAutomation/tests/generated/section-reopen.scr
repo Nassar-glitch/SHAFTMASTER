@@ -1,0 +1,21 @@
+(setq secSecure (getvar "SECURELOAD"))
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/ElevatorAutomation/bin-section/Elevator.AutoCAD.dll"
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/ElevatorAutomation/bin-section/Elevator.Automation.Tests.dll"
+(setvar "SECURELOAD" secSecure)
+SECTIONTESTREOPEN
+ELEVATORTESTINPUT
+1450
+2300
+UPDATEALL
+SECTIONTESTCHECK
+ELEVATORTESTINPUT
+1450
+1600
+UPDATEALL
+SECTIONTESTCHECK
+_.QUIT
+_Y
+

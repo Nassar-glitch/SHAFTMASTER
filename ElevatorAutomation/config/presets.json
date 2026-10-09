@@ -1,0 +1,60 @@
+{
+  "Version": 1,
+  "Ropes": {
+    "Designation": "8×19 Seale FC 1370/1770",
+    "Table": [
+      { "DiameterMm": 6.5, "MinimumBreakingLoadKn": 18.5, "MassKgPerM": 0.144 },
+      { "DiameterMm": 8, "MinimumBreakingLoadKn": 28.1, "MassKgPerM": 0.218 },
+      { "DiameterMm": 10, "MinimumBreakingLoadKn": 44.0, "MassKgPerM": 0.340 },
+      { "DiameterMm": 11, "MinimumBreakingLoadKn": 53.2, "MassKgPerM": 0.411 },
+      { "DiameterMm": 12, "MinimumBreakingLoadKn": 63.3, "MassKgPerM": 0.490 }
+    ]
+  },
+  "Groove": { "Type": "UndercutU", "UndercutAngleDeg": 95, "GrooveAngleDeg": 30 },
+  "TravellingCableKgPerM": 0.5,
+  "BrakingRetardationMps2": 0.5,
+  "DeflectorMass": [
+    { "PitchDiameterMm": 400, "MassKg": 45 },
+    { "PitchDiameterMm": 520, "MassKg": 70 },
+    { "PitchDiameterMm": 620, "MassKg": 95 }
+  ],
+  "TractionLimitingMethod": "RopesSlip",
+  "NewProject": { "ShaftWidthMm": 1500, "ShaftDepthMm": 1800, "PitDepthMm": 1300, "OverheadMm": 4200, "Stops": 5, "FloorHeightMm": 3000, "CapacityKg": 630, "SpeedMps": 1.0 },
+  "PersonMassKg": 75,
+  "CapacityTable": [
+    { "CapacityKg": 320, "CarMassKg": 450, "MachineMassKg": 250 },
+    { "CapacityKg": 480, "CarMassKg": 550, "MachineMassKg": 300 },
+    { "CapacityKg": 630, "CarMassKg": 700, "MachineMassKg": 350 },
+    { "CapacityKg": 800, "CarMassKg": 850, "MachineMassKg": 400 },
+    { "CapacityKg": 1000, "CarMassKg": 1100, "MachineMassKg": 450 },
+    { "CapacityKg": 1275, "CarMassKg": 1350, "MachineMassKg": 550 },
+    { "CapacityKg": 1600, "CarMassKg": 1650, "MachineMassKg": 650 }
+  ],
+  "CounterweightBalanceFactor": 0.5,
+  "BalanceFactorSteps": [ 0.5, 0.45 ],
+  "RopeLadder": [
+    { "MaxCapacityKg": 480, "RopeCount": 4, "DiameterMm": 10 },
+    { "MaxCapacityKg": 800, "RopeCount": 5, "DiameterMm": 11 },
+    { "MaxCapacityKg": 1275, "RopeCount": 6, "DiameterMm": 12 },
+    { "MaxCapacityKg": null, "RopeCount": 7, "DiameterMm": 12 }
+  ],
+  "MaximumRopeCount": 7,
+  "TractionSheavePitchDiameterMm": 520,
+  "TractionSheavePitchSteps": [ 520, 560, 620 ],
+  "UndercutAngleStepsDeg": [ 95, 100, 105 ],
+  "GuideShoeSpacingMm": 2800,
+  "SafetyGear": { "ProgressiveAboveSpeedMps": 0.63, "CarGuideCount": 2 },
+  "Buffers": { "EnergyAccumulationUpToSpeedMps": 1.0, "CarCount": 1, "CounterweightCount": 1, "Sharing": "EqualSharing" },
+  "BracketMaximumSpacingMm": 1500,
+  "Advanced": {
+    "LoadCase": "StaticRatedLoad1To1",
+    "TransferModel": "ReleasedTwoStageWithRigidSpreader-v1",
+    "MachineCgOffsetXMm": 0, "MachineCgOffsetYMm": 0, "MachineCgOffsetZMm": 0,
+    "HangerAttachmentOffsetXMm": 0, "HangerAttachmentOffsetYMm": 0,
+    "AdditionalMassKg": 0,
+    "MachineCgBasis": "Traction sheave centre",
+    "TransferBasis": "Released two-stage beams with rigid spreader",
+    "HangerAttachmentBasis": "Deflector centre",
+    "ExcludedWeightBasis": "Not included"
+  }
+}

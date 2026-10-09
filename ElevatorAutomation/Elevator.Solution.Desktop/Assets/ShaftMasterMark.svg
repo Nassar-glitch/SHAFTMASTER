@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 180">
+ <g fill="none" stroke="#073365" stroke-width="6" stroke-linejoin="miter">
+  <path d="M16 29 64 5 112 29V151L64 175 16 151Z M64 5V175 M16 29 64 53 112 29 M16 151 64 127 112 151"/>
+  <path d="M55 23V139 M73 23V139" stroke-width="3"/>
+ </g>
+ <path fill="#073365" d="M30 42 53 54V71L30 59V80L53 92V110L24 95V41Z M75 56 102 43V64L86 72V115L75 121Z"/>
+ <path fill="#073365" d="M39 104 62 116V147L39 135Z"/>
+ <path fill="#009EF2" d="M67 116 90 104V135L67 147Z"/>
+</svg>

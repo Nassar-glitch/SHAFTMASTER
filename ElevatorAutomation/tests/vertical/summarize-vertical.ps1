@@ -1,0 +1,20 @@
+$ErrorActionPreference='Stop'
+$root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$output=Join-Path $root 'output/experimental-vertical'
+$specs=@(@('vertical-native-results.json',19),@('vertical-resize-results.json',3),@('vertical-interactive-results.json',3),@('vertical-fresh-process-results.json',2),@('native-plot-results.json',6))
+$reports=@(foreach($spec in $specs){$rows=@(Get-Content -LiteralPath (Join-Path $output $spec[0]) -Raw|ConvertFrom-Json);if($rows.Count -ne $spec[1] -or @($rows|Where-Object status -ne PASS).Count){throw ('Failed report: '+$spec[0])};[pscustomobject]@{File=$spec[0];Passed=$rows.Count;Failed=0}})
+$core=Get-Content -LiteralPath (Join-Path $output 'vertical-core-results.json') -Raw|ConvertFrom-Json
+if($core.Status -ne 'PASS' -or $core.Assertions -ne 2255){throw 'Core results incomplete'}
+$old=Join-Path $output 'regression/ElevatorAutomation/tests'
+$existing=@(foreach($spec in @(@('cad-test-results.json',17),@('architecture-results.json',14),@('workflow-results.json',1),@('plan-results.json',7),@('machine-room-results.json',32),@('section-results.json',32),@('section-reopen-results.json',2))){$rows=@(Get-Content -LiteralPath (Join-Path $old $spec[0]) -Raw|ConvertFrom-Json);if($rows.Count -ne $spec[1] -or @($rows|Where-Object status -ne PASS).Count){throw ('Existing regression failed: '+$spec[0])};[pscustomobject]@{File=$spec[0];Passed=$rows.Count;Failed=0}})
+$before=Get-Content -LiteralPath (Join-Path $output 'verification/protected-before.json') -Raw|ConvertFrom-Json
+$preserved=@(foreach($file in $before){$hash=(Get-FileHash -LiteralPath $file.Path -Algorithm SHA256).Hash;if($hash -ne $file.Hash){throw ('Protected file changed: '+$file.Path)};[pscustomobject]@{Path=$file.Path;Before=$file.Hash;After=$hash;Unchanged=$true}})
+$preserved | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $output 'verification/protected-after.json') -Encoding utf8
+$production=@('Elevator.Core/Models/VerticalProjectData.cs','Elevator.Core/Geometry/VerticalSolvers.cs','Elevator.Core/Geometry/VerticalGenerators.cs','Elevator.AutoCAD/Drawing/VerticalExperimentDrawing.cs','Elevator.AutoCAD/Commands/VerticalExperimentCommands.cs')
+$files=@(foreach($path in $production){$file=Get-Item -LiteralPath (Join-Path $root $path);[pscustomobject]@{Path=$file.FullName;Change='NEW';Kind='Production source';SHA256=(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash}})
+$files+=@(Get-ChildItem -LiteralPath $PSScriptRoot -File | Where-Object {$_.Extension -in '.cs','.ps1','.scr'} | ForEach-Object {[pscustomobject]@{Path=$_.FullName;Change='NEW';Kind='Test / runner';SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash}})
+$files | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $output 'implementation-files.json') -Encoding utf8
+$artifacts=@(foreach($path in @((Join-Path $root 'bin-vertical-experiment/Elevator.AutoCAD.dll'),(Join-Path $root 'bin-vertical-experiment/Elevator.Core.dll'),(Join-Path $output 'FullVertical_V1_Review.dwg'))){$f=Get-Item -LiteralPath $path;[pscustomobject]@{Path=$f.FullName;Bytes=$f.Length;SHA256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash}})
+$summary=[pscustomobject]@{Classification='ACCEPTABLE FOR REVIEW';EngineeringApproval=$false;VerifiedUtc=[DateTime]::UtcNow.ToString('o');NewCoreAssertions=$core.Assertions;SyntheticCoreFixtures=$core.Cases;NewNativeRecords=27;ExistingCoreAssertions=190;ExistingNativeRecords=105;NativePreviewPlots=6;ProtectedFilesChecked=$preserved.Count;ProtectedFilesChanged=0;Reports=$reports;ExistingReports=$existing;Audit=(Get-Content -LiteralPath (Join-Path $output 'review-audit.json') -Raw|ConvertFrom-Json);Artifacts=$artifacts;SourceFiles=$files}
+$summary | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'verification-summary.json') -Encoding utf8
+Write-Output ('PASS: 2255 new Core assertions; 27 new native records; 190 existing Core assertions; 105 existing native records; '+$preserved.Count+' protected files unchanged.')

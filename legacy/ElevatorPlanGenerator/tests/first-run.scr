@@ -1,0 +1,10 @@
+(setq elevatorSecure (getvar "SECURELOAD"))
+(setvar "SECURELOAD" 0)
+_.NETLOAD
+"D:/CAD DATA---------------------/DWGs/2026/dwg plan codex/legacy/ElevatorPlanGenerator/bin/ElevatorPlanGenerator.dll"
+(setvar "SECURELOAD" elevatorSecure)
+ELEVATORUPDATE
+1450
+1600
+_.QUIT
+_Y

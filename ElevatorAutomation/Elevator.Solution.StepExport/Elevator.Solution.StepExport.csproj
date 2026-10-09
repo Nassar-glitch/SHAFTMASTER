@@ -1,0 +1,9 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <PropertyGroup><Configuration Condition="'$(Configuration)'==''">Release</Configuration><ProjectGuid>{15C80021-B101-490A-9B21-4AA645800104}</ProjectGuid><OutputType>Exe</OutputType><AssemblyName>Elevator.Solution.StepExport</AssemblyName><TargetFrameworkVersion>v4.8</TargetFrameworkVersion><PlatformTarget>x64</PlatformTarget><OutputPath>..\bin-solution-v01\</OutputPath><SolidWorksDirectory Condition="'$(SolidWorksDirectory)'==''">$(ProgramW6432)\SOLIDWORKS Corp\SOLIDWORKS</SolidWorksDirectory></PropertyGroup>
+ <ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Web.Extensions"/>
+ <Reference Include="SolidWorks.Interop.sldworks"><HintPath>$(SolidWorksDirectory)\SolidWorks.Interop.sldworks.dll</HintPath><Private>True</Private><EmbedInteropTypes>False</EmbedInteropTypes></Reference>
+ <Reference Include="SolidWorks.Interop.swconst"><HintPath>$(SolidWorksDirectory)\SolidWorks.Interop.swconst.dll</HintPath><Private>True</Private><EmbedInteropTypes>False</EmbedInteropTypes></Reference>
+ <ProjectReference Include="..\Elevator.Solution.Bridge\Elevator.Solution.Bridge.csproj"><Project>{15C80021-B101-490A-9B21-4AA645800101}</Project><Name>Elevator.Solution.Bridge</Name></ProjectReference>
+ <Compile Include="BuildModel.cs"/></ItemGroup>
+ <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+</Project>

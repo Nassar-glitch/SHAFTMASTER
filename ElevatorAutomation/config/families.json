@@ -1,0 +1,42 @@
+[
+  {
+    "ElevatorType": 0,
+    "TemplateId": "existing-plan-v1",
+    "TemplateFile": "ExistingPlan_Master.dwg",
+    "ProfileFile": "equipment-profile.json",
+    "Enabled": true,
+    "Status": "Validated existing plan"
+  },
+  {
+    "ElevatorType": 1,
+    "TemplateId": "hydraulic-v1",
+    "TemplateFile": "Hydraulic_Master.dwg",
+    "ProfileFile": null,
+    "Enabled": false,
+    "Status": "Pending supplied family geometry and validated profile"
+  },
+  {
+    "ElevatorType": 2,
+    "TemplateId": "mrl_gearless-v1",
+    "TemplateFile": "MRL_Gearless_Master.dwg",
+    "ProfileFile": null,
+    "Enabled": false,
+    "Status": "Pending supplied family geometry and validated profile"
+  },
+  {
+    "ElevatorType": 3,
+    "TemplateId": "gearbox-v1",
+    "TemplateFile": "Gearbox_Master.dwg",
+    "ProfileFile": null,
+    "Enabled": false,
+    "Status": "Pending supplied family geometry and validated profile"
+  },
+  {
+    "ElevatorType": 4,
+    "TemplateId": "homelift-v1",
+    "TemplateFile": "HomeLift_Master.dwg",
+    "ProfileFile": null,
+    "Enabled": false,
+    "Status": "Pending supplied family geometry and validated profile"
+  }
+]
