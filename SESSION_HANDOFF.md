@@ -12,9 +12,9 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P3 "Reporting extraction" on branch `refactor/p3-reporting` (not merged, not pushed). P2 was merged into `main` first (`a1fff15`, tier 1 PASS on the branch) and the Planner section 4a committed (`f94d4d5`). Report code is now the internal DLL Elevator.Reporting (netstandard2.0, net48) next to ShaftMaster.exe; no user-visible change; golden files unchanged; tiers 1, 2 and 3 PASS; release hashes unchanged.
-- **Goal:** P3: move the non-WPF report code from Desktop into Elevator.Reporting, keep WPF parts in Desktop, add DOCX content tests without Word.
-- **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P3)
+- **Status:** In progress (2026-10-09): P3 merged into `main` (`723f32d`, tier 1 PASS on the branch, 552 s; not pushed). Now ARCHITECTURE-PLAN phase P4 "Desktop structure" and a clean-up on branch `refactor/p4-desktop`.
+- **Goal:** P4: UI-free application services into Elevator.Core.Application, split MainWindow into a shell and page views with small view-models, a test-automation facade for the UI tests, xUnit for the services; then the clean-up (dead code, obsolete scripts and docs, a disk clean-up proposal).
+- **Last updated:** 2026-10-09 (Claude Code, Executor role; P3 merge, P4 started)
 - **Completed:**
   - ARCHITECTURE-PLAN P3 "Reporting extraction" (2026-10-09), branch `refactor/p3-reporting` from `main` `b35d087`:
     - **Commits:** `60445b0` move the report code into Elevator.Reporting (and runners / tests); `731ebf9` Elevator.Reporting.Tests, tier 1 and CI; `7504b71` docs; plus this handoff commit.
@@ -986,6 +986,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-09: Executor merged P3 into main (`723f32d`; tier 1 PASS on the branch, 552 s). Not pushed. P4 and the clean-up started on `refactor/p4-desktop`.
 - 2026-10-09: Executor merged P2 into main (`a1fff15`), committed Planner section 4a (`f94d4d5`) and completed P3 on branch `refactor/p3-reporting` (not merged, not pushed): report code in the internal DLL Elevator.Reporting (netstandard2.0, net48), WPF rasterizer in Desktop, Elevator.Reporting.Tests 145 / 145, presets xUnit on net8.0. Golden unchanged; tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor merged P1 into main (`01ecbe4`) and completed P2 on branch `refactor/p2-portable-core` (not merged, not pushed): Core netstandard2.0 / net48, CoreJson serializer abstraction (JavaScriptSerializer kept on .NET Framework; the compatible serializer is not a default on netstandard: 157 of 199,955 doubles differ in digit count), xUnit Core tests (net8.0 40, net48 161), CI workflow. Tiers 1-3 PASS. Awaiting Planner.
 - 2026-10-09: Executor closed P0 (merged into main `ac9fdcc`, Planner files `ee898b6`) and completed P1 on branch `refactor/p1-build` (not merged, not pushed): SDK-style projects, Directory.Build.props, one solution, tools/build.ps1; same 26-file output; tiers 1-3 PASS. Awaiting Planner.
