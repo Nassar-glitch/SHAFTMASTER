@@ -51,20 +51,7 @@ namespace Elevator.AutoCAD.MachineRoom
                 {
                     if (b.Key == "MachineRoom.Governor.OffsetDimension")
                     {
-                        var ga = s.Frame.Local(dim.XLine1Point);
-                        var gc = s.Frame.Local(dim.XLine2Point);
-                        double dy = design.CarRow - s.CarRow;
-                        bool firstHigher = ga.Y > gc.Y;
-                        double lower =
-                            design.MachineRoom.Governor.OffsetFromCarGuideAxisMm.HasValue ? design.CarRow : Math.Min(ga.Y, gc.Y) + dy;
-                        double span = design.MachineRoom.Governor.OffsetFromCarGuideAxisMm ?? s.GovernorOffset;
-                        dim.XLine1Point = s.Frame.World(new Point3d(ga.X, lower + (firstHigher ? span : 0), ga.Z));
-                        dim.XLine2Point = s.Frame.World(new Point3d(gc.X, lower + (firstHigher ? 0 : span), gc.Z));
-                        double midDelta = lower + span / 2 - (ga.Y + gc.Y) / 2;
-                        dim.DimLinePoint += s.Frame.Vector(0, midDelta);
-                        dim.TextPosition += s.Frame.Vector(0, midDelta);
-                        dim.RecomputeDimensionBlock(true);
-                        expected[b.Key] = span;
+                        UpdateGovernorDimension(design, s, expected, b, dim);
                         continue;
                     }
                     var a = Map(dim.XLine1Point, s, g, b.Role);
@@ -78,25 +65,7 @@ namespace Elevator.AutoCAD.MachineRoom
                 }
                 else if (g.Flexible(b.Role))
                 {
-                    var line = e as Line;
-                    var poly = e as Polyline;
-                    if (line != null)
-                    {
-                        var a = Map(line.StartPoint, s, g, b.Role);
-                        var c = Map(line.EndPoint, s, g, b.Role);
-                        line.StartPoint = a;
-                        line.EndPoint = c;
-                    }
-                    else if (poly != null)
-                    {
-                        if ((poly.Normal - Vector3d.ZAxis).Length > 1e-6)
-                            throw new InvalidOperationException("MachineRoom polyline plane changed: " + b.Key);
-                        var pts = Enumerable.Range(0, poly.NumberOfVertices).Select(i => Map(poly.GetPoint3dAt(i), s, g, b.Role)).ToArray();
-                        for (int i = 0; i < pts.Length; i++)
-                            poly.SetPointAt(i, new Point2d(pts[i].X, pts[i].Y));
-                    }
-                    else
-                        throw new InvalidOperationException("Unsupported flexible machine-room detail: " + b.Key);
+                    MapFlexibleDetail(s, g, b, e);
                 }
                 else
                 {
@@ -134,6 +103,52 @@ namespace Elevator.AutoCAD.MachineRoom
                 Clearances = new Dictionary<string, double>(),
                 Annotations = new Dictionary<string, string>()
             };
+        }
+
+        private void UpdateGovernorDimension(
+            ElevatorParameters design,
+            MachineRoomSnapshot s,
+            Dictionary<string, double> expected,
+            MachineRoomBinding b,
+            RotatedDimension dim)
+        {
+            var ga = s.Frame.Local(dim.XLine1Point);
+            var gc = s.Frame.Local(dim.XLine2Point);
+            double dy = design.CarRow - s.CarRow;
+            bool firstHigher = ga.Y > gc.Y;
+            double lower =
+                design.MachineRoom.Governor.OffsetFromCarGuideAxisMm.HasValue ? design.CarRow : Math.Min(ga.Y, gc.Y) + dy;
+            double span = design.MachineRoom.Governor.OffsetFromCarGuideAxisMm ?? s.GovernorOffset;
+            dim.XLine1Point = s.Frame.World(new Point3d(ga.X, lower + (firstHigher ? span : 0), ga.Z));
+            dim.XLine2Point = s.Frame.World(new Point3d(gc.X, lower + (firstHigher ? 0 : span), gc.Z));
+            double midDelta = lower + span / 2 - (ga.Y + gc.Y) / 2;
+            dim.DimLinePoint += s.Frame.Vector(0, midDelta);
+            dim.TextPosition += s.Frame.Vector(0, midDelta);
+            dim.RecomputeDimensionBlock(true);
+            expected[b.Key] = span;
+        }
+
+        private void MapFlexibleDetail(MachineRoomSnapshot s, MachineRoomGeometry g, MachineRoomBinding b, Entity e)
+        {
+            var line = e as Line;
+            var poly = e as Polyline;
+            if (line != null)
+            {
+                var a = Map(line.StartPoint, s, g, b.Role);
+                var c = Map(line.EndPoint, s, g, b.Role);
+                line.StartPoint = a;
+                line.EndPoint = c;
+            }
+            else if (poly != null)
+            {
+                if ((poly.Normal - Vector3d.ZAxis).Length > 1e-6)
+                    throw new InvalidOperationException("MachineRoom polyline plane changed: " + b.Key);
+                var pts = Enumerable.Range(0, poly.NumberOfVertices).Select(i => Map(poly.GetPoint3dAt(i), s, g, b.Role)).ToArray();
+                for (int i = 0; i < pts.Length; i++)
+                    poly.SetPointAt(i, new Point2d(pts[i].X, pts[i].Y));
+            }
+            else
+                throw new InvalidOperationException("Unsupported flexible machine-room detail: " + b.Key);
         }
 
         public static void Validate(MachineRoomSnapshot s, ElevatorParameters design)

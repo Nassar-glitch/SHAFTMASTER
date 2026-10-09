@@ -46,137 +46,20 @@ namespace Elevator.AutoCAD.SectionBB
                 }
                 if (b.Role == "status")
                 {
-                    var note = (MText)e;
-                    note.Location = World(s, new LocalPoint(400, p.TractionZ + 260, 0));
-                    note.Contents = "SECTION B-B\\P"
-                        + p.Beam.SectionDesignation
-                        + " - nominal depth envelope\\PBeam: "
-                        + p.Beam.StructuralStatus
-                        + "\\PConcrete: NOT EVALUATED\\PLayout: "
-                        + p.LayoutStatus
-                        + "\\PReeving: "
-                        + p.ReevingGeometryStatus
-                        + "\\PWrap: "
-                        + (p.HasCalculatedPath
-                            ? p.Arrangement.Reeving.CalculatedWrapAngleDeg.Value.ToString("0.###") + " deg / target >=152"
-                            : "NOT YET EVALUABLE")
-                        + "\\PD/d: "
-                        + design.MachineRoom.CodeDiameterRatioStatus
-                        + "\\PSlab clearance: "
-                        + (p.Arrangement.DeflectorToSlabClearanceMm.HasValue
-                            ? p.Arrangement.DeflectorToSlabClearanceMm.Value.ToString("0.###") + " mm"
-                            : "unknown")
-                        + " - "
-                        + p.Arrangement.DeflectorSlabClearanceStatus
-                        + "\\PHanger: MECHANICAL REVIEW REQUIRED\\PRope/structure clearance: NOT YET EVALUABLE\\P"
-                        + p.OpeningStatus;
+                    UpdateStatusNote(design, s, p, e);
                     continue;
                 }
                 if (b.Role == "rope")
                 {
-                    var line = (Line)e;
-                    line.Visible = p.HasCalculatedPath;
-                    line.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1);
-                    line.Linetype = "Continuous";
-                    line.LineWeight = LineWeight.LineWeight030;
-                    if (p.HasCalculatedPath)
-                    {
-                        LocalPoint a, c;
-                        if (b.Key.EndsWith("CommonTangent"))
-                        {
-                            a = p.Arrangement.Reeving.TractionTangentPoint;
-                            c = p.Arrangement.Reeving.DeflectorTangentPoint;
-                        }
-                        else
-                        {
-                            double x = b.Key.EndsWith("CarDrop") ? p.CarDropX : p.CwDropX;
-                            double z = b.Key.EndsWith("CarDrop") ? p.TractionZ : p.DeflectorZ;
-                            a = new LocalPoint(x, b.SourcePoints.Min(v => v.Y), 0);
-                            c = new LocalPoint(x, z, 0);
-                        }
-                        line.StartPoint = World(s, a);
-                        line.EndPoint = World(s, c);
-                    }
+                    UpdateRope(s, p, b, e);
                     continue;
                 }
                 if (b.Role == "generatedRope")
                 {
-                    var arc = (Arc)e;
-                    bool traction = b.Key.EndsWith("TractionWrap");
-                    double beta = p.HasCalculatedPath ? p.Arrangement.Reeving.CalculatedWrapAngleDeg.Value * Math.PI / 180 : 0;
-                    arc.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1);
-                    arc.Linetype = "Continuous";
-                    arc.LineWeight = LineWeight.LineWeight030;
-                    arc.Visible = p.HasCalculatedPath && (traction || Math.Abs(beta - Math.PI) > 1e-8);
-                    if (arc.Visible)
-                    {
-                        arc.Center = World(
-                            s,
-                            traction ? new LocalPoint(p.TractionX, p.TractionZ, 0) : new LocalPoint(p.DeflectorX, p.DeflectorZ, 0));
-                        arc.Radius = traction ? 260 : p.DeflectorPitchMm / 2;
-                        double angle = Math.Atan2(s.Frame.XAxis.Y, s.Frame.XAxis.X);
-                        arc.StartAngle = angle + (traction ? 0 : beta);
-                        arc.EndAngle = angle + (traction ? beta : Math.PI);
-                    }
+                    UpdateWrapArc(s, p, b, e);
                     continue;
                 }
-                e.Visible = b.Visible;
-                if (b.Role == "deflector" || b.Role == "hanger")
-                    e.Visible = p.DeflectorVisible && b.Visible;
-                if (b.Role == "steelDetail" && p.Beam.NominalDepthMm != 140)
-                    e.Visible = false;
-                var poly = e as Polyline;
-                var nativeLine = e as Line;
-                var hatch = e as Hatch;
-                if (g.Flexible(b.Role) && (poly != null || nativeLine != null))
-                {
-                    var mapped = b.SourcePoints.Select(v => World(s, g.Map(v, b.Role))).ToArray();
-                    if (poly != null)
-                    {
-                        if (poly.NumberOfVertices != mapped.Length)
-                            throw new InvalidOperationException("Section topology changed: " + b.Key);
-                        for (int i = 0; i < mapped.Length; i++)
-                            poly.SetPointAt(i, new Point2d(mapped[i].X, mapped[i].Y));
-                    }
-                    else
-                    {
-                        nativeLine.StartPoint = mapped[0];
-                        nativeLine.EndPoint = mapped[1];
-                    }
-                }
-                else if (hatch != null && (b.Role == "slab" || b.Role == "concrete"))
-                {
-                    var corners = new[]
-                    {
-                        new LocalPoint(b.Bounds[0], b.Bounds[1], 0),
-                        new LocalPoint(b.Bounds[2], b.Bounds[1], 0),
-                        new LocalPoint(b.Bounds[2], b.Bounds[3], 0),
-                        new LocalPoint(b.Bounds[0], b.Bounds[3], 0)
-                    };
-                    hatch.Associative = false;
-                    while (hatch.NumberOfLoops > 0)
-                        hatch.RemoveLoopAt(0);
-                    var vertices = new Point2dCollection();
-                    var bulges = new DoubleCollection();
-                    foreach (var v in corners)
-                    {
-                        var w = World(s, g.Map(v, b.Role));
-                        vertices.Add(new Point2d(w.X, w.Y));
-                        bulges.Add(0);
-                    }
-                    hatch.AppendLoop(HatchLoopTypes.External, vertices, bulges);
-                    hatch.EvaluateHatch(true);
-                }
-                else
-                {
-                    var target = g.Map(b.SourcePoints[0], b.Role);
-                    var actual = MachineRoomDependencies.Points(e, s.Frame)[0];
-                    e.TransformBy(Matrix3d.Displacement(s.Frame.Vector(target.X - actual.X, target.Y - actual.Y)));
-                }
-                if (b.Key == "MachineRoomSection.TractionSheave.PitchCircle")
-                    ((Circle)e).Radius = 260;
-                if (b.Key == "MachineRoomSection.DeflectorSheave.PitchCircle")
-                    ((Circle)e).Radius = p.DeflectorPitchMm / 2;
+                UpdateNativeEntity(s, p, g, b, e);
             }
             var audit =
                 MachineRoomSectionGeometryAudit.Run(MachineRoomSectionDrawing.Read(db, tr), design, MachineRoomDrawing.Read(db, tr));
@@ -188,6 +71,148 @@ namespace Elevator.AutoCAD.SectionBB
                 Annotations = new Dictionary<string, string>(),
                 Clearances = new Dictionary<string, double>()
             };
+        }
+
+        private void UpdateStatusNote(ElevatorParameters design, SectionSnapshot s, MachineRoomSectionParameters p, Entity e)
+        {
+            var note = (MText)e;
+            note.Location = World(s, new LocalPoint(400, p.TractionZ + 260, 0));
+            note.Contents = "SECTION B-B\\P"
+                + p.Beam.SectionDesignation
+                + " - nominal depth envelope\\PBeam: "
+                + p.Beam.StructuralStatus
+                + "\\PConcrete: NOT EVALUATED\\PLayout: "
+                + p.LayoutStatus
+                + "\\PReeving: "
+                + p.ReevingGeometryStatus
+                + "\\PWrap: "
+                + (p.HasCalculatedPath
+                    ? p.Arrangement.Reeving.CalculatedWrapAngleDeg.Value.ToString("0.###") + " deg / target >=152"
+                    : "NOT YET EVALUABLE")
+                + "\\PD/d: "
+                + design.MachineRoom.CodeDiameterRatioStatus
+                + "\\PSlab clearance: "
+                + (p.Arrangement.DeflectorToSlabClearanceMm.HasValue
+                    ? p.Arrangement.DeflectorToSlabClearanceMm.Value.ToString("0.###") + " mm"
+                    : "unknown")
+                + " - "
+                + p.Arrangement.DeflectorSlabClearanceStatus
+                + "\\PHanger: MECHANICAL REVIEW REQUIRED\\PRope/structure clearance: NOT YET EVALUABLE\\P"
+                + p.OpeningStatus;
+        }
+
+        private void UpdateRope(SectionSnapshot s, MachineRoomSectionParameters p, SectionBinding b, Entity e)
+        {
+            var line = (Line)e;
+            line.Visible = p.HasCalculatedPath;
+            line.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1);
+            line.Linetype = "Continuous";
+            line.LineWeight = LineWeight.LineWeight030;
+            if (p.HasCalculatedPath)
+            {
+                LocalPoint a, c;
+                if (b.Key.EndsWith("CommonTangent"))
+                {
+                    a = p.Arrangement.Reeving.TractionTangentPoint;
+                    c = p.Arrangement.Reeving.DeflectorTangentPoint;
+                }
+                else
+                {
+                    double x = b.Key.EndsWith("CarDrop") ? p.CarDropX : p.CwDropX;
+                    double z = b.Key.EndsWith("CarDrop") ? p.TractionZ : p.DeflectorZ;
+                    a = new LocalPoint(x, b.SourcePoints.Min(v => v.Y), 0);
+                    c = new LocalPoint(x, z, 0);
+                }
+                line.StartPoint = World(s, a);
+                line.EndPoint = World(s, c);
+            }
+        }
+
+        private void UpdateWrapArc(SectionSnapshot s, MachineRoomSectionParameters p, SectionBinding b, Entity e)
+        {
+            var arc = (Arc)e;
+            bool traction = b.Key.EndsWith("TractionWrap");
+            double beta = p.HasCalculatedPath ? p.Arrangement.Reeving.CalculatedWrapAngleDeg.Value * Math.PI / 180 : 0;
+            arc.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByAci, 1);
+            arc.Linetype = "Continuous";
+            arc.LineWeight = LineWeight.LineWeight030;
+            arc.Visible = p.HasCalculatedPath && (traction || Math.Abs(beta - Math.PI) > 1e-8);
+            if (arc.Visible)
+            {
+                arc.Center = World(
+                    s,
+                    traction ? new LocalPoint(p.TractionX, p.TractionZ, 0) : new LocalPoint(p.DeflectorX, p.DeflectorZ, 0));
+                arc.Radius = traction ? 260 : p.DeflectorPitchMm / 2;
+                double angle = Math.Atan2(s.Frame.XAxis.Y, s.Frame.XAxis.X);
+                arc.StartAngle = angle + (traction ? 0 : beta);
+                arc.EndAngle = angle + (traction ? beta : Math.PI);
+            }
+        }
+
+        private void UpdateNativeEntity(
+            SectionSnapshot s,
+            MachineRoomSectionParameters p,
+            MachineRoomSectionGeometry g,
+            SectionBinding b,
+            Entity e)
+        {
+            e.Visible = b.Visible;
+            if (b.Role == "deflector" || b.Role == "hanger")
+                e.Visible = p.DeflectorVisible && b.Visible;
+            if (b.Role == "steelDetail" && p.Beam.NominalDepthMm != 140)
+                e.Visible = false;
+            var poly = e as Polyline;
+            var nativeLine = e as Line;
+            var hatch = e as Hatch;
+            if (g.Flexible(b.Role) && (poly != null || nativeLine != null))
+            {
+                var mapped = b.SourcePoints.Select(v => World(s, g.Map(v, b.Role))).ToArray();
+                if (poly != null)
+                {
+                    if (poly.NumberOfVertices != mapped.Length)
+                        throw new InvalidOperationException("Section topology changed: " + b.Key);
+                    for (int i = 0; i < mapped.Length; i++)
+                        poly.SetPointAt(i, new Point2d(mapped[i].X, mapped[i].Y));
+                }
+                else
+                {
+                    nativeLine.StartPoint = mapped[0];
+                    nativeLine.EndPoint = mapped[1];
+                }
+            }
+            else if (hatch != null && (b.Role == "slab" || b.Role == "concrete"))
+            {
+                var corners = new[]
+                {
+                        new LocalPoint(b.Bounds[0], b.Bounds[1], 0),
+                        new LocalPoint(b.Bounds[2], b.Bounds[1], 0),
+                        new LocalPoint(b.Bounds[2], b.Bounds[3], 0),
+                        new LocalPoint(b.Bounds[0], b.Bounds[3], 0)
+                    };
+                hatch.Associative = false;
+                while (hatch.NumberOfLoops > 0)
+                    hatch.RemoveLoopAt(0);
+                var vertices = new Point2dCollection();
+                var bulges = new DoubleCollection();
+                foreach (var v in corners)
+                {
+                    var w = World(s, g.Map(v, b.Role));
+                    vertices.Add(new Point2d(w.X, w.Y));
+                    bulges.Add(0);
+                }
+                hatch.AppendLoop(HatchLoopTypes.External, vertices, bulges);
+                hatch.EvaluateHatch(true);
+            }
+            else
+            {
+                var target = g.Map(b.SourcePoints[0], b.Role);
+                var actual = MachineRoomDependencies.Points(e, s.Frame)[0];
+                e.TransformBy(Matrix3d.Displacement(s.Frame.Vector(target.X - actual.X, target.Y - actual.Y)));
+            }
+            if (b.Key == "MachineRoomSection.TractionSheave.PitchCircle")
+                ((Circle)e).Radius = 260;
+            if (b.Key == "MachineRoomSection.DeflectorSheave.PitchCircle")
+                ((Circle)e).Radius = p.DeflectorPitchMm / 2;
         }
 
         private static void UpdateDimension(Dimension dimension, string key, SectionSnapshot s, ElevatorParameters d)
