@@ -711,6 +711,31 @@ namespace Elevator.Reporting.Figures
             string ff1 = Figure.Kn(ff.FF1DesignN.Value), ff2 = Figure.Kn(ff.FF2DesignN.Value), v1 =
                 Figure.Num(ff.FF1DesignN.Value / 1000, "0.###"), v2 = Figure.Num(ff.FF2DesignN.Value / 1000, "0.###");
             // (a) Front elevation, seen from the entrance: both car rails, car frame between them.
+            DrawFrontView(s1, f, h, yu, yl, xl, xr, top, bottom, ff1, v1);
+            // (b) Side view of one car rail, seen along the car rail line: blade side faces (front left, rear right).
+            DrawSideView(s2, f, h, yu, yl, top, bottom, ff2, v2);
+            f.Line(Pt(F5ViewSplitX, 4), Pt(F5ViewSplitX, bottom + 8), FigureLayer.Thin, "view-split");
+            var note = f.Text(
+                "FF1 and FF2 act as couples between the upper and lower guide shoes; h centre to centre of the shoes",
+                Pt(4, bottom + 12),
+                "start");
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawFrontView(
+            int s1,
+            Figure f,
+            double h,
+            double yu,
+            double yl,
+            double xl,
+            double xr,
+            double top,
+            double bottom,
+            string ff1,
+            string v1)
+        {
             f.Text("a) Front elevation", Pt(54, 8), "middle", FigureLayer.Text, 3.5, false, null, null, true);
             f.Text("seen from the entrance", Pt(54, 13), "middle");
             f.Rect(xl - 3.5, top, xl, bottom, FigureLayer.Outline, "rail-left");
@@ -737,21 +762,21 @@ namespace Elevator.Reporting.Figures
             foreach (var lv in new[]
             {
                 new
-{
-    Side = s1,
-    Y = yu,
-    Tag = "force-ff1-upper",
-    Dy = -2.6,
-    Dy2 = -6.0
-},
+                {
+                    Side = s1,
+                    Y = yu,
+                    Tag = "force-ff1-upper",
+                    Dy = -2.6,
+                    Dy2 = -6.0
+                },
                 new
-{
-    Side = -s1,
-    Y = yl,
-    Tag = "force-ff1-lower",
-    Dy = 5.2,
-    Dy2 = 8.6
-}
+                {
+                    Side = -s1,
+                    Y = yl,
+                    Tag = "force-ff1-lower",
+                    Dy = 5.2,
+                    Dy2 = 8.6
+                }
             })
             {
                 double face = lv.Side < 0 ? xl : xr;
@@ -770,7 +795,10 @@ namespace Elevator.Reporting.Figures
             f.Text("left rail", Pt(xl - 1.75, bottom + 5), "middle");
             f.Text("right rail", Pt(xr + 1.75, bottom + 5), "middle");
             f.DimV(Pt(xl - 3.5, yu), Pt(xl - 3.5, yl), xl - 14, "h " + Figure.Mm(h), "dim-h", Figure.Mm(h));
-            // (b) Side view of one car rail, seen along the car rail line: blade side faces (front left, rear right).
+        }
+
+        private static void DrawSideView(int s2, Figure f, double h, double yu, double yl, double top, double bottom, string ff2, string v2)
+        {
             double fx = F5SideFrontFace, rx = F5SideRearFace;
             f.Text("b) Side view of one rail", Pt(134, 8), "middle", FigureLayer.Text, 3.5, false, null, null, true);
             f.Text("seen along the car rail line", Pt(134, 13), "middle");
@@ -783,17 +811,17 @@ namespace Elevator.Reporting.Figures
             foreach (var lv in new[]
             {
                 new
-{
-    Dir = s2,
-    Y = yu,
-    Tag = "force-ff2-upper"
-},
+                {
+                    Dir = s2,
+                    Y = yu,
+                    Tag = "force-ff2-upper"
+                },
                 new
-{
-    Dir = -s2,
-    Y = yl,
-    Tag = "force-ff2-lower"
-}
+                {
+                    Dir = -s2,
+                    Y = yl,
+                    Tag = "force-ff2-lower"
+                }
             })
             {
                 double face = lv.Dir > 0 ? fx : rx;
@@ -809,13 +837,6 @@ namespace Elevator.Reporting.Figures
             f.DimV(Pt(fx - 15, yu), Pt(fx - 3.5, yl), F5ViewSplitX + 10, "h " + Figure.Mm(h), "dim-h-side", Figure.Mm(h));
             f.Text("front", Pt(fx - 4, bottom + 5), "end");
             f.Text("rear", Pt(rx + 4, bottom + 5), "start");
-            f.Line(Pt(F5ViewSplitX, 4), Pt(F5ViewSplitX, bottom + 8), FigureLayer.Thin, "view-split");
-            var note = f.Text(
-                "FF1 and FF2 act as couples between the upper and lower guide shoes; h centre to centre of the shoes",
-                Pt(4, bottom + 12),
-                "start");
-            Finish(f, note.At.Y);
-            return f;
         }
 
         // ---------- F6 rail cross-section ----------
