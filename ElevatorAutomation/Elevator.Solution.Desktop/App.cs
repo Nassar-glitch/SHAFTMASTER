@@ -37,7 +37,7 @@ namespace Elevator.Solution.Desktop
         readonly string[] args;
         public MainWindow(string[] arguments)
         {
-            args=arguments;root=Directory.GetParent(bin.TrimEnd(Path.DirectorySeparatorChar)).FullName;
+            args=arguments;root=FindRoot(bin);
             outputFolder=Path.Combine(root,"output","solution-v01");Directory.CreateDirectory(outputFolder);
             Title="ShaftMaster — Elevator Design Solutions";WindowLayout.Initial(this);Icon=BrandAssets.Image("ShaftMasterMark.png");
             FontFamily=new FontFamily("Segoe UI");FontSize=14;Foreground=ink;Background=new SolidColorBrush(Color.FromRgb(242,245,248));
@@ -49,6 +49,14 @@ namespace Elevator.Solution.Desktop
             BuildShell();ShowPage("GENERAL");Closing+=(s,e)=>{if(busy){SetStatus("An operation is running. Close is available after it finishes; Minimize and Maximize remain available.");e.Cancel=true;return;}if(!smoke&&!ConfirmDiscard())e.Cancel=true;};
             InitializeChromeEvents();
             Loaded+=async(s,e)=>{WindowLayout.Clamp(this);if(args.Contains("--smoke")){smoke=true;await Smoke();}};
+        }
+        // The folder with config/ and Templates/: the parent of the binary folder for a release (bin-shaftmaster-vNN), an
+        // ancestor for a build in artifacts/bin.
+        static string FindRoot(string binary)
+        {
+            var parent=Directory.GetParent(binary.TrimEnd(Path.DirectorySeparatorChar));
+            for(var d=parent;d!=null;d=d.Parent)if(Directory.Exists(Path.Combine(d.FullName,"config"))&&Directory.Exists(Path.Combine(d.FullName,"Templates")))return d.FullName;
+            return parent.FullName;
         }
         ElevatorProject NewProject()
         {

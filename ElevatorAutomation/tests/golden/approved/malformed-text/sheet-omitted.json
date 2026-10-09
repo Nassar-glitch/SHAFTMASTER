@@ -1,0 +1,37 @@
+{
+  "HasContent": true,
+  "Omitted": [
+    {
+      "Name": "P1–P4 machine-room bearing reactions and rope tensions (Basic)",
+      "Reasons": [
+        "Car mass: Empty car mass: finite number required."
+      ]
+    },
+    {
+      "Name": "P5 safety-gear load per car guide rail",
+      "Reasons": [
+        "Car mass: Empty car mass: finite number required. Malformed text is not an omitted mass."
+      ]
+    },
+    {
+      "Name": "P6 car-buffer reaction",
+      "Reasons": [
+        "Car mass: Empty car mass: finite number required. Malformed text is not an omitted mass."
+      ]
+    },
+    {
+      "Name": "FF1 / FF2 car guide-rail forces",
+      "Reasons": [
+        "Guide-shoe spacing h: Vertical upper-to-lower car guide-shoe spacing h (mm): invalid text; enter a finite positive number."
+      ]
+    },
+    {
+      "Name": "Suspension rope and traction checks (part)",
+      "Reasons": [
+        "EN 81-50 safety factor: TZ 1200 mm is outside the deflector selection range; no deflector size is selected.",
+        "Rope safety factor: Not provided: car mass.",
+        "Traction: Deflector without a valid rope path (TZ 1200 mm); the wrap angle α cannot be determined."
+      ]
+    }
+  ]
+}

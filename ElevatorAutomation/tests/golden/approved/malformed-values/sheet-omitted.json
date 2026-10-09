@@ -1,0 +1,39 @@
+{
+  "HasContent": true,
+  "Omitted": [
+    {
+      "Name": "P1–P4 machine-room bearing reactions and rope tensions (Basic)",
+      "Reasons": [
+        "Rated load: Capacity must be finite and positive."
+      ]
+    },
+    {
+      "Name": "P5 safety-gear load per car guide rail",
+      "Reasons": [
+        "Rated load: Finite positive mass in kg required.",
+        "Car guide rails: Positive physical guide count required."
+      ]
+    },
+    {
+      "Name": "P6 car-buffer reaction",
+      "Reasons": [
+        "Rated load: Finite positive mass in kg required."
+      ]
+    },
+    {
+      "Name": "FF1 / FF2 car guide-rail forces",
+      "Reasons": [
+        "Rated load: Rated capacity (kg) must be finite and positive.",
+        "Guide-shoe spacing h: Vertical upper-to-lower car guide-shoe spacing h (mm) must be finite and positive."
+      ]
+    },
+    {
+      "Name": "Suspension rope and traction checks (part)",
+      "Reasons": [
+        "Number of ropes: Rope count not provided.",
+        "Safety factor and traction: Shared geometry unavailable: Capacity must be finite and positive.",
+        "Rope safety factor: Not provided: rope count, rated load, travel and overhead."
+      ]
+    }
+  ]
+}

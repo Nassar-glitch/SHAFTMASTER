@@ -13,7 +13,7 @@ namespace Elevator.Solution.Desktop
   // Malformed UI text clears the canonical value; it makes the dependent calculation unavailable, never zero.
   public Dictionary<string,string> ChassisDraftErrors=new Dictionary<string,string>(),SafetyPitDraftErrors=new Dictionary<string,string>();
   public string CarGuideForceDraftError;
-  public DateTime GeneratedLocal=DateTime.Now;
+  public DateTime GeneratedLocal=ReportClock.Now();
   // Company-level settings (application, not project); both optional.
   public string CompanyName;
   public DocxImage Logo;

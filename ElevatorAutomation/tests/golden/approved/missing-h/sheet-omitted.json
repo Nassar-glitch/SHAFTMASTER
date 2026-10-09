@@ -1,0 +1,18 @@
+{
+  "HasContent": true,
+  "Omitted": [
+    {
+      "Name": "FF1 / FF2 car guide-rail forces",
+      "Reasons": [
+        "Guide-shoe spacing h: Vertical upper-to-lower car guide-shoe spacing h (mm) NOT PROVIDED; finite positive value required."
+      ]
+    },
+    {
+      "Name": "Suspension rope and traction checks (part)",
+      "Reasons": [
+        "EN 81-50 safety factor: TZ 1200 mm is outside the deflector selection range; no deflector size is selected.",
+        "Traction: Deflector without a valid rope path (TZ 1200 mm); the wrap angle α cannot be determined."
+      ]
+    }
+  ]
+}

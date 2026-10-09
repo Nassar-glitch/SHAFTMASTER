@@ -1,0 +1,19 @@
+=== /word/document.xml
+Warnings
+•  Rope safety factor 13.66 is below the required 16.21 (EN 81-20 5.5.2.2; EN 81-50 5.12). No rope count up to 7 and no listed rope diameter reaches it; a stronger rope (higher MBL) is needed.
+•  Emergency braking: T1/T2 1.679 exceeds e^(fα) 1.636 by 2.7 % with the empty car, highest landing, retarding upwards (EN 81-50 5.11.2.2.2). It needs a wrap angle of at least 165.7° with this groove, or a groove giving f ≥ 0.1889.
+Recommendations
+•  No 1:1 arrangement passes every rope and traction check; the limiting check is rope safety factor. 2:1 roping is recommended for this rated load; on 1:1, 7 ropes of 12 mm would need MBL ≥ 75.1 kN each (EN 81-20 5.5; EN 81-50 5.11, 5.12).
+Notes
+•  Deflector pitch diameter 400 mm gives D/d = 33.33 for 12 mm ropes; EN 81-20 5.5.2.1 requires D/d ≥ 40 for pulleys (≥ 480 mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

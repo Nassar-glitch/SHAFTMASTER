@@ -1,0 +1,28 @@
+# Basic UI flake proof, 2026-10-09 (branch refactor/p0-safety-net, build artifacts/bin)
+# tests/solution/run-basic-ui.ps1 -CandidateBin artifacts/bin -SkipBuild, 20 consecutive runs, fresh folder each
+run 1 exit 0 result PASS 22s
+run 2 exit 0 result PASS 22s
+run 3 exit 0 result PASS 22s
+run 4 exit 0 result PASS 22s
+run 5 exit 0 result PASS 22s
+run 6 exit 0 result PASS 22s
+run 7 exit 0 result PASS 22s
+run 8 exit 0 result PASS 22s
+run 9 exit 0 result PASS 22s
+run 10 exit 0 result PASS 22s
+run 11 exit 0 result PASS 22s
+run 12 exit 0 result PASS 22s
+run 13 exit 0 result PASS 22s
+run 14 exit 0 result PASS 22s
+run 15 exit 0 result PASS 22s
+run 16 exit 0 result PASS 22s
+run 17 exit 0 result PASS 23s
+run 18 exit 0 result PASS 22s
+run 19 exit 0 result PASS 22s
+run 20 exit 0 result PASS 22s
+
+# Injected close: WM_CLOSE posted to the running test window after the first screenshot
+# before the fix (artifacts/flake/inject1): runner exit 1, no result file, no ui-error / ui-crash, no Application-log event
+#   trace: Loaded -> Window.WmClose -> window Closed -> app Exit 0 -> app.Run returned, exit 1
+# after the fix (artifacts/flake/inject2): "external close request refused" (Window.WmClose stack), result PASS, 18 assertions
+# without injection, before the fix: 15 runs with the calculation-UI predecessor all PASS (artifacts/flake/repro2)

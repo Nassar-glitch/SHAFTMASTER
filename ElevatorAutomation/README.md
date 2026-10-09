@@ -4,7 +4,7 @@ Refactored from the working `ElevatorPlanGenerator` AutoCAD 2023 plugin. The ori
 
 ## ShaftMaster desktop application
 
-The current release is `bin-shaftmaster-v03/ShaftMaster.exe` (SHA-256 `9CFD5FAB…`). Its changes are in `bin-shaftmaster-v03/RELEASE-NOTES.md`, the checksums in `bin-shaftmaster-v03/SHA256SUMS.txt`, and the application in [ShaftMaster UI results](docs/SHAFTMASTER-UI-RESULTS.md). v01 and v02 are kept unchanged. Build into a separate folder with `./build-solution.ps1 -BinDirectory <folder>`; without the parameter it writes to `bin-shaftmaster-v01`.
+The current release is `bin-shaftmaster-v03/ShaftMaster.exe` (SHA-256 `9CFD5FAB…`). Its changes are in `bin-shaftmaster-v03/RELEASE-NOTES.md`, the checksums in `bin-shaftmaster-v03/SHA256SUMS.txt`, and the application in [ShaftMaster UI results](docs/SHAFTMASTER-UI-RESULTS.md). v01 and v02 are kept unchanged. `./build-solution.ps1` builds into `artifacts/bin` by default; it refuses to write into a release folder (`bin-shaftmaster-v*`) unless `-Release` is given. Tests: `./tools/test.ps1 -Tier 1|2|3` ([testing](docs/TESTING.md)).
 
 ## AutoCAD workflow
 
@@ -75,7 +75,7 @@ Car DBG = SW − 300; cabin width = SW − 400; cabin depth = SD − 400; TZ = c
 
 ## Build and verification
 
-Run `./build.ps1` in PowerShell. This compiles the two DLLs with the installed .NET Framework compiler and AutoCAD 2023 SDK assemblies, then runs 43 pure rule assertions. The Visual Studio solution targets .NET Framework 4.8; override `AutoCADDirectory` if needed.
+Run `./build.ps1` in PowerShell (output `artifacts/bin` unless `-BinDirectory` is given). This compiles the two DLLs with the installed .NET Framework compiler and AutoCAD 2023 SDK assemblies, then runs 43 pure rule assertions. The Visual Studio solution targets .NET Framework 4.8; override `AutoCADDirectory` if needed.
 
 Run `./tests/run-tests.ps1` for the native regression and interactive command workflow. It uses disposable copies and real AutoCAD Core Console command boundaries; AutoCAD's dimension-association callbacks run between commands. Keep the original `legacy/ElevatorPlanGenerator` directory because it contains the preserved regression template and independently generated golden DWGs. The runner restores SECURELOAD and checks result JSON for failures, not merely the console exit code.
 

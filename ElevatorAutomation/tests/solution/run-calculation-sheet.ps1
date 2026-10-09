@@ -1,4 +1,4 @@
-param([string]$CandidateBin='bin-shaftmaster-calcsheet-candidate',[string]$EvidenceDirectory='output/calcsheet-20261007/core')
+param([string]$CandidateBin='bin-shaftmaster-calcsheet-candidate',[string]$EvidenceDirectory='output/calcsheet-20261007/core',[switch]$WordRender)
 $ErrorActionPreference='Stop'
 $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bin=Join-Path $root $CandidateBin;$out=Join-Path $root $EvidenceDirectory
@@ -12,3 +12,11 @@ $sources=@('tests/solution/CalculationSheetTests.cs','Elevator.Solution.Desktop/
 if($LASTEXITCODE){throw 'Calculation sheet test build failed'}
 & (Join-Path $bin 'CalculationSheetTests.exe') $root $bin $out
 if($LASTEXITCODE){throw 'Calculation sheet tests failed; see calculation-sheet-error.json'}
+# -WordRender (tier 3 only): render every sheet through Word to PDF, rasterise the pages and check the pagination.
+if($WordRender){
+ & (Join-Path $PSScriptRoot 'render-calculation-sheets.ps1') -SheetDirectory $EvidenceDirectory -RenderDirectory ($EvidenceDirectory+'-rendered')
+ python (Join-Path $PSScriptRoot 'rasterise_calculation_sheets.py') $out ($out+'-rendered')
+ if($LASTEXITCODE){throw 'Calculation sheet raster check failed'}
+ python (Join-Path $PSScriptRoot 'check_pagination.py') ($out+'-rendered') 01-basic-complete 12-changed-geometry 14-rope-traction 15-rope-not-ok
+ if($LASTEXITCODE){throw 'Calculation sheet pagination check failed'}
+}

@@ -1,5 +1,7 @@
-param([string]$AutoCADDirectory='C:\Program Files\Autodesk\AutoCAD 2023',[string]$BinDirectory='bin')
+param([string]$AutoCADDirectory='C:\Program Files\Autodesk\AutoCAD 2023',[string]$BinDirectory='artifacts/bin',[switch]$Release)
 $ErrorActionPreference='Stop'
+# Builds go to artifacts/ by default. A release folder (bin-shaftmaster-v*) is written only with -Release.
+if(((Split-Path $BinDirectory -Leaf) -like 'bin-shaftmaster-v*') -and -not $Release){throw ("Refusing to build into the release folder '"+$BinDirectory+"'. Release folders are written only with -Release; use the default artifacts/bin or another folder.")}
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $bin=Join-Path $PSScriptRoot $BinDirectory
 New-Item -ItemType Directory -Path $bin -Force|Out-Null

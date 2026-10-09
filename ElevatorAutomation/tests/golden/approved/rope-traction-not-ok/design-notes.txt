@@ -1,0 +1,18 @@
+=== /word/document.xml
+Warnings
+•  Emergency braking: T1/T2 1.679 exceeds e^(fα) 1.652 by 1.7 % with the empty car, highest landing, retarding upwards (EN 81-50 5.11.2.2.2). It needs a wrap angle of at least 165.6° with this groove, or a groove giving f ≥ 0.1852.
+Notes
+•  Deflector pitch diameter 250 mm gives D/d = 31.25 for 8 mm ropes; EN 81-20 5.5.2.1 requires D/d ≥ 40 for pulleys (≥ 320 mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+Project
+Golden N - rope NOT OK
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

@@ -108,4 +108,4 @@ Layout PASS, wrap PASS and D/d FAIL remain independent and visible. No code/comp
 5. Use Drawings to choose views/output conventions; choose Generate Drawings for the coordinated DWG.
 6. Choose Export STEP and select the `.step` destination for the current inputs. After completion, use Open Output Folder or Details. The editable native model and reports are in the sibling source folder.
 
-Rebuild with `build-solution.ps1`; its default output is the separate `bin-shaftmaster-v01` folder. Run `tests/shaftmaster/run-ui-tests.ps1` for the packaged WPF regression matrix. Existing `--smoke` generation diagnostics remain available; AutoCAD needs access to its normal user profile.
+Rebuild with `build-solution.ps1`; its default output is `artifacts/bin`, and it refuses to write into a release folder (`bin-shaftmaster-v*`) unless `-Release` is given. Run `tests/shaftmaster/run-ui-tests.ps1` for the packaged WPF regression matrix. Existing `--smoke` generation diagnostics remain available; AutoCAD needs access to its normal user profile.

@@ -1,0 +1,20 @@
+=== /word/document.xml
+Recommendations
+•  Traction sheave D/d not calculated: Traction sheave pitch diameter not provided.
+•  Enter the sheave pitch diameter, car mass to check rope safety factor (EN 81-20 5.5.2.2; EN 81-50 5.12).
+•  Enter the car mass, counterweight mass to check traction (EN 81-50 5.11).
+Notes
+•  Deflector pitch diameter 250 mm gives D/d = 31.25 for 8 mm ropes; EN 81-20 5.5.2.1 requires D/d ≥ 40 for pulleys (≥ 320 mm). The smaller deflector is accounted for in the rope safety factor (EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+Project
+مشروع اختبار
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

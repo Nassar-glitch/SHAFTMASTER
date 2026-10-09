@@ -38,7 +38,7 @@ namespace Elevator.Solution.Desktop
   {
    var company=CompanyReportSettings.Load();
    return CalculationSheet.Build(session.Project,context,new CalculationSheetInputs{
-    ChassisDraftErrors=new Dictionary<string,string>(RelevantDraftErrors),SafetyPitDraftErrors=RelevantSafetyPitDraftErrors,CarGuideForceDraftError=carGuideForceDraftError,GeneratedLocal=DateTime.Now,
+    ChassisDraftErrors=new Dictionary<string,string>(RelevantDraftErrors),SafetyPitDraftErrors=RelevantSafetyPitDraftErrors,CarGuideForceDraftError=carGuideForceDraftError,GeneratedLocal=ReportClock.Now(),
     CompanyName=company.CompanyName,Logo=company.Logo(),Presets=presets});
   }
   static string OmissionText(CalculationSheet sheet)

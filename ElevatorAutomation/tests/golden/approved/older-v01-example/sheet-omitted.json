@@ -1,0 +1,49 @@
+{
+  "HasContent": false,
+  "Omitted": [
+    {
+      "Name": "P1–P4 machine-room bearing reactions and rope tensions (Basic)",
+      "Reasons": [
+        "Car mass: NOT PROVIDED; mass in kg required.",
+        "Counterweight mass: NOT PROVIDED; mass in kg required.",
+        "Machine mass: NOT PROVIDED; mass in kg required."
+      ]
+    },
+    {
+      "Name": "P5 safety-gear load per car guide rail",
+      "Reasons": [
+        "Car mass: NOT PROVIDED; mass in kg required.",
+        "Safety-gear type: Select the physical car safety-gear type.",
+        "Car guide rails: Confirm physical car-guide quantity; CAD line count is not physical quantity."
+      ]
+    },
+    {
+      "Name": "P6 car-buffer reaction",
+      "Reasons": [
+        "Car mass: NOT PROVIDED; mass in kg required.",
+        "Car buffers: Select the physical buffer quantity explicitly; a drawing symbol does not establish count."
+      ]
+    },
+    {
+      "Name": "P7 counterweight-buffer reaction",
+      "Reasons": [
+        "Counterweight mass: NOT PROVIDED; mass in kg required.",
+        "Counterweight buffers: Select the physical buffer quantity explicitly; a drawing symbol does not establish count."
+      ]
+    },
+    {
+      "Name": "FF1 / FF2 car guide-rail forces",
+      "Reasons": [
+        "Guide-shoe spacing h: Vertical upper-to-lower car guide-shoe spacing h (mm) NOT PROVIDED; finite positive value required."
+      ]
+    },
+    {
+      "Name": "Suspension rope and traction checks",
+      "Reasons": [
+        "Traction sheave D/d: Traction sheave pitch diameter not provided.",
+        "Rope safety factor: Not provided: sheave pitch diameter, car mass.",
+        "Traction: Not provided: car mass, counterweight mass."
+      ]
+    }
+  ]
+}

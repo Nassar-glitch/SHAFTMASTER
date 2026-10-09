@@ -1,0 +1,262 @@
+{
+  "CarGuideForces": {
+    "CapacityKg": -480,
+    "Details": [],
+    "FF1BaseN": null,
+    "FF1DesignN": null,
+    "FF2BaseN": null,
+    "FF2DesignN": null,
+    "GuideShoeSpacingMm": 0,
+    "InputFingerprint": "D401FA3333504AA15605BDFAF9424E0F5AAAB1556B7B6D216DD0A3B8F6FE65E5",
+    "InternalDepthMm": 2100,
+    "InternalWidthMm": 1100,
+    "Issues": [
+      {
+        "Field": "Elevator.CapacityKg",
+        "Message": "Rated capacity (kg) must be finite and positive."
+      },
+      {
+        "Field": "Calculations.CarGuideForces.GuideShoeSpacingMm",
+        "Message": "Vertical upper-to-lower car guide-shoe spacing h (mm) must be finite and positive."
+      }
+    ],
+    "RuleBasis": "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx, Third: irregular load distribution inside car, zero-based descendant paragraphs 77–87. FF1 = Q × 10 × internal width / (4h); FF2 = Q × 10 × internal depth / (8h); design multiplier 2 applied once. Adopted note rules, not independent standards/manufacturer certification.",
+    "RuleVersion": "GearboxNoteCarGuideForces-v1",
+    "Status": "INVALID_INPUT"
+  },
+  "Chassis": {
+    "Assumptions": [],
+    "CarBundleTensionN": null,
+    "CarPerRopeTensionN": null,
+    "CounterweightBundleTensionN": null,
+    "CounterweightPerRopeTensionN": null,
+    "InputFingerprint": null,
+    "Issues": [
+      {
+        "Field": "Elevator.CapacityKg",
+        "Message": "Capacity must be finite and positive."
+      }
+    ],
+    "Loads": [],
+    "MassCompositionKg": null,
+    "Mode": "Basic",
+    "ModelVersion": "ReleasedTwoStageWithRigidSpreader-v1",
+    "MomentXResidualNmm": null,
+    "MomentYResidualNmm": null,
+    "Reactions": null,
+    "SimplifiedGeometry": null,
+    "Status": "INVALID_OR_UNAVAILABLE_GEOMETRY",
+    "TotalMassKg": null,
+    "TotalVerticalLoadN": null,
+    "Transfers": [],
+    "Units": "mm, kg, N, N.mm (divide N.mm by 1000 for N.m)",
+    "UnverifiedLateralForceN": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "UnverifiedYawMomentNmm": 0,
+    "VerificationStatus": "ENGINEERING REVIEW REQUIRED - simplified reactions only",
+    "VerticalResidualN": null
+  },
+  "Description": "Out-of-range values in the project file: negative Q, h 0, no car guide rails, 0 ropes.",
+  "Fixture": "malformed-values",
+  "FollowsPresets": null,
+  "Mode": "Basic",
+  "RopeTraction": {
+    "AnyNotOk": false,
+    "Checks": [
+      {
+        "Actual": "8 mm",
+        "ActualValue": 8,
+        "Clause": "EN 81-20 5.5.1.2 a)",
+        "Equation": "d ≥ 8 mm",
+        "Id": "rope-diameter",
+        "Ok": true,
+        "Required": "≥ 8 mm",
+        "RequiredValue": 8,
+        "Substitution": "d = 8 mm",
+        "Title": "Nominal rope diameter",
+        "Unit": "mm"
+      },
+      {
+        "Actual": "65",
+        "ActualValue": 65,
+        "Clause": "EN 81-20 5.5.2.1",
+        "Equation": "Dt / d ≥ 40",
+        "Id": "dd-sheave",
+        "Ok": true,
+        "Required": "≥ 40",
+        "RequiredValue": 40,
+        "Substitution": "520 / 8 = 65",
+        "Title": "Traction sheave D/d",
+        "Unit": null
+      },
+      {
+        "Actual": null,
+        "ActualValue": null,
+        "Clause": "EN 81-20 5.5.2.3",
+        "Equation": "Ftermination ≥ 0.8 × MBL",
+        "Id": "termination",
+        "Ok": null,
+        "Required": "≥ 22.48 kN",
+        "RequiredValue": 22.480000000000004,
+        "Substitution": "0.8 × 28.1 = 22.48 kN",
+        "Title": "Rope termination strength",
+        "Unit": "kN"
+      }
+    ],
+    "DpOverDr": null,
+    "DtOverDr": 65,
+    "Geometry": {
+      "Available": false,
+      "CarDepthMm": null,
+      "CarWidthMm": null,
+      "DeflectorPathValid": false,
+      "DeflectorPitchMm": null,
+      "DeflectorPresent": false,
+      "Problem": "Capacity must be finite and positive.",
+      "TravelMm": 12500,
+      "TzMm": null,
+      "WrapAngleDeg": null
+    },
+    "HangingLengthM": null,
+    "HasResults": true,
+    "InputFingerprint": "15DD770A98277E470FE828B35C1A61F2B69B15DC75F64D1E000C47FBE202FFE8",
+    "Inputs": {
+      "BrakingRetardationMps2": 0.5,
+      "CapacityKg": -480,
+      "CarMassKg": 500,
+      "CounterweightMassKg": 740,
+      "DeflectorMassKg": null,
+      "GrooveAngleDeg": 30,
+      "GrooveType": "UndercutU",
+      "MinimumBreakingLoadKn": 28.1,
+      "OverheadMm": 4200,
+      "RopeCount": 0,
+      "RopeDesignation": "8×19 Seale FC 1370/1770",
+      "RopeDiameterMm": 8,
+      "RopeMassKgPerM": 0.218,
+      "RopingRatio": 1,
+      "SheavePitchDiameterMm": 520,
+      "SpeedMps": 1,
+      "TractionLimitingMethod": "RopesSlip",
+      "TravellingCableKgPerM": 0.5,
+      "UndercutAngleDeg": 95
+    },
+    "Kp": null,
+    "MdpKg": null,
+    "Nequiv": null,
+    "NequivP": null,
+    "NequivT": null,
+    "Omissions": [
+      {
+        "Item": "Number of ropes",
+        "Kind": "MISSING_INPUT",
+        "Reason": "Rope count not provided."
+      },
+      {
+        "Item": "Safety factor and traction",
+        "Kind": "MISSING_INPUT",
+        "Reason": "Shared geometry unavailable: Capacity must be finite and positive."
+      },
+      {
+        "Item": "Rope safety factor",
+        "Kind": "MISSING_INPUT",
+        "Reason": "Not provided: rope count, rated load, travel and overhead."
+      }
+    ],
+    "RuleVersion": "EN81-20-5.5_EN81-50-5.11-5.12_RopeTraction-v1",
+    "Sf8150": null,
+    "SfActual": null,
+    "SfMinimum8120": null,
+    "SfRequired": null,
+    "Status": "CALCULATED_OK",
+    "TmaxN": null,
+    "Traction": [],
+    "TravelM": null
+  },
+  "SafetyPit": {
+    "InputFingerprint": "CC9C58DF95B6C0A6C709BFB00D82602D3E1CF06A1BE2BCE3B7079CBC87D0C982",
+    "P5": {
+      "Application": "Vertical safety-gear load per car guide rail",
+      "ComponentCount": 0,
+      "Details": [
+        "Car effective additions: not included (blank optional mass)."
+      ],
+      "GroupLoadN": null,
+      "Id": "P5",
+      "Issues": [
+        {
+          "Field": "Elevator.CapacityKg",
+          "Message": "Finite positive mass in kg required."
+        },
+        {
+          "Field": "SafetyPit.CarGuideCount",
+          "Message": "Positive physical guide count required."
+        }
+      ],
+      "ParticipatingMassKg": null,
+      "PerComponentLoadN": null,
+      "Status": "INVALID_INPUT",
+      "Units": "N"
+    },
+    "P6": {
+      "Application": "Car-buffer reaction at pit support",
+      "ComponentCount": 1,
+      "Details": [
+        "Car effective additions: not included (blank optional mass)."
+      ],
+      "GroupLoadN": null,
+      "Id": "P6",
+      "Issues": [
+        {
+          "Field": "Elevator.CapacityKg",
+          "Message": "Finite positive mass in kg required."
+        }
+      ],
+      "ParticipatingMassKg": null,
+      "PerComponentLoadN": null,
+      "Status": "INVALID_INPUT",
+      "Units": "N"
+    },
+    "P7": {
+      "Application": "Counterweight-buffer reaction at pit support",
+      "ComponentCount": 2,
+      "Details": [
+        "Counterweight effective additions: not included (blank optional mass).",
+        "CW event mass = counterweight 740 + allocated CW additions 0 = 740 kg. Capacity/car/machine/chassis/hanger excluded.",
+        "Explicit ideal equal-sharing assumption across 2 physical buffers; not established by the note or verified stiffness/contact distribution.",
+        "P7 group = 740 kg × max(40 N/kg, 4 × 9.81 N/kg) = 29600 N; coefficient = 40 N/kg. Per buffer = 14800 N under explicit equal sharing.",
+        "Adopted note coefficients: safety 10 N/kg is distinct from physical g = 9.81 m/s²; buffer factor 4 is the note\u0027s adopted value, not a supplied manufacturer rating. No chassis reactions or rope-tension/roping-ratio factors added."
+      ],
+      "GroupLoadN": 29600,
+      "Id": "P7",
+      "Issues": [],
+      "ParticipatingMassKg": 740,
+      "PerComponentLoadN": 14800,
+      "Status": "CALCULATED_UNDER_NOTE_ASSUMPTIONS",
+      "Units": "N"
+    },
+    "RuleBasis": "Elevator_Calculations_GEARBOX_Code_Corrected_Dual_Units.docx: Progressive Safety Gear p104–106 (equation 439730EB), Car Buffer p108–110 (5429655E), Counterweight Buffer p112–114 (3897FF34), zero-based descendant paragraphs / Word paraIds. The note supplies no P5–P7 standard clause or manufacturer basis. Adopted note rules, not independent code/manufacturer certification.",
+    "RuleVersion": "GearboxNoteSafetyPit-v1",
+    "VerificationStatus": "ADOPTED NOTE RULES — engineering/manufacturer verification remains required"
+  },
+  "Selection": null,
+  "Values": {
+    "BalanceFactor": null,
+    "Beta": 95,
+    "CW": 740,
+    "Dt": 520,
+    "Locked": null,
+    "Machine": 300,
+    "P": 500,
+    "Q": -480,
+    "SD": 2500,
+    "SW": 1500,
+    "SelectedBalanceFactor": null,
+    "SelectedBeta": null,
+    "d": 8,
+    "n": 0
+  }
+}

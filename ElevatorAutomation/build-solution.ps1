@@ -1,7 +1,9 @@
-param([string]$AutoCADDirectory='C:/Program Files/Autodesk/AutoCAD 2023',[string]$SolidWorksDirectory='C:/Program Files/SOLIDWORKS Corp/SOLIDWORKS',[string]$BinDirectory='bin-shaftmaster-v01')
+param([string]$AutoCADDirectory='C:/Program Files/Autodesk/AutoCAD 2023',[string]$SolidWorksDirectory='C:/Program Files/SOLIDWORKS Corp/SOLIDWORKS',[string]$BinDirectory='artifacts/bin',[switch]$Release)
 $ErrorActionPreference='Stop'
+# Builds go to artifacts/ by default. A release folder (bin-shaftmaster-v*) is written only with -Release.
+if(((Split-Path $BinDirectory -Leaf) -like 'bin-shaftmaster-v*') -and -not $Release){throw ("Refusing to build into the release folder '"+$BinDirectory+"'. Release folders are written only with -Release; use the default artifacts/bin or another folder.")}
 $solutionRoot=$PSScriptRoot
-& (Join-Path $solutionRoot 'build.ps1') -AutoCADDirectory $AutoCADDirectory -BinDirectory $BinDirectory
+& (Join-Path $solutionRoot 'build.ps1') -AutoCADDirectory $AutoCADDirectory -BinDirectory $BinDirectory -Release:$Release
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $solutionBin=Join-Path $solutionRoot $BinDirectory
 $baseRefs=@('/reference:System.Web.Extensions.dll',"/reference:$solutionBin/Elevator.Core.dll")

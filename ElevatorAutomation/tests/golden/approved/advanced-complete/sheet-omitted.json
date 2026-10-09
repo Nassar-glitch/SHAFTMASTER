@@ -1,0 +1,13 @@
+{
+  "HasContent": true,
+  "Omitted": [
+    {
+      "Name": "Suspension rope and traction checks (part)",
+      "Reasons": [
+        "Traction sheave D/d: Traction sheave pitch diameter not provided.",
+        "Rope safety factor: Not provided: sheave pitch diameter.",
+        "Emergency braking: Not provided: rated speed."
+      ]
+    }
+  ]
+}

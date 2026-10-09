@@ -38,3 +38,6 @@ review_internal/
 # Root project drawings (local originals) and AutoCAD error file
 /*.dwg
 acad.err
+
+# Default build and test output (build.ps1, build-solution.ps1, tools/test.ps1)
+ElevatorAutomation/artifacts/

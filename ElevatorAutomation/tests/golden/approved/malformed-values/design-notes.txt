@@ -1,0 +1,19 @@
+=== /word/document.xml
+Recommendations
+•  Enter the rated load to check the car area (EN 81-20 Table 6).
+•  Number of ropes not calculated: Rope count not provided.
+•  Safety factor and traction not calculated: Shared geometry unavailable: Capacity must be finite and positive.
+•  Enter the rope count, rated load, travel and overhead to check rope safety factor (EN 81-20 5.5.2.2; EN 81-50 5.12).
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+Project
+Golden F - malformed values
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+
