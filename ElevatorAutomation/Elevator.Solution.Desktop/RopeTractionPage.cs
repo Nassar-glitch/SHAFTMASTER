@@ -130,7 +130,7 @@ namespace Elevator.Solution.Desktop
   {
    if(busy)return;Commit();
    var company=CompanyReportSettings.Load();
-   var notes=DesignNotes.Build(session.Project,context,new CalculationSheetInputs{GeneratedLocal=DateTime.Now,CompanyName=company.CompanyName,Logo=company.Logo(),Presets=presets});
+   var notes=DesignNotes.Build(session.Project,context,new CalculationSheetInputs{GeneratedLocal=ReportClock.Now(),CompanyName=company.CompanyName,Logo=company.Logo(),Presets=presets});
    var dialog=new SaveFileDialog{Title="Export design notes",Filter="Word document (*.docx)|*.docx",DefaultExt=".docx",AddExtension=true,OverwritePrompt=true,FileName=DesignNotes.SuggestedFileName(session.Project.Info.Name),
     InitialDirectory=designNotesFolder!=null&&Directory.Exists(designNotesFolder)?designNotesFolder:!String.IsNullOrEmpty(session.FilePath)?Path.GetDirectoryName(session.FilePath):Directory.Exists(outputFolder)?outputFolder:null};
    if(dialog.ShowDialog(this)!=true)return;
@@ -142,7 +142,7 @@ namespace Elevator.Solution.Desktop
   DesignNotes WriteDesignNotes(string path)
   {
    var company=CompanyReportSettings.Load();
-   var notes=DesignNotes.Build(session.Project,context,new CalculationSheetInputs{GeneratedLocal=DateTime.Now,CompanyName=company.CompanyName,Logo=company.Logo(),Presets=presets});
+   var notes=DesignNotes.Build(session.Project,context,new CalculationSheetInputs{GeneratedLocal=ReportClock.Now(),CompanyName=company.CompanyName,Logo=company.Logo(),Presets=presets});
    notes.Save(path);return notes;
   }
  }

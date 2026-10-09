@@ -6,6 +6,12 @@ using System.Text;
 using System.Collections.Generic;
 namespace Elevator.Solution.Desktop
 {
+ // Date and time used by the reports (calculation sheet, Design Notes, DOCX package): the local time in the
+ // application; tests replace it with a fixed value.
+ public static class ReportClock
+ {
+  public static Func<DateTime> Now=()=>DateTime.Now;
+ }
  // PNG or JPEG image for embedding. Pixel size is read from the file header so callers can keep the
  // aspect ratio without WPF. Reusable for logos now and drawings later.
  public sealed class DocxImage
@@ -298,7 +304,7 @@ namespace Elevator.Solution.Desktop
     }
     WritePart(package,new Uri("/word/footer1.xml",UriKind.Relative),"application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml","<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:ftr xmlns:w=\""+W+"\" xmlns:r=\""+R+"\">"+FooterXml()+"</w:ftr>");
     document.CreateRelationship(new Uri("footer1.xml",UriKind.Relative),TargetMode.Internal,R+"/footer","rIdFooter");
-    package.PackageProperties.Title=Title;if(!String.IsNullOrEmpty(Subject))package.PackageProperties.Subject=Subject;package.PackageProperties.Creator="ShaftMaster";package.PackageProperties.Created=DateTime.UtcNow;
+    package.PackageProperties.Title=Title;if(!String.IsNullOrEmpty(Subject))package.PackageProperties.Subject=Subject;package.PackageProperties.Creator="ShaftMaster";package.PackageProperties.Created=ReportClock.Now().ToUniversalTime();
    }
   }
  }
