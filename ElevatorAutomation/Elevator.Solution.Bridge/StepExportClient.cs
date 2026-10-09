@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Runs the SOLIDWORKS STEP worker for a project.</summary>
     public sealed class StepExportClient
     {
         readonly string bin;
@@ -15,6 +16,7 @@ namespace Elevator.Solution.Bridge
             bin = applicationDirectory;
         }
 
+        /// <summary>Checks that the export files and SOLIDWORKS are present.</summary>
         public void CheckDependencies()
         {
             foreach (var file in new[]
@@ -41,6 +43,7 @@ namespace Elevator.Solution.Bridge
             }
         }
 
+        /// <summary>Exports the project to a STEP file in the background.</summary>
         public Task<StepExportResult> ExportAsync(
             ElevatorProject project,
             string outputPath,

@@ -10,6 +10,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Updates the machine-room view from the shared design.</summary>
     public sealed class MachineRoomUpdater : IViewUpdater
     {
         public string ViewId
@@ -27,6 +28,7 @@ namespace Elevator.AutoCAD.MachineRoom
             return s.Frame.World(new Point3d(n.X, n.Y, n.Z));
         }
 
+        /// <summary>Moves the machine-room entities to the new design.</summary>
         public ViewUpdateResult Update(Database db, Transaction tr, ElevatorParameters design)
         {
             if (design.MachineRoom == null)
@@ -151,6 +153,7 @@ namespace Elevator.AutoCAD.MachineRoom
                 throw new InvalidOperationException("Unsupported flexible machine-room detail: " + b.Key);
         }
 
+        /// <summary>Checks the updated machine room against the design.</summary>
         public static void Validate(MachineRoomSnapshot s, ElevatorParameters design)
         {
             MachineRoomGeometryAudit.Run(s, design);

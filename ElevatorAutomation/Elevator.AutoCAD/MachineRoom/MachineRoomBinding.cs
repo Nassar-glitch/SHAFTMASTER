@@ -8,6 +8,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>A bound machine-room entity: key, role, source points and dependency.</summary>
     public sealed class MachineRoomBinding
     {
         public string Key;

@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>What the STEP worker verified after reopening the file.</summary>
     public sealed class StepVerification
     {
         public int SourceSolidCount;

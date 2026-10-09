@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Counts of what the machine-room geometry audit checked.</summary>
     public sealed class MachineRoomAuditResult
     {
         public string Status = "PASS";

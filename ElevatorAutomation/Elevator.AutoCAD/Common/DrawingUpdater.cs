@@ -8,8 +8,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>Moves and reshapes the plan entities to the new design and checks the result.</summary>
     public static class DrawingUpdater
     {
+        /// <summary>Applies the plan geometry mapping to one entity by its role.</summary>
         public static void ApplyShape(Entity e, string role, PlanGeometryAdapter g)
         {
             if (!g.IsFlexible(role))
@@ -66,6 +68,7 @@ namespace Elevator.AutoCAD.Common
         private static readonly string[] XAnchors =
             { "left", "right", "carLeft", "carRight", "cwLeft", "cwRight", "railLeft", "railRight" };
 
+        /// <summary>Moves the points of a dimension to the new design.</summary>
         public static double UpdateDimension(RotatedDimension d, Binding b, PlanGeometryAdapter g)
         {
             var f = g.Frame;
@@ -109,6 +112,7 @@ namespace Elevator.AutoCAD.Common
             return Math.Abs(horizontal ? cc.X - aa.X : cc.Y - aa.Y);
         }
 
+        /// <summary>Checks that every plan entity can be updated before any is changed.</summary>
         public static Dictionary<string, double> Preflight(DrawingSnapshot snapshot, PlanGeometryAdapter g)
         {
             var gaps = new Dictionary<string, double>();
@@ -175,6 +179,7 @@ namespace Elevator.AutoCAD.Common
             return gaps;
         }
 
+        /// <summary>Updates all plan entities.</summary>
         public static Dictionary<string, double> Apply(Database db, Transaction tr, DrawingSnapshot s, PlanGeometryAdapter g)
         {
             RegAppTable apps = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
@@ -214,6 +219,7 @@ namespace Elevator.AutoCAD.Common
                 e.XData = rb;
         }
 
+        /// <summary>Checks the updated plan against the design and the expected dimensions.</summary>
         public static void Validate(DrawingSnapshot s, ElevatorParameters target, Dictionary<string, double> expected)
         {
             AssertNear(s.ElevatorParameters.SW, target.SW, "Shaft width");
@@ -270,6 +276,7 @@ namespace Elevator.AutoCAD.Common
                 AssertNear(s.Get<RotatedDimension>(d.Key).Measurement, d.Value, "Independent dimension " + d.Key);
         }
 
+        /// <summary>Throws when two values differ by more than the drawing tolerance.</summary>
         public static void AssertNear(double value, double expected, string label)
         {
             if (Double.IsNaN(value)

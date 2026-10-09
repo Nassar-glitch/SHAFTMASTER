@@ -9,6 +9,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>One entity of the A-A master.</summary>
     public sealed class AAPart
     {
         public string Handle;

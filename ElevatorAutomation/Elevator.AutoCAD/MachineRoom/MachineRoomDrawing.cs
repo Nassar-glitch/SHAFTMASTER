@@ -11,20 +11,29 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Imports, reads and checks the native machine-room view.</summary>
     public static class MachineRoomDrawing
     {
+        /// <summary>Name of the stored manifest record.</summary>
         public const string Record = "MachineRoomBindings";
+        /// <summary>Key of the left face entity.</summary>
         public const string LeftFace = "MachineRoom.Shaft.LeftFace";
+        /// <summary>Key of the right face entity.</summary>
         public const string RightFace = "MachineRoom.Shaft.RightFace";
+        /// <summary>Key of the car axis entity.</summary>
         public const string CarAxis = "MachineRoom.Reference.CarAxis";
+        /// <summary>Key of the counterweight axis entity.</summary>
         public const string CwAxis = "MachineRoom.Reference.CounterweightAxis";
+        /// <summary>Key of the deflector pitch entity.</summary>
         public const string Pitch = "MachineRoom.DeflectorSheave.LeftPitchProjection";
 
+        /// <summary>True when the drawing already holds the machine room.</summary>
         public static bool IsPresent(Database db, Transaction tr)
         {
             return ProjectDataStorage.Read<MachineRoomManifest>(db, tr, Record) != null;
         }
 
+        /// <summary>Reads the machine-room entities and their manifest.</summary>
         public static MachineRoomSnapshot Read(Database db, Transaction tr)
         {
             var m = ProjectDataStorage.Read<MachineRoomManifest>(db, tr, Record);
@@ -99,6 +108,7 @@ namespace Elevator.AutoCAD.MachineRoom
             };
         }
 
+        /// <summary>Binds a verified source drawing as the machine-room master.</summary>
         public static void InitializeVerifiedSource(Database db, Transaction tr)
         {
             if (IsPresent(db, tr))
@@ -155,6 +165,7 @@ namespace Elevator.AutoCAD.MachineRoom
             MachineRoomDependencies.Prepare(db, tr, Read(db, tr));
         }
 
+        /// <summary>Imports the machine-room master into the drawing.</summary>
         public static void Import(Database destination, string source, Point3d origin, Vector3d xAxis)
         {
             using (var check = destination.TransactionManager.StartTransaction())

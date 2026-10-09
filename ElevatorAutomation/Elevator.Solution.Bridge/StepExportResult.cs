@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Result of a STEP export: paths, verification and statuses.</summary>
     public sealed class StepExportResult
     {
         public string OutputPath;

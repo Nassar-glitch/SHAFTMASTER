@@ -8,6 +8,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>Reviewed description of the B-B master drawing.</summary>
     public sealed class SectionSeed
     {
         public string SourceSha256;

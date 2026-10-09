@@ -7,6 +7,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Reviewed description of the machine-room master drawing.</summary>
     public sealed class MachineRoomSeed
     {
         public string SourceSha256;

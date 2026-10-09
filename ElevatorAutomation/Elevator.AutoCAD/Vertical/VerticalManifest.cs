@@ -11,6 +11,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.Vertical
 {
+    /// <summary>The recorded entities and input of the vertical view.</summary>
     public sealed class VerticalManifest
     {
         public int SchemaVersion = 1;

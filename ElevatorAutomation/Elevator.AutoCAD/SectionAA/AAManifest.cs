@@ -8,6 +8,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>The recorded entities and input of the A-A view.</summary>
     public sealed class AAManifest
     {
         public int SchemaVersion = 1;

@@ -14,8 +14,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>The AutoCAD plan commands.</summary>
     public sealed class PlanCommands
     {
+        /// <summary>Command entry: shows the plan options.</summary>
         [CommandMethod("ELEVATORPLANOPTIONS", CommandFlags.Modal)]
         public void Options()
         {
@@ -64,6 +66,7 @@ namespace Elevator.AutoCAD.Plan
             return true;
         }
 
+        /// <summary>Command entry: edits the plan annotations.</summary>
         [CommandMethod("ELEVATORANNOTATION", CommandFlags.Modal)]
         public void Annotation()
         {
@@ -159,6 +162,7 @@ namespace Elevator.AutoCAD.Plan
             }
         }
 
+        /// <summary>Command entry: audits the plan coverage.</summary>
         [CommandMethod("ELEVATORPLANAUDIT", CommandFlags.Modal)]
         public void Audit()
         {

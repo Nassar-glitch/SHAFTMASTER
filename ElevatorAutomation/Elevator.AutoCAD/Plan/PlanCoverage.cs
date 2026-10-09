@@ -8,8 +8,10 @@ using Elevator.AutoCAD.SectionBB;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Finds which model entities the plan automation does not control.</summary>
     public static class PlanCoverage
     {
+        /// <summary>Reads the coverage of the drawing.</summary>
         public static PlanCoverageReport Read(Database db, Transaction tr, DrawingSnapshot snapshot)
         {
             var bound = new HashSet<ObjectId>(snapshot.Entities.Values.Select(e => e.ObjectId));

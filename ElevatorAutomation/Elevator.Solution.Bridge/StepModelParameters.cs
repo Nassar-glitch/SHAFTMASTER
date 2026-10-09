@@ -1,6 +1,7 @@
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Dimensions in millimetres that the STEP worker builds the solids from.</summary>
     public sealed class StepModelParameters
     {
         public double SW = 1450;

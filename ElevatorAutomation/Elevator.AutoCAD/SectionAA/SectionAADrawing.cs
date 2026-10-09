@@ -14,11 +14,16 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>Builds, reads and audits the native section A-A view.</summary>
     public static class SectionAADrawing
     {
+        /// <summary>Prefix of the A-A entity keys.</summary>
         public const string Prefix = "SectionAA.";
+        /// <summary>Name of the block that holds the A-A library.</summary>
         public const string Library = "SECTION_AA_NATIVE_PARTS";
+        /// <summary>Name of the stored A-A data record.</summary>
         public const string DataKey = "SectionAAProject";
+        /// <summary>Name of the stored A-A manifest record.</summary>
         public const string ManifestKey = "SectionAAManifest";
 
         public static string Output
@@ -37,6 +42,7 @@ namespace Elevator.AutoCAD.SectionAA
             }
         }
 
+        /// <summary>The JSON of an object, as stored.</summary>
         public static string Json(object o)
         {
             return Elevator.Core.Serialization.CoreJson.Create().Serialize(o);
@@ -47,6 +53,7 @@ namespace Elevator.AutoCAD.SectionAA
             return ((BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead))[BlockTableRecord.ModelSpace];
         }
 
+        /// <summary>The key and role tag of an entity.</summary>
         public static string[] Tag(Entity e)
         {
             using (var x = e.GetXDataForApplication(DrawingReader.RegApp))
@@ -57,6 +64,7 @@ namespace Elevator.AutoCAD.SectionAA
             }
         }
 
+        /// <summary>The A-A entities of the drawing by key.</summary>
         public static Dictionary<string, Entity> Find(Database db, Transaction tr)
         {
             var r = new Dictionary<string, Entity>();
@@ -77,6 +85,7 @@ namespace Elevator.AutoCAD.SectionAA
             return r;
         }
 
+        /// <summary>The frame of the A-A entities.</summary>
         public static ShaftFrame Frame(Dictionary<string, Entity> e)
         {
             var l = (Line)e[Prefix + "Frame.Axis"];
@@ -122,6 +131,7 @@ namespace Elevator.AutoCAD.SectionAA
             return v <= a ? v + c - a : v >= b ? v + d - b : c + (v - a) * (d - c) / (b - a);
         }
 
+        /// <summary>Creates the A-A library from a hash-checked source drawing.</summary>
         public static void PrepareLibrary(Database target, string source)
         {
             var seed = Configuration.Read<AASeed>("section-aa-seed.json");
@@ -295,6 +305,7 @@ namespace Elevator.AutoCAD.SectionAA
             }
         }
 
+        /// <summary>Imports the A-A library into a drawing.</summary>
         public static void ImportLibrary(Database db)
         {
             using (var src = new Database(false, true))
@@ -344,6 +355,7 @@ namespace Elevator.AutoCAD.SectionAA
             tr.AddNewlyCreatedDBObject(l, true);
         }
 
+        /// <summary>Rebuilds the A-A view from the A-A data.</summary>
         public static AAAudit Rebuild(Database db, SectionAAProject data, Point3d? insertion)
         {
             using (var tr = db.TransactionManager.StartTransaction())
@@ -788,6 +800,7 @@ namespace Elevator.AutoCAD.SectionAA
             t.Location = sourceFrame.World(new Point3d(700, z, 0));
         }
 
+        /// <summary>Checks the A-A view against its data.</summary>
         public static AAAudit Audit(Database db, Transaction tr)
         {
             var d = ProjectDataStorage.Read<SectionAAProject>(db, tr, DataKey);
@@ -925,6 +938,7 @@ namespace Elevator.AutoCAD.SectionAA
                 yield return Tuple.Create(floors[i - 1], floors[i]);
         }
 
+        /// <summary>Writes the A-A library as a master drawing.</summary>
         public static void ExportMaster(Database db)
         {
             using (var tr = db.TransactionManager.StartTransaction())

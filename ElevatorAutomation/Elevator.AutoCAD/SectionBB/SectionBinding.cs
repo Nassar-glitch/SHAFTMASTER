@@ -8,6 +8,7 @@ using Elevator.Core.Geometry;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>A bound B-B entity: key, role and source points.</summary>
     public sealed class SectionBinding
     {
         public string Key;

@@ -9,6 +9,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>Counts and statuses reported by the A-A audit.</summary>
     public sealed class AAAudit
     {
         public string Status = "PASS";

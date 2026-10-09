@@ -6,6 +6,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Response of the host: statuses, entity counts, validation and the design.</summary>
     public sealed class GenerationResponse
     {
         public int ProtocolVersion = BridgeContract.Version;

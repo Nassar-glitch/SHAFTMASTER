@@ -7,6 +7,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>The recorded entities and reference data of the machine-room view.</summary>
     public sealed class MachineRoomManifest
     {
         public int SchemaVersion = 1;

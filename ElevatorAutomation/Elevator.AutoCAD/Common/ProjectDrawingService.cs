@@ -15,7 +15,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
-    // AutoCAD document/command context is an adapter concern. UI calls this service, not commands.
+    /// <summary>AutoCAD document/command context is an adapter concern. UI calls this service, not commands.</summary>
     public sealed class ProjectDrawingService : IProjectDrawingGenerator
     {
         private readonly Document boundDocument;
@@ -27,6 +27,7 @@ namespace Elevator.AutoCAD.Common
             boundDocument = document;
         }
 
+        /// <summary>Generates the requested views of the project in the document.</summary>
         public DrawingGenerationResult GenerateProjectDrawings(ElevatorProject project, GenerationOptions options)
         {
             if (boundDocument == null)
@@ -34,6 +35,7 @@ namespace Elevator.AutoCAD.Common
             return GenerateProjectDrawings(boundDocument, project, options);
         }
 
+        /// <summary>Generates the requested views of the project in the document.</summary>
         public DrawingGenerationResult GenerateProjectDrawings(Document document, ElevatorProject project, GenerationOptions options = null)
         {
             if (document == null)

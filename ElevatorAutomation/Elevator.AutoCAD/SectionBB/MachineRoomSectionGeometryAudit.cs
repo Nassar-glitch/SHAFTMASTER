@@ -11,6 +11,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>Checks the B-B geometry against the design.</summary>
     public static class MachineRoomSectionGeometryAudit
     {
         private static void Near(double a, double b, string name)
@@ -24,6 +25,7 @@ namespace Elevator.AutoCAD.SectionBB
             Near(a.Y, b.Y, name + " Z");
         }
 
+        /// <summary>The depth offset of a bearing support in the machine-room view.</summary>
         public static double SupportOffset(MachineRoomSnapshot mr, string name)
         {
             var b = mr.Manifest
@@ -37,6 +39,7 @@ namespace Elevator.AutoCAD.SectionBB
             return (b.Dependency.Offsets.Min(v => v.Y) + b.Dependency.Offsets.Max(v => v.Y)) / 2;
         }
 
+        /// <summary>Checks the B-B section against the design and the machine-room view.</summary>
         public static SectionAuditResult Run(SectionSnapshot s, ElevatorParameters design, MachineRoomSnapshot mr)
         {
             var p = design.MachineRoomSection;

@@ -8,6 +8,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>The recorded entities and reference data of the B-B view.</summary>
     public sealed class SectionManifest
     {
         public int SchemaVersion = 1;

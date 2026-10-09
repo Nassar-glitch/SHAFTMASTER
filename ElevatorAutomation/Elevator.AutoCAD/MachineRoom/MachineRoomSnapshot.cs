@@ -7,6 +7,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>The machine-room entities read from the drawing with their frame and manifest.</summary>
     public sealed class MachineRoomSnapshot
     {
         public ShaftFrame Frame;
@@ -21,6 +22,7 @@ namespace Elevator.AutoCAD.MachineRoom
         public double GovernorStartOffset;
         public MachineRoomExtensions Extensions;
 
+        /// <summary>An entity of the snapshot by key, as a type.</summary>
         public T Get<T>(string id) where T : Entity
         {
             return (T)Entities[id];

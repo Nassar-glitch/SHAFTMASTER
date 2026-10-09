@@ -4,8 +4,10 @@ using Elevator.AutoCAD.Common;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Tags drawing entities with their key and role, and reads the manifest.</summary>
     public static class ComponentBinding
     {
+        /// <summary>Reads the plan binding manifest from the drawing.</summary>
         public static BindingFile ReadManifest(Database db, Transaction tr)
         {
             var m = ProjectDataStorage.Read<BindingFile>(db, tr, "PlanBindings");
@@ -18,6 +20,7 @@ namespace Elevator.AutoCAD.Plan
             return m;
         }
 
+        /// <summary>Registers the application name used for entity tags.</summary>
         public static void Register(Database db, Transaction tr)
         {
             var apps = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
@@ -29,6 +32,7 @@ namespace Elevator.AutoCAD.Plan
             tr.AddNewlyCreatedDBObject(app, true);
         }
 
+        /// <summary>Tags an entity with a key and a role.</summary>
         public static void Tag(Entity entity, string id, string role)
         {
             entity.UpgradeOpen();

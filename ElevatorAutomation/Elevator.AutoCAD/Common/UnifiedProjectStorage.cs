@@ -7,10 +7,13 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>Stores and reads the project in the drawing.</summary>
     public static class UnifiedProjectStorage
     {
+        /// <summary>Name of the stored project record.</summary>
         public const string Key = "ElevatorProject";
 
+        /// <summary>Reads the project from the drawing.</summary>
         public static ElevatorProject Read(Database db, Transaction tr)
         {
             var doc = ProjectDataStorage.Read<ProjectDocument>(db, tr, Key);
@@ -44,6 +47,7 @@ namespace Elevator.AutoCAD.Common
             ProjectDataStorage.WriteRecord(db, tr, Key, new ProjectDocument { project = merged });
         }
 
+        /// <summary>Stores the project in the drawing.</summary>
         public static void Save(Database db, Transaction tr, ElevatorProject project)
         {
             // Detached snapshot prevents subsequent caller mutations from changing stored intent.
@@ -63,6 +67,7 @@ namespace Elevator.AutoCAD.Common
             ProjectDataStorage.WriteRecord(db, tr, Key, new ProjectDocument { project = p });
         }
 
+        /// <summary>Writes the stored project as JSON.</summary>
         public static string ExportJson(Database db, Transaction tr)
         {
             return ProjectJson.Serialize(Read(db, tr));

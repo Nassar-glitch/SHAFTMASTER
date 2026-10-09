@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Binding of one plan entity: key, type, role and annotation template.</summary>
     public sealed class Binding
     {
         public string Key { get; set; }

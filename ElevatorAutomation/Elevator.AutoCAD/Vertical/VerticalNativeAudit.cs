@@ -11,6 +11,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.Vertical
 {
+    /// <summary>Counts and statuses reported by the vertical audit.</summary>
     public sealed class VerticalNativeAudit
     {
         public string Status = "PASS";

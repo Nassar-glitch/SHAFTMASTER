@@ -6,9 +6,10 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
-    // Read existing semantic bindings only. No new tags, entity handles or template mutation.
+    /// <summary>Read existing semantic bindings only. No new tags, entity handles or template mutation.</summary>
     public static class ChassisCalculationGeometryReader
     {
+        /// <summary>Reads the chassis contours of a machine-room snapshot.</summary>
         public static ChassisGeometryEvidence Read(MachineRoomSnapshot s)
         {
             var result = new ChassisGeometryEvidence

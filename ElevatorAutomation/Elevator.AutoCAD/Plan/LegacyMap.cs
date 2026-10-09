@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Map from legacy entity keys to current keys.</summary>
     public sealed class LegacyMap
     {
         public string SemanticId { get; set; }

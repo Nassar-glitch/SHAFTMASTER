@@ -7,10 +7,13 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Reads the plan entities and the plan dimensions from the drawing.</summary>
     public static class DrawingReader
     {
+        /// <summary>Application name of the entity tags.</summary>
         public const string RegApp = "ELEVATOR_AUTOMATION";
 
+        /// <summary>Reads the bound plan entities and derives the plan dimensions.</summary>
         public static DrawingSnapshot Read(Database db, Transaction tr)
         {
             var manifest = ComponentBinding.ReadManifest(db, tr);

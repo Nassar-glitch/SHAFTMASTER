@@ -8,6 +8,7 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>One entity of the reviewed machine-room master.</summary>
     public sealed class MachineRoomSeedEntity
     {
         public string Key;

@@ -16,11 +16,16 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Vertical
 {
+    /// <summary>Builds and reads the native vertical section (experimental).</summary>
     public static class VerticalExperimentDrawing
     {
+        /// <summary>Prefix of the vertical entity keys.</summary>
         public const string Prefix = "VerticalExperiment.";
+        /// <summary>Name of the stored vertical data record.</summary>
         public const string DataKey = "VerticalExperimentProject";
+        /// <summary>Name of the stored vertical manifest record.</summary>
         public const string ManifestKey = "VerticalExperimentManifest";
+        /// <summary>Key of the frame entity.</summary>
         public const string FrameKey = Prefix + "Reference.Frame";
 
         public static string OutputDirectory
@@ -31,11 +36,13 @@ namespace Elevator.AutoCAD.Vertical
             }
         }
 
+        /// <summary>The JSON of an object, as stored.</summary>
         public static string Json(object value)
         {
             return Elevator.Core.Serialization.CoreJson.Create().Serialize(value);
         }
 
+        /// <summary>The vertical entities of the drawing by key.</summary>
         public static Dictionary<string, Entity> Find(Database db, Transaction tr)
         {
             var all = new Dictionary<string, Entity>();
@@ -63,6 +70,7 @@ namespace Elevator.AutoCAD.Vertical
             return all;
         }
 
+        /// <summary>The frame of the vertical entities.</summary>
         public static ShaftFrame Frame(Dictionary<string, Entity> all)
         {
             if (!all.ContainsKey(FrameKey) || !(all[FrameKey] is Line))
@@ -74,6 +82,7 @@ namespace Elevator.AutoCAD.Vertical
             return new ShaftFrame { Origin = l.StartPoint, XAxis = x, YAxis = Vector3d.ZAxis.CrossProduct(x), ZAxis = Vector3d.ZAxis };
         }
 
+        /// <summary>Reads the coordinated plan and B-B results that feed the vertical section.</summary>
         public static VerticalSource ReadSource(Database db, Transaction tr, out SectionSnapshot section)
         {
             var input = ProjectDataStorage.ReadProject(db, tr);
@@ -184,6 +193,7 @@ namespace Elevator.AutoCAD.Vertical
             }
         }
 
+        /// <summary>Creates the native entity of a vertical primitive.</summary>
         public static Entity Create(VerticalPrimitive p, Database db, ShaftFrame f)
         {
             var a = p.Points;
@@ -240,6 +250,7 @@ namespace Elevator.AutoCAD.Vertical
             ComponentBinding.Tag(e, key, role);
         }
 
+        /// <summary>True when a B-B entity is copied into the vertical section.</summary>
         public static bool CloneInFullSection(SectionBinding b)
         {
             // Existing B-B drop tails are replaced by continuous drops ending at the actual car/CW envelopes.
@@ -248,6 +259,7 @@ namespace Elevator.AutoCAD.Vertical
                 && !(b.Role == "rope" && (b.Key.EndsWith("CarDrop") || b.Key.EndsWith("CwDrop")));
         }
 
+        /// <summary>The transform that places the B-B entities in the vertical section.</summary>
         public static Matrix3d SectionPose(SectionSnapshot section, ShaftFrame f, double roofZ)
         {
             return Matrix3d.AlignCoordinateSystem(
@@ -261,6 +273,7 @@ namespace Elevator.AutoCAD.Vertical
                 f.ZAxis);
         }
 
+        /// <summary>Clones a B-B entity for the vertical section.</summary>
         public static Entity CloneCoordinatedEntity(Entity original)
         {
             var clone = (Entity)original.Clone();
@@ -272,6 +285,7 @@ namespace Elevator.AutoCAD.Vertical
             return clone;
         }
 
+        /// <summary>Generates the vertical section in the drawing.</summary>
         public static VerticalNativeAudit Generate(Database db, VerticalProjectData data, Point3d? insertion)
         {
             using (var tr = db.TransactionManager.StartTransaction())

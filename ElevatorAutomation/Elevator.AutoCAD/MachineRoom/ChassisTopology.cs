@@ -8,6 +8,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>The reviewed chassis topology of the machine-room template.</summary>
     public sealed class ChassisTopology
     {
         public double SourceSW;

@@ -5,11 +5,13 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
-    // Native NOD Xrecords survive SAVEAS and reopening; no sidecar is required.
+    /// <summary>Native NOD Xrecords survive SAVEAS and reopening; no sidecar is required.</summary>
     public static class ProjectDataStorage
     {
+        /// <summary>Name of the extension dictionary entry.</summary>
         public const string DictionaryName = "ELEVATOR_AUTOMATION";
 
+        /// <summary>Reads a stored record.</summary>
         public static T Read<T>(Database db, Transaction tr, string key) where T : class
         {
             var root = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
@@ -28,6 +30,7 @@ namespace Elevator.AutoCAD.Common
             }
         }
 
+        /// <summary>Writes a record.</summary>
         public static void Write(Database db, Transaction tr, string key, object value)
         {
             WriteRecord(db, tr, key, value);
@@ -72,6 +75,7 @@ namespace Elevator.AutoCAD.Common
             return Elevator.Core.Serialization.CoreJson.Create();
         }
 
+        /// <summary>Reads the legacy project input stored in the drawing.</summary>
         public static ProjectInput ReadProject(Database db, Transaction tr)
         {
             var p = Read<ProjectInput>(db, tr, "Project");

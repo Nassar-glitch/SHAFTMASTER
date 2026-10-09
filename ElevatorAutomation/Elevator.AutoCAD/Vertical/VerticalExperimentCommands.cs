@@ -13,6 +13,7 @@ using Elevator.Core.Shaft;
 
 namespace Elevator.AutoCAD.Vertical
 {
+    /// <summary>The AutoCAD vertical-section commands (experimental).</summary>
     public sealed class VerticalExperimentCommands
     {
         static void Cancel(PromptStatus status)
@@ -147,6 +148,7 @@ namespace Elevator.AutoCAD.Vertical
             Brackets(ed, d);
         }
 
+        /// <summary>Prompts for the vertical data.</summary>
         public static VerticalProjectData Edit(Document doc, VerticalProjectData data)
         {
             var d = data == null ? new VerticalProjectData() : Elevator.Core
@@ -223,6 +225,7 @@ namespace Elevator.AutoCAD.Vertical
             return d;
         }
 
+        /// <summary>Command entry: generates the vertical section.</summary>
         [CommandMethod("ELEVATORVERTICALEXPERIMENT", CommandFlags.Modal)]
         public void Generate()
         {
@@ -266,6 +269,7 @@ namespace Elevator.AutoCAD.Vertical
             }
         }
 
+        /// <summary>Command entry: edits the vertical data.</summary>
         [CommandMethod("ELEVATORVERTICALDATA", CommandFlags.Modal)]
         public void Data()
         {
@@ -297,6 +301,7 @@ namespace Elevator.AutoCAD.Vertical
             }
         }
 
+        /// <summary>Command entry: audits the vertical section.</summary>
         [CommandMethod("ELEVATORVERTICALAUDIT", CommandFlags.Modal)]
         public void Audit()
         {

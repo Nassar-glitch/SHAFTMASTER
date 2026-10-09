@@ -9,8 +9,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>The AutoCAD command that edits the project data stored in the drawing.</summary>
     public sealed class ElevatorProjectCommand
     {
+        /// <summary>Command entry.</summary>
         [CommandMethod("ELEVATORPROJECT", CommandFlags.Modal)]
         public void Execute()
         {
@@ -25,11 +27,13 @@ namespace Elevator.AutoCAD.Common
             }
         }
 
+        /// <summary>The registered elevator family for a project input.</summary>
         public static FamilyDefinition Family(ProjectInput input)
         {
             return Configuration.Read<FamilyDefinition[]>("families.json").SingleOrDefault(f => f.ElevatorType == input.ElevatorType);
         }
 
+        /// <summary>Prompts for the project data and stores it in the drawing; false when cancelled.</summary>
         public static bool Edit(Document doc)
         {
             using (var tr = doc.Database.TransactionManager.StartTransaction())

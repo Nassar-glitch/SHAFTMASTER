@@ -8,7 +8,7 @@ using Elevator.Core.Serialization;
 using Elevator.Solution.Bridge;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
-// All dimensions in this source and Parameters.json are millimetres. SOLIDWORKS API geometry uses metres.
+/// <summary>All dimensions in this source and Parameters.json are millimetres. SOLIDWORKS API geometry uses metres.</summary>
 public class BuildModel
 {
     static SldWorks sw;
@@ -423,6 +423,9 @@ public class BuildModel
         return hits;
     }
 
+    /// <summary>
+    /// STEP worker entry: builds the solids in SOLIDWORKS from the job folder, exports and re-verifies the STEP file; 0 on success.
+    /// </summary>
     [STAThread]
     public static int Main(string[] args)
     {

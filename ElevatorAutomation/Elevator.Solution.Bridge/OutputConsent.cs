@@ -7,12 +7,14 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>The user's consent to write or replace an output file.</summary>
     public sealed class OutputConsent
     {
         public string Path;
         public string PreviousHash;
         public bool ReplaceExisting;
 
+        /// <summary>Checks the output path and records whether an existing file may be replaced.</summary>
         public static OutputConsent Capture(string path, bool confirmed)
         {
             path = System.IO.Path.GetFullPath(path);
@@ -29,6 +31,7 @@ namespace Elevator.Solution.Bridge
             };
         }
 
+        /// <summary>Moves the staged file to the output path.</summary>
         public void Publish(string staged)
         {
             string folder = System.IO.Path.GetDirectoryName(Path);

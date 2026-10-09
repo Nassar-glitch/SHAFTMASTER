@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Counts of bound and unbound plan entities.</summary>
     public sealed class PlanCoverageReport
     {
         public int ModelEntities;

@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.Geometry;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Expected loops and area of a plan hatch.</summary>
     public sealed class HatchExpectation
     {
         public double Area;

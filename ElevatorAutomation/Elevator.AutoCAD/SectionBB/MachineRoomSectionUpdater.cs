@@ -11,6 +11,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>Updates the B-B view from the shared design.</summary>
     public sealed class MachineRoomSectionUpdater : IViewUpdater
     {
         public string ViewId
@@ -21,11 +22,13 @@ namespace Elevator.AutoCAD.SectionBB
             }
         }
 
+        /// <summary>Converts a local B-B point to the world frame.</summary>
         public static Point3d World(SectionSnapshot s, LocalPoint p)
         {
             return s.Frame.World(new Point3d(p.X, p.Y, p.Z));
         }
 
+        /// <summary>Moves the B-B entities to the new design.</summary>
         public ViewUpdateResult Update(Database db, Transaction tr, ElevatorParameters design)
         {
             var s = MachineRoomSectionDrawing.Read(db, tr);

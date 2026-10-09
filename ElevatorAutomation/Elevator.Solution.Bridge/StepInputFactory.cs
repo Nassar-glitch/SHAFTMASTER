@@ -4,8 +4,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Builds the STEP model parameters from a project.</summary>
     public static class StepInputFactory
     {
+        /// <summary>Calculates the design and builds the STEP model parameters.</summary>
         public static StepModelParameters Create(
             ElevatorProject project,
             DesignContext context,

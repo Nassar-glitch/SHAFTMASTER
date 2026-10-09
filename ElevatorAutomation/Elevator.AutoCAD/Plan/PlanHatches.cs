@@ -5,8 +5,10 @@ using Elevator.AutoCAD.Common;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Preparation and checks of the plan hatches.</summary>
     public static class PlanHatches
     {
+        /// <summary>Records the expected plan hatches.</summary>
         public static Dictionary<string, HatchExpectation> Prepare(DrawingSnapshot snapshot, PlanGeometryAdapter geometry)
         {
             var expected = new Dictionary<string, HatchExpectation>();
@@ -33,6 +35,7 @@ namespace Elevator.AutoCAD.Plan
             return expected;
         }
 
+        /// <summary>Re-evaluates the plan hatches and checks them.</summary>
         public static void EvaluateAndValidate(DrawingSnapshot snapshot, Dictionary<string, HatchExpectation> expected)
         {
             foreach (var pair in expected)

@@ -12,8 +12,10 @@ using Elevator.Core.MachineRoom;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>Imports, reads and checks the native machine-room section B-B.</summary>
     public static class MachineRoomSectionDrawing
     {
+        /// <summary>Detaches the associations of the master dimensions, which the update cannot keep.</summary>
         public static void DetachSourceDimensionAssociations(Autodesk.AutoCAD.ApplicationServices.Document doc)
         {
             ObjectId[] dimensions;
@@ -32,14 +34,18 @@ namespace Elevator.AutoCAD.SectionBB
                 doc.Editor.Command("_.DIMDISASSOCIATE", Autodesk.AutoCAD.EditorInput.SelectionSet.FromObjectIds(dimensions), "");
         }
 
+        /// <summary>Name of the stored manifest record.</summary>
         public const string Record = "MachineRoomSectionBindings";
+        /// <summary>Key of the frame entity.</summary>
         public const string FrameKey = "MachineRoomSection.Reference.Frame";
 
+        /// <summary>True when the drawing already holds section B-B.</summary>
         public static bool IsPresent(Database db, Transaction tr)
         {
             return ProjectDataStorage.Read<SectionManifest>(db, tr, Record) != null;
         }
 
+        /// <summary>Reads the B-B entities and their manifest.</summary>
         public static SectionSnapshot Read(Database db, Transaction tr)
         {
             var m = ProjectDataStorage.Read<SectionManifest>(db, tr, Record);
@@ -85,6 +91,7 @@ namespace Elevator.AutoCAD.SectionBB
             };
         }
 
+        /// <summary>Binds a verified master as section B-B.</summary>
         public static void Prepare(Database db, Transaction tr)
         {
             if (IsPresent(db, tr))
@@ -169,6 +176,7 @@ namespace Elevator.AutoCAD.SectionBB
             Read(db, tr);
         }
 
+        /// <summary>Imports the B-B master into the drawing.</summary>
         public static void Import(Database destination, string source, Point3d origin, Vector3d xAxis)
         {
             using (var outer = destination.TransactionManager.StartTransaction())

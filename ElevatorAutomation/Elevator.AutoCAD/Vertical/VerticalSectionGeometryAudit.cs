@@ -14,6 +14,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.Vertical
 {
+    /// <summary>Checks the vertical section against its calculation.</summary>
     public static class VerticalSectionGeometryAudit
     {
         static void Near(double a, double b, string label)
@@ -22,6 +23,7 @@ namespace Elevator.AutoCAD.Vertical
                 throw new InvalidOperationException("Geometry mismatch: " + label + " (" + a + " / " + b + ")");
         }
 
+        /// <summary>Checks that a native entity matches the expected one.</summary>
         public static void Compare(Entity actual, Entity expected, ShaftFrame f, string id)
         {
             if (actual.GetRXClass().DxfName != expected.GetRXClass().DxfName || actual.Visible != expected.Visible)
@@ -76,6 +78,7 @@ namespace Elevator.AutoCAD.Vertical
             }
         }
 
+        /// <summary>Checks the vertical section against its data.</summary>
         public static VerticalNativeAudit Run(Database db, Transaction tr)
         {
             var data = ProjectDataStorage.Read<VerticalProjectData>(db, tr, VerticalExperimentDrawing.DataKey);

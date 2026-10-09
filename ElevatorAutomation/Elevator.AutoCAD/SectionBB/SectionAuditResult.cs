@@ -7,6 +7,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>Statuses and counts reported by the B-B audit.</summary>
     public sealed class SectionAuditResult
     {
         public string Status;

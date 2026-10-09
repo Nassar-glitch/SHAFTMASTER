@@ -13,8 +13,10 @@ using Elevator.Core.Suspension;
 
 namespace Elevator.AutoCAD.SectionBB
 {
+    /// <summary>The AutoCAD section B-B commands.</summary>
     public sealed class MachineRoomSectionCommand
     {
+        /// <summary>Prompts for the B-B data.</summary>
         public static bool EditData(Document doc)
         {
             ProjectInput input;
@@ -76,6 +78,7 @@ namespace Elevator.AutoCAD.SectionBB
             return true;
         }
 
+        /// <summary>Command entry: edits the B-B data.</summary>
         [CommandMethod("ELEVATORREEVINGDATA", CommandFlags.Modal)]
         public void Data()
         {
@@ -90,6 +93,7 @@ namespace Elevator.AutoCAD.SectionBB
             }
         }
 
+        /// <summary>Command entry: places the B-B section.</summary>
         [CommandMethod("ELEVATORMRSECTION", CommandFlags.Modal)]
         public void Place()
         {
@@ -127,6 +131,7 @@ namespace Elevator.AutoCAD.SectionBB
             }
         }
 
+        /// <summary>Command entry: audits the B-B section.</summary>
         [CommandMethod("ELEVATORMRSECTIONAUDIT", CommandFlags.Modal)]
         public void Audit()
         {

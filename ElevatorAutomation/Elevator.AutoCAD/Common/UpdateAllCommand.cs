@@ -5,9 +5,10 @@ using Elevator.AutoCAD.SectionBB;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>The AutoCAD command that updates every view.</summary>
     public sealed class UpdateAllCommand
     {
-        // Add validated view implementations here; all receive the same calculated design.
+        /// <summary>Add validated view implementations here; all receive the same calculated design.</summary>
         [CommandMethod("UPDATEALL", CommandFlags.Modal)]
         public void Execute()
         {

@@ -10,8 +10,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Dependencies of the machine-room chassis contours on the shared design.</summary>
     public static class MachineRoomDependencies
     {
+        /// <summary>The points of an entity in the local frame.</summary>
         public static LocalPoint[] Points(Entity e, ShaftFrame frame)
         {
             Point3d[] pts;
@@ -56,6 +58,7 @@ namespace Elevator.AutoCAD.MachineRoom
             return Math.Abs(a - b) < .02;
         }
 
+        /// <summary>Derives and stores the dependency of each chassis contour.</summary>
         public static void Prepare(Database db, Transaction tr, MachineRoomSnapshot s)
         {
             if (s.Manifest.DependencyVersion == 1)
@@ -190,6 +193,7 @@ namespace Elevator.AutoCAD.MachineRoom
                 throw new InvalidOperationException("Reviewed P1/P3 annotation topology differs; no automatic label inference.");
         }
 
+        /// <summary>Moves an entity to follow its dependency.</summary>
         public static void Apply(Entity e, MachineRoomBinding b, MachineRoomSnapshot s, ElevatorParameters design)
         {
             var d = b.Dependency;

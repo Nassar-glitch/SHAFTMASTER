@@ -8,9 +8,10 @@ using Elevator.AutoCAD.Common;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Migrates drawings made by earlier versions.</summary>
     public static class LegacyMigration
     {
-        // Only this import boundary knows old handles. Normal reading/updating never uses them.
+        /// <summary>Only this import boundary knows old handles. Normal reading/updating never uses them.</summary>
         public static void Ensure(Database db, Transaction tr)
         {
             if (ProjectDataStorage.Read<BindingFile>(db, tr, "PlanBindings") != null)

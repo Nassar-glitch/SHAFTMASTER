@@ -4,6 +4,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>Updates the plan view from the shared design.</summary>
     public sealed class PlanUpdater : IViewUpdater
     {
         public string ViewId
@@ -14,6 +15,7 @@ namespace Elevator.AutoCAD.Plan
             }
         }
 
+        /// <summary>Moves and reshapes the plan entities to the new design.</summary>
         public ViewUpdateResult Update(Database db, Transaction tr, ElevatorParameters design)
         {
             var snapshot = DrawingReader.Read(db, tr);

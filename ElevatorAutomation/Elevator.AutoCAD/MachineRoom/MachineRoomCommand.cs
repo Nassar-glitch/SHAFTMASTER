@@ -8,8 +8,10 @@ using Elevator.AutoCAD.Plan;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>The AutoCAD command that adds the machine room.</summary>
     public sealed class MachineRoomCommand
     {
+        /// <summary>Command entry.</summary>
         [CommandMethod("ELEVATORMACHINEROOM", CommandFlags.Modal)]
         public void Add()
         {

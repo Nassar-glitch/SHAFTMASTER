@@ -13,6 +13,7 @@ using Elevator.Core.Shaft;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>The AutoCAD section A-A commands.</summary>
     public sealed class SectionAACommands
     {
         static void Check(PromptStatus s)
@@ -65,6 +66,7 @@ namespace Elevator.AutoCAD.SectionAA
             d.DisplayFloorId = f1.FloorId;
         }
 
+        /// <summary>Prompts for the A-A data.</summary>
         public static SectionAAProject Edit(Document doc, SectionAAProject current)
         {
             var d = current == null ? new SectionAAProject() : Elevator.Core
@@ -198,18 +200,21 @@ namespace Elevator.AutoCAD.SectionAA
             }
         }
 
+        /// <summary>Command entry: places the A-A section.</summary>
         [CommandMethod("ELEVATORSECTIONAA")]
         public void Install()
         {
             Run(true, false);
         }
 
+        /// <summary>Command entry: updates the A-A section.</summary>
         [CommandMethod("ELEVATORSECTIONAAUPDATE")]
         public void Update()
         {
             Run(false, false);
         }
 
+        /// <summary>Command entry: edits the A-A data.</summary>
         [CommandMethod("ELEVATORSECTIONAADATA")]
         public void Data()
         {
@@ -283,6 +288,7 @@ namespace Elevator.AutoCAD.SectionAA
             }
         }
 
+        /// <summary>Command entry: audits the A-A section.</summary>
         [CommandMethod("ELEVATORSECTIONAAAUDIT")]
         public void Audit()
         {

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Elevator.AutoCAD.Plan
 {
+    /// <summary>The list of plan bindings and the template identifier.</summary>
     public sealed class BindingFile
     {
         public int SchemaVersion { get; set; }

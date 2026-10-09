@@ -8,6 +8,7 @@ using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.SectionAA
 {
+    /// <summary>Reviewed description of the A-A master drawing.</summary>
     public sealed class AASeed
     {
         public string SourceSha256;

@@ -8,6 +8,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>Checks the machine-room geometry against the design.</summary>
     public static class MachineRoomGeometryAudit
     {
         private static void Near(double actual, double expected, string message)
@@ -15,6 +16,7 @@ namespace Elevator.AutoCAD.MachineRoom
             DrawingUpdater.AssertNear(actual, expected, "Geometry audit: " + message);
         }
 
+        /// <summary>Checks every dependency, support and dimension of the machine room.</summary>
         public static MachineRoomAuditResult Run(MachineRoomSnapshot s, ElevatorParameters design)
         {
             if (s.Manifest.DependencyVersion != 1)

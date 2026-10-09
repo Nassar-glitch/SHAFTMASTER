@@ -9,8 +9,10 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.MachineRoom
 {
+    /// <summary>The AutoCAD command that audits the machine-room geometry.</summary>
     public sealed class MachineRoomAuditCommand
     {
+        /// <summary>Command entry.</summary>
         [CommandMethod("ELEVATORMRAUDIT", CommandFlags.Modal)]
         public void Execute()
         {

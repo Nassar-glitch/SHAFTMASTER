@@ -7,7 +7,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
-    // Transport envelopes reference the existing versioned project JSON, never a second project model.
+    /// <summary>Transport envelopes reference the existing versioned project JSON, never a second project model.</summary>
     public sealed class GenerationRequest
     {
         public int ProtocolVersion = BridgeContract.Version;

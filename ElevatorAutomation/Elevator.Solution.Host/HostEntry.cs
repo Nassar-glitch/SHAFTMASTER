@@ -17,8 +17,10 @@ using Elevator.Solution.Bridge;
 
 namespace Elevator.Solution.Host
 {
+    /// <summary>The AutoCAD Core Console entry point that runs a desktop request.</summary>
     public sealed class HostEntry
     {
+        /// <summary>Command SOLUTIONHOST: reads the request folder, generates or verifies the drawing and writes the response.</summary>
         [CommandMethod("SOLUTIONHOST")]
         public void Execute()
         {
@@ -127,6 +129,7 @@ namespace Elevator.Solution.Host
             Inspect(db, request, response);
         }
 
+        /// <summary>Adds the roof identifiers that the A-A round trip stores, before generation and verification.</summary>
         public static void PrepareRoofMetadata(ElevatorProject project, DrawingViews views)
         {
             // A-A's legacy round-trip persists these identifiers. Materialize the same
@@ -142,6 +145,7 @@ namespace Elevator.Solution.Host
                 project.Extensions["legacy.roofName"] = roof.Name;
         }
 
+        /// <summary>Reads the design context from the generated drawing.</summary>
         public static DesignContext ReadContext(Database db, Transaction tr, ElevatorProject project, DrawingViews views)
         {
             var plan = DrawingReader.Read(db, tr);
@@ -169,6 +173,7 @@ namespace Elevator.Solution.Host
             return c;
         }
 
+        /// <summary>The model entities grouped by drawing view.</summary>
         public static Dictionary<DrawingViews, List<Entity>> Groups(Database db, Transaction tr)
         {
             var groups = new Dictionary<DrawingViews, List<Entity>>();
@@ -197,6 +202,7 @@ namespace Elevator.Solution.Host
             return groups;
         }
 
+        /// <summary>Reads the generated drawing back and fills the response.</summary>
         public static void Inspect(Database db, GenerationRequest request, GenerationResponse response)
         {
             using (var tr = db.TransactionManager.StartTransaction())

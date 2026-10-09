@@ -1,4 +1,4 @@
-// All dimensions in this source and Parameters.json are millimetres. SOLIDWORKS API geometry uses metres.
+/// <summary>All dimensions in this source and Parameters.json are millimetres. SOLIDWORKS API geometry uses metres.</summary>
 public class BodyRecord
 {
     public string Name;

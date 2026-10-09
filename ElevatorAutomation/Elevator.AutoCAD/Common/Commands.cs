@@ -15,6 +15,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>Runs an update command over a set of view updaters and records its outputs for the tests.</summary>
     public static class Commands
     {
         public static ElevatorParameters LastElevatorParameters;
@@ -22,6 +23,7 @@ namespace Elevator.AutoCAD.Common
         public static string LastError;
         public static Dictionary<string, double> LastDimensions;
 
+        /// <summary>Updates the given views of the open drawing, validates the result and saves a separate DWG and JSON.</summary>
         public static void Run(string command, IEnumerable<IViewUpdater> views)
         {
             var doc = Application.DocumentManager.MdiActiveDocument;

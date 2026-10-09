@@ -7,6 +7,7 @@ using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
 {
+    /// <summary>Runs the AutoCAD Core Console host for a request.</summary>
     public sealed class GenerationClient
     {
         public readonly string Root;
@@ -21,6 +22,7 @@ namespace Elevator.Solution.Bridge
             ConsolePath = consolePath;
         }
 
+        /// <summary>Generates the drawing of a project in the background.</summary>
         public Task<GenerationResponse> GenerateAsync(
             ElevatorProject project,
             GenerationOptions options,
@@ -36,6 +38,7 @@ namespace Elevator.Solution.Bridge
             return Task.Run(() => Run(request, consent, progress));
         }
 
+        /// <summary>Runs a generation request and checks the response.</summary>
         public GenerationResponse Run(GenerationRequest request, OutputConsent consent, Action<string> progress)
         {
             var timer = Stopwatch.StartNew();
@@ -93,6 +96,7 @@ namespace Elevator.Solution.Bridge
             return r;
         }
 
+        /// <summary>Starts the Core Console with the host script.</summary>
         public void RunHost(string drawing, string mode, string job)
         {
             string plugin = Path.Combine(Bin, "Elevator.Solution.Host.dll").Replace('\\', '/');

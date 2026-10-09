@@ -7,10 +7,13 @@ using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Common
 {
+    /// <summary>Plan text annotations: preparation, update and validation.</summary>
     public static class PlanAnnotations
     {
+        /// <summary>Key of the plan title annotation.</summary>
         public const string TitleId = "Plan.CenterFront.Part013";
 
+        /// <summary>The text of an annotation entity.</summary>
         public static string Text(Entity entity)
         {
             var text = entity as MText;
@@ -28,6 +31,7 @@ namespace Elevator.AutoCAD.Common
             throw new InvalidOperationException("Annotation binding requires an MText or an MText-content multileader.");
         }
 
+        /// <summary>Escapes a value for AutoCAD text.</summary>
         public static string Escape(string value)
         {
             return value.Replace("\\", "\\\\")
@@ -39,6 +43,7 @@ namespace Elevator.AutoCAD.Common
                 .Replace("%<", "% <");
         }
 
+        /// <summary>Reads the annotation templates from the drawing.</summary>
         public static Dictionary<string, string> Prepare(
             Database db,
             Transaction tr,
@@ -76,6 +81,7 @@ namespace Elevator.AutoCAD.Common
             return result;
         }
 
+        /// <summary>Writes the annotation values.</summary>
         public static void Apply(DrawingSnapshot snapshot, Dictionary<string, string> contents)
         {
             foreach (var pair in contents)
@@ -97,6 +103,7 @@ namespace Elevator.AutoCAD.Common
             }
         }
 
+        /// <summary>Checks the annotation texts against the expected values.</summary>
         public static void Validate(DrawingSnapshot snapshot, Dictionary<string, string> contents)
         {
             foreach (var pair in contents)
