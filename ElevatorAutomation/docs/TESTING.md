@@ -4,19 +4,27 @@ The tests are organised in three tiers (ARCHITECTURE-PLAN section 3). One entry 
 
 ```powershell
 cd ElevatorAutomation
-./tools/test.ps1 -Tier 1          # after every change
-./tools/test.ps1 -Tier 1,2,3      # end of a phase / before a release
+./tools/test.ps1 -List                    # the suites, their tier and what they need
+./tools/test.ps1 -Tier 1                  # after every change (the command CI runs)
+./tools/test.ps1 -Tier 1,2,3              # end of a phase / before a release
+./tools/test.ps1 -Suite core-net48        # one suite (any tier); several names are allowed
 ```
 
-`tools/test.ps1` first builds into `artifacts/bin` (`tools/build.ps1`; `-NoBuild` skips it, `-Bin` chooses another non-release folder), then runs the suites of each requested tier. Every run writes into a fresh folder `artifacts/test-results/<yyyyMMdd-HHmmss>/`: one subfolder per suite (`tier<N>/<suite>/`), one log per suite, `build.log`, and `summary.json` / `summary.md` with the result, the assertion count and the time of every suite and the time per tier. A failing suite fails the run. Tests never run in, or build into, a release folder (`bin-shaftmaster-v*`).
+`tools/test.ps1` builds `artifacts/bin` (`tools/build.ps1`) when a selected suite needs it and the two xUnit projects (`-NoBuild` skips both, `-Bin` chooses another non-release folder). Tier-1 suites are independent and run as parallel processes (`-Serial` runs them one after another); tiers 2 and 3 drive one desktop / AutoCAD session and run one after another. Every run writes `artifacts/test-results/<yyyyMMdd-HHmmss>/`: one folder per suite (`tier<N>/<suite>/`), one log per suite, `build.log`, `summary.json` / `summary.md`, and prints a summary table. A failing suite fails the run. Tests never run in, or build into, a release folder (`bin-shaftmaster-v*`).
 
 | Tier | Suites | Needs |
 |---|---|---|
-| 1 | `golden` (tests/golden), `presets-core`, `rope-core` (with the Python hand check), `sheet-core` (no Word), `ff-core`, `safety-pit-core`, `xunit-core` (tests/Elevator.Core.Tests) and `xunit-reporting` (tests/Elevator.Reporting.Tests), each on net8.0 and net48 | .NET Framework, .NET 8 runtime, Python 3 |
-| 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui`. They drive the real window through its internal test facade `TestAutomation` (`Elevator.Solution.Desktop/Shell`, `InternalsVisibleTo` the test programs) by the handle names the suites used before P4 | as tier 1, a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
+| 1 | xUnit `core-net8.0`, `core-net48` (tests/Elevator.Core.Tests: golden Core captures, presets and Q sweep, rope / traction with the Python hand check, FF, safety / pit, application services, serializer parity on net48), `reporting-net8.0`, `reporting-net48` (tests/Elevator.Reporting.Tests); console programs that need WPF: `golden` (tests/golden: all approved files incl. figures) and `sheet-wpf` (CalculationSheetTests, 8285 assertions) | .NET SDK, .NET Framework 4.8, Python 3. On Linux only the net8.0 xUnit suites exist (that is the CI run) |
+| 2 | Programmatic WPF suites: `presets-ui`, `rope-ui`, `sheet-ui`, `calculation-ui`, `basic`, `safety-pit-ui`, `safety-pit-draft-ui`, `ff-ui`. They drive the real window through its internal test facade `TestAutomation` (`Elevator.Solution.Desktop/Shell`) | a desktop session; `calculation-ui` and `basic` also generate native drawings (AutoCAD 2023) |
 | 3 | `integration` (tests/integration/run-tier3.ps1: affected regressions, FF native / STEP integration, STEP input, native golden), `presets-native`, `sheet-word-render` | AutoCAD 2023, Microsoft Word, Python with PyMuPDF and python-docx, the local evidence folder `output/calculation-phase1` and the release `bin-shaftmaster-v01` (read only) |
 
-Reference run (2026-10-09, `artifacts/test-results/20261009-053328`, all PASS): build 8 s, tier 1 204 s, tier 2 215 s, tier 3 229 s (the Word render of 23 sheets, 169 pages, takes 185 s of it). The golden suite takes about 70–85 s, most of it the rope selection of the heavy-Q fixtures.
+Assertions column: for the xUnit suites the number of xUnit tests plus the checks made inside the converted suites (`checks-<framework>.json`); for the console programs their own assertion count.
+
+Reference run (2026-10-09, `artifacts/test-results/20261009-234346`, all PASS): xUnit build 10 s, tier 1 160 s (before P7: 602 s), tier 2 208 s, tier 3 140 s. Within tier 1 the longest suite is `core-net48` (159 s while six processes share the machine; about 100 s alone). The Q sweep and the golden heavy-Q fixtures dominate; they are now computed once (geometry and selection caches in Core, per-fixture results computed in parallel on first use).
+
+**Speed measures (P7).** `RopeTractionCalculationEngine.Geometry` (a full design-engine run, about 120 ms on net48) and `ProjectPresets.SizeRopes` keep bounded, locked, multi-entry caches keyed by the project fingerprint and the context object; `PresetLibrary.Hash` is computed once per library; the xUnit projects run test classes in parallel and compute the per-fixture captures / renders of a class in parallel on first use (`WarmCache`); the Q sweep runs its 14 cases in parallel. The JSON serializer chosen for one test (`CoreJson.UseScoped`) is private to that call context, not a shared static.
+
+**Flaky tests (P7).** Tests that compared project JSON text as a string failed now and then on net48 (the rope / traction and application-service tests): `JavaScriptSerializer` writes object members in reflection order, which is not stable within a process. They now compare after `JsonMembers.Sort`. The earlier suspect, the static `CoreJson.Override` set by the parity test, is replaced by the scoped override. Proof: 10 consecutive runs of `core-net8.0`, `core-net48` and `reporting-net48` in parallel, all PASS (the same 10 runs before the member-order fix failed 3 times).
 
 The AutoCAD script suites of `tests/run-tests.ps1` (plan, machine room, section, legacy regression) are not part of the tiers yet.
 
@@ -69,14 +77,14 @@ Figure SVG depends on the fonts installed (text is measured with ISOCPEUR, Arial
 
 ## Tier 1: xUnit Core tests (`tests/Elevator.Core.Tests`, ARCHITECTURE-PLAN P2)
 
-`tests/Elevator.Core.Tests/run-xunit.ps1` (and `tools/test.ps1` suite `xunit-core`) runs the xUnit project on net8.0 (against the netstandard2.0 build of `Elevator.Core`) and on net48 (against the application's build). It contains:
+`tools/test.ps1` suites `core-net8.0` and `core-net48` run the xUnit project on net8.0 (against the netstandard2.0 build of `Elevator.Core`) and on net48 (against the application's build). It contains:
 
 - **GoldenCoreTests:** the Core-level golden captures of `tests/golden/GoldenTests.cs` for all 36 fixtures plus the new project (round-trip project JSON, `results.json`, `fingerprints.json`), compared with the same approved files in `tests/golden/approved`. The calculation-sheet, Design Notes and figure captures need the WPF report code and stay in the console golden suite.
-- **ConsoleSuiteTests:** the rope / traction (60), FF (131) and safety / pit (117) console suites run unchanged inside xUnit; presets (160) on both since P3 (the Design Notes are in Elevator.Reporting). The console runners stay until P7.
+- **Suites/ (P7, the former console suites as xUnit):** `PresetsTests` (160 checks: `Loader_ladder_rules_lock_follow_and_selection` 125, `Q_sweep_survey_and_Table_6_shafts` 35), `RopeTractionTests` (60: presets 17, engine fixtures 35, machine-room rules 4, Table 6 2, independence 2; its `hand-check-fixtures.json` is re-computed by `verify_rope_traction.py` at the end of the `core-*` suites), `CarGuideForceTests` (131), `SafetyPitTests` (117). Each test asserts its expected check count.
 - **SerializerParityTests** (net48): the evidence for the serializer decision below.
 - **ApplicationServicesTests** (ARCHITECTURE-PLAN P4): the UI-free application services of `Elevator.Core.Application` — project session (new / save / open / dirty state, floor edits), preset flow (lock on edit, follow while unlocked, Reset, Fill blanks, persons) and live calculation (what an input change makes outdated, recalculation of only outdated results, invalid text, resets).
 
-CI (`.github/workflows/ci.yml`, not pushed yet): ubuntu-latest builds `Elevator.Core` for netstandard2.0 and runs the tests on net8.0; windows-latest builds Core and Bridge.
+CI (`.github/workflows/ci.yml`, not pushed yet): ubuntu-latest builds `Elevator.Core` for netstandard2.0 and runs `tools/test.ps1 -Tier 1` (the net8.0 suites); windows-latest builds Core, Reporting and Bridge.
 
 ### Serializer decision (P2)
 
@@ -113,7 +121,7 @@ Making Core's number formatting explicit (for example `G15`) would remove cause 
 
 ## Tier 1: xUnit Reporting tests (`tests/Elevator.Reporting.Tests`, ARCHITECTURE-PLAN P3)
 
-`run-xunit.ps1 -Project Elevator.Reporting.Tests` (and `tools/test.ps1` suite `xunit-reporting`) checks the DOCX content without Word for the 36 golden fixtures, on net8.0 (netstandard2.0 Elevator.Reporting) and net48 (the application's):
+`tools/test.ps1` suites `reporting-net8.0` and `reporting-net48` checks the DOCX content without Word for the 36 golden fixtures, on net8.0 (netstandard2.0 Elevator.Reporting) and net48 (the application's):
 
 - the calculation-sheet and Design Notes text (document, header, footer) equals the approved golden text in `tests/golden/approved` (net48 byte-exact; net8.0 with the numbers-only rule of the Core tests);
 - the forbidden strings of `CalculationSheetTests` are absent from the text and the document properties; no non-finite number;
