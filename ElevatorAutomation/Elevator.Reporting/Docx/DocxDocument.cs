@@ -557,134 +557,173 @@ namespace Elevator.Reporting.Docx
             using (var package = Package.Open(output, FileMode.Create, FileAccess.ReadWrite))
             {
                 var documentUri = new Uri("/word/document.xml", UriKind.Relative);
-                string headerXml = TitleBlockXml(); // registers header images before the media parts are written
-                                                    // A4 portrait; drawing frame as a page border ~10 mm from the paper edge: thin (0.5 pt)
-                                                    // outer line, thick (1.5 pt) inner line (Word draws thickThin top/left and thinThick
-                                                    // bottom/right with the thin line outside).
-                string frame =
-                    "<w:pgBorders w:offsetFrom=\"page\"><w:top w:val=\"thickThinSmallGap\" w:sz=\"12\" w:space=\"27\" "
-                    + "w:color=\"1F2A36\"/><w:left w:val=\"thickThinSmallGap\" w:sz=\"12\" w:space=\"27\" w:color=\"1F2A36\"/><w:bottom "
-                    + "w:val=\"thinThickSmallGap\" w:sz=\"12\" w:space=\"27\" w:color=\"1F2A36\"/><w:right w:val=\"thinThickSmallGap\" "
-                    + "w:sz=\"12\" w:space=\"27\" w:color=\"1F2A36\"/></w:pgBorders>";
-                string sect =
-                    "<w:sectPr><w:headerReference w:type=\"default\" r:id=\"rIdHeader\"/><w:footerReference w:type=\"default\" "
-                    + "r:id=\"rIdFooter\"/><w:pgSz w:w=\"11906\" w:h=\"16838\"/><w:pgMar w:top=\"2041\" w:right=\"1134\" w:bottom=\"1531\" "
-                    + "w:left=\"1134\" w:header=\"794\" w:footer=\"737\" w:gutter=\"0\"/>"
-                    + frame
-                    + "</w:sectPr>";
-                WritePart(
-                    package,
-                    documentUri,
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:document xmlns:w=\""
-                    + W
-                    + "\" xmlns:r=\""
-                    + R
-                    + "\" xmlns:wp=\""
-                    + WP
-                    + "\" xmlns:a=\""
-                    + A
-                    + "\" xmlns:pic=\""
-                    + PIC
-                    + "\"><w:body>"
-                    + body
-                    + sect
-                    + "</w:body></w:document>");
-                var document = package.GetPart(documentUri);
-                package.CreateRelationship(documentUri, TargetMode.Internal, R + "/officeDocument", "rIdDocument");
-                WritePart(
-                    package,
-                    new Uri("/word/styles.xml", UriKind.Relative),
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
-                    Styles());
-                document.CreateRelationship(new Uri("styles.xml", UriKind.Relative), TargetMode.Internal, R + "/styles", "rIdStyles");
-                WritePart(
-                    package,
-                    new Uri("/word/settings.xml", UriKind.Relative),
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:settings xmlns:w=\""
-                    + W
-                    + "\"><w:updateFields w:val=\"false\"/><w:defaultTabStop w:val=\"709\"/><w:compat><w:compatSetting "
-                    + "w:name=\"compatibilityMode\" w:uri=\"http://schemas.microsoft.com/office/word\" "
-                    + "w:val=\"15\"/></w:compat></w:settings>");
-                document.CreateRelationship(new Uri("settings.xml", UriKind.Relative), TargetMode.Internal, R + "/settings", "rIdSettings");
-                WritePart(
-                    package,
-                    new Uri("/word/header1.xml", UriKind.Relative),
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:hdr xmlns:w=\""
-                        + W
-                        + "\" xmlns:r=\""
-                        + R
-                        + "\" xmlns:wp=\""
-                        + WP
-                        + "\" xmlns:a=\""
-                        + A
-                        + "\" xmlns:pic=\""
-                        + PIC
-                        + "\">"
-                        + headerXml
-                        + "</w:hdr>");
-                document.CreateRelationship(new Uri("header1.xml", UriKind.Relative), TargetMode.Internal, R + "/header", "rIdHeader");
+                // Registers the header images before the media parts are written.
+                string headerXml = TitleBlockXml();
+                string sect = SectionXml();
+                PackagePart document = WriteDocumentPart(package, documentUri, sect);
+                WriteStyles(package, document);
+                WriteSettings(package, document);
+                WriteHeader(package, headerXml, document);
                 var header = package.GetPart(new Uri("/word/header1.xml", UriKind.Relative));
-                for (int i = 0; i < media.Count; i++)
-                {
-                    var image = media[i];
-                    string name = "image" + (i + 1) + "." + image.Extension;
-                    var part = package.CreatePart(
-                        new Uri("/word/media/" + name, UriKind.Relative),
-                        image.ContentType,
-                        CompressionOption.NotCompressed);
-                    using (var stream = part.GetStream(FileMode.Create, FileAccess.Write))
-                        stream.Write(image.Data, 0, image.Data.Length);
-                    string id;
-                    if (documentImages.TryGetValue(image, out id))
-                        document.CreateRelationship(new Uri("media/" + name, UriKind.Relative), TargetMode.Internal, R + "/image", id);
-                    if (headerImages.TryGetValue(image, out id))
-                        header.CreateRelationship(new Uri("media/" + name, UriKind.Relative), TargetMode.Internal, R + "/image", id);
-                    if (image.SvgData != null)
-                    {
-                        string svg = "image" + (i + 1) + ".svg";
-                        var svgPart =
-                            package.CreatePart(new Uri("/word/media/" + svg, UriKind.Relative), "image/svg+xml", CompressionOption.Normal);
-                        using (var stream = svgPart.GetStream(FileMode.Create, FileAccess.Write))
-                            stream.Write(image.SvgData, 0, image.SvgData.Length);
-                        if (documentImages.TryGetValue(image, out id))
-                        {
-                            document.CreateRelationship(
-                                                            new Uri("media/" + svg, UriKind.Relative),
-                                                            TargetMode.Internal,
-                                                            R + "/image",
-                                                            id + "s");
-                        }
-                        if (headerImages.TryGetValue(image, out id))
-                        {
-                            header.CreateRelationship(
-                                                            new Uri("media/" + svg, UriKind.Relative),
-                                                            TargetMode.Internal,
-                                                            R + "/image",
-                                                            id + "s");
-                        }
-                    }
-                }
-                WritePart(
-                    package,
-                    new Uri("/word/footer1.xml", UriKind.Relative),
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:ftr xmlns:w=\""
-                        + W
-                        + "\" xmlns:r=\""
-                        + R
-                        + "\">"
-                        + FooterXml()
-                        + "</w:ftr>");
-                document.CreateRelationship(new Uri("footer1.xml", UriKind.Relative), TargetMode.Internal, R + "/footer", "rIdFooter");
+                WriteMedia(package, document, header);
+                WriteFooter(package, document);
                 package.PackageProperties.Title = Title;
                 if (!String.IsNullOrEmpty(Subject))
                     package.PackageProperties.Subject = Subject;
                 package.PackageProperties.Creator = "ShaftMaster";
                 package.PackageProperties.Created = ReportClock.Now().ToUniversalTime();
             }
+        }
+
+        private string SectionXml()
+        {
+            // A4 portrait; drawing frame as a page border ~10 mm from the paper edge: thin (0.5 pt) outer line, thick (1.5 pt) inner
+            // line (Word draws thickThin top/left and thinThick bottom/right with the thin line outside).
+            string frame =
+                                "<w:pgBorders w:offsetFrom=\"page\"><w:top w:val=\"thickThinSmallGap\" w:sz=\"12\" w:space=\"27\" "
+                                + "w:color=\"1F2A36\"/><w:left w:val=\"thickThinSmallGap\" w:sz=\"12\" w:space=\"27\" "
+                                + "w:color=\"1F2A36\"/><w:bottom "
+                                + "w:val=\"thinThickSmallGap\" w:sz=\"12\" w:space=\"27\" w:color=\"1F2A36\"/><w:right "
+                                + "w:val=\"thinThickSmallGap\" "
+                                + "w:sz=\"12\" w:space=\"27\" w:color=\"1F2A36\"/></w:pgBorders>";
+            string sect =
+                "<w:sectPr><w:headerReference w:type=\"default\" r:id=\"rIdHeader\"/><w:footerReference w:type=\"default\" "
+                + "r:id=\"rIdFooter\"/><w:pgSz w:w=\"11906\" w:h=\"16838\"/><w:pgMar w:top=\"2041\" w:right=\"1134\" w:bottom=\"1531\" "
+                + "w:left=\"1134\" w:header=\"794\" w:footer=\"737\" w:gutter=\"0\"/>"
+                + frame
+                + "</w:sectPr>";
+            return sect;
+        }
+
+        private PackagePart WriteDocumentPart(Package package, Uri documentUri, string sect)
+        {
+            WritePart(
+                                package,
+                                documentUri,
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:document xmlns:w=\""
+                                + W
+                                + "\" xmlns:r=\""
+                                + R
+                                + "\" xmlns:wp=\""
+                                + WP
+                                + "\" xmlns:a=\""
+                                + A
+                                + "\" xmlns:pic=\""
+                                + PIC
+                                + "\"><w:body>"
+                                + body
+                                + sect
+                                + "</w:body></w:document>");
+            var document = package.GetPart(documentUri);
+            package.CreateRelationship(documentUri, TargetMode.Internal, R + "/officeDocument", "rIdDocument");
+            return document;
+        }
+
+        private void WriteStyles(Package package, PackagePart document)
+        {
+            WritePart(
+                                package,
+                                new Uri("/word/styles.xml", UriKind.Relative),
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
+                                Styles());
+            document.CreateRelationship(new Uri("styles.xml", UriKind.Relative), TargetMode.Internal, R + "/styles", "rIdStyles");
+        }
+
+        private void WriteSettings(Package package, PackagePart document)
+        {
+            WritePart(
+                                package,
+                                new Uri("/word/settings.xml", UriKind.Relative),
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml",
+                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:settings xmlns:w=\""
+                                + W
+                                + "\"><w:updateFields w:val=\"false\"/><w:defaultTabStop w:val=\"709\"/><w:compat><w:compatSetting "
+                                + "w:name=\"compatibilityMode\" w:uri=\"http://schemas.microsoft.com/office/word\" "
+                                + "w:val=\"15\"/></w:compat></w:settings>");
+            document.CreateRelationship(new Uri("settings.xml", UriKind.Relative), TargetMode.Internal, R + "/settings", "rIdSettings");
+        }
+
+        private void WriteHeader(Package package, string headerXml, PackagePart document)
+        {
+            WritePart(
+                                package,
+                                new Uri("/word/header1.xml", UriKind.Relative),
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml",
+                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:hdr xmlns:w=\""
+                                    + W
+                                    + "\" xmlns:r=\""
+                                    + R
+                                    + "\" xmlns:wp=\""
+                                    + WP
+                                    + "\" xmlns:a=\""
+                                    + A
+                                    + "\" xmlns:pic=\""
+                                    + PIC
+                                    + "\">"
+                                    + headerXml
+                                    + "</w:hdr>");
+            document.CreateRelationship(new Uri("header1.xml", UriKind.Relative), TargetMode.Internal, R + "/header", "rIdHeader");
+        }
+
+        private void WriteMedia(Package package, PackagePart document, PackagePart header)
+        {
+            for (int i = 0; i < media.Count; i++)
+            {
+                var image = media[i];
+                string name = "image" + (i + 1) + "." + image.Extension;
+                var part = package.CreatePart(
+                    new Uri("/word/media/" + name, UriKind.Relative),
+                    image.ContentType,
+                    CompressionOption.NotCompressed);
+                using (var stream = part.GetStream(FileMode.Create, FileAccess.Write))
+                    stream.Write(image.Data, 0, image.Data.Length);
+                string id;
+                if (documentImages.TryGetValue(image, out id))
+                    document.CreateRelationship(new Uri("media/" + name, UriKind.Relative), TargetMode.Internal, R + "/image", id);
+                if (headerImages.TryGetValue(image, out id))
+                    header.CreateRelationship(new Uri("media/" + name, UriKind.Relative), TargetMode.Internal, R + "/image", id);
+                if (image.SvgData != null)
+                {
+                    string svg = "image" + (i + 1) + ".svg";
+                    var svgPart =
+                        package.CreatePart(new Uri("/word/media/" + svg, UriKind.Relative), "image/svg+xml", CompressionOption.Normal);
+                    using (var stream = svgPart.GetStream(FileMode.Create, FileAccess.Write))
+                        stream.Write(image.SvgData, 0, image.SvgData.Length);
+                    if (documentImages.TryGetValue(image, out id))
+                    {
+                        document.CreateRelationship(
+                                                        new Uri("media/" + svg, UriKind.Relative),
+                                                        TargetMode.Internal,
+                                                        R + "/image",
+                                                        id + "s");
+                    }
+                    if (headerImages.TryGetValue(image, out id))
+                    {
+                        header.CreateRelationship(
+                                                        new Uri("media/" + svg, UriKind.Relative),
+                                                        TargetMode.Internal,
+                                                        R + "/image",
+                                                        id + "s");
+                    }
+                }
+            }
+        }
+
+        private void WriteFooter(Package package, PackagePart document)
+        {
+            WritePart(
+                                package,
+                                new Uri("/word/footer1.xml", UriKind.Relative),
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml",
+                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:ftr xmlns:w=\""
+                                    + W
+                                    + "\" xmlns:r=\""
+                                    + R
+                                    + "\">"
+                                    + FooterXml()
+                                    + "</w:ftr>");
+            document.CreateRelationship(new Uri("footer1.xml", UriKind.Relative), TargetMode.Internal, R + "/footer", "rIdFooter");
         }
     }
 }

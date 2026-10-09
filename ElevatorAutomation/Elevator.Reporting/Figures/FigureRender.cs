@@ -47,34 +47,7 @@ namespace Elevator.Reporting.Figures
         public static string Svg(Figure f)
         {
             var b = new StringBuilder();
-            b.Append("<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"")
-                .Append(F(f.WidthMm))
-                .Append("mm\" height=\"")
-                .Append(F(f.HeightMm))
-                .Append("mm\" viewBox=\"0 0 ")
-                .Append(U(f.WidthMm))
-                .Append(" ")
-                .Append(U(f.HeightMm))
-                .Append("\" data-figure=\"")
-                .Append(f.Id)
-                .Append("\"")
-                .Append(f.View == null ? "" : " data-view=\""
-                    + F(f.View.Scale)
-                    + ","
-                    + F(f.View.MinX)
-                    + ","
-                    + F(f.View.MaxY)
-                    + ","
-                    + F(f.View.OffsetX)
-                    + ","
-                    + F(f.View.OffsetY)
-                    + "\"")
-                .Append(">");
-            b.Append("<rect x=\"0\" y=\"0\" width=\"")
-                .Append(U(f.WidthMm))
-                .Append("\" height=\"")
-                .Append(U(f.HeightMm))
-                .Append("\" fill=\"#FFFFFF\"/>");
+            AppendHeader(f, b);
             string font = DocxDocument.Escape(Figure.FontFamily + ", 'Arial Narrow', Arial, sans-serif");
             foreach (var e in f.Entities)
             {
@@ -84,82 +57,127 @@ namespace Elevator.Reporting.Figures
                 var p = e as FigurePolyline;
                 if (p != null)
                 {
-                    string pts = String.Join(" ", p.Points.Select(q => U(q.X) + "," + U(q.Y)));
-                    if (p.Filled)
-                    {
-                        b.Append("<polygon")
-                            .Append(tag)
-                            .Append(" points=\"")
-                            .Append(pts)
-                            .Append("\" fill=\"#")
-                            .Append(p.Layer.Colour)
-                            .Append("\" stroke=\"none\"/>");
-                        continue;
-                    }
-                    b.Append(p.Closed ? "<polygon" : "<polyline")
-                        .Append(tag)
-                        .Append(" points=\"")
-                        .Append(pts)
-                        .Append("\" fill=\"none\" stroke=\"#")
-                        .Append(p.Layer.Colour)
-                        .Append("\" stroke-width=\"")
-                        .Append(U(p.Layer.WeightMm))
-                        .Append("\" stroke-linejoin=\"round\" stroke-linecap=\"butt\"");
-                    var dash = Dash(p.Layer);
-                    if (dash != null)
-                    {
-                        b.Append(" stroke-dasharray=\"")
-                                                    .Append(String.Join(" ", dash.Split(' ').Select(x => U(Double.Parse(x, Inv)))))
-                                                    .Append("\"");
-                    }
-                    b.Append("/>");
+                    AppendPolyline(b, p, tag);
                     continue;
                 }
                 var c = e as FigureCircle;
                 if (c != null)
                 {
-                    b.Append("<circle")
-                        .Append(tag)
-                        .Append(" cx=\"")
-                        .Append(U(c.Centre.X))
-                        .Append("\" cy=\"")
-                        .Append(U(c.Centre.Y))
-                        .Append("\" r=\"")
-                        .Append(U(c.Radius))
-                        .Append("\"")
-                        .Append(c.Filled
-                            ? " fill=\"#" + c.Layer.Colour + "\" stroke=\"none\""
-                            : " fill=\"#FFFFFF\" stroke=\"#" + c.Layer.Colour + "\" stroke-width=\"" + U(c.Layer.WeightMm) + "\"")
-                        .Append("/>");
+                    AppendCircle(b, c, tag);
                     continue;
                 }
                 var t = e as FigureText;
                 if (t != null)
-                {
-                    b.Append("<text")
-                        .Append(tag)
-                        .Append(" x=\"")
-                        .Append(U(t.At.X))
-                        .Append("\" y=\"")
-                        .Append(U(t.At.Y))
-                        .Append("\" font-family=\"")
-                        .Append(font)
-                        .Append("\" font-size=\"")
-                        .Append(U(t.HeightMm / CapRatio))
-                        .Append("\" text-anchor=\"")
-                        .Append(t.Anchor)
-                        .Append("\" fill=\"#")
-                        .Append(t.Layer.Colour)
-                        .Append("\"");
-                    if (t.Title)
-                        b.Append(" font-weight=\"bold\"");
-                    if (t.Vertical)
-                        b.Append(" transform=\"rotate(-90 ").Append(U(t.At.X)).Append(" ").Append(U(t.At.Y)).Append(")\"");
-                    b.Append(">").Append(DocxDocument.Escape(t.Content)).Append("</text>");
-                }
+                    AppendText(b, t, tag, font);
             }
             b.Append("</svg>");
             return b.ToString();
+        }
+
+        private static void AppendHeader(Figure f, StringBuilder b)
+        {
+            b.Append("<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"")
+                            .Append(F(f.WidthMm))
+                            .Append("mm\" height=\"")
+                            .Append(F(f.HeightMm))
+                            .Append("mm\" viewBox=\"0 0 ")
+                            .Append(U(f.WidthMm))
+                            .Append(" ")
+                            .Append(U(f.HeightMm))
+                            .Append("\" data-figure=\"")
+                            .Append(f.Id)
+                            .Append("\"")
+                            .Append(f.View == null ? "" : " data-view=\""
+                                + F(f.View.Scale)
+                                + ","
+                                + F(f.View.MinX)
+                                + ","
+                                + F(f.View.MaxY)
+                                + ","
+                                + F(f.View.OffsetX)
+                                + ","
+                                + F(f.View.OffsetY)
+                                + "\"")
+                            .Append(">");
+            b.Append("<rect x=\"0\" y=\"0\" width=\"")
+                .Append(U(f.WidthMm))
+                .Append("\" height=\"")
+                .Append(U(f.HeightMm))
+                .Append("\" fill=\"#FFFFFF\"/>");
+        }
+
+        private static void AppendPolyline(StringBuilder b, FigurePolyline p, string tag)
+        {
+            string pts = String.Join(" ", p.Points.Select(q => U(q.X) + "," + U(q.Y)));
+            if (p.Filled)
+            {
+                b.Append("<polygon")
+                    .Append(tag)
+                    .Append(" points=\"")
+                    .Append(pts)
+                    .Append("\" fill=\"#")
+                    .Append(p.Layer.Colour)
+                    .Append("\" stroke=\"none\"/>");
+                return;
+            }
+            b.Append(p.Closed ? "<polygon" : "<polyline")
+                .Append(tag)
+                .Append(" points=\"")
+                .Append(pts)
+                .Append("\" fill=\"none\" stroke=\"#")
+                .Append(p.Layer.Colour)
+                .Append("\" stroke-width=\"")
+                .Append(U(p.Layer.WeightMm))
+                .Append("\" stroke-linejoin=\"round\" stroke-linecap=\"butt\"");
+            var dash = Dash(p.Layer);
+            if (dash != null)
+            {
+                b.Append(" stroke-dasharray=\"")
+                    .Append(String.Join(" ", dash.Split(' ').Select(x => U(Double.Parse(x, Inv)))))
+                    .Append("\"");
+            }
+            b.Append("/>");
+        }
+
+        private static void AppendCircle(StringBuilder b, FigureCircle c, string tag)
+        {
+            b.Append("<circle")
+                .Append(tag)
+                .Append(" cx=\"")
+                .Append(U(c.Centre.X))
+                .Append("\" cy=\"")
+                .Append(U(c.Centre.Y))
+                .Append("\" r=\"")
+                .Append(U(c.Radius))
+                .Append("\"")
+                .Append(c.Filled
+                    ? " fill=\"#" + c.Layer.Colour + "\" stroke=\"none\""
+                    : " fill=\"#FFFFFF\" stroke=\"#" + c.Layer.Colour + "\" stroke-width=\"" + U(c.Layer.WeightMm) + "\"")
+                .Append("/>");
+        }
+
+        private static void AppendText(StringBuilder b, FigureText t, string tag, string font)
+        {
+            b.Append("<text")
+                .Append(tag)
+                .Append(" x=\"")
+                .Append(U(t.At.X))
+                .Append("\" y=\"")
+                .Append(U(t.At.Y))
+                .Append("\" font-family=\"")
+                .Append(font)
+                .Append("\" font-size=\"")
+                .Append(U(t.HeightMm / CapRatio))
+                .Append("\" text-anchor=\"")
+                .Append(t.Anchor)
+                .Append("\" fill=\"#")
+                .Append(t.Layer.Colour)
+                .Append("\"");
+            if (t.Title)
+                b.Append(" font-weight=\"bold\"");
+            if (t.Vertical)
+                b.Append(" transform=\"rotate(-90 ").Append(U(t.At.X)).Append(" ").Append(U(t.At.Y)).Append(")\"");
+            b.Append(">").Append(DocxDocument.Escape(t.Content)).Append("</text>");
         }
 
         public static byte[] Png(Figure f, double dpi = 300)
