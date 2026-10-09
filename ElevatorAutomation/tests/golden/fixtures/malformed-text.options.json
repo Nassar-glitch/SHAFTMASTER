@@ -1,0 +1,12 @@
+{
+  "CarGuideForceDraftError": "Vertical upper-to-lower car guide-shoe spacing h (mm): invalid text; enter a finite positive number.",
+  "ChassisDraftErrors": {
+    "Calculations.CarMassKg": "Empty car mass: finite number required."
+  },
+  "CompanyName": null,
+  "Description": "Malformed UI text for the car mass and h (sheet test 05): draft errors passed to the sheet.",
+  "LogoFile": null,
+  "SafetyPitDraftErrors": {
+    "Calculations.CarMassKg": "Empty car mass: finite number required. Malformed text is not an omitted mass."
+  }
+}

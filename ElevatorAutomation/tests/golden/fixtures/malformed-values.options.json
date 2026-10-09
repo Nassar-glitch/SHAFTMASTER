@@ -1,0 +1,8 @@
+{
+  "CarGuideForceDraftError": null,
+  "ChassisDraftErrors": null,
+  "CompanyName": null,
+  "Description": "Out-of-range values in the project file: negative Q, h 0, no car guide rails, 0 ropes.",
+  "LogoFile": null,
+  "SafetyPitDraftErrors": null
+}
