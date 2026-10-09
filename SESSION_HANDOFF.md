@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete, awaiting Planner (2026-10-09): ARCHITECTURE-PLAN P7 "Test consolidation" on branch `refactor/p7-tests` (from `main` `780e1a5`, the P6 merge). Not merged, not pushed.
+- **Status:** P7 reviewed OK and merged into main as `7c5e930` (--no-ff) after a passing pre-merge tier 1 (artifacts/test-results/20261010-000239, 141 s). Not pushed. P8 not started.
 - **Goal:** P7: xUnit as the single home of the Core / Reporting tier-1 tests, tier 1 about 3 minutes, one test command (`tools/test.ps1`). No behaviour change.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; P6 merge, then P7)
 - **Completed:**
