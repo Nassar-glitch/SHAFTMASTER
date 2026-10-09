@@ -15,6 +15,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Real rendered WPF window. Rope / traction inputs on the Suspension page are typed through their normal handlers; presets,
 // locks and Reset to preset are exercised through the editors and their context menus; the Calculate button, the export

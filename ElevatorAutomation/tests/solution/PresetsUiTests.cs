@@ -15,6 +15,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // DESIGN-FLOW stage 2 in the real rendered WPF window: a new project opens complete; every calculation, the calculation
 // sheet and the Design Notes come straight from it; managed fields lock on edit, follow while unlocked and Reset; older

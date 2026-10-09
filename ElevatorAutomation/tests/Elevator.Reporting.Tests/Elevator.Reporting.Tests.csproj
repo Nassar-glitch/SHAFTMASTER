@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tier-1 xUnit tests of Elevator.Reporting (ARCHITECTURE-PLAN P3): DOCX content without Word, on net8.0 (netstandard2.0
+       Reporting) and net48 (the application's Reporting). -->
+  <PropertyGroup>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>net8.0;net48</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+    <OutDir>$(ArtifactsRoot)tests\Elevator.Reporting.Tests\$(TargetFramework)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <StartupObject>Elevator.Core.Tests.TestHost</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+    <ProjectReference Include="..\..\Elevator.Core\Elevator.Core.csproj" Private="true" />
+    <ProjectReference Include="..\..\Elevator.Reporting\Elevator.Reporting.csproj" Private="true" />
+    <!-- Paths and data shared with the Core tests; the project session (WPF-free) of the application. -->
+    <Compile Include="..\Elevator.Core.Tests\TestData.cs" Link="Linked\TestData.cs" />
+    <Compile Include="..\..\Elevator.Solution.Desktop\ProjectSession.cs" Link="Linked\ProjectSession.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Web.Extensions" />
+    <!-- On .NET Framework the application's WPF rasterizer, so the sheet text and figures are exactly the application's. -->
+    <Compile Include="..\..\Elevator.Solution.Desktop\WpfFigureRasterizer.cs" Link="Linked\WpfFigureRasterizer.cs" />
+  </ItemGroup>
+</Project>

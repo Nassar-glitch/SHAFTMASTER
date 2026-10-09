@@ -6,6 +6,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
 using Elevator.Solution.Desktop;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Independent numeric fixtures, never project defaults. Live tests use geometry
 // issued by the shared design engine rather than stamping arbitrary dimensions.

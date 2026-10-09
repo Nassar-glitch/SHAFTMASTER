@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
+namespace Elevator.Reporting.Sheet
 {
  public sealed class CalculationSheetInputs
  {

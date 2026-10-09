@@ -39,10 +39,8 @@ namespace Elevator.Core.Tests
         [Fact]
         public void Safety_pit_core() { Assert.Equal(117, Run(SafetyPitTests.Main, "safety-pit-core", "safety-pit-tests.json", TestData.Root)); }
 
-#if NETFRAMEWORK
-        // Needs the Design Notes and so the WPF calculation-sheet sources: .NET Framework only.
+        // Needs the Design Notes (Elevator.Reporting since P3): runs on net8.0 and net48.
         [Fact]
         public void Presets_core() { Assert.Equal(160, Run(PresetsTests.Main, "presets-core", "presets-tests.json")); }
-#endif
     }
 }

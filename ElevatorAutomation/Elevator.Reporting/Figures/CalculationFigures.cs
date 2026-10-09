@@ -3,7 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+namespace Elevator.Reporting.Figures
 {
  // Phase A figures F1–F6, built only from the same plan geometry and results as the calculation sheet.
  // Shapes, symbols, styles and layout are fixed; every dimension, position, rail location and force value is project data.

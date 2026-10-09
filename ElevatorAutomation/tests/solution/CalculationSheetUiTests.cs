@@ -15,6 +15,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Real rendered WPF window: inputs typed into editors through their normal TextChanged handlers,
 // then the export path used by "Export Calculation Sheet…" (WriteCalculationSheet) is invoked.

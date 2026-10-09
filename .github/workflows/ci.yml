@@ -1,5 +1,5 @@
-# Continuous integration (ARCHITECTURE-PLAN P2): the portable Core and its tier-1 tests. The AutoCAD, SOLIDWORKS and WPF
-# parts are not built here (tier 2 and 3 run locally; docs/TESTING.md).
+# Continuous integration (ARCHITECTURE-PLAN P2, P3): the portable Core and Reporting and their tier-1 tests. The AutoCAD,
+# SOLIDWORKS and WPF parts are not built here (tier 2 and 3 run locally; docs/TESTING.md).
 name: CI
 
 on:
@@ -14,7 +14,7 @@ env:
 
 jobs:
   core-portable:
-    name: Core (netstandard2.0) and Core tests (net8.0)
+    name: Core and Reporting (netstandard2.0), tests (net8.0)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,26 +23,32 @@ jobs:
           dotnet-version: |
             8.0.x
             10.0.x
-      - name: Build Elevator.Core (netstandard2.0)
-        run: dotnet build ElevatorAutomation/Elevator.Core/Elevator.Core.csproj -c Release -f netstandard2.0
+      - name: Build Elevator.Core and Elevator.Reporting (netstandard2.0)
+        run: dotnet build ElevatorAutomation/Elevator.Reporting/Elevator.Reporting.csproj -c Release -f netstandard2.0
       - name: Test Elevator.Core.Tests (net8.0)
         run: >
           dotnet test ElevatorAutomation/tests/Elevator.Core.Tests/Elevator.Core.Tests.csproj -c Release -f net8.0
-          --results-directory test-results --logger "trx;LogFileName=net8.0.trx" --logger "console;verbosity=normal"
+          --results-directory test-results --logger "trx;LogFileName=core-net8.0.trx" --logger "console;verbosity=normal"
+      - name: Test Elevator.Reporting.Tests (net8.0)
+        run: >
+          dotnet test ElevatorAutomation/tests/Elevator.Reporting.Tests/Elevator.Reporting.Tests.csproj -c Release -f net8.0
+          --results-directory test-results --logger "trx;LogFileName=reporting-net8.0.trx" --logger "console;verbosity=normal"
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: core-tests-net8.0
+          name: tests-net8.0
           path: test-results
 
   windows-core-bridge:
-    name: Core and Bridge (.NET Framework 4.8, no AutoCAD / SOLIDWORKS)
+    name: Core, Reporting and Bridge (.NET Framework 4.8, no AutoCAD / SOLIDWORKS)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Build Elevator.Core and Elevator.Solution.Bridge
-        run: dotnet build ElevatorAutomation/Elevator.Solution.Bridge/Elevator.Solution.Bridge.csproj -c Release
+      - name: Build Elevator.Core, Elevator.Reporting and Elevator.Solution.Bridge
+        run: |
+          dotnet build ElevatorAutomation/Elevator.Solution.Bridge/Elevator.Solution.Bridge.csproj -c Release
+          dotnet build ElevatorAutomation/Elevator.Reporting/Elevator.Reporting.csproj -c Release

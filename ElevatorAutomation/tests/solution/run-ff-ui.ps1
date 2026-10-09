@@ -6,7 +6,7 @@ if($CandidateBin -in @('bin-shaftmaster-v01','bin-shaftmaster-basic-candidate','
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $wpf=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/WPF'
-$refs=@('/reference:System.Web.Extensions.dll','/reference:System.Xaml.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'ShaftMaster.exe')))
+$refs=@('/reference:System.Web.Extensions.dll','/reference:System.Xaml.dll',('/reference:'+(Join-Path $bin 'Elevator.Core.dll')),('/reference:'+(Join-Path $bin 'Elevator.Solution.Bridge.dll')),('/reference:'+(Join-Path $bin 'Elevator.Reporting.dll')),('/reference:'+(Join-Path $bin 'ShaftMaster.exe')))
 foreach($a in @('PresentationCore','PresentationFramework','WindowsBase')){$refs+=('/reference:'+(Join-Path $wpf ($a+'.dll')))}
 & $compiler /nologo /target:exe /platform:x64 ('/out:'+(Join-Path $bin 'CarGuideForceUiTests.exe')) @refs (Get-Item -LiteralPath (Join-Path $PSScriptRoot 'CarGuideForceUiTests.cs')).FullName
 if($LASTEXITCODE){throw 'FF rendered WPF test build failed'}

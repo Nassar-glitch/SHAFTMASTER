@@ -10,6 +10,10 @@ using System.Windows.Media;
 using Elevator.Core.Project;
 using Elevator.Solution.Desktop;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 public static class CalculationUiTests
 {
  static MainWindow window;static string output;static int count;static List<string> checks=new List<string>();

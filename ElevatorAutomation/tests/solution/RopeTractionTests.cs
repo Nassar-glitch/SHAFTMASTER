@@ -7,6 +7,10 @@ using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Rope / traction Core tests (EN 81-20 5.5, EN 81-50 5.11/5.12) on the packaged candidate. Engine inputs and outputs of each
 // fixture are written to hand-check-fixtures.json for the independent Python re-computation (verify_rope_traction.py).
@@ -192,7 +196,7 @@ public static class RopeTractionTests
         p.Calculations.SafetyPit = new SafetyPitInputs { SafetyGearType = "Progressive", CarGuideCount = 2, CarBufferCount = 1, CounterweightBufferCount = 1 };
         var geometry = new ElevatorDesignEngine().CalculateCarGuideForceGeometry(p, ctx); var ff = new CarGuideForceCalculationEngine().Calculate(p, geometry, ctx);
         var sp = new SafetyPitCalculationEngine().Calculate(p);
-        var ws = new Elevator.Solution.Desktop.CalculationWorkspace(); var chassis = ws.Calculate(p, ctx);
+        var ws = new Elevator.Reporting.Sheet.CalculationWorkspace(); var chassis = ws.Calculate(p, ctx);
         Check(Near(ff.FF1DesignN, 2 * 480 * 10 * geometry.InternalWidthMm.Value / (4 * 1200.0)) && Near(sp.P5.PerComponentLoadN, 9800), "FF and P5 values unchanged by the new module (FF1 per note rule; P5 9800 N)");
         Lock(p, PresetFields.MinimumBreakingLoad, 50.0); Lock(p, PresetFields.GrooveAngle, 33.0);
         Check(CarGuideForceCalculationEngine.IsCurrent(ff, p, ctx) && SafetyPitCalculationEngine.IsCurrent(sp, p) && ws.IsCurrent(p, ctx), "Rope / traction edits leave P1–P4, P5–P7 and FF results current (independent fingerprints)");

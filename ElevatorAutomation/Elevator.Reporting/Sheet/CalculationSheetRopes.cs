@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using Elevator.Core;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
+namespace Elevator.Reporting.Sheet
 {
  // "Suspension rope and traction checks" section (EN 81-20 5.5; EN 81-50 5.11 / 5.12). Clean client format: equation,
  // substitution, required, actual, OK / NOT OK. Remarks and explanations go to the Design Notes file only.

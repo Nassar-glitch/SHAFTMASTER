@@ -11,6 +11,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Serialization;
 using Elevator.Solution.Desktop;
 using Xunit;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // ProjectPresets keeps a static selection cache: the tests run one after another.
 [assembly: CollectionBehavior(DisableTestParallelization = true)]

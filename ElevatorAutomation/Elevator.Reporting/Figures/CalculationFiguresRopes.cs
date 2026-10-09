@@ -3,7 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
-namespace Elevator.Solution.Desktop
+using Elevator.Reporting.Docx;
+namespace Elevator.Reporting.Figures
 {
  // F10 traction sheave (schematic, NTS): rope wrap with α dimensioned from the reeving geometry, T1 / T2 on the rope runs,
  // and the groove profile detail with β / γ from the project inputs. Shapes are fixed; α, β, γ, Dt and the groove type are project data.

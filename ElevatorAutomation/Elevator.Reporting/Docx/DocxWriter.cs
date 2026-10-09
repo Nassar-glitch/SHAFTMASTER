@@ -4,7 +4,7 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
-namespace Elevator.Solution.Desktop
+namespace Elevator.Reporting.Docx
 {
  // Date and time used by the reports (calculation sheet, Design Notes, DOCX package): the local time in the
  // application; tests replace it with a fixed value.

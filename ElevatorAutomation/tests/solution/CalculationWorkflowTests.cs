@@ -5,6 +5,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
 using Elevator.Solution.Desktop;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 public static class CalculationWorkflowTests
 {
  static int count;static void Check(bool ok,string name){if(!ok)throw new Exception(name);count++;}

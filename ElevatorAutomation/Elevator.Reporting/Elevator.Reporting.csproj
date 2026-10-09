@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Reports (ARCHITECTURE-PLAN P3): calculation sheet, Design Notes, DOCX writer, figure model, figure builders and SVG
+       renderer, company report settings. An internal DLL next to ShaftMaster.exe; no WPF. PNG rendering and text measurement
+       come from the application through IFigureRasterizer. -->
+  <PropertyGroup>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Elevator.Reporting</AssemblyName>
+    <RootNamespace>Elevator.Reporting</RootNamespace>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <OutDir>$(ArtifactsRoot)netstandard2.0\Elevator.Reporting\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elevator.Core\Elevator.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <!-- System.IO.Packaging of .NET Framework (as the DOCX writer used it in the desktop project). -->
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
+  </ItemGroup>
+</Project>

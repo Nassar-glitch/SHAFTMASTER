@@ -5,6 +5,10 @@ using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;
 using Elevator.Solution.Desktop;
+using Elevator.Reporting.Sheet;
+using Elevator.Reporting.DesignNotes;
+using Elevator.Reporting.Docx;
+using Elevator.Reporting.Figures;
 
 // Synthetic fixtures only. These values are never inserted into project defaults.
 public static class SafetyPitTests
