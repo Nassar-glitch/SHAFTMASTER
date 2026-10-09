@@ -70,6 +70,67 @@ namespace Elevator.Reporting.Figures
             double dl = p.X("doorLeft"), dr = p.X("doorRight");
             bool door = p.DoorWidth > 0 && dl > 0 && dr < p.SW;
             // Walls (symbolic hatched band) with the entrance opening in the front wall, from the plan geometry.
+            DrawWalls(p, f, v, dl, dr, door);
+            // Car (internal) and counterweight.
+            double cl = p.X("carLeft"), cr = p.X("carRight");
+            f.Poly(
+                Map(v, new[] { Pt(cl, p.CarFront), Pt(cr, p.CarFront), Pt(cr, p.CarRear), Pt(cl, p.CarRear) }),
+                true,
+                FigureLayer.Secondary,
+                "car").Value = Figure.Mm(p.CarWidth) + "," + Figure.Mm(p.CarDepth);
+            f.Poly(Map(v, new[]
+            {
+                Pt(p.X("cwLeft"), p.CwFront),
+                Pt(p.X("cwRight"), p.CwFront),
+                Pt(p.X("cwRight"), p.CwRear),
+                Pt(p.X("cwLeft"), p.CwRear)
+            }), true, FigureLayer.Secondary, "counterweight");
+            // Car rail line (centre line) and simplified T-profile rails at their positions, blades towards the car / counterweight.
+            f.Line(v.P(-Wall - 60, p.CarRow), v.P(p.SW + Wall + 60, p.CarRow), FigureLayer.Centre, "car-rail-line").Value =
+                Figure.Mm(p.CarRow);
+            double kc = RailSymbolFactor(carRail, v);
+            f.Poly(Map(v, RailPlan(carRail, p.X("railLeft"), p.CarRow, +1, kc)), true, FigureLayer.Outline, "car-rail-left", true).Value =
+                Figure.Mm(p.X("railLeft"));
+            var carRight =
+                f.Poly(Map(v, RailPlan(carRail, p.X("railRight"), p.CarRow, -1, kc)), true, FigureLayer.Outline, "car-rail-right", true);
+            carRight.Value = Figure.Mm(p.X("railRight"));
+            FigurePolyline cwRight = null;
+            if (cwRail != null)
+            {
+                double kw = RailSymbolFactor(cwRail, v);
+                f.Poly(
+                    Map(v, RailPlan(cwRail, p.X("cwRailLeft"), p.CwRow, +1, kw)),
+                    true,
+                    FigureLayer.Outline,
+                    "cw-rail-left",
+                    true).Value = Figure.Mm(p.X("cwRailLeft"));
+                cwRight =
+                    f.Poly(Map(v, RailPlan(cwRail, p.X("cwRailRight"), p.CwRow, -1, kw)), true, FigureLayer.Outline, "cw-rail-right", true);
+                cwRight.Value = Figure.Mm(p.X("cwRailRight"));
+            }
+            var label = v.P(p.Center, (p.CarFront + p.CarRow) / 2);
+            f.Text("CAR", label + Pt(0, -1.5), "middle");
+            f.Text("internal W × D", label + Pt(0, 2.5), "middle");
+            f.Text("CW", v.P(p.Center, p.CwRow) + Pt(0, 1.2), "middle");
+            f.Text("car rail line", v.P(p.SW + Wall + 60, p.CarRow) + Pt(1.5, 1), "start");
+            // Rail designations as leader labels outside the walls on the right.
+            DrawRailLabels(p, carRail, cwRail, f, v, carRight, cwRight);
+            // Dimensions outside the walls: W, car DBG and SW below; CW DBG above; D and SD on the left.
+            double front = v.P(0, -Wall).Y, rear = v.P(0, p.SD + Wall).Y, left = v.P(-Wall, 0).X;
+            DrawShaftDimensions(p, cwRail, f, v, cl, cr, front, rear, left);
+            Axes(f, Pt(v.P(p.SW + Wall, 0).X + 8, front + 21));
+            if (door)
+            {
+                Finish(f, front + 24);
+                return f;
+            }
+            var note = f.Text("Entrance at the bottom", Pt(left - 14, front + 29), "start");
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawWalls(ElevatorParameters p, Figure f, FigureView v, double dl, double dr, bool door)
+        {
             var bands = new List<double[]> { new[] { -Wall, p.SD, p.SW + Wall, p.SD + Wall },
                 new[] { -Wall, 0, 0, p.SD },
                 new[] { p.SW, 0, p.SW + Wall, p.SD } };
@@ -122,49 +183,17 @@ namespace Elevator.Reporting.Figures
                 f.Poly(Map(v, new[] { Pt(0, 0), Pt(p.SW, 0), Pt(p.SW, p.SD), Pt(0, p.SD) }), true, FigureLayer.Outline, "shaft").Value =
                     Figure.Mm(p.SW) + "," + Figure.Mm(p.SD);
             }
-            // Car (internal) and counterweight.
-            double cl = p.X("carLeft"), cr = p.X("carRight");
-            f.Poly(
-                Map(v, new[] { Pt(cl, p.CarFront), Pt(cr, p.CarFront), Pt(cr, p.CarRear), Pt(cl, p.CarRear) }),
-                true,
-                FigureLayer.Secondary,
-                "car").Value = Figure.Mm(p.CarWidth) + "," + Figure.Mm(p.CarDepth);
-            f.Poly(Map(v, new[]
-            {
-                Pt(p.X("cwLeft"), p.CwFront),
-                Pt(p.X("cwRight"), p.CwFront),
-                Pt(p.X("cwRight"), p.CwRear),
-                Pt(p.X("cwLeft"), p.CwRear)
-            }), true, FigureLayer.Secondary, "counterweight");
-            // Car rail line (centre line) and simplified T-profile rails at their positions, blades towards the car / counterweight.
-            f.Line(v.P(-Wall - 60, p.CarRow), v.P(p.SW + Wall + 60, p.CarRow), FigureLayer.Centre, "car-rail-line").Value =
-                Figure.Mm(p.CarRow);
-            double kc = RailSymbolFactor(carRail, v);
-            f.Poly(Map(v, RailPlan(carRail, p.X("railLeft"), p.CarRow, +1, kc)), true, FigureLayer.Outline, "car-rail-left", true).Value =
-                Figure.Mm(p.X("railLeft"));
-            var carRight =
-                f.Poly(Map(v, RailPlan(carRail, p.X("railRight"), p.CarRow, -1, kc)), true, FigureLayer.Outline, "car-rail-right", true);
-            carRight.Value = Figure.Mm(p.X("railRight"));
-            FigurePolyline cwRight = null;
-            if (cwRail != null)
-            {
-                double kw = RailSymbolFactor(cwRail, v);
-                f.Poly(
-                    Map(v, RailPlan(cwRail, p.X("cwRailLeft"), p.CwRow, +1, kw)),
-                    true,
-                    FigureLayer.Outline,
-                    "cw-rail-left",
-                    true).Value = Figure.Mm(p.X("cwRailLeft"));
-                cwRight =
-                    f.Poly(Map(v, RailPlan(cwRail, p.X("cwRailRight"), p.CwRow, -1, kw)), true, FigureLayer.Outline, "cw-rail-right", true);
-                cwRight.Value = Figure.Mm(p.X("cwRailRight"));
-            }
-            var label = v.P(p.Center, (p.CarFront + p.CarRow) / 2);
-            f.Text("CAR", label + Pt(0, -1.5), "middle");
-            f.Text("internal W × D", label + Pt(0, 2.5), "middle");
-            f.Text("CW", v.P(p.Center, p.CwRow) + Pt(0, 1.2), "middle");
-            f.Text("car rail line", v.P(p.SW + Wall + 60, p.CarRow) + Pt(1.5, 1), "start");
-            // Rail designations as leader labels outside the walls on the right.
+        }
+
+        private static void DrawRailLabels(
+            ElevatorParameters p,
+            IRailSection carRail,
+            IRailSection cwRail,
+            Figure f,
+            FigureView v,
+            FigurePolyline carRight,
+            FigurePolyline cwRight)
+        {
             double lx = v.P(p.SW + Wall + 60, 0).X + 1.5;
             Action<FigurePolyline, double, string, string> leader =
                 (rail, y, text, tag) =>
@@ -180,8 +209,19 @@ namespace Elevator.Reporting.Figures
             leader(carRight, v.P(0, p.CarRow).Y - 5, "car rail " + carRail.Designation, "car-rail-label");
             if (cwRight != null)
                 leader(cwRight, v.P(0, p.CwRow).Y + 1, "CW rail " + cwRail.Designation, "cw-rail-label");
-            // Dimensions outside the walls: W, car DBG and SW below; CW DBG above; D and SD on the left.
-            double front = v.P(0, -Wall).Y, rear = v.P(0, p.SD + Wall).Y, left = v.P(-Wall, 0).X;
+        }
+
+        private static void DrawShaftDimensions(
+            ElevatorParameters p,
+            IRailSection cwRail,
+            Figure f,
+            FigureView v,
+            double cl,
+            double cr,
+            double front,
+            double rear,
+            double left)
+        {
             f.DimH(v.P(cl, p.CarFront), v.P(cr, p.CarFront), front + 7, "W " + Figure.Mm(p.CarWidth), "dim-W", Figure.Mm(p.CarWidth));
             f.DimH(
                 v.P(p.X("railLeft"), p.CarRow),
@@ -203,15 +243,6 @@ namespace Elevator.Reporting.Figures
             }
             f.DimV(v.P(cl, p.CarFront), v.P(cl, p.CarRear), left - 7, "D " + Figure.Mm(p.CarDepth), "dim-D", Figure.Mm(p.CarDepth));
             f.DimV(v.P(0, 0), v.P(0, p.SD), left - 14, "SD " + Figure.Mm(p.SD), "dim-SD", Figure.Mm(p.SD));
-            Axes(f, Pt(v.P(p.SW + Wall, 0).X + 8, front + 21));
-            if (door)
-            {
-                Finish(f, front + 24);
-                return f;
-            }
-            var note = f.Text("Entrance at the bottom", Pt(left - 14, front + 29), "start");
-            Finish(f, note.At.Y);
-            return f;
         }
 
         // ---------- F2 chassis plan ----------
@@ -230,6 +261,26 @@ namespace Elevator.Reporting.Figures
             f.View = v;
             Func<string, FigurePoint> S = id => v.P(seats[id].X, seats[id].Y);
             f.Poly(new[] { S("P4"), S("P2"), S("P1"), S("P3") }, true, FigureLayer.Secondary, "chassis");
+            DrawReactionLabels(r, f, S);
+            double top = pts.Select(q => v.P(q.X, q.Y).Y).Min(), bottom = pts.Select(q => v.P(q.X, q.Y).Y).Max(), leftX =
+                pts.Select(q => v.P(q.X, q.Y).X).Min(), rightX = pts.Select(q => v.P(q.X, q.Y).X).Max();
+            if (basic)
+            {
+                DrawBasicLoad(r, f, v, S, top, bottom, leftX, rightX);
+            }
+            else
+            {
+                // Load labels outside the chassis outline, stacked top to bottom, each joined to its point by a leader.
+                DrawLoadLabels(r, f, seats, v, S, top, bottom, leftX, rightX);
+            }
+            Axes(f, Pt(8, bottom + 20));
+            var note = f.Text("Plan on the machine room axes, entrance at the bottom; upward reactions", Pt(24, bottom + 22), "start");
+            Finish(f, note.At.Y);
+            return f;
+        }
+
+        private static void DrawReactionLabels(ChassisCalculationResult r, Figure f, Func<string, FigurePoint> S)
+        {
             foreach (var b in r.Reactions)
             {
                 var c = S(b.Id);
@@ -247,110 +298,122 @@ namespace Elevator.Reporting.Figures
                     "reaction-" + b.Id,
                     Figure.Num(b.UpwardN / 1000, "0.###"));
             }
-            double top = pts.Select(q => v.P(q.X, q.Y).Y).Min(), bottom = pts.Select(q => v.P(q.X, q.Y).Y).Max(), leftX =
-                pts.Select(q => v.P(q.X, q.Y).X).Min(), rightX = pts.Select(q => v.P(q.X, q.Y).X).Max();
-            if (basic)
+        }
+
+        private static void DrawBasicLoad(
+            ChassisCalculationResult r,
+            Figure f,
+            FigureView v,
+            Func<string, FigurePoint> S,
+            double top,
+            double bottom,
+            double leftX,
+            double rightX)
+        {
+            var g = r.SimplifiedGeometry;
+            var w = v.P(g.LoadReference.X, g.LoadReference.Y);
+            f.Line(w + Pt(-8, 0), w + Pt(8, 0), FigureLayer.Centre);
+            f.Line(w + Pt(0, -8), w + Pt(0, 8), FigureLayer.Centre);
+            LoadPoint(f, w, "load-W");
+            // Labels outside the chassis outline with a leader, so no text crosses a member line.
+            f.Line(w + Pt(1.6, 0), Pt(rightX + 3, w.Y), FigureLayer.Leader);
+            f.Text(
+                "W " + Figure.Kn(r.TotalVerticalLoadN.Value),
+                Pt(rightX + 4, w.Y - 1),
+                "start",
+                FigureLayer.LoadText,
+                2.5,
+                false,
+                "load-W-text",
+                Figure.Num(r.TotalVerticalLoadN.Value / 1000, "0.###"));
+            f.Text("traction sheave centre", Pt(rightX + 4, w.Y + 3.6), "start");
+            // a and b chain on the left, L on the right, s(f) below, s(r) above.
+            double x = leftX - 14;
+            f.DimV(
+                v.P(g.LoadReference.X, g.FrontRowY),
+                v.P(g.LoadReference.X, g.LoadReference.Y),
+                x,
+                "a " + Figure.Mm(g.LoadFromFrontMm),
+                "dim-a",
+                Figure.Mm(g.LoadFromFrontMm));
+            f.DimV(
+                v.P(g.LoadReference.X, g.LoadReference.Y),
+                v.P(g.LoadReference.X, g.RearRowY),
+                x,
+                "b " + Figure.Mm(g.LoadToRearMm),
+                "dim-b",
+                Figure.Mm(g.LoadToRearMm));
+            f.DimV(S("P2"), S("P1"), rightX + 38, "L " + Figure.Mm(g.LongitudinalSpanMm), "dim-L", Figure.Mm(g.LongitudinalSpanMm));
+            f.DimH(
+                S("P4"),
+                S("P2"),
+                bottom + 12,
+                "s(f) " + Figure.Mm(g.FrontTransverseSpanMm),
+                "dim-sf",
+                Figure.Mm(g.FrontTransverseSpanMm));
+            f.DimH(
+                S("P3"),
+                S("P1"),
+                top - 10,
+                "s(r) " + Figure.Mm(g.RearTransverseSpanMm),
+                "dim-sr",
+                Figure.Mm(g.RearTransverseSpanMm));
+        }
+
+        private static void DrawLoadLabels(
+            ChassisCalculationResult r,
+            Figure f,
+            Dictionary<string, LocalPoint> seats,
+            FigureView v,
+            Func<string, FigurePoint> S,
+            double top,
+            double bottom,
+            double leftX,
+            double rightX)
+        {
+            double labelY = top + 4;
+            foreach (var l in r.Loads.OrderByDescending(q => q.PositionMm.Y))
             {
-                var g = r.SimplifiedGeometry;
-                var w = v.P(g.LoadReference.X, g.LoadReference.Y);
-                f.Line(w + Pt(-8, 0), w + Pt(8, 0), FigureLayer.Centre);
-                f.Line(w + Pt(0, -8), w + Pt(0, 8), FigureLayer.Centre);
-                LoadPoint(f, w, "load-W");
-                // Labels outside the chassis outline with a leader, so no text crosses a member line.
-                f.Line(w + Pt(1.6, 0), Pt(rightX + 3, w.Y), FigureLayer.Leader);
+                var c = v.P(l.PositionMm.X, l.PositionMm.Y);
+                LoadPoint(f, c, "load-" + l.Id);
+                string name = l.Id == "MachineWeight" ? "machine weight" : l.Id == "TractionRopeAction"
+                    ? "rope forces at traction sheave"
+                    : l.Id == "DeflectorHangerAction" ? "rope forces at deflector hanger" : l.Id;
+                labelY = Math.Max(labelY, c.Y);
+                var at = Pt(rightX + 6, labelY);
+                f.Poly(new[] { c + Pt(1.6, 0), Pt(rightX + 2, labelY - 0.9), Pt(rightX + 5, labelY - 0.9) }, false, FigureLayer.Leader);
                 f.Text(
-                    "W " + Figure.Kn(r.TotalVerticalLoadN.Value),
-                    Pt(rightX + 4, w.Y - 1),
+                    name + " Fz " + Figure.Kn(-l.ForceN.Z),
+                    at,
                     "start",
                     FigureLayer.LoadText,
                     2.5,
                     false,
-                    "load-W-text",
-                    Figure.Num(r.TotalVerticalLoadN.Value / 1000, "0.###"));
-                f.Text("traction sheave centre", Pt(rightX + 4, w.Y + 3.6), "start");
-                // a and b chain on the left, L on the right, s(f) below, s(r) above.
-                double x = leftX - 14;
-                f.DimV(
-                    v.P(g.LoadReference.X, g.FrontRowY),
-                    v.P(g.LoadReference.X, g.LoadReference.Y),
-                    x,
-                    "a " + Figure.Mm(g.LoadFromFrontMm),
-                    "dim-a",
-                    Figure.Mm(g.LoadFromFrontMm));
-                f.DimV(
-                    v.P(g.LoadReference.X, g.LoadReference.Y),
-                    v.P(g.LoadReference.X, g.RearRowY),
-                    x,
-                    "b " + Figure.Mm(g.LoadToRearMm),
-                    "dim-b",
-                    Figure.Mm(g.LoadToRearMm));
-                f.DimV(S("P2"), S("P1"), rightX + 38, "L " + Figure.Mm(g.LongitudinalSpanMm), "dim-L", Figure.Mm(g.LongitudinalSpanMm));
-                f.DimH(
-                    S("P4"),
-                    S("P2"),
-                    bottom + 12,
-                    "s(f) " + Figure.Mm(g.FrontTransverseSpanMm),
-                    "dim-sf",
-                    Figure.Mm(g.FrontTransverseSpanMm));
-                f.DimH(
-                    S("P3"),
-                    S("P1"),
-                    top - 10,
-                    "s(r) " + Figure.Mm(g.RearTransverseSpanMm),
-                    "dim-sr",
-                    Figure.Mm(g.RearTransverseSpanMm));
+                    "load-" + l.Id + "-text",
+                    Figure.Num(-l.ForceN.Z / 1000, "0.###"));
+                labelY += 4.6;
             }
-            else
-            {
-                // Load labels outside the chassis outline, stacked top to bottom, each joined to its point by a leader.
-                double labelY = top + 4;
-                foreach (var l in r.Loads.OrderByDescending(q => q.PositionMm.Y))
-                {
-                    var c = v.P(l.PositionMm.X, l.PositionMm.Y);
-                    LoadPoint(f, c, "load-" + l.Id);
-                    string name = l.Id == "MachineWeight" ? "machine weight" : l.Id == "TractionRopeAction"
-                        ? "rope forces at traction sheave"
-                        : l.Id == "DeflectorHangerAction" ? "rope forces at deflector hanger" : l.Id;
-                    labelY = Math.Max(labelY, c.Y);
-                    var at = Pt(rightX + 6, labelY);
-                    f.Poly(new[] { c + Pt(1.6, 0), Pt(rightX + 2, labelY - 0.9), Pt(rightX + 5, labelY - 0.9) }, false, FigureLayer.Leader);
-                    f.Text(
-                        name + " Fz " + Figure.Kn(-l.ForceN.Z),
-                        at,
-                        "start",
-                        FigureLayer.LoadText,
-                        2.5,
-                        false,
-                        "load-" + l.Id + "-text",
-                        Figure.Num(-l.ForceN.Z / 1000, "0.###"));
-                    labelY += 4.6;
-                }
-                f.DimV(
-                    S("P4"),
-                    S("P3"),
-                    leftX - 14,
-                    "L " + Figure.Mm(seats["P1"].Y - seats["P2"].Y),
-                    "dim-L",
-                    Figure.Mm(seats["P1"].Y - seats["P2"].Y));
-                f.DimH(
-                    S("P4"),
-                    S("P2"),
-                    bottom + 12,
-                    "s(f) " + Figure.Mm(seats["P2"].X - seats["P4"].X),
-                    "dim-sf",
-                    Figure.Mm(seats["P2"].X - seats["P4"].X));
-                f.DimH(
-                    S("P3"),
-                    S("P1"),
-                    top - 10,
-                    "s(r) " + Figure.Mm(seats["P1"].X - seats["P3"].X),
-                    "dim-sr",
-                    Figure.Mm(seats["P1"].X - seats["P3"].X));
-            }
-            Axes(f, Pt(8, bottom + 20));
-            var note = f.Text("Plan on the machine room axes, entrance at the bottom; upward reactions", Pt(24, bottom + 22), "start");
-            Finish(f, note.At.Y);
-            return f;
+            f.DimV(
+                S("P4"),
+                S("P3"),
+                leftX - 14,
+                "L " + Figure.Mm(seats["P1"].Y - seats["P2"].Y),
+                "dim-L",
+                Figure.Mm(seats["P1"].Y - seats["P2"].Y));
+            f.DimH(
+                S("P4"),
+                S("P2"),
+                bottom + 12,
+                "s(f) " + Figure.Mm(seats["P2"].X - seats["P4"].X),
+                "dim-sf",
+                Figure.Mm(seats["P2"].X - seats["P4"].X));
+            f.DimH(
+                S("P3"),
+                S("P1"),
+                top - 10,
+                "s(r) " + Figure.Mm(seats["P1"].X - seats["P3"].X),
+                "dim-sr",
+                Figure.Mm(seats["P1"].X - seats["P3"].X));
         }
 
         // ---------- F3 chassis elevation / free body (Basic) ----------
@@ -425,143 +488,7 @@ namespace Elevator.Reporting.Figures
             double minX = -dbg - rail.HeightMm - 60, maxX = dbg + rail.HeightMm + 60;
             for (int panel = 0; panel < 2; panel++)
             {
-                bool ff1 = panel == 0;
-                double left = panel * 82.5;
-                var v = new FigureView(minX, -D / 2, maxX, D / 2, left + 23.75, 19, 35, 84, true);
-                if (panel == 0)
-                    f.View = v;
-                f.Text(
-                    ff1 ? "Load case FF1" : "Load case FF2",
-                    Pt(left + 41.25, 9),
-                    "middle",
-                    FigureLayer.Text,
-                    3.5,
-                    false,
-                    null,
-                    null,
-                    true);
-                // Eccentric half-area load: resultant W/4 (FF1) or D/4 (FF2) from the car centre.
-                var half = ff1
-                    ? new[] { Pt(0, -D / 2), Pt(s1 * W / 2, -D / 2), Pt(s1 * W / 2, D / 2), Pt(0, D / 2) }
-                    : new[] { Pt(-W / 2, 0), Pt(W / 2, 0), Pt(W / 2, s2 * D / 2), Pt(-W / 2, s2 * D / 2) };
-                f.Hatch(Map(v, half), 2.0);
-                f.Poly(
-                    Map(v, new[] { Pt(-W / 2, -D / 2), Pt(W / 2, -D / 2), Pt(W / 2, D / 2), Pt(-W / 2, D / 2) }),
-                    true,
-                    FigureLayer.Outline,
-                    ff1 ? "car-ff1" : "car-ff2").Value = Figure.Mm(W) + "," + Figure.Mm(D);
-                f.Line(v.P(-W / 2 - 80, 0), v.P(W / 2 + 80, 0), FigureLayer.Centre);
-                f.Line(v.P(0, -D / 2 - 80), v.P(0, D / 2 + 80), FigureLayer.Centre);
-                // Car-rail line, rails and guide shoes.
-                f.Line(v.P(minX + 20, ry), v.P(maxX - 20, ry), FigureLayer.Centre, "car-rail-line").Value = Figure.Mm(ry);
-                foreach (int side in new[] { -1, 1 })
-                {
-                    f.Poly(
-                        Map(v, RailPlan(rail, side * dbg, ry, -side)),
-                        true,
-                        FigureLayer.Outline,
-                        side < 0 ? "rail-left" : "rail-right",
-                        true).Value = Figure.Mm(side * dbg);
-                    var tip = v.P(side * dbg, ry);
-                    f.Rect(
-                        Math.Min(tip.X, tip.X - side * 3.2),
-                        tip.Y - 3.8,
-                        Math.Max(tip.X, tip.X - side * 3.2),
-                        tip.Y + 3.8,
-                        FigureLayer.Secondary,
-                        side < 0 ? "shoe-left" : "shoe-right");
-                }
-                var q = ff1 ? v.P(s1 * W / 4, 0) : v.P(0, s2 * D / 4);
-                LoadPoint(f, q, ff1 ? "resultant-ff1" : "resultant-ff2");
-                double fv = ff1 ? ff.FF1DesignN.Value : ff.FF2DesignN.Value;
-                string name = ff1 ? "FF1 " : "FF2 ";
-                foreach (int side in new[] { -1, 1 })
-                {
-                    var tip = v.P(side * dbg, ry);
-                    string tag = "force-" + (ff1 ? "ff1" : "ff2") + (side < 0 ? "-left" : "-right"), anchor = side < 0 ? "end" : "start";
-                    // FF1: a couple between the two rails, both outward: upper level on the loaded side, lower level on the other.
-                    // FF2: both rails at the upper level, towards the loaded side; the forces reverse at the lower level.
-                    string level = ff1 ? (side == s1 ? "upper level" : "lower level") : "upper level";
-                    if (ff1)
-                    {
-                        f.Load(
-                            tip + Pt(-side * 10, 3.0),
-                            tip + Pt(-side * 3.4, 3.0),
-                            name + Figure.Kn(fv),
-                            new[] { tip + Pt(side * 3, -3.5), tip + Pt(side * 3, -7) },
-                            anchor,
-                            tag,
-                            Figure.Num(fv / 1000, "0.###"));
-                        f.Text(
-                            level,
-                            new[] { tip + Pt(side * 3, 5.2), tip + Pt(side * 3, 8.6) },
-                            anchor,
-                            FigureLayer.LoadText,
-                            2.5,
-                            false,
-                            "level-ff1" + (side < 0 ? "-left" : "-right"),
-                            level);
-                    }
-                    else
-                    {
-                        double u = s2;
-                        f.Load(
-                            tip + Pt(side * 1.6, u * 15),
-                            tip + Pt(side * 1.6, u * 4.2),
-                            name + Figure.Kn(fv),
-                            new[] { tip + Pt(side * 3.2, s2 > 0 ? 11 : -15), tip + Pt(side * 3.2, s2 > 0 ? 14 : -18) },
-                            anchor,
-                            tag,
-                            Figure.Num(fv / 1000, "0.###"));
-                        f.Text(
-                            level,
-                            new[] { tip + Pt(side * 3.2, s2 > 0 ? 15 : -11.5), tip + Pt(side * 3.2, s2 > 0 ? 18 : -8.5) },
-                            anchor,
-                            FigureLayer.LoadText,
-                            2.5,
-                            false,
-                            "level-ff2" + (side < 0 ? "-left" : "-right"),
-                            level);
-                    }
-                }
-                double top = v.P(0, D / 2).Y, bottom = v.P(0, -D / 2).Y;
-                if (ff1)
-                {
-                    f.DimH(
-                                            v.P(Math.Min(0, s1 * W / 4), D / 2 + 80),
-                                            v.P(Math.Max(0, s1 * W / 4), D / 2),
-                                            top - 4,
-                                            "W/4 " + Figure.Mm(W / 4),
-                                            "dim-W4",
-                                            Figure.Mm(W / 4));
-                }
-                else
-                {
-                    f.DimV(
-                                            v.P(W / 2 + 80, Math.Min(0, s2 * D / 4)),
-                                            v.P(W / 2 + 80, Math.Max(0, s2 * D / 4)),
-                                            v.P(maxX, 0).X + 3,
-                                            "D/4 " + Figure.Mm(D / 4),
-                                            "dim-D4",
-                                            Figure.Mm(D / 4));
-                }
-                if (ff1)
-                    f.Line(v.P(s1 * W / 4, 0), v.P(s1 * W / 4, D / 2 + 80), FigureLayer.Centre);
-                else
-                    f.Line(v.P(0, s2 * D / 4), v.P(W / 2 + 80, s2 * D / 4), FigureLayer.Centre);
-                f.DimH(v.P(-W / 2, -D / 2), v.P(W / 2, -D / 2), bottom + 8, "W " + Figure.Mm(W), ff1 ? "dim-W" : "dim-W-2", Figure.Mm(W));
-                if (!ff1)
-                {
-                    f.Text(
-                                            "forces reverse at the lower level",
-                                            Pt(left + 41.25, bottom + 15),
-                                            "middle",
-                                            FigureLayer.LoadText,
-                                            2.5,
-                                            false,
-                                            "ff2-reverse-note",
-                                            null);
-                }
+                DrawGuideForcePanel(ff, rail, s1, s2, f, W, D, dbg, ry, minX, maxX, panel);
             }
             double noteY = f.Entities.OfType<FigurePolyline>().SelectMany(e => e.Points).Max(q => q.Y) + 8.5;
             f.Text("Hatched: rated load on half the car floor", Pt(4, noteY), "start");
@@ -585,6 +512,183 @@ namespace Elevator.Reporting.Figures
                 null);
             Finish(f, note.At.Y);
             return f;
+        }
+
+        private static void DrawGuideForcePanel(
+            CarGuideForceResult ff,
+            IRailSection rail,
+            int s1,
+            int s2,
+            Figure f,
+            double W,
+            double D,
+            double dbg,
+            double ry,
+            double minX,
+            double maxX,
+            int panel)
+        {
+            bool ff1 = panel == 0;
+            double left = panel * 82.5;
+            var v = new FigureView(minX, -D / 2, maxX, D / 2, left + 23.75, 19, 35, 84, true);
+            if (panel == 0)
+                f.View = v;
+            f.Text(
+                ff1 ? "Load case FF1" : "Load case FF2",
+                Pt(left + 41.25, 9),
+                "middle",
+                FigureLayer.Text,
+                3.5,
+                false,
+                null,
+                null,
+                true);
+            // Eccentric half-area load: resultant W/4 (FF1) or D/4 (FF2) from the car centre.
+            var half = ff1
+                ? new[] { Pt(0, -D / 2), Pt(s1 * W / 2, -D / 2), Pt(s1 * W / 2, D / 2), Pt(0, D / 2) }
+                : new[] { Pt(-W / 2, 0), Pt(W / 2, 0), Pt(W / 2, s2 * D / 2), Pt(-W / 2, s2 * D / 2) };
+            f.Hatch(Map(v, half), 2.0);
+            f.Poly(
+                Map(v, new[] { Pt(-W / 2, -D / 2), Pt(W / 2, -D / 2), Pt(W / 2, D / 2), Pt(-W / 2, D / 2) }),
+                true,
+                FigureLayer.Outline,
+                ff1 ? "car-ff1" : "car-ff2").Value = Figure.Mm(W) + "," + Figure.Mm(D);
+            f.Line(v.P(-W / 2 - 80, 0), v.P(W / 2 + 80, 0), FigureLayer.Centre);
+            f.Line(v.P(0, -D / 2 - 80), v.P(0, D / 2 + 80), FigureLayer.Centre);
+            // Car-rail line, rails and guide shoes.
+            f.Line(v.P(minX + 20, ry), v.P(maxX - 20, ry), FigureLayer.Centre, "car-rail-line").Value = Figure.Mm(ry);
+            DrawRailsAndShoes(rail, f, dbg, ry, v);
+            var q = ff1 ? v.P(s1 * W / 4, 0) : v.P(0, s2 * D / 4);
+            LoadPoint(f, q, ff1 ? "resultant-ff1" : "resultant-ff2");
+            DrawRailForces(ff, s1, s2, f, dbg, ry, ff1, v);
+            DrawGuideForceDimensions(s1, s2, f, W, D, maxX, ff1, left, v);
+        }
+
+        private static void DrawRailsAndShoes(IRailSection rail, Figure f, double dbg, double ry, FigureView v)
+        {
+            foreach (int side in new[] { -1, 1 })
+            {
+                f.Poly(
+                    Map(v, RailPlan(rail, side * dbg, ry, -side)),
+                    true,
+                    FigureLayer.Outline,
+                    side < 0 ? "rail-left" : "rail-right",
+                    true).Value = Figure.Mm(side * dbg);
+                var tip = v.P(side * dbg, ry);
+                f.Rect(
+                    Math.Min(tip.X, tip.X - side * 3.2),
+                    tip.Y - 3.8,
+                    Math.Max(tip.X, tip.X - side * 3.2),
+                    tip.Y + 3.8,
+                    FigureLayer.Secondary,
+                    side < 0 ? "shoe-left" : "shoe-right");
+            }
+        }
+
+        private static void DrawRailForces(CarGuideForceResult ff, int s1, int s2, Figure f, double dbg, double ry, bool ff1, FigureView v)
+        {
+            double fv = ff1 ? ff.FF1DesignN.Value : ff.FF2DesignN.Value;
+            string name = ff1 ? "FF1 " : "FF2 ";
+            foreach (int side in new[] { -1, 1 })
+            {
+                var tip = v.P(side * dbg, ry);
+                string tag = "force-" + (ff1 ? "ff1" : "ff2") + (side < 0 ? "-left" : "-right"), anchor = side < 0 ? "end" : "start";
+                // FF1: a couple between the two rails, both outward: upper level on the loaded side, lower level on the other.
+                // FF2: both rails at the upper level, towards the loaded side; the forces reverse at the lower level.
+                string level = ff1 ? (side == s1 ? "upper level" : "lower level") : "upper level";
+                if (ff1)
+                {
+                    f.Load(
+                        tip + Pt(-side * 10, 3.0),
+                        tip + Pt(-side * 3.4, 3.0),
+                        name + Figure.Kn(fv),
+                        new[] { tip + Pt(side * 3, -3.5), tip + Pt(side * 3, -7) },
+                        anchor,
+                        tag,
+                        Figure.Num(fv / 1000, "0.###"));
+                    f.Text(
+                        level,
+                        new[] { tip + Pt(side * 3, 5.2), tip + Pt(side * 3, 8.6) },
+                        anchor,
+                        FigureLayer.LoadText,
+                        2.5,
+                        false,
+                        "level-ff1" + (side < 0 ? "-left" : "-right"),
+                        level);
+                }
+                else
+                {
+                    double u = s2;
+                    f.Load(
+                        tip + Pt(side * 1.6, u * 15),
+                        tip + Pt(side * 1.6, u * 4.2),
+                        name + Figure.Kn(fv),
+                        new[] { tip + Pt(side * 3.2, s2 > 0 ? 11 : -15), tip + Pt(side * 3.2, s2 > 0 ? 14 : -18) },
+                        anchor,
+                        tag,
+                        Figure.Num(fv / 1000, "0.###"));
+                    f.Text(
+                        level,
+                        new[] { tip + Pt(side * 3.2, s2 > 0 ? 15 : -11.5), tip + Pt(side * 3.2, s2 > 0 ? 18 : -8.5) },
+                        anchor,
+                        FigureLayer.LoadText,
+                        2.5,
+                        false,
+                        "level-ff2" + (side < 0 ? "-left" : "-right"),
+                        level);
+                }
+            }
+        }
+
+        private static void DrawGuideForceDimensions(
+            int s1,
+            int s2,
+            Figure f,
+            double W,
+            double D,
+            double maxX,
+            bool ff1,
+            double left,
+            FigureView v)
+        {
+            double top = v.P(0, D / 2).Y, bottom = v.P(0, -D / 2).Y;
+            if (ff1)
+            {
+                f.DimH(
+                                        v.P(Math.Min(0, s1 * W / 4), D / 2 + 80),
+                                        v.P(Math.Max(0, s1 * W / 4), D / 2),
+                                        top - 4,
+                                        "W/4 " + Figure.Mm(W / 4),
+                                        "dim-W4",
+                                        Figure.Mm(W / 4));
+            }
+            else
+            {
+                f.DimV(
+                                        v.P(W / 2 + 80, Math.Min(0, s2 * D / 4)),
+                                        v.P(W / 2 + 80, Math.Max(0, s2 * D / 4)),
+                                        v.P(maxX, 0).X + 3,
+                                        "D/4 " + Figure.Mm(D / 4),
+                                        "dim-D4",
+                                        Figure.Mm(D / 4));
+            }
+            if (ff1)
+                f.Line(v.P(s1 * W / 4, 0), v.P(s1 * W / 4, D / 2 + 80), FigureLayer.Centre);
+            else
+                f.Line(v.P(0, s2 * D / 4), v.P(W / 2 + 80, s2 * D / 4), FigureLayer.Centre);
+            f.DimH(v.P(-W / 2, -D / 2), v.P(W / 2, -D / 2), bottom + 8, "W " + Figure.Mm(W), ff1 ? "dim-W" : "dim-W-2", Figure.Mm(W));
+            if (!ff1)
+            {
+                f.Text(
+                                        "forces reverse at the lower level",
+                                        Pt(left + 41.25, bottom + 15),
+                                        "middle",
+                                        FigureLayer.LoadText,
+                                        2.5,
+                                        false,
+                                        "ff2-reverse-note",
+                                        null);
+            }
         }
 
         // ---------- F5 guide-shoe forces: (a) front elevation with both rails, (b) side view of one rail (schematic) ----------
