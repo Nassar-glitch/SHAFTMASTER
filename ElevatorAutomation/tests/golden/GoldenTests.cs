@@ -72,11 +72,11 @@ public static class GoldenTests
     {
         string fixturePath = Path.Combine(fixtures, name + ".elevator.json");
         var options = File.Exists(Path.Combine(fixtures, name + ".options.json")) ? new JavaScriptSerializer().Deserialize<GoldenOptions>(File.ReadAllText(Path.Combine(fixtures, name + ".options.json"))) : new GoldenOptions();
-        // Project JSON after load -> save, byte-exact (the application's ProjectSession).
+        // Project JSON after load -> save through the application's ProjectSession: byte-exact values, member order normalised (JsonMembers.Sort).
         var session = new ProjectSession(null); session.Open(fixturePath);
         string saved = Path.Combine(run, "work", name + ".saved.elevator.json"); Directory.CreateDirectory(Path.GetDirectoryName(saved));
         session.Save(saved);
-        Emit(name + "/roundtrip.elevator.json", File.ReadAllBytes(saved));
+        Emit(name + "/roundtrip.elevator.json", Utf8.GetBytes(JsonMembers.Sort(File.ReadAllText(saved, Utf8))));
         var p = session.Project;
         // A project that follows the presets gets them applied (as the application does), including the rope selection.
         object selection = null;
@@ -152,7 +152,7 @@ public static class GoldenTests
         var p = NewProject();
         string saved = Path.Combine(run, "work", "new-project.saved.elevator.json");
         new ProjectSession(p).Save(saved);
-        Emit("new-project-from-presets/new-project.elevator.json", Utf8.GetBytes(NormaliseGuids(File.ReadAllText(saved, Utf8))));
+        Emit("new-project-from-presets/new-project.elevator.json", Utf8.GetBytes(JsonMembers.Sort(NormaliseGuids(File.ReadAllText(saved, Utf8)))));
     }
     static string NormaliseGuids(string json)
     {
