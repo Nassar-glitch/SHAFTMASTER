@@ -1,4 +1,4 @@
-# Continuous integration (ARCHITECTURE-PLAN P2, P3): the portable Core and Reporting and their tier-1 tests. The AutoCAD,
+# Continuous integration (ARCHITECTURE-PLAN P2, P3, P7): the portable Core and Reporting and their tier-1 tests (tools/test.ps1 -Tier 1). The AutoCAD,
 # SOLIDWORKS and WPF parts are not built here (tier 2 and 3 run locally; docs/TESTING.md).
 name: CI
 
@@ -25,20 +25,15 @@ jobs:
             10.0.x
       - name: Build Elevator.Core and Elevator.Reporting (netstandard2.0)
         run: dotnet build ElevatorAutomation/Elevator.Reporting/Elevator.Reporting.csproj -c Release -f netstandard2.0
-      - name: Test Elevator.Core.Tests (net8.0)
-        run: >
-          dotnet test ElevatorAutomation/tests/Elevator.Core.Tests/Elevator.Core.Tests.csproj -c Release -f net8.0
-          --results-directory test-results --logger "trx;LogFileName=core-net8.0.trx" --logger "console;verbosity=normal"
-      - name: Test Elevator.Reporting.Tests (net8.0)
-        run: >
-          dotnet test ElevatorAutomation/tests/Elevator.Reporting.Tests/Elevator.Reporting.Tests.csproj -c Release -f net8.0
-          --results-directory test-results --logger "trx;LogFileName=reporting-net8.0.trx" --logger "console;verbosity=normal"
+      - name: Tier 1 (ElevatorAutomation/tools/test.ps1, the command used locally; net8.0 suites on Linux)
+        shell: pwsh
+        run: ./ElevatorAutomation/tools/test.ps1 -Tier 1
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tests-net8.0
-          path: test-results
+          path: ElevatorAutomation/artifacts/test-results
 
   windows-core-bridge:
     name: Core, Reporting and Bridge (.NET Framework 4.8, no AutoCAD / SOLIDWORKS)
