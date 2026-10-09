@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elevator.Automation.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepExportTests", "tests\projects\StepExportTests\StepExportTests.csproj", "{EC2DD80F-AF1F-47DD-BEE6-3842143891B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elevator.Core.Tests", "tests\Elevator.Core.Tests\Elevator.Core.Tests.csproj", "{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -191,6 +193,18 @@ Global
 		{EC2DD80F-AF1F-47DD-BEE6-3842143891B2}.Release|x64.Build.0 = Release|Any CPU
 		{EC2DD80F-AF1F-47DD-BEE6-3842143891B2}.Release|x86.ActiveCfg = Release|Any CPU
 		{EC2DD80F-AF1F-47DD-BEE6-3842143891B2}.Release|x86.Build.0 = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|x64.Build.0 = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -203,5 +217,6 @@ Global
 		{AB5ACD9E-CC51-4F7E-86CA-AB6507DD12FA} = {FCBEACA7-07F0-EBCE-4076-4DD6555F74A0}
 		{48293A24-9859-4F09-8D72-946C18DD5038} = {FCBEACA7-07F0-EBCE-4076-4DD6555F74A0}
 		{EC2DD80F-AF1F-47DD-BEE6-3842143891B2} = {FCBEACA7-07F0-EBCE-4076-4DD6555F74A0}
+		{59D29B81-6AF0-4469-BCB7-B3286C22E7F8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
