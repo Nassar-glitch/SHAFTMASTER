@@ -72,50 +72,11 @@ namespace Elevator.Solution.Bridge
                 Wire.Read<StepModelParameters>(Path.Combine(bin, "preliminary-3d-reference.json")),
                 out design);
             // Editable native source, inputs and verification accompany the STEP in a unique sibling folder.
-            string folder = Path.Combine(
-                Path.GetDirectoryName(output),
-                Path.GetFileNameWithoutExtension(output) + "_source_" + Guid.NewGuid().ToString("N").Substring(0, 8));
-            Directory.CreateDirectory(folder);
-            Wire.Write(Path.Combine(folder, "Parameters.json"), input);
-            File.WriteAllText(Path.Combine(folder, "project.elevator.json"), snapshot);
-            Wire.Write(
-                Path.Combine(folder, "engineering-statuses.json"),
-                new { design.LayoutStatus, design.WrapAngleStatus, design.CodeDiameterRatioStatus, design.Validation });
-            var start =
-                new ProcessStartInfo(Path.Combine(bin, "Elevator.Solution.StepExport.exe"), "\"" + folder + "\"")
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    WorkingDirectory = bin,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    StandardOutputEncoding = System.Text.Encoding.UTF8
-                };
+            string folder = WriteSourceFolder(snapshot, output, design, input);
+            ProcessStartInfo start = WorkerStartInfo(folder);
             try
             {
-                using (var process = new Process { StartInfo = start })
-                {
-                    var log = new System.Text.StringBuilder();
-                    process.OutputDataReceived += (s, e) =>
-                    {
-                        if (e.Data != null)
-                        {
-                            lock (log)
-                                log.AppendLine(e.Data);
-                            progress(e.Data);
-                        }
-                    };
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    var errors = process.StandardError.ReadToEndAsync();
-                    // The worker owns COM on an STA thread. The desktop remains responsive while awaiting this background task.
-                    process.WaitForExit();
-                    string error = errors.GetAwaiter().GetResult();
-                    File.WriteAllText(Path.Combine(folder, "export.log"), log.ToString() + error);
-                    if (process.ExitCode != 0)
-                        throw new InvalidOperationException(String.IsNullOrWhiteSpace(error) ? "The STEP worker failed." : error.Trim());
-                }
+                RunWorker(progress, folder, start);
                 var verification = Wire.Read<StepVerification>(Path.Combine(folder, "verification.json"));
                 if (verification.SourceSolidCount < 1
                     || verification.SourceSolidCount != verification.ReopenedSolidCount
@@ -145,6 +106,62 @@ namespace Elevator.Solution.Bridge
             catch (Exception e)
             {
                 throw new InvalidOperationException(e.Message + "\nExport details: " + folder, e);
+            }
+        }
+
+        private string WriteSourceFolder(string snapshot, string output, ElevatorDesignResult design, StepModelParameters input)
+        {
+            string folder = Path.Combine(
+                            Path.GetDirectoryName(output),
+                            Path.GetFileNameWithoutExtension(output) + "_source_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(folder);
+            Wire.Write(Path.Combine(folder, "Parameters.json"), input);
+            File.WriteAllText(Path.Combine(folder, "project.elevator.json"), snapshot);
+            Wire.Write(
+                Path.Combine(folder, "engineering-statuses.json"),
+                new { design.LayoutStatus, design.WrapAngleStatus, design.CodeDiameterRatioStatus, design.Validation });
+            return folder;
+        }
+
+        private ProcessStartInfo WorkerStartInfo(string folder)
+        {
+            var start =
+                            new ProcessStartInfo(Path.Combine(bin, "Elevator.Solution.StepExport.exe"), "\"" + folder + "\"")
+                            {
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                WindowStyle = ProcessWindowStyle.Hidden,
+                                WorkingDirectory = bin,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                StandardOutputEncoding = System.Text.Encoding.UTF8
+                            };
+            return start;
+        }
+
+        private void RunWorker(Action<string> progress, string folder, ProcessStartInfo start)
+        {
+            using (var process = new Process { StartInfo = start })
+            {
+                var log = new System.Text.StringBuilder();
+                process.OutputDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                    {
+                        lock (log)
+                            log.AppendLine(e.Data);
+                        progress(e.Data);
+                    }
+                };
+                process.Start();
+                process.BeginOutputReadLine();
+                var errors = process.StandardError.ReadToEndAsync();
+                // The worker owns COM on an STA thread. The desktop remains responsive while awaiting this background task.
+                process.WaitForExit();
+                string error = errors.GetAwaiter().GetResult();
+                File.WriteAllText(Path.Combine(folder, "export.log"), log.ToString() + error);
+                if (process.ExitCode != 0)
+                    throw new InvalidOperationException(String.IsNullOrWhiteSpace(error) ? "The STEP worker failed." : error.Trim());
             }
         }
 
