@@ -32,7 +32,7 @@ The loader (`PresetLibrary.Parse`) rejects a file with a missing section, fewer 
 
 ## Lock, follow and Reset
 
-- **Mechanism:** `ProjectPresets` (`Elevator.Core/Project/ProjectPresets.cs`) extends the stage-1 mechanism. Each project input is a `PresetField` with `Materialized = true`: its value is an ordinary project value, written by `ProjectPresets.Apply` while it is unlocked.
+- **Mechanism:** `ProjectPresets` (`Elevator.Core/Presets/ProjectPresets.cs`) extends the stage-1 mechanism. Each project input is a `PresetField` with `Materialized = true`: its value is an ordinary project value, written by `ProjectPresets.Apply` while it is unlocked.
 - **New project:** `ElevatorProject.FollowsPresets = true`, nothing locked.
 - **Lock:** editing a field locks it (its key is added to `UserEditedFields`). A locked value is never changed by a preset or by the rope / groove selection. Clearing a field locks it blank.
 - **Follow:** an unlocked field takes its preset again whenever a driver changes: P, machine and the ropes follow Q; CW follows P and Q; gear and buffer type follow v. Typing updates the fields that follow at once. The rope and groove selection runs with the live calculation (and on Commit, page change, Save and export).

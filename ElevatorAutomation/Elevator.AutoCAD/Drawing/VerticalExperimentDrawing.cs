@@ -5,8 +5,11 @@ using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Colors;
-using Elevator.Core;
-using Elevator.Core.Vertical;
+using Elevator.Core.Serialization;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 namespace Elevator.AutoCAD
 {
     public sealed class VerticalManifest

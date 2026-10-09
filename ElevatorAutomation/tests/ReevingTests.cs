@@ -1,5 +1,8 @@
 using System;
-using Elevator.Core;
+using Elevator.Core.Suspension;
+using Elevator.Core.Project;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 public static class ReevingTests
 {
     static int count;static void Check(bool ok,string message){count++;if(!ok)throw new Exception(message);}

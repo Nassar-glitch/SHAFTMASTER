@@ -6,7 +6,9 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.Core.Vertical;
+using Elevator.Core.Shaft;
+using Elevator.Core.Serialization;
+using Elevator.Core.Geometry;
 namespace Elevator.AutoCAD
 {
     public sealed class VerticalExperimentCommands

@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using Elevator.Core;
+using Elevator.Core.Presets;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
-using Elevator.Core.SectionAA;
-using Elevator.Core.Vertical;
+using Elevator.Core.Shaft;
 public static class ProjectTests
 {
     static int count;

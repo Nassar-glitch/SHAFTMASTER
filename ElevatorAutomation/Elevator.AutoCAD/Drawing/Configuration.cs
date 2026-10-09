@@ -1,4 +1,3 @@
-using Elevator.Core;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -7,6 +6,7 @@ using System.Reflection;
 using System.Web.Script.Serialization;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD
 {

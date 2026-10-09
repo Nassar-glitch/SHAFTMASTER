@@ -1,7 +1,9 @@
 using System;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
 namespace Elevator.AutoCAD
 {
     public sealed class MachineRoomAuditCommand

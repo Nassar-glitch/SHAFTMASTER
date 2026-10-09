@@ -1,4 +1,5 @@
-using System;using System.IO;using System.Linq;using System.Collections.Generic;using System.Security.Cryptography;using Autodesk.AutoCAD.DatabaseServices;using Autodesk.AutoCAD.Geometry;using Elevator.Core;using Elevator.Core.SectionAA;
+using System;using System.IO;using System.Linq;using System.Collections.Generic;using System.Security.Cryptography;using Autodesk.AutoCAD.DatabaseServices;using Autodesk.AutoCAD.Geometry;using Elevator.Core.Serialization;
+using Elevator.Core.Geometry;
 namespace Elevator.AutoCAD {
  public sealed class AASeed {public string SourceSha256;public List<AAPart> Entities;}
  public sealed class AAPart {public string Handle,Role,Key;public double[] Bounds;}
@@ -118,7 +119,7 @@ namespace Elevator.AutoCAD {
    near(car.Max(p=>p.Y)-car.Min(p=>p.Y),2400,"Car envelope");near(cw.Max(p=>p.Y)-cw.Min(p=>p.Y),3000,"CW envelope");
    return new AAAudit{EntityCount=all.Count,FloorCount=g.Floors.Count,DoorCount=g.Floors.Count(v=>v.Served),Dimensions=all.Count(p=>p.Value is Dimension),BracketStations=g.Brackets.Elevations.Count,MaxBracketSpacing=g.Brackets.ConsecutiveSpacings.Max(),Pit=d.Pit,OH=d.OH,Travel=g.Travel,CarEnvelope=car.Max(p=>p.Y)-car.Min(p=>p.Y),CWEnvelope=cw.Max(p=>p.Y)-cw.Min(p=>p.Y),LayoutStatus=g.LayoutStatus,CWCalibrationStatus=d.CWCalibrationStatus,CodeDiameterRatioStatus=s.CodeDiameterRatioStatus,WrapAngleStatus=s.Section.Arrangement.Reeving==null?"NOT YET EVALUABLE":s.Section.Arrangement.Reeving.WrapAngleStatus,SlabClearanceStatus=s.Section.Arrangement.DeflectorSlabClearanceStatus};
   }
-  static IEnumerable<Tuple<Elevator.Core.Vertical.VerticalFloor,Elevator.Core.Vertical.VerticalFloor>> normalForAudit(SectionAAGeometry g){var floors=g.Floors.Where(v=>!v.IsRoof).ToArray();for(int i=1;i<floors.Length;i++)yield return Tuple.Create(floors[i-1],floors[i]);}
+  static IEnumerable<Tuple<Elevator.Core.Geometry.VerticalFloor,Elevator.Core.Geometry.VerticalFloor>> normalForAudit(SectionAAGeometry g){var floors=g.Floors.Where(v=>!v.IsRoof).ToArray();for(int i=1;i<floors.Length;i++)yield return Tuple.Create(floors[i-1],floors[i]);}
   public static void ExportMaster(Database db){using(var tr=db.TransactionManager.StartTransaction())using(var dst=new Database(true,true)){var ids=new ObjectIdCollection(Find(db,tr).Values.Select(e=>e.ObjectId).ToArray());using(var dt=dst.TransactionManager.StartTransaction()){var bt=(BlockTable)dt.GetObject(dst.BlockTableId,OpenMode.ForRead);db.WblockCloneObjects(ids,bt[BlockTableRecord.ModelSpace],new IdMapping(),DuplicateRecordCloning.Ignore,false);var sb=(BlockTable)tr.GetObject(db.BlockTableId,OpenMode.ForRead);db.WblockCloneObjects(new ObjectIdCollection(new[]{sb[Library]}),dst.BlockTableId,new IdMapping(),DuplicateRecordCloning.Ignore,false);dst.Insunits=UnitsValue.Millimeters;ProjectDataStorage.Write(dst,dt,DataKey,ProjectDataStorage.Read<SectionAAProject>(db,tr,DataKey));ProjectDataStorage.Write(dst,dt,ManifestKey,ProjectDataStorage.Read<AAManifest>(db,tr,ManifestKey));dt.Commit();}dst.SaveAs(Master,DwgVersion.AC1032);}}
  }
 }

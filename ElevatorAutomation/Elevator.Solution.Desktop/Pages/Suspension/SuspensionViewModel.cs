@@ -1,7 +1,9 @@
 using System.Globalization;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Presets;
 using Elevator.Core.Project;
+using Elevator.Core.Suspension;
 using Elevator.Solution.Desktop.Common;
 namespace Elevator.Solution.Desktop.Pages
 {

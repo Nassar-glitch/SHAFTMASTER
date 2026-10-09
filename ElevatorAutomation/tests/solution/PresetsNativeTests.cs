@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using Elevator.Core;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
+using Elevator.Core.Suspension;
 using Elevator.Solution.Bridge;
 
 // DESIGN-FLOW stage 2: a new project built from the presets, with no user input, generates all four native views through

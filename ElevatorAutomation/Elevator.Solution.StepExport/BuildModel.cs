@@ -1,4 +1,5 @@
 using System;using System.IO;using System.Linq;using System.Collections.Generic;using System.Runtime.InteropServices;using System.Web.Script.Serialization;
+using Elevator.Core.Serialization;
 using Elevator.Solution.Bridge;
 using SolidWorks.Interop.sldworks;using SolidWorks.Interop.swconst;
 // All dimensions in this source and Parameters.json are millimetres. SOLIDWORKS API geometry uses metres.

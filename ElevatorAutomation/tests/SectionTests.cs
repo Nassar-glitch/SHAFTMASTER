@@ -7,8 +7,9 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
-using Elevator.Core;
 using Exception=System.Exception;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 public sealed class SectionTests
 {
     static List<object> results=new List<object>();static int sequence;static string report="section-results.json";

@@ -4,8 +4,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Elevator.Core;
 using Elevator.Core.Calculations;
+using Elevator.Core.MachineRoom;
+using Elevator.Core.Geometry;
 using Elevator.Solution.Desktop.Common;
 namespace Elevator.Solution.Desktop.Pages
 {

@@ -1,8 +1,7 @@
 using System;
 using Autodesk.AutoCAD.DatabaseServices;
-using Elevator.Core;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
-using Elevator.Core.SectionAA;
 namespace Elevator.AutoCAD
 {
     public static class UnifiedProjectStorage

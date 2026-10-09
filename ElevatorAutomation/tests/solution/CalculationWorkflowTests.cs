@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Elevator.Core.Application;
+using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
 using Elevator.Core.Calculations;
 using Elevator.Solution.Bridge;

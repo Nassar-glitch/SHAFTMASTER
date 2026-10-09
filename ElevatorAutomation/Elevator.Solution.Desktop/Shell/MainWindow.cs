@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Elevator.Core.Application;
+using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
 using Elevator.Reporting.Figures;
@@ -66,7 +67,7 @@ namespace Elevator.Solution.Desktop
    FontFamily=new FontFamily("Segoe UI");FontSize=14;Foreground=Ink;Background=new SolidColorBrush(Color.FromRgb(242,245,248));
    ConfigureStyles();
    string contextPath=Path.Combine(Bin,"reviewed-context.json");if(File.Exists(contextPath))Context=Wire.Read<DesignContext>(contextPath);
-   string chassisPath=Path.Combine(Bin,"reviewed-chassis-evidence.json");if(Context!=null&&File.Exists(chassisPath))Context.ChassisEvidence=Wire.Read<Elevator.Core.Calculations.ChassisGeometryEvidence>(chassisPath);
+   string chassisPath=Path.Combine(Bin,"reviewed-chassis-evidence.json");if(Context!=null&&File.Exists(chassisPath))Context.ChassisEvidence=Wire.Read<Elevator.Core.MachineRoom.ChassisGeometryEvidence>(chassisPath);
    Presets=PresetFlow.Load(Path.Combine(Bin,"presets.json"),Context);Live=new LiveCalculation(Context,Presets);
    General=new GeneralPage(this);Floors=new FloorsPage(this);Calculations=new CalculationsPage(this);Drawings=new DrawingsPage(this,outputFolder);
    foreach(var view in new PageView[]{General,new ShaftPage(this),Floors,new CarDoorsPage(this),new MachinePage(this),new SuspensionPage(this),new RailsPage(this),Calculations,Drawings,new ValidationPage(this),new AboutPage(this)})views[view.Key]=view;

@@ -3,7 +3,9 @@ using System.IO;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Web.Script.Serialization;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
+using Elevator.Core.Serialization;
 namespace Elevator.Solution.Bridge
 {
     // Transport envelopes reference the existing versioned project JSON, never a second project model.

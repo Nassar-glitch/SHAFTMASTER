@@ -7,9 +7,8 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Elevator.AutoCAD;
-using Elevator.Core;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
-using Elevator.Core.SectionAA;
 public sealed class ProjectNativeTests
 {
     static string Output {get{return Path.Combine(Configuration.Root,"output","phase1");}}

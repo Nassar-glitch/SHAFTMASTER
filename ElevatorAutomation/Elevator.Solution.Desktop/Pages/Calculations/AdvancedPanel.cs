@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Elevator.Core.Calculations;
+using Elevator.Core.MachineRoom;
 using Elevator.Solution.Desktop.Common;
 namespace Elevator.Solution.Desktop.Pages
 {

@@ -3,7 +3,10 @@ using System.IO;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Elevator.Core;
+using Elevator.Core.Suspension;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
 namespace Elevator.AutoCAD
 {
     public sealed class MachineRoomSectionCommand

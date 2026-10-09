@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Web.Script.Serialization;
-using Elevator.Core;
+using Elevator.Core.Project;
+using Elevator.Core.Presets;
+using Elevator.Core.MachineRoom;
 public static class MachineRoomRuleTests
 {
     static int count;

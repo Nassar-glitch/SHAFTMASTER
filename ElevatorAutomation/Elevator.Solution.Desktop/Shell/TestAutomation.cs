@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.SafetyGear;
 using Elevator.Reporting.Sheet;
 namespace Elevator.Solution.Desktop
 {
