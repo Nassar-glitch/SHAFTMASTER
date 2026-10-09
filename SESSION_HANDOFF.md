@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P2 "Portable Core" on branch `refactor/p2-portable-core` (not merged, not pushed). P1 was merged into `main` first (`01ecbe4`, tier 1 PASS on the branch). Core multi-targets netstandard2.0 / net48 behind a serializer abstraction; the .NET Framework application keeps JavaScriptSerializer (no behaviour change); xUnit Core tests on net8.0 and net48; CI workflow (not pushed). Tiers 1, 2 and 3 PASS; golden files unchanged; release hashes unchanged.
+- **Status:** Complete (2026-10-09): ARCHITECTURE-PLAN phase P2 "Portable Core", approved and merged into `main` (--no-ff) after tier 1 PASS on the branch (`artifacts/test-results/20261009-103216`, 456 s); Planner section 4a committed on `main`; not pushed. P1 was merged into `main` first (`01ecbe4`, tier 1 PASS on the branch). Core multi-targets netstandard2.0 / net48 behind a serializer abstraction; the .NET Framework application keeps JavaScriptSerializer (no behaviour change); xUnit Core tests on net8.0 and net48; CI workflow (not pushed). Tiers 1, 2 and 3 PASS; golden files unchanged; release hashes unchanged.
 - **Goal:** P2: portable Core (netstandard2.0), serializer abstraction proven before any switch, xUnit Core tests, CI.
 - **Last updated:** 2026-10-09 (Claude Code, Executor role; ARCHITECTURE-PLAN P2)
 - **Completed:**
