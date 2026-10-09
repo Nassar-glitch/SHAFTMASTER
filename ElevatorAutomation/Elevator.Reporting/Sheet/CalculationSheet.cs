@@ -653,6 +653,23 @@ namespace Elevator.Reporting.Sheet
                 + "between the front and rear bearing rows by their lever arms, and within each row between the left and right bearings by "
                 + "their lever arms.");
             d.Paragraph("Masses", "Heading2");
+            AddMassTable(d, r);
+            d.Paragraph("Load position and bearing positions", "Heading2");
+            d.Paragraph(
+                "Machine-room axes in mm: +X to the right, +Y from the entrance towards the rear, +Z above the machine-room slab.",
+                "Small",
+                null,
+                true);
+            AddPositionTable(d, r, g);
+            AddBasicEquations(d, r, g);
+            Reactions(d);
+            // Text first, then the figures: a figure moves to the next page only when it does not fit.
+            AddFigure(d, () => CalculationFigures.ChassisPlan(r, true));
+            AddFigure(d, () => CalculationFigures.ChassisElevation(r));
+        }
+
+        private void AddMassTable(DocxDocument d, ChassisCalculationResult r)
+        {
             var masses = r.MassCompositionKg.Where(m => !m.Key.EndsWith("(not included)") && m.Value > 0).ToList();
             var rows = masses.Select(m => new[] { MassName(m.Key), L(m.Value) + " kg" }).ToList();
             rows.Add(new[] { "Total Σm", L(r.TotalMassKg.Value) + " kg" });
@@ -665,12 +682,10 @@ namespace Elevator.Reporting.Sheet
                     + N(r.TotalVerticalLoadN)
                     + " N"
             });
-            d.Paragraph("Load position and bearing positions", "Heading2");
-            d.Paragraph(
-                "Machine-room axes in mm: +X to the right, +Y from the entrance towards the rear, +Z above the machine-room slab.",
-                "Small",
-                null,
-                true);
+        }
+
+        private void AddPositionTable(DocxDocument d, ChassisCalculationResult r, SimplifiedDistances g)
+        {
             var pos = new List<string[]> { new[]
             {
                 "Load W",
@@ -686,6 +701,10 @@ namespace Elevator.Reporting.Sheet
                 pos,
                 new[] { 1500, 3638, 1500, 1500, 1500 },
                 new HashSet<int> { 0 });
+        }
+
+        private void AddBasicEquations(DocxDocument d, ChassisCalculationResult r, SimplifiedDistances g)
+        {
             var x = r.Reactions.ToDictionary(b => b.Id, b => b.PositionMm);
             d.Paragraph("Equations", "Heading2");
             d.Equations(new[]
@@ -755,10 +774,6 @@ namespace Elevator.Reporting.Sheet
                     + N(R("P3"))
                     + " N"
             });
-            Reactions(d);
-            // Text first, then the figures: a figure moves to the next page only when it does not fit.
-            AddFigure(d, () => CalculationFigures.ChassisPlan(r, true));
-            AddFigure(d, () => CalculationFigures.ChassisElevation(r));
         }
 
         static string MassName(string key)
@@ -1004,6 +1019,22 @@ namespace Elevator.Reporting.Sheet
         {
             var s = Project.Calculations.SafetyPit;
             d.Heading(n + "  Safety-gear and buffer loads P5–P7", 1);
+            AddSafetyPitItems(d, s);
+            foreach (var load in Loads.Where(Available))
+            {
+                AddLoadSection(d, load);
+            }
+            if (Available(SafetyPit.P6) || Available(SafetyPit.P7))
+            {
+                AddFigure(d, () => CalculationFigures.PitBuffers(
+                                    Available(SafetyPit.P6) ? SafetyPit.P6 : null,
+                                    Available(SafetyPit.P7) ? SafetyPit.P7 : null,
+                                    Project.Shaft == null ? null : Project.Shaft.PitDepthMm));
+            }
+        }
+
+        private void AddSafetyPitItems(DocxDocument d, SafetyPitInputs s)
+        {
             var rows = new List<string[]>();
             if (Available(SafetyPit.P5))
             {
@@ -1015,94 +1046,104 @@ namespace Elevator.Reporting.Sheet
             if (Available(SafetyPit.P7))
                 rows.Add(new[] { "Counterweight buffers", s.CounterweightBufferCount.Value.ToString(Inv) });
             d.Table(new[] { "Item", "Value" }, rows, TwoCol, new HashSet<int> { 0 });
-            foreach (var load in Loads.Where(Available))
+        }
+
+        private void AddLoadSection(DocxDocument d, SafetyPitLoad load)
+        {
+            bool p5 = load.Id == "P5", p6 = load.Id == "P6";
+            double m = load.ParticipatingMassKg.Value;
+            var terms = EventTerms(load);
+            string massSymbol = load.Id == "P7" ? "m(cwt)" : "m(car)";
+            d.Paragraph(load.Id + " — " + (p5
+                ? "Safety-gear load per car guide rail"
+                : p6 ? "Car-buffer reaction" : "Counterweight-buffer reaction"), "Heading2");
+            d.Paragraph(p5
+                ? "P5 is the vertical load transmitted to each car guide rail when the progressive safety gear stops the car with "
+                    + "rated load."
+             : p6
+                 ? "P6 is the vertical reaction on the pit floor under the car buffers when the car with rated load strikes the "
+                     + "buffers. The total acts on all car buffers together; the per-buffer value acts on each buffer."
+             : "P7 is the vertical reaction on the pit floor under the counterweight buffers when the counterweight strikes the "
+                 + "buffers. The total acts on all counterweight buffers together; the per-buffer value acts on each buffer.",
+                 null,
+                 null,
+                 true);
+            AddLoadEquations(d, load, p5, m, terms, massSymbol);
+            AddLoadTable(d, load, p5, m, massSymbol);
+            if (p5 && CarRail != null)
+                AddFigure(d, () => CalculationFigures.SafetyGear(load, CarRail));
+        }
+
+        private void AddLoadEquations(
+            DocxDocument d,
+            SafetyPitLoad load,
+            bool p5,
+            double m,
+            List<KeyValuePair<string, double>> terms,
+            string massSymbol)
+        {
+            var lines = new List<string>();
+            if (terms != null && terms.Count > 1)
             {
-                bool p5 = load.Id == "P5", p6 = load.Id == "P6";
-                double m = load.ParticipatingMassKg.Value;
-                var terms = EventTerms(load);
-                string massSymbol = load.Id == "P7" ? "m(cwt)" : "m(car)";
-                d.Paragraph(load.Id + " — " + (p5
-                    ? "Safety-gear load per car guide rail"
-                    : p6 ? "Car-buffer reaction" : "Counterweight-buffer reaction"), "Heading2");
-                d.Paragraph(p5
-                    ? "P5 is the vertical load transmitted to each car guide rail when the progressive safety gear stops the car with "
-                        + "rated load."
-                 : p6
-                     ? "P6 is the vertical reaction on the pit floor under the car buffers when the car with rated load strikes the "
-                         + "buffers. The total acts on all car buffers together; the per-buffer value acts on each buffer."
-                 : "P7 is the vertical reaction on the pit floor under the counterweight buffers when the counterweight strikes the "
-                     + "buffers. The total acts on all counterweight buffers together; the per-buffer value acts on each buffer.",
-                     null,
-                     null,
-                     true);
-                var lines = new List<string>();
-                if (terms != null && terms.Count > 1)
-                {
-                    lines.Add(massSymbol
-                                            + " = "
-                                            + String.Join(" + ", terms.Select(t => t.Key))
-                                            + " = "
-                                            + String.Join(" + ", terms.Select(t => L(t.Value)))
-                                            + " = "
-                                            + L(m)
-                                            + " kg");
-                }
-                else
-                    lines.Add(massSymbol + " = " + L(m) + " kg");
-                if (p5)
-                {
-                    lines.Add("P5 = "
-                                            + massSymbol
-                                            + " × 10 N/kg = "
-                                            + L(m)
-                                            + " kg × 10 N/kg = "
-                                            + N(load.PerComponentLoadN)
-                                            + " N per car guide rail");
-                }
-                else
-                {
-                    lines.Add(load.Id
-                        + "(total) = "
-                        + massSymbol
-                        + " × max(40, 4 × 9.81) N/kg = "
-                        + L(m)
-                        + " kg × "
-                        + L(SafetyPitCalculationEngine.BufferCoefficientNPerKg)
-                        + " N/kg = "
-                        + N(load.GroupLoadN)
-                        + " N");
-                    lines.Add(load.Id
-                        + "(per buffer) = "
-                        + load.Id
-                        + "(total) / n = "
-                        + N(load.GroupLoadN)
-                        + " / "
-                        + load.ComponentCount
-                        + " = "
-                        + N(load.PerComponentLoadN)
-                        + " N");
-                }
-                d.Equations(true, lines);
-                var table = new List<string[]> { new[] { "Event mass " + massSymbol, L(m) + " kg" } };
-                if (p5)
-                    table.Add(new[] { "P5 per car guide rail", N(load.PerComponentLoadN) + " N (" + KN(load.PerComponentLoadN) + " kN)" });
-                else
-                {
-                    table.Add(new[] { "Number of buffers n", load.ComponentCount.Value.ToString(Inv) });
-                    table.Add(new[] { load.Id + " per buffer", N(load.PerComponentLoadN) + " N (" + KN(load.PerComponentLoadN) + " kN)" });
-                    table.Add(new[] { load.Id + " total", N(load.GroupLoadN) + " N (" + KN(load.GroupLoadN) + " kN)" });
-                }
-                d.Table(new[] { "Quantity", "Value" }, table, TwoCol, new HashSet<int> { 0, 1 });
-                if (p5 && CarRail != null)
-                    AddFigure(d, () => CalculationFigures.SafetyGear(load, CarRail));
+                lines.Add(massSymbol
+                                        + " = "
+                                        + String.Join(" + ", terms.Select(t => t.Key))
+                                        + " = "
+                                        + String.Join(" + ", terms.Select(t => L(t.Value)))
+                                        + " = "
+                                        + L(m)
+                                        + " kg");
             }
-            if (Available(SafetyPit.P6) || Available(SafetyPit.P7))
+            else
+                lines.Add(massSymbol + " = " + L(m) + " kg");
+            if (p5)
             {
-                AddFigure(d, () => CalculationFigures.PitBuffers(
-                                    Available(SafetyPit.P6) ? SafetyPit.P6 : null,
-                                    Available(SafetyPit.P7) ? SafetyPit.P7 : null,
-                                    Project.Shaft == null ? null : Project.Shaft.PitDepthMm));
+                lines.Add("P5 = "
+                                        + massSymbol
+                                        + " × 10 N/kg = "
+                                        + L(m)
+                                        + " kg × 10 N/kg = "
+                                        + N(load.PerComponentLoadN)
+                                        + " N per car guide rail");
             }
+            else
+            {
+                lines.Add(load.Id
+                    + "(total) = "
+                    + massSymbol
+                    + " × max(40, 4 × 9.81) N/kg = "
+                    + L(m)
+                    + " kg × "
+                    + L(SafetyPitCalculationEngine.BufferCoefficientNPerKg)
+                    + " N/kg = "
+                    + N(load.GroupLoadN)
+                    + " N");
+                lines.Add(load.Id
+                    + "(per buffer) = "
+                    + load.Id
+                    + "(total) / n = "
+                    + N(load.GroupLoadN)
+                    + " / "
+                    + load.ComponentCount
+                    + " = "
+                    + N(load.PerComponentLoadN)
+                    + " N");
+            }
+            d.Equations(true, lines);
+        }
+
+        private void AddLoadTable(DocxDocument d, SafetyPitLoad load, bool p5, double m, string massSymbol)
+        {
+            var table = new List<string[]> { new[] { "Event mass " + massSymbol, L(m) + " kg" } };
+            if (p5)
+                table.Add(new[] { "P5 per car guide rail", N(load.PerComponentLoadN) + " N (" + KN(load.PerComponentLoadN) + " kN)" });
+            else
+            {
+                table.Add(new[] { "Number of buffers n", load.ComponentCount.Value.ToString(Inv) });
+                table.Add(new[] { load.Id + " per buffer", N(load.PerComponentLoadN) + " N (" + KN(load.PerComponentLoadN) + " kN)" });
+                table.Add(new[] { load.Id + " total", N(load.GroupLoadN) + " N (" + KN(load.GroupLoadN) + " kN)" });
+            }
+            d.Table(new[] { "Quantity", "Value" }, table, TwoCol, new HashSet<int> { 0, 1 });
         }
 
         void ForcesSection(DocxDocument d, int n)
