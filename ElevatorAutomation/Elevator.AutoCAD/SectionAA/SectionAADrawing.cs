@@ -806,65 +806,9 @@ namespace Elevator.AutoCAD.SectionAA
                 if (Math.Abs(a - b) > .03)
                     throw new InvalidOperationException("A-A mismatch " + n + ": " + a + " / " + b);
             };
-            foreach (var fl in g.Floors.Where(v => !v.IsRoof))
-            {
-                string p = Prefix + "Floor." + fl.FloorId + ".";
-                var door = all.Where(v => v.Key.StartsWith(p + "Door.")).ToArray();
-                if (door.Length != (fl.Served ? 3 : 0))
-                    throw new InvalidOperationException("Door ownership count");
-                foreach (var v in door)
-                {
-                    var l = (Line)v.Value;
-                    double y = f.Local(l.EndPoint).Y - fl.FflZ;
-                    near(
-                    y,
-                    v.Key.Contains("ClearHead") ? 2000 : 2160,
-                    v.Key);
-                }
-                var top = (Polyline)all.Single(v => v.Key.StartsWith(p + "Slab.Top")).Value;
-                var bottom = (Polyline)all.Single(v => v.Key.StartsWith(p + "Slab.Bottom")).Value;
-                near(f.Local(top.GetPoint3dAt(0)).Y, fl.FflZ, "FFL");
-                near(f.Local(bottom.GetPoint3dAt(0)).Y, fl.FflZ - 250, "Slab");
-            }
-            foreach (var pair in new Dictionary<string, double> { { "Pit", d.Pit },
-                { "OH", d.OH },
-                { "Travel", g.Travel },
-                { "ShaftTotal", g.Underside - g.PitZ } })
-                near(((Dimension)all[Prefix + "Dimension." + pair.Key]).Measurement, pair.Value, pair.Key);
-            foreach (var rail in new[] { "CarRail.Projected", "CWRail.Projected" })
-            {
-                var l = (Line)all[Prefix + rail];
-                near(f.Local(l.StartPoint).Y, g.PitZ, rail);
-                near(f.Local(l.EndPoint).Y, g.Underside, rail);
-                near(f.Local(l.StartPoint).X, rail.StartsWith("CarRail") ? -s.Plan.CarRow : -s.Plan.CwRow, rail + " horizontal projection");
-            }
-            near(f.Local(((Line)all[Prefix + "MR.Ceiling"]).StartPoint).Y - g.R, 2200, "MR clear");
-            foreach (var fl in normalForAudit(g))
-            {
-                var dim = (RotatedDimension)all[Prefix + "Dimension.Floor." + fl.Item1.FloorId];
-                near(dim.Measurement, fl.Item2.FflZ - fl.Item1.FflZ, "floor interval");
-            }
-            foreach (var entry in all.Where(v => v.Key.StartsWith(Prefix + "MR.Coordinated.")))
-            {
-                string sourceKey = entry.Key.Substring((Prefix + "MR.Coordinated.").Length);
-                using (var expected = (Entity)bb.Entities[sourceKey].Clone())
-                {
-                    var pose = Matrix3d.AlignCoordinateSystem(
-                    bb.Frame.Origin,
-                    bb.Frame.XAxis,
-                    bb.Frame.YAxis,
-                    bb.Frame.ZAxis,
-                    f.World(new Point3d(0, g.R, 0)),
-                    f.XAxis,
-                    f.YAxis,
-                    f.ZAxis);
-                    PlaceCoordinatedNote(
-                        expected,
-                        bb.Frame);
-                    expected.TransformBy(pose);
-                    VerticalSectionGeometryAudit.Compare(entry.Value, expected, f, entry.Key);
-                }
-            }
+            AuditFloors(all, g, f, near);
+            AuditDatumsAndRails(d, all, s, g, f, near);
+            AuditCoordinated(all, bb, g, f);
             var car =
                 all.Where(p => p.Key.StartsWith(Prefix + "Car.")).SelectMany(p => MachineRoomDependencies.Points(p.Value, f)).ToArray();
             var cw = all.Where(p => p.Key.StartsWith(Prefix + "CW.")).SelectMany(p => MachineRoomDependencies.Points(p.Value, f)).ToArray();
@@ -890,6 +834,87 @@ namespace Elevator.AutoCAD.SectionAA
                     s.Section.Arrangement.Reeving == null ? "NOT YET EVALUABLE" : s.Section.Arrangement.Reeving.WrapAngleStatus,
                 SlabClearanceStatus = s.Section.Arrangement.DeflectorSlabClearanceStatus
             };
+        }
+
+        private static void AuditFloors(
+            Dictionary<string, Entity> all,
+            SectionAAGeometry g,
+            ShaftFrame f,
+            Action<double, double, string> near)
+        {
+            foreach (var fl in g.Floors.Where(v => !v.IsRoof))
+            {
+                string p = Prefix + "Floor." + fl.FloorId + ".";
+                var door = all.Where(v => v.Key.StartsWith(p + "Door.")).ToArray();
+                if (door.Length != (fl.Served ? 3 : 0))
+                    throw new InvalidOperationException("Door ownership count");
+                foreach (var v in door)
+                {
+                    var l = (Line)v.Value;
+                    double y = f.Local(l.EndPoint).Y - fl.FflZ;
+                    near(
+                    y,
+                    v.Key.Contains("ClearHead") ? 2000 : 2160,
+                    v.Key);
+                }
+                var top = (Polyline)all.Single(v => v.Key.StartsWith(p + "Slab.Top")).Value;
+                var bottom = (Polyline)all.Single(v => v.Key.StartsWith(p + "Slab.Bottom")).Value;
+                near(f.Local(top.GetPoint3dAt(0)).Y, fl.FflZ, "FFL");
+                near(f.Local(bottom.GetPoint3dAt(0)).Y, fl.FflZ - 250, "Slab");
+            }
+        }
+
+        private static void AuditDatumsAndRails(
+            SectionAAProject d,
+            Dictionary<string, Entity> all,
+            VerticalSource s,
+            SectionAAGeometry g,
+            ShaftFrame f,
+            Action<double, double, string> near)
+        {
+            foreach (var pair in new Dictionary<string, double> { { "Pit", d.Pit },
+                { "OH", d.OH },
+                { "Travel", g.Travel },
+                { "ShaftTotal", g.Underside - g.PitZ } })
+                near(((Dimension)all[Prefix + "Dimension." + pair.Key]).Measurement, pair.Value, pair.Key);
+            foreach (var rail in new[] { "CarRail.Projected", "CWRail.Projected" })
+            {
+                var l = (Line)all[Prefix + rail];
+                near(f.Local(l.StartPoint).Y, g.PitZ, rail);
+                near(f.Local(l.EndPoint).Y, g.Underside, rail);
+                near(f.Local(l.StartPoint).X, rail.StartsWith("CarRail") ? -s.Plan.CarRow : -s.Plan.CwRow, rail + " horizontal projection");
+            }
+            near(f.Local(((Line)all[Prefix + "MR.Ceiling"]).StartPoint).Y - g.R, 2200, "MR clear");
+            foreach (var fl in normalForAudit(g))
+            {
+                var dim = (RotatedDimension)all[Prefix + "Dimension.Floor." + fl.Item1.FloorId];
+                near(dim.Measurement, fl.Item2.FflZ - fl.Item1.FflZ, "floor interval");
+            }
+        }
+
+        private static void AuditCoordinated(Dictionary<string, Entity> all, SectionSnapshot bb, SectionAAGeometry g, ShaftFrame f)
+        {
+            foreach (var entry in all.Where(v => v.Key.StartsWith(Prefix + "MR.Coordinated.")))
+            {
+                string sourceKey = entry.Key.Substring((Prefix + "MR.Coordinated.").Length);
+                using (var expected = (Entity)bb.Entities[sourceKey].Clone())
+                {
+                    var pose = Matrix3d.AlignCoordinateSystem(
+                    bb.Frame.Origin,
+                    bb.Frame.XAxis,
+                    bb.Frame.YAxis,
+                    bb.Frame.ZAxis,
+                    f.World(new Point3d(0, g.R, 0)),
+                    f.XAxis,
+                    f.YAxis,
+                    f.ZAxis);
+                    PlaceCoordinatedNote(
+                        expected,
+                        bb.Frame);
+                    expected.TransformBy(pose);
+                    VerticalSectionGeometryAudit.Compare(entry.Value, expected, f, entry.Key);
+                }
+            }
         }
 
         static IEnumerable<Tuple<Elevator.Core.Geometry.VerticalFloor, Elevator.Core.Geometry.VerticalFloor>> normalForAudit(
