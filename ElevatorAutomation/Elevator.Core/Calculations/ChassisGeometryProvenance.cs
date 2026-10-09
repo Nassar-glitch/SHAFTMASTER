@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Web.Script.Serialization;
+using Elevator.Core.Serialization;
 using Elevator.Core.Project;
 namespace Elevator.Core.Calculations
 {
@@ -39,7 +39,7 @@ namespace Elevator.Core.Calculations
         static string GeometryHash(ChassisCalculationGeometry g)
         {
             if(g==null)return null;
-            var serializer=new JavaScriptSerializer{MaxJsonLength=Int32.MaxValue};
+            var serializer=CoreJson.Create();
             try
             {
                 var payload=(Dictionary<string,object>)serializer.DeserializeObject(serializer.Serialize(g));

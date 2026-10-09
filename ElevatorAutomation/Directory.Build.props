@@ -28,9 +28,11 @@
     <Prefer32Bit>false</Prefer32Bit>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <!-- All assemblies in one folder, as before: artifacts/bin (override with -p:OutDir=... through tools/build.ps1). -->
+    <!-- All .NET Framework assemblies in one folder, as before: artifacts/bin (tools/build.ps1 -Bin sets BinDir). The
+         netstandard2.0 build of Elevator.Core goes to artifacts/netstandard2.0/ (Elevator.Core.csproj). -->
     <ArtifactsRoot>$(MSBuildThisFileDirectory)artifacts\</ArtifactsRoot>
-    <OutDir Condition="'$(OutDir)' == ''">$(ArtifactsRoot)bin\</OutDir>
+    <BinDir Condition="'$(BinDir)' == ''">$(ArtifactsRoot)bin\</BinDir>
+    <OutDir Condition="'$(OutDir)' == ''">$(BinDir)</OutDir>
     <BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>

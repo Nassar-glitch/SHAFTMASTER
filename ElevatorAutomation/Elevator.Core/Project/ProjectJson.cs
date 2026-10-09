@@ -1,10 +1,10 @@
 using System;
-using System.Web.Script.Serialization;
+using Elevator.Core.Serialization;
 namespace Elevator.Core.Project
 {
     public static class ProjectJson
     {
-        static JavaScriptSerializer Serializer() { return new JavaScriptSerializer { MaxJsonLength = Int32.MaxValue }; }
+        static IJsonSerializer Serializer() { return CoreJson.Create(); }
         public static string Serialize(ElevatorProject project)
         {
             if (project == null) throw new ArgumentNullException("project");

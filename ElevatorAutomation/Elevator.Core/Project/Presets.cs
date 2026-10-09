@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Web.Script.Serialization;
+using Elevator.Core.Serialization;
 namespace Elevator.Core.Project
 {
     // Editable preset library (config/presets.json, shipped beside the application). Company practice changes here,
@@ -36,7 +36,7 @@ namespace Elevator.Core.Project
         public static PresetLibrary Parse(string json)
         {
             PresetLibrary library;
-            try{library=new JavaScriptSerializer().Deserialize<PresetLibrary>(json);}
+            try{library=CoreJson.CreateWithDefaultLimit().Deserialize<PresetLibrary>(json);}
             catch(Exception e){throw new ArgumentException("Preset library is not valid JSON: "+e.Message);}
             if(library==null)throw new ArgumentException("Preset library is empty.");
             var problems=library.Validate();
