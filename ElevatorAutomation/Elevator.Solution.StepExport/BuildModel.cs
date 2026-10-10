@@ -202,17 +202,21 @@ public class BuildModel
         B("Shaft_Left_Wall", -p.WallSide, -p.WallFront, -p.Pit, p.WallSide, p.SD + p.WallFront + p.WallRear, under + p.Pit);
         B("Shaft_Right_Wall", p.SW, -p.WallFront, -p.Pit, p.WallSide, p.SD + p.WallFront + p.WallRear, under + p.Pit);
         B("Shaft_Rear_Wall", 0, p.SD, -p.Pit, p.SW, p.WallRear, under + p.Pit);
-        B("Shaft_Front_Left_Pier", 0, -p.WallFront, -p.Pit, c - p.DoorWidth / 2, p.WallFront, under + p.Pit);
-        B("Shaft_Front_Right_Pier", c + p.DoorWidth / 2, -p.WallFront, -p.Pit, c - p.DoorWidth / 2, p.WallFront, under + p.Pit);
+        // The wall opening: centred for a manual door, at the opening of an automatic door (2S, 2C) otherwise.
+        bool automatic = p.DoorOpeningRight > p.DoorOpeningLeft;
+        double openLeft = automatic ? p.DoorOpeningLeft : c - p.DoorWidth / 2;
+        double openRight = automatic ? p.DoorOpeningRight : c + p.DoorWidth / 2;
+        B("Shaft_Front_Left_Pier", 0, -p.WallFront, -p.Pit, openLeft, p.WallFront, under + p.Pit);
+        B("Shaft_Front_Right_Pier", openRight, -p.WallFront, -p.Pit, automatic ? p.SW - openRight : c - p.DoorWidth / 2, p.WallFront, under + p.Pit);
         double previous = -p.Pit;
         foreach (double z in p.FloorElevations.Where((z, i) => p.ServedFloors == null || p.ServedFloors[i]))
         {
             if (z > previous)
-                B("Shaft_Front_Spandrel_" + z, c - p.DoorWidth / 2, -p.WallFront, previous, p.DoorWidth, p.WallFront, z - previous);
+                B("Shaft_Front_Spandrel_" + z, openLeft, -p.WallFront, previous, p.DoorWidth, p.WallFront, z - previous);
             previous = z + p.DoorConstructionHeight;
         }
         if (under > previous)
-            B("Shaft_Front_Top_Spandrel", c - p.DoorWidth / 2, -p.WallFront, previous, p.DoorWidth, p.WallFront, under - previous);
+            B("Shaft_Front_Top_Spandrel", openLeft, -p.WallFront, previous, p.DoorWidth, p.WallFront, under - previous);
     }
 
     private static void PitSlabsAndCeiling(double c, double under, double top)
@@ -260,6 +264,13 @@ public class BuildModel
                 p.LandingSlab);
             if (p.ServedFloors != null && !p.ServedFloors[i])
                 continue;
+            if (p.LandingDoorPanels != null && p.LandingDoorPanels.Length > 0)
+            {
+                // Automatic door: two panels and the frame as simple bodies.
+                Boxes("Landing_" + i + "_Door_Panel_", p.LandingDoorPanels, z);
+                Boxes("Landing_" + i + "_Door_Frame_", p.LandingDoorFrame, z);
+                continue;
+            }
             B(
                 "Landing_" + i + "_Door_Left",
                 c - p.DoorWidth / 2,
@@ -270,6 +281,15 @@ public class BuildModel
                 p.DoorClearHeight);
             B("Landing_" + i + "_Door_Right", c, -p.DoorThickness / 2, z, p.DoorWidth / 2, p.DoorThickness, p.DoorClearHeight);
         }
+    }
+
+    // Boxes given as groups of six numbers (X, Y, width, depth, height above the floor, height) on a floor level.
+    private static void Boxes(string name, double[] groups, double floorZ)
+    {
+        if (groups == null)
+            return;
+        for (int k = 0; k + 5 < groups.Length; k += 6)
+            B(name + (k / 6 + 1), groups[k], groups[k + 1], floorZ + groups[k + 4], groups[k + 2], groups[k + 3], groups[k + 5]);
     }
 
     private static void CarAndCounterweight(double c)
@@ -286,8 +306,13 @@ public class BuildModel
         B("Car_Frame_Right_Upright", right + t, p.CarRow - fd / 2, fb + f, f, fd, ft - fb - 2 * f);
         B("Car_Frame_Lower_Crosshead", left - t - f, p.CarRow - fd / 2, fb, p.CarWidth + 2 * (t + f), fd, f);
         B("Car_Frame_Upper_Crosshead", left - t - f, p.CarRow - fd / 2, ft - f, p.CarWidth + 2 * (t + f), fd, f);
-        B("Cabin_Door_Left", c - p.DoorWidth / 2, front - p.DoorThickness, cz, p.DoorWidth / 2, p.DoorThickness, p.DoorClearHeight);
-        B("Cabin_Door_Right", c, front - p.DoorThickness, cz, p.DoorWidth / 2, p.DoorThickness, p.DoorClearHeight);
+        if (p.CarDoorPanels != null && p.CarDoorPanels.Length > 0)
+            Boxes("Cabin_Door_Panel_", p.CarDoorPanels, cz);
+        else
+        {
+            B("Cabin_Door_Left", c - p.DoorWidth / 2, front - p.DoorThickness, cz, p.DoorWidth / 2, p.DoorThickness, p.DoorClearHeight);
+            B("Cabin_Door_Right", c, front - p.DoorThickness, cz, p.DoorWidth / 2, p.DoorThickness, p.DoorClearHeight);
+        }
         // Frame and infill partition the stated CW envelope without double-counted volume.
         double cwleft = c - p.CwWidth / 2, cwfront = p.CwRow - p.CwDepth / 2, cb = p.CwBottom;
         B("Counterweight_Frame_Left", cwleft, cwfront, cb, 25, p.CwDepth, p.CwHeight);
