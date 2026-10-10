@@ -320,6 +320,16 @@ public static class GoldenTests
         add("doors-2c-auto", c2, "Automatic 2C, opening selected by the rules, shaft 1900 x 2800 (D1).");
         var shifted = door("Golden D5 - 2S shifted", Elevator.Core.Doors.DoorTypes.Automatic2S); shifted.Shaft.WidthMm = 1750;
         add("doors-2s-shifted", shifted, "Automatic 2S on the 1750 mm shaft: the 1000 mm opening is selected and shifted to the car side wall (fixed return 0) (D1).");
+        // D2 (door drawings): the three native cases, F1 shaft plan figures with the automatic door.
+        var d2s = door("Golden D6 - 2S 800 on 1720", Elevator.Core.Doors.DoorTypes.Automatic2S); d2s.Shaft.WidthMm = 1720;
+        Elevator.Core.Doors.DoorFlow.SetNumber(d2s, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        add("doors-2s-800-1720", d2s, "Automatic 2S, 800 mm locked on a 1720 x 2800 shaft: preferred layout (D2 figure F1).");
+        var d2c = door("Golden D7 - 2C 800 on 1720", Elevator.Core.Doors.DoorTypes.Automatic2C); d2c.Shaft.WidthMm = 1720;
+        Elevator.Core.Doors.DoorFlow.SetNumber(d2c, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        add("doors-2c-800-1720", d2c, "Automatic 2C, 800 mm locked on a 1720 x 2800 shaft (D2 figure F1).");
+        var d7 = door("Golden D8 - 2S 700 on 1300", Elevator.Core.Doors.DoorTypes.Automatic2S); d7.Shaft.WidthMm = 1300;
+        Elevator.Core.Doors.DoorFlow.SetNumber(d7, Elevator.Core.Doors.DoorSettings.OpeningKey, 700);
+        add("doors-2s-700-1300", d7, "Automatic 2S, 700 mm locked on a 1300 x 2800 shaft: opening shifted to the car side wall (D2 figure F1).");
         var left = door("Golden D3 - 2S left 1000", Elevator.Core.Doors.DoorTypes.Automatic2S); left.Shaft.WidthMm = 2100;
         Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.OpeningKey, 1000); Elevator.Core.Doors.DoorFlow.SetHanding(left, Elevator.Core.Doors.DoorTypes.Left);
         Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.SillGapKey, 30);
