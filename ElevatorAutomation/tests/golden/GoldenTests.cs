@@ -57,6 +57,7 @@ public static class GoldenTests
             lib = PresetLibrary.Load(Path.Combine(bin, "presets.json"));
             Directory.CreateDirectory(run);
             if (mode == "fixtures") { MakeFixtures(); Console.WriteLine("Fixtures written: " + Directory.GetFiles(fixtures, "*.elevator.json").Length); return 0; }
+            if (mode == "door-fixtures") { MakeDoorFixtures(); Console.WriteLine("Door fixtures written (existing files are kept)."); return 0; }
             if (mode == "approve" && Directory.Exists(approved) && Directory.EnumerateFileSystemEntries(approved).Any()) throw new InvalidOperationException("Approve creates the initial baseline only; the approved folder is not empty: " + approved);
             var names = Directory.GetFiles(fixtures, "*.elevator.json").Select(f => Path.GetFileName(f)).OrderBy(f => f, StringComparer.Ordinal).ToList();
             if (names.Count == 0) throw new InvalidOperationException("No fixtures in " + fixtures);
@@ -114,6 +115,8 @@ public static class GoldenTests
             Locked = p.UserEditedFields == null ? null : p.UserEditedFields.OrderBy(k => k, StringComparer.Ordinal).ToList()
         };
         EmitJson(name + "/results.json", new { Fixture = name, options.Description, p.FollowsPresets, Mode = p.Calculations == null ? null : CalculationModes.Resolve(p.Calculations), Selection = selection, Values = values, Chassis = chassis, SafetyPit = pit, CarGuideForces = ff, RopeTraction = rope });
+        if (p.Doors != null && Elevator.Core.Doors.DoorTypes.IsAutomatic(p.Doors.Type))
+            EmitJson(name + "/doors.json", Try(() => { var plan = new ElevatorDesignEngine().Calculate(p, ctx, DrawingViews.Plan).Plan; return new { Plan = plan, Layout = Elevator.Core.Doors.DoorRules.Evaluate(p, ctx.Doors, plan) }; }));
         var cr = chassis as ChassisCalculationResult; var pr = pit as SafetyPitCalculationResult; var fr = ff as CarGuideForceResult;
         EmitJson(name + "/fingerprints.json", new
         {
@@ -210,6 +213,8 @@ public static class GoldenTests
         string captured = Path.Combine(run, "captured", rel.Replace('/', Path.DirectorySeparatorChar)); Directory.CreateDirectory(Path.GetDirectoryName(captured)); File.WriteAllBytes(captured, content);
         string target = Path.Combine(approved, rel.Replace('/', Path.DirectorySeparatorChar));
         if (mode == "approve") { Directory.CreateDirectory(Path.GetDirectoryName(target)); File.WriteAllBytes(target, content); return; }
+        // approve-new: files that have no approved copy yet are approved; an existing approved file is compared as usual.
+        if (mode == "approve-new" && !File.Exists(target)) { Directory.CreateDirectory(Path.GetDirectoryName(target)); File.WriteAllBytes(target, content); return; }
         if (!File.Exists(target)) { mismatches.Add(rel + ": no approved file"); WriteMismatch(rel, content, null); return; }
         var expected = File.ReadAllBytes(target);
         if (!expected.SequenceEqual(content)) { mismatches.Add(rel + ": differs"); WriteMismatch(rel, content, expected); }
@@ -296,6 +301,32 @@ public static class GoldenTests
         if (o != null) File.WriteAllText(Path.Combine(fixtures, name + ".options.json"), Pretty(o) + "\n", Utf8);
     }
     static GoldenOptions Describe(string text) { return new GoldenOptions { Description = text }; }
+    // The door fixtures (D1): written beside the existing set, never over an existing file.
+    static void MakeDoorFixtures()
+    {
+        Directory.CreateDirectory(fixtures);
+        Action<string, ElevatorProject, string> add = (name, p, text) =>
+        {
+            if (File.Exists(Path.Combine(fixtures, name + ".elevator.json"))) return;
+            Save(name, p, Describe(text));
+        };
+        Func<string, string, ElevatorProject> door = (name, type) =>
+        {
+            var p = BasicComplete(name); p.Shaft.WidthMm = 1900; p.Shaft.DepthMm = 2800; Elevator.Core.Doors.DoorFlow.SetType(p, type); return p;
+        };
+        var s2 = door("Golden D1 - 2S auto", Elevator.Core.Doors.DoorTypes.Automatic2S);
+        add("doors-2s-auto", s2, "Automatic 2S, opening selected by the rules, shaft 1900 x 2800 (D1).");
+        var c2 = door("Golden D2 - 2C auto", Elevator.Core.Doors.DoorTypes.Automatic2C);
+        add("doors-2c-auto", c2, "Automatic 2C, opening selected by the rules, shaft 1900 x 2800 (D1).");
+        var left = door("Golden D3 - 2S left 1000", Elevator.Core.Doors.DoorTypes.Automatic2S); left.Shaft.WidthMm = 2100;
+        Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.OpeningKey, 1000); Elevator.Core.Doors.DoorFlow.SetHanding(left, Elevator.Core.Doors.DoorTypes.Left);
+        Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.SillGapKey, 30);
+        add("doors-2s-left-1000", left, "Automatic 2S, 1000 mm and left handing and sill gap 30 locked, shaft 2100 x 2800 (D1).");
+        var big = door("Golden D4 - 2C 1200 does not fit", Elevator.Core.Doors.DoorTypes.Automatic2C);
+        Elevator.Core.Doors.DoorFlow.SetNumber(big, Elevator.Core.Doors.DoorSettings.OpeningKey, 1200);
+        add("doors-2c-1200-no-fit", big, "Automatic 2C with 1200 mm locked on a 1900 mm shaft: does not fit; Design Notes give the needed widths (D1).");
+    }
+
     static void MakeFixtures()
     {
         if (Directory.Exists(fixtures) && Directory.EnumerateFileSystemEntries(fixtures).Any()) throw new InvalidOperationException("Fixture folder is not empty: " + fixtures);

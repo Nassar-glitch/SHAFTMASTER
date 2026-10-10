@@ -1,0 +1,68 @@
+{
+  "Layout": {
+    "ActualFixedReturnMm": 150,
+    "ActualStackReturnMm": 150,
+    "AutoSelected": false,
+    "CarToWallMm": 110,
+    "CarZoneMm": 110,
+    "CentreShiftMm": 0,
+    "Fits": false,
+    "FixedReturnMm": 375,
+    "FrontZoneMm": 220,
+    "LandingFixedJambMm": 625,
+    "LandingLeftX": -275,
+    "LandingRightX": 2175,
+    "LandingStackPocketMm": 625,
+    "LandingWallClearanceMm": 35,
+    "LandingZoneMm": 80,
+    "NeededCarWidthMm": 2120,
+    "NeededShaftWidthMm": 2520,
+    "OpeningLeftX": 350,
+    "OpeningMm": 1200,
+    "OpeningOffsetMm": 0,
+    "OpeningRightX": 1550,
+    "PanelOverlapMm": 2,
+    "PanelThicknessMm": 39,
+    "PanelWidthMm": 599,
+    "Problems": [
+      {
+        "Code": "car-width",
+        "Message": "needs car width 1950 mm (now 1500 mm), shaft width 2350 mm",
+        "NeededCarWidthMm": 1950,
+        "NeededShaftWidthMm": 2350
+      },
+      {
+        "Code": "landing-width",
+        "Message": "needs shaft width 2520 mm (now 1900 mm)",
+        "NeededCarWidthMm": 2120,
+        "NeededShaftWidthMm": 2520
+      }
+    ],
+    "SillGapMm": 30,
+    "StackReturnMm": 375,
+    "StackingSide": "Right",
+    "Type": "Automatic2C"
+  },
+  "Plan": {
+    "CarDbg": 1600,
+    "CarDepth": 2305,
+    "CarFront": 220,
+    "CarRear": 2525,
+    "CarRow": 1372.5,
+    "CarWidth": 1500,
+    "Center": 950,
+    "CwDbg": 1040,
+    "CwDepth": 100,
+    "CwFront": 2625,
+    "CwRear": 2725,
+    "CwRow": 2675,
+    "CwWidth": 1000,
+    "DoorWidth": 1200,
+    "JambWidth": 135,
+    "MachineRoom": null,
+    "MachineRoomSection": null,
+    "SD": 2800,
+    "SW": 1900,
+    "TZ": 1302.5
+  }
+}

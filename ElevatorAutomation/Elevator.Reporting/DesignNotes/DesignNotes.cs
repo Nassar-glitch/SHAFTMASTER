@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Elevator.Core.Car;
+using Elevator.Core.Doors;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.Suspension;
@@ -95,6 +96,8 @@ namespace Elevator.Reporting.DesignNotes
             AddOmissionWarnings(n, r);
             // EN 81-20 5.4.2.1, Table 6: car available area against the rated load (shared internal car dimensions).
             AddCarAreaNote(project, n, r);
+            // Automatic door (DESIGN-FLOW "Doors"): a user size or a type that does not fit; one line with the needed car or shaft width.
+            AddDoorNote(project, context, n, presets);
             // Rope / groove / balance / sheave selection (project presets): nothing passes on 1:1. One recommendation: the limiting check,
             // 2:1 roping, and the minimum rope MBL that would satisfy the safety factor at 7 ropes (same engine, 7 ropes of this diameter).
             AddRopeSelectionRecommendation(project, context, n, presets, engine);
@@ -234,6 +237,35 @@ namespace Elevator.Reporting.DesignNotes
             }
             else if (!q.HasValue || q.Value <= 0)
                 n.Recommendations.Add("Enter the rated load to check the car area (EN 81-20 Table 6).");
+        }
+
+        private static void AddDoorNote(ElevatorProject project, DesignContext context, DesignNotes n, PresetLibrary presets)
+        {
+            var door = DoorInput.From(project, context == null ? null : (context.Doors ?? (presets == null ? null : presets.DoorsOrDefault())));
+            if (door == null
+                || context == null
+                || context.Equipment == null
+                || project.Shaft == null
+                || project.Shaft.WidthMm <= 0
+                || project.Shaft.DepthMm <= 0
+                || context.CounterweightDepthMm <= 0)
+                return;
+            try
+            {
+                var plan = DesignRules.Calculate(
+                    project.Shaft.WidthMm,
+                    project.Shaft.DepthMm,
+                    context.Equipment,
+                    context.CounterweightDepthMm,
+                    door);
+                string note = DoorFlow.DesignNote(DoorRules.Select(door, plan));
+                if (note != null)
+                    n.Recommendations.Add(note);
+            }
+            catch (ArgumentException)
+            {
+                // The shaft gives no plan: the layout checks of the Design Notes already name the cause.
+            }
         }
 
         private static void AddRopeSelectionRecommendation(

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Doors;
 using Elevator.Core.Geometry;
 using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
@@ -178,7 +179,8 @@ namespace Elevator.Reporting.Sheet
                                             project.Shaft.WidthMm,
                                             project.Shaft.DepthMm,
                                             context.Equipment,
-                                            context.CounterweightDepthMm);
+                                            context.CounterweightDepthMm,
+                                            Elevator.Core.Doors.DoorInput.From(project, context.Doors));
                 }
             }
             catch (ArgumentException)
@@ -188,6 +190,10 @@ namespace Elevator.Reporting.Sheet
             if (s.Plan != null && s.CarGuideForcesAvailable && (Math.Abs(s.Plan.CarWidth - s.CarGuideForces.InternalWidthMm.Value) > 1e-6
                 || Math.Abs(s.Plan.CarDepth - s.CarGuideForces.InternalDepthMm.Value) > 1e-6))
                 s.Plan = null;
+            // Automatic door: the layout behind the plan (type, size and handing appear in the input table). Manual: none.
+            var door = DoorInput.From(project, context == null ? null : context.Doors);
+            if (s.Plan != null && door != null)
+                s.Door = DoorRules.Select(door, s.Plan);
         }
 
         private static void RecordOmissions(CalculationSheet s)
@@ -362,6 +368,9 @@ namespace Elevator.Reporting.Sheet
         public List<Figure> Figures { get; private set; }
         public List<string> FigureErrors { get; private set; }
         public ElevatorParameters Plan { get; private set; }
+
+        /// <summary>The layout of an automatic car door (null for a Manual door).</summary>
+        public DoorLayout Door { get; private set; }
         public IRailSection CarRail { get; private set; }
         public IRailSection CounterweightRail { get; private set; }
 
@@ -614,6 +623,8 @@ namespace Elevator.Reporting.Sheet
                 add("Shaft width", "Shaft.WidthMm", p.Shaft.WidthMm, "mm");
                 add("Shaft depth", "Shaft.DepthMm", p.Shaft.DepthMm, "mm");
             }
+            if (Door != null && (chassis || ff))
+                DoorInputRows(rows);
             if (chassis && Positive(p.Suspension.RopingRatio))
                 rows.Add(new[] { "Roping", p.Suspension.RopingRatio.Value.ToString(Inv) + ":1" });
             if (chassis && p.Suspension.RopeCount.HasValue && p.Suspension.RopeCount.Value > 0)
@@ -644,7 +655,16 @@ namespace Elevator.Reporting.Sheet
                 RopeTractionInputRows(rows);
             d.Table(new[] { "Input", "Value" }, rows, TwoCol, new HashSet<int> { 0 });
             if (Plan != null && CarRail != null)
-                AddFigure(d, () => CalculationFigures.ShaftPlan(Plan, CarRail, CounterweightRail));
+                AddFigure(d, () => CalculationFigures.ShaftPlan(Plan, CarRail, CounterweightRail, Door == null ? 0 : Door.CentreShiftMm));
+        }
+
+        // Automatic car door: type, clear opening and (side opening) the stacking side. Manual doors add no row.
+        void DoorInputRows(List<string[]> rows)
+        {
+            rows.Add(new[] { "Car door", DoorTypes.Display(Door.Type) });
+            rows.Add(new[] { "Door clear opening", L(Door.OpeningMm) + " mm" });
+            if (Door.Type == DoorTypes.Automatic2S)
+                rows.Add(new[] { "Door stacking side", Door.StackingSide });
         }
 
         void BasicChassis(DocxDocument d, int n)
