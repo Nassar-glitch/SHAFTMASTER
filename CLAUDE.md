@@ -22,8 +22,8 @@
 - Read `SESSION_HANDOFF.md` for the latest Executor progress and next step.
 - Read `CALCULATION_ROADMAP.md` for the user's broader calculation goal and the note-section inventory.
 - For the main application, read `ElevatorAutomation/README.md` and the relevant current documents under `ElevatorAutomation/docs/` before changing code.
-- `ElevatorAutomation/docs/CAR-GUIDE-FORCES.md` documents the FF1/FF2 candidate, adopted equations, validation, and known interpretation limits.
-- `ElevatorAutomation/docs/SHAFTMASTER-UI-RESULTS.md` and `ElevatorAutomation/docs/STEP-EXPORT-RESULTS.md` describe packaged application and export evidence.
+- `ElevatorAutomation/docs/calculations/CAR-GUIDE-FORCES.md` documents the FF1/FF2 candidate, adopted equations, validation, and known interpretation limits.
+- `ElevatorAutomation/docs/releases/SHAFTMASTER-UI-RESULTS.md` and `ElevatorAutomation/docs/releases/STEP-EXPORT-RESULTS.md` describe packaged application and export evidence.
 - `legacy/ElevatorPlanGenerator/` is an earlier AutoCAD plugin and regression/reference tree. Do not assume it is the active ShaftMaster desktop application.
 
 ## Project constraints

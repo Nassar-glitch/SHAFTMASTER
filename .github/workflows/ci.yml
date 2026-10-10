@@ -1,5 +1,5 @@
 # Continuous integration (ARCHITECTURE-PLAN P2, P3, P7): the portable Core and Reporting and their tier-1 tests (tools/test.ps1 -Tier 1). The AutoCAD,
-# SOLIDWORKS and WPF parts are not built here (tier 2 and 3 run locally; docs/TESTING.md).
+# SOLIDWORKS and WPF parts are not built here (tier 2 and 3 run locally; docs/testing/TESTING.md).
 name: CI
 
 on:

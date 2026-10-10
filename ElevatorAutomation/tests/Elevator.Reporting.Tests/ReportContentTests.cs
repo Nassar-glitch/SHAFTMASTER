@@ -143,7 +143,7 @@ namespace Elevator.Reporting.Tests
             string approved = File.ReadAllText(path, Utf8);
             if (approved == text) return;
 #if !NETFRAMEWORK
-            // .NET 8: numbers written with double.ToString() can have more digits (docs/TESTING.md); text otherwise identical.
+            // .NET 8: numbers written with double.ToString() can have more digits (docs/testing/TESTING.md); text otherwise identical.
             var x = approved.Split('\n'); var y = text.Split('\n');
             var number = new Regex(@"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?");
             if (x.Length == y.Length && Enumerable.Range(0, x.Length).All(i => x[i] == y[i] || (number.Replace(x[i], "#") == number.Replace(y[i], "#") && NumbersClose(number, x[i], y[i])))) return;

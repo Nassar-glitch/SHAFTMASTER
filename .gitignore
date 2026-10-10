@@ -45,3 +45,16 @@ ElevatorAutomation/artifacts/
 # AutoCAD script-suite outputs (tests/run-tests.ps1 rewrites them on every run)
 ElevatorAutomation/tests/generated/
 ElevatorAutomation/tests/*-results.json
+
+# Legacy ElevatorPlanGenerator outputs: only the seven drawings that ArchitectureTests compares with (named in tests/cad-test-results.json) are tracked.
+legacy/ElevatorPlanGenerator/output/*
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1450_SD1600_20260907_032747_680_9ee646.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1800_SD2000_20260907_032747_858_7abdb1.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1200_SD1400_20260907_032747_994_cc0ef0.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1450_SD1600_20260907_032748_121_784230.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1450_SD1600_20260907_032748_236_118db4.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW1600_SD1800_20260907_032748_377_332679.dwg
+!legacy/ElevatorPlanGenerator/output/Elevator_SW2000_SD1800_20260907_032748_519_da0037.dwg
+legacy/ElevatorPlanGenerator/tests/previous-runs/
+legacy/ElevatorPlanGenerator/tests/RuleTests.exe
+legacy/ElevatorPlanGenerator/tests/generated-preview.*

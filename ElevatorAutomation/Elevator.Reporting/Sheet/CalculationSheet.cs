@@ -18,7 +18,7 @@ namespace Elevator.Reporting.Sheet
     /// <summary>
     /// Every result is recalculated from the current canonical project at export and checked against its input fingerprint. Previously
     /// displayed UI numbers are never reused. The document contains only available calculations; unavailable ones are omitted and reported
-    /// to the user before saving. Source-note traceability lives in docs/CAR-GUIDE-FORCES.md and docs/CALCULATION-SHEET-EXPORT.md.
+    /// to the user before saving. Source-note traceability lives in docs/calculations/CAR-GUIDE-FORCES.md and docs/calculations/CALCULATION-SHEET-EXPORT.md.
     /// </summary>
     public sealed partial class CalculationSheet
     {

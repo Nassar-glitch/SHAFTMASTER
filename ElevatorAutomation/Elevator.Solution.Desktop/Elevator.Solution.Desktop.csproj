@@ -29,8 +29,8 @@
     <None Include="..\config\reviewed-chassis-evidence.json" Link="reviewed-chassis-evidence.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\config\presets.json" Link="presets.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\config\preliminary-3d-reference.json" Link="preliminary-3d-reference.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\docs\STEP-EXPORT.md" Link="STEP-EXPORT.md" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\docs\SHAFTMASTER-UI-RESULTS.md" Link="SHAFTMASTER-UI-RESULTS.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\docs\architecture\STEP-EXPORT.md" Link="STEP-EXPORT.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\docs\releases\SHAFTMASTER-UI-RESULTS.md" Link="SHAFTMASTER-UI-RESULTS.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <!-- Brand assets: copy Assets/ to <output>/brand-assets and generate ShaftMaster.ico and ShaftMasterMark.png there with
        tools/BrandIconBuilder (built first through the solution dependency); runs only when an asset or the tool changed. -->

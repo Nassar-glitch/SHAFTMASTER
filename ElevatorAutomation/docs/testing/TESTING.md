@@ -26,6 +26,8 @@ Reference run (2026-10-09, `artifacts/test-results/20261009-234346`, all PASS): 
 
 **Flaky tests (P7).** Tests that compared project JSON text as a string failed now and then on net48 (the rope / traction and application-service tests): `JavaScriptSerializer` writes object members in reflection order, which is not stable within a process. They now compare after `JsonMembers.Sort`. The earlier suspect, the static `CoreJson.Override` set by the parity test, is replaced by the scoped override. Proof: 10 consecutive runs of `core-net8.0`, `core-net48` and `reporting-net48` in parallel, all PASS (the same 10 runs before the member-order fix failed 3 times).
 
+**Release.** `./tools/release.ps1 -Version vNN` builds, runs tiers 1-3, copies the build to `bin-shaftmaster-vNN` (refused if it exists), writes `RELEASE-NOTES.md` (from the `## [vNN]` section of `CHANGELOG.md`) and `SHA256SUMS.txt`, verifies them and prints a summary. `-DryRun` writes to `artifacts/release-dryrun` instead and creates nothing in `ElevatorAutomation`.
+
 The AutoCAD script suites of `tests/run-tests.ps1` (plan, machine room, section, legacy regression) are not part of the tiers yet.
 
 ## Tier 1: golden master (`tests/golden`)
@@ -149,4 +151,4 @@ On net48 the figures use the application's WPF rasterizer; on net8.0 a test rast
 
 **Fix (test harness, no product change).** The test owns its window: a close request it did not make is refused and logged (`ui-trace.log`, with the call stack), the window opens without activation (`ShowActivated = false`), and only the test's own `finally` closes it after writing the result. With the fix, the same injected `WM_CLOSE` is refused and the run passes.
 
-**Proof.** 20 consecutive runs after the fix: 20 PASS (22–23 s each). Log: [docs/evidence/basic-ui-flake-proof-20261009.txt](evidence/basic-ui-flake-proof-20261009.txt).
+**Proof.** 20 consecutive runs after the fix: 20 PASS (22–23 s each). Log: [docs/testing/evidence/basic-ui-flake-proof-20261009.txt](evidence/basic-ui-flake-proof-20261009.txt).

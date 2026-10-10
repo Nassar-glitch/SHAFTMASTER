@@ -43,7 +43,7 @@ namespace Elevator.Core.Serialization
 
         const string NoSerializer =
             "Elevator.Core has no JSON serializer on this runtime: call CoreJson.Use first (JavaScriptCompatibleJson is not proven "
-            + "byte-identical to JavaScriptSerializer for every number; see docs/TESTING.md).";
+            + "byte-identical to JavaScriptSerializer for every number; see docs/testing/TESTING.md).";
 
         /// <summary>Without a size limit (project files, fingerprints): JavaScriptSerializer with MaxJsonLength = Int32.MaxValue.</summary>
         public static IJsonSerializer Create()

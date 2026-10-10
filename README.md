@@ -30,7 +30,7 @@ cd ElevatorAutomation
 
 `tools/build.ps1` runs `dotnet build ElevatorAutomation.sln -c Release` (SDK-style projects, shared settings in `ElevatorAutomation/Directory.Build.props`, incremental), then the pure rule tests and the STEP-input tests. Use `-AutoCADDir` and `-SolidWorksDir` when they are not installed in the default folders. Release builds are kept in `ElevatorAutomation/bin-shaftmaster-vNN/` with release notes and SHA-256 checksums; these folders are not in the repository.
 
-Tests run by tier (see [ElevatorAutomation/docs/TESTING.md](ElevatorAutomation/docs/TESTING.md)):
+Tests run by tier (see [ElevatorAutomation/docs/testing/TESTING.md](ElevatorAutomation/docs/testing/TESTING.md)):
 
 ```powershell
 cd ElevatorAutomation
