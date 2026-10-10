@@ -6,6 +6,11 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Automatic doors, D1 (Core and UI; no drawing change yet):** door type Manual / Automatic 2S / Automatic 2C on the Car & Doors page, optional clear
+  opening (700 / 800 / 900 / 1000 / 1200; selected by the rules when empty), 2S handing, and an Advanced dimensions expander with every clearance
+  (lock, follow, Reset). The front zone sets the car depth; a size or type that does not fit is reported with the needed car or shaft width (field
+  message and Design Notes). Manual doors and existing projects are unchanged. See `ElevatorAutomation/docs/design/DOORS.md`.
+
 ## [v04] — 2026-10-10
 
 v04 is the first release built from the refactored sources (ARCHITECTURE-PLAN P0–P8). Internal; no user-visible change: no equation, preset, output text, drawing entity or file format differs from v03
