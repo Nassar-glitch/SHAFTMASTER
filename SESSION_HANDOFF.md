@@ -12,10 +12,11 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** D1 (automatic doors, Core + UI) done on branch `feature/doors-d1`, corrected to preferred / minimum returns (2026-10-11), tiers 1-3 PASS, awaiting Planner. Not merged, not pushed. `main`: refactor P0-P8 complete, v04 released, disk clean-up done.
+- **Status:** D1 (automatic doors, Core + UI) approved and merged into `main` (2026-10-11); D2 (drawings) in progress on `feature/doors-d2`. Not pushed.
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-11 (Claude Code, Executor role; D1 automatic doors)
 - **Completed:**
+  - **D1 merged into `main` (2026-10-11), Planner-approved:** tier 1 PASS on `feature/doors-d1` (`20261011-013830`: core-net8.0 585, core-net48 720, reporting 165 x 2, golden 651, sheet-wpf 8285) and merged with --no-ff ("Merge feature/doors-d1: automatic doors, Core and UI"); the Planner's pending DESIGN-FLOW.md change committed on `main` ("Planner: doors specification"). The stacking-side landing-frame-to-side-wall minimum is 25 mm (the default, confirmed by the user). Not pushed.
   - **D1 rule correction (Planner, 2026-10-11): reference returns / offsets are PREFERRED values, minimums bind. Same branch `feature/doors-d1`, commit `323196b`. Not merged, not pushed. Awaiting Planner.** This block supersedes the generalised-rules table and the "returns are minimums" text of the first D1 block below (the extracted dimensions, the 2S / 2C front-zone presets and everything else there stand). Full rules: `ElevatorAutomation/docs/design/DOORS.md` section 3.
     - **Implemented as specified:**
       - 2S: (1) preferred layout (fixed return 200, offset as in the drawing: `x = SW/2 - offset - o/2` from the fixed-side wall); (2) if it does not fit the opening shifts towards the fixed side down to fixed return 0 (edge flush with the car side wall) and the fixed-side landing jamb shrinks from 30 to its minimum 0; the landing door moves with it; (3) if it still does not fit the next smaller standard size (blank size only). Shift is computed in one step (equal to stepping to the first fitting position).
