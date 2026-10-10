@@ -52,7 +52,8 @@
     "MaxCarToWallMm": 150,
     "GovernorSide": "Left",
     "Automatic2S": {
-      "CarZoneMm": 130, "SillGapMm": 25, "LandingZoneMm": 90, "LandingWallClearanceMm": 35,
+      "CarZoneMm": 130, "SillGapMm": 25, "LandingZoneMm": 90, "LandingWallClearanceMm": 25,
+      "MinFixedReturnMm": 0, "MinStackReturnMm": 0, "LandingFixedJambMinMm": 0,
       "PanelThicknessMm": 40, "PanelOverlapMm": 10, "PanelEdgeOvertravelMm": 5,
       "Sizes": [
         { "OpeningMm": 700, "FixedReturnMm": 200, "StackReturnMm": 300, "LandingFixedJambMm": 30, "LandingStackPocketMm": 375 },
@@ -63,7 +64,8 @@
       ]
     },
     "Automatic2C": {
-      "CarZoneMm": 110, "SillGapMm": 30, "LandingZoneMm": 80, "LandingWallClearanceMm": 35,
+      "CarZoneMm": 110, "SillGapMm": 30, "LandingZoneMm": 80, "LandingWallClearanceMm": 25,
+      "MinFixedReturnMm": 0, "MinStackReturnMm": 0, "LandingFixedJambMinMm": 0,
       "PanelThicknessMm": 39, "PanelOverlapMm": 2, "PanelEdgeOvertravelMm": 0,
       "Sizes": [
         { "OpeningMm": 700, "FixedReturnMm": 250, "StackReturnMm": 250, "LandingFixedJambMm": 375, "LandingStackPocketMm": 375 },

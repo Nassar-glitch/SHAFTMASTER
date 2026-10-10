@@ -18,14 +18,15 @@ namespace Elevator.Solution.Desktop.Pages
   // The clearances of the Advanced dimensions expander that a type uses, in order.
   public static string[] ClearanceKeys(string type)
   {
-   if(type==DoorTypes.Automatic2S)return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.StackReturnKey,DoorSettings.OffsetKey,DoorSettings.LandingJambKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
-   return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
+   if(type==DoorTypes.Automatic2S)return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.StackReturnKey,DoorSettings.OffsetKey,DoorSettings.MinFixedReturnKey,DoorSettings.MinStackReturnKey,DoorSettings.LandingJambKey,DoorSettings.LandingJambMinKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
+   return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.MinFixedReturnKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
   }
   public static string Label(string type,string key)
   {
    if(type==DoorTypes.Automatic2C)
    {
-    if(key==DoorSettings.FixedReturnKey)return "Car return, each side (mm)";
+    if(key==DoorSettings.FixedReturnKey)return "Car return, each side, preferred (mm)";
+    if(key==DoorSettings.MinFixedReturnKey)return "Car return, each side, minimum (mm)";
     if(key==DoorSettings.LandingPocketKey)return "Landing pocket, each side (mm)";
    }
    return DoorFlow.Label(key);

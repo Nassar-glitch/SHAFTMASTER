@@ -44,7 +44,10 @@ namespace Elevator.Core.Doors
         {
             var t = new DoorTypePreset
             {
-                LandingWallClearanceMm = 35,
+                LandingWallClearanceMm = 25,
+                MinFixedReturnMm = 0,
+                MinStackReturnMm = 0,
+                LandingFixedJambMinMm = 0,
                 Sizes = new List<DoorSizePreset>()
             };
             if (sideOpening)
@@ -166,6 +169,8 @@ namespace Elevator.Core.Doors
                 p.Add(n + " front-zone split needs positive CarZoneMm, SillGapMm and LandingZoneMm");
             if (!NonNegative(t.LandingWallClearanceMm))
                 p.Add(n + ".LandingWallClearanceMm must not be negative");
+            if (!NonNegative(t.MinFixedReturnMm) || !NonNegative(t.MinStackReturnMm) || !NonNegative(t.LandingFixedJambMinMm))
+                p.Add(n + " minimum returns and landing jamb must not be negative");
             if (t.Sizes == null || t.Sizes.Count == 0)
             {
                 p.Add(n + ".Sizes is required");

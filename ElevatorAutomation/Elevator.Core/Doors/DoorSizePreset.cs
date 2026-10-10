@@ -5,13 +5,13 @@ namespace Elevator.Core.Doors
     {
         public double OpeningMm;
 
-        /// <summary>Minimum car return on the fixed side (2C: each side).</summary>
+        /// <summary>Preferred car return on the fixed side (2C: each side); the layout may shrink it down to the minimum.</summary>
         public double FixedReturnMm;
 
-        /// <summary>Minimum car return on the stacking side (2C: equal to the fixed side).</summary>
+        /// <summary>Preferred car return on the stacking side (2C: equal to the fixed side).</summary>
         public double StackReturnMm;
 
-        /// <summary>Landing jamb width on the fixed side (2C: the stacking pocket).</summary>
+        /// <summary>Preferred landing jamb on the fixed side (2C: the stacking pocket).</summary>
         public double LandingFixedJambMm;
 
         /// <summary>Landing stacking pocket beyond the opening edge on the stacking side.</summary>

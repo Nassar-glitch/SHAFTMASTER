@@ -66,24 +66,24 @@ public static class DoorsUiTests
                 Check(Session().Project.Doors.Type == DoorTypes.Automatic2S, "Choosing Automatic 2S sets the project door type");
                 Check(Editors().ContainsKey("Doors.OpeningMm") && Editors().ContainsKey("Doors.CarZoneMm") && Editors().ContainsKey("Doors.StackReturnMm") && Choices().ContainsKey("Doors.Handing"), "2S page offers opening, handing and every clearance");
                 Check(Editors()["Doors.OpeningMm"].Text == "", "The opening is empty while the rules select it");
-                Check(Block("Clear opening in use").Text == "In use: 900 mm", "The size in use is shown (900 on a 1900 shaft)");
-                Check(Editors()["Doors.CarZoneMm"].Text == "130" && Editors()["Doors.SillGapMm"].Text == "25" && Editors()["Doors.LandingZoneMm"].Text == "90" && Editors()["Doors.FixedReturnMm"].Text == "200" && Editors()["Doors.StackReturnMm"].Text == "400", "Clearances show the catalog values (130 / 25 / 90, returns 200 / 400)");
+                Check(Block("Clear opening in use").Text == "In use: 1000 mm", "The size in use is shown (1000 on a 1900 shaft)");
+                Check(Editors()["Doors.CarZoneMm"].Text == "130" && Editors()["Doors.SillGapMm"].Text == "25" && Editors()["Doors.LandingZoneMm"].Text == "90" && Editors()["Doors.FixedReturnMm"].Text == "200" && Editors()["Doors.StackReturnMm"].Text == "450", "Clearances show the catalog values (130 / 25 / 90, preferred returns 200 / 450)");
                 Check(Doc() == "" && !Session().Project.Extensions.ContainsKey("doors"), "Nothing is locked after choosing the type");
-                Check(Plan().CarFront == 245 && Plan().DoorWidth == 900, "The front zone 245 and the selected opening reach the plan");
+                Check(Plan().CarFront == 245 && Plan().DoorWidth == 1000, "The front zone 245 and the selected opening reach the plan");
                 Check(Block("Door fit message").Visibility == Visibility.Collapsed, "No fit message while it fits");
                 await Shot("02-2s-auto");
                 // ---------- a user size that does not fit ----------
                 Type("Doors.OpeningMm", "1200"); await Ready();
                 Check(Session().Project.UserEditedFields.Contains(DoorSettings.OpeningKey) && DoorSettings.Read(Session().Project).OpeningMm == 1200, "Typing the opening locks it");
                 var msg = Block("Door fit message");
-                Check(msg.Visibility == Visibility.Visible && msg.Text.StartsWith("does not fit: needs car width"), "A size that does not fit shows 'does not fit: needs car width ...'");
+                Check(msg.Visibility == Visibility.Visible && msg.Text == "does not fit: needs car width 1650 mm, shaft width 2050 mm", "A size that does not fit shows the true minimum car and shaft width (1650 / 2050 for 1200 on 1900)");
                 Check(Block("Clear opening in use").Text == "In use: 1200 mm" && Plan().DoorWidth == 1200, "The locked size is kept in use");
                 Check(ResetButton("Clear opening (mm)").IsEnabled, "Reset is enabled for a locked field");
                 await Shot("03-2s-1200-no-fit");
                 Type("Doors.OpeningMm", "850"); await Ready();
                 Check(Block("Door fit message").Text.Contains("not a standard opening"), "A non-standard size is named as such");
                 ResetButton("Clear opening (mm)").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await Ready();
-                Check(Editors()["Doors.OpeningMm"].Text == "" && !Session().Project.UserEditedFields.Contains(DoorSettings.OpeningKey) && Block("Clear opening in use").Text == "In use: 900 mm", "Reset gives back the selected size");
+                Check(Editors()["Doors.OpeningMm"].Text == "" && !Session().Project.UserEditedFields.Contains(DoorSettings.OpeningKey) && Block("Clear opening in use").Text == "In use: 1000 mm", "Reset gives back the selected size");
                 Check(Block("Door fit message").Visibility == Visibility.Collapsed, "The message goes with the reset");
                 // ---------- handing ----------
                 Choices()["Doors.Handing"].SelectedIndex = Array.IndexOf(DoorTypes.Handings, DoorTypes.Left); await Ready();
@@ -95,12 +95,13 @@ public static class DoorsUiTests
                 Check(Plan().CarFront == 130 + 40 + 90, "A locked sill gap changes the front zone and the car front (260)");
                 Check(Block("Door fit message").Text.Contains("sill gap 40 mm exceeds 35 mm"), "A sill gap above 35 mm is reported");
                 await Expand();
+                Check(Editors().ContainsKey("Doors.MinFixedReturnMm") && Editors()["Doors.MinFixedReturnMm"].Text == "0" && Editors()["Doors.MinStackReturnMm"].Text == "0" && Editors()["Doors.LandingFixedJambMinMm"].Text == "0" && Editors()["Doors.LandingWallClearanceMm"].Text == "25", "Minimums are fields too: returns 0, fixed jamb 0, frame to wall 25");
                 Check(Editors()["Doors.CarZoneMm"].Text == "130" && ResetButton("Sill gap (mm)").IsEnabled && !ResetButton("Car door zone (mm)").IsEnabled, "Only the edited field is locked");
                 ResetButton("Sill gap (mm)").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await Ready();
                 Check(Editors()["Doors.SillGapMm"].Text == "25" && Plan().CarFront == 245, "Reset per field restores the preset");
                 // ---------- unlocked values follow the shaft ----------
                 Session().Project.Shaft.WidthMm = 2100; Call("ShowPage", "CAR & DOORS"); await Ready();
-                Check(Block("Clear opening in use").Text == "In use: 1000 mm", "An unlocked opening follows the shaft width (1000 on 2100)");
+                Check(Block("Clear opening in use").Text == "In use: 1200 mm", "An unlocked opening follows the shaft width (1200 on 2100)");
                 Session().Project.Shaft.WidthMm = 1900;
                 // ---------- Automatic 2C ----------
                 Call("ShowPage", "CAR & DOORS"); await Ready();

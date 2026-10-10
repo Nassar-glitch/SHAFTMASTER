@@ -123,22 +123,22 @@ namespace Elevator.Core.Tests
         }
 
         // ---------- every size x type ----------
-        static double NeededCar(string type, double o)
-        {
-            // Fixed 200 + opening + stacking o/2 - 50 (2S), or the opening and two returns o/4 + 75 (2C).
-            return type == DoorTypes.Automatic2S ? 200 + o + (o / 2 - 50) : o + 2 * (o / 4 + 75);
-        }
+        // Recipe car: the car side wall stands g = 200 inside the shaft wall (150 + 50). Minimums are 0 for the returns and the fixed
+        // jamb, 25 frame to wall: the opening goes flush with the car side wall.
+        const double G = 200;
 
-        static double NeededLanding(string type, double o)
+        static double NeededCar(double o) { return o; }
+
+        static double NeededShaft(string type, double o, double g = G)
         {
-            double pocket = o / 2 + 25, wc = 35;
+            double pocket = o / 2 + 25, wc = 25;
             if (type == DoorTypes.Automatic2C)
-                return o + 2 * (pocket + wc);
-            double off = (o / 2 - 50 - 200) / 2;
-            return o + 2 * Math.Max(Math.Max(pocket, o / 2 + 7.5) + wc - off, 30 + wc + off);
+                return o + 2 * Math.Max(g, pocket + wc);
+            return g + o + Math.Max(pocket + wc, g);
         }
 
         [Theory]
+        [InlineData(1100, 2600)]
         [InlineData(1500, 2600)]
         [InlineData(1720, 2800)]
         [InlineData(1900, 2800)]
@@ -149,25 +149,32 @@ namespace Elevator.Core.Tests
             {
                 var car = Plan(sw, sd, Door(type));
                 double cw = car.CarWidth;
+                Assert.Equal(sw - 400, cw);
                 foreach (double o in Sizes)
                 {
                     var door = Door(type, new DoorSettings { OpeningMm = o });
                     var p = Plan(sw, sd, door);
                     Assert.Equal(o, p.DoorWidth);
                     var l = DoorRules.Select(door, p);
-                    bool carFits = NeededCar(type, o) <= cw + 1e-7, landingFits = NeededLanding(type, o) <= sw + 1e-7;
+                    bool carFits = NeededCar(o) <= cw + 1e-7, landingFits = NeededShaft(type, o) <= sw + 1e-7;
                     Assert.Equal(carFits && landingFits, l.Fits);
                     Assert.Equal(!carFits, l.Problems.Any(x => x.Code == "car-width"));
                     Assert.Equal(!landingFits, l.Problems.Any(x => x.Code == "landing-width"));
-                    if (!carFits)
+                    if (!landingFits)
                     {
-                        var prob = l.Problems.First(x => x.Code == "car-width");
-                        Assert.Equal(NeededCar(type, o), prob.NeededCarWidthMm.Value, 6);
-                        Assert.Equal(sw + NeededCar(type, o) - cw, prob.NeededShaftWidthMm.Value, 6);
+                        var prob = l.Problems.First(x => x.Code == "landing-width");
+                        Assert.Equal(NeededShaft(type, o), prob.NeededShaftWidthMm.Value, 6);
+                        Assert.Equal(cw + NeededShaft(type, o) - sw, prob.NeededCarWidthMm.Value, 6);
+                    }
+                    if (l.Fits && type == DoorTypes.Automatic2S)
+                    {
+                        // Whatever the shift, both returns and the landing stay within their minimums.
+                        Assert.True(l.ActualFixedReturnMm >= -1e-7 && l.ActualStackReturnMm >= -1e-7);
+                        Assert.True(l.LandingLeftX >= -1e-7 && l.LandingRightX <= sw - 25 + 1e-7);
                     }
                 }
-                // Auto: the largest standard size that fits, else the smallest with its problems.
-                var best = Sizes.OrderByDescending(o => o).FirstOrDefault(o => NeededCar(type, o) <= cw + 1e-7 && NeededLanding(type, o) <= sw + 1e-7);
+                // Auto: the largest standard size that fits after shifting, else the smallest with its problems.
+                var best = Sizes.OrderByDescending(o => o).FirstOrDefault(o => NeededCar(o) <= cw + 1e-7 && NeededShaft(type, o) <= sw + 1e-7);
                 var auto = DoorRules.Select(Door(type), Plan(sw, sd, Door(type)));
                 Assert.True(auto.AutoSelected);
                 if (best > 0)
@@ -184,34 +191,135 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void On_the_reference_shaft_with_the_current_recipe_the_largest_fitting_size_is_700()
+        public void On_the_reference_shaft_the_recipe_selects_900_for_2S_and_800_for_2C()
         {
-            // The equipment profile (150 mm rail allowance per side) gives a 1320 mm car in 1720: 800 needs a 1350 mm car.
-            foreach (string type in Types)
-            {
-                var door = Door(type);
-                var p = Plan(1720, 2800, door);
-                Assert.Equal(1320, p.CarWidth);
-                Assert.Equal(700, p.DoorWidth);
-                var l = DoorRules.Select(door, p);
-                Assert.True(l.Fits);
-                var user = DoorRules.Select(Door(type, new DoorSettings { OpeningMm = 800 }), p);
-                Assert.False(user.Fits);
-                Assert.Equal(1350, user.NeededCarWidthMm.Value, 6);
-                Assert.Equal(1750, user.NeededShaftWidthMm.Value, 6);
-                Assert.StartsWith("does not fit: needs car width 1350 mm", DoorFlow.FitMessage(user));
-            }
+            // The equipment profile (150 mm rail allowance per side) gives a 1320 mm car in 1720; the car side gap is 200 mm.
+            var s = Door(DoorTypes.Automatic2S);
+            var ps = Plan(1720, 2800, s);
+            Assert.Equal(1320, ps.CarWidth);
+            Assert.Equal(900, ps.DoorWidth); // 1000 needs a 1750 mm shaft
+            var c = Door(DoorTypes.Automatic2C);
+            var pc = Plan(1720, 2800, c);
+            Assert.Equal(800, pc.DoorWidth); // 900 needs 1900
+            var user = DoorRules.Select(Door(DoorTypes.Automatic2S, new DoorSettings { OpeningMm = 1000 }), ps);
+            Assert.False(user.Fits);
+            Assert.Equal(1750, user.NeededShaftWidthMm.Value, 6);
+            Assert.Equal(1350, user.NeededCarWidthMm.Value, 6);
+            Assert.Equal("does not fit: needs car width 1350 mm, shaft width 1750 mm", DoorFlow.FitMessage(user));
         }
 
         [Fact]
-        public void The_800_reference_fits_when_the_shaft_is_wide_enough()
+        public void Preferred_layout_is_kept_when_it_fits_and_shifted_when_it_does_not()
         {
-            foreach (string type in Types)
+            // 2S 1000 at the recipe minimum shaft 1750: preferred opening X 250..1250 does not fit, the opening is shifted to X 200
+            // (fixed return 0, flush with the car side wall); at 1900 the preferred layout fits.
+            var door = Door(DoorTypes.Automatic2S, new DoorSettings { OpeningMm = 1000 });
+            var tight = DoorRules.Select(door, Plan(1750, 2800, door));
+            Assert.True(tight.Fits);
+            Assert.True(tight.Shifted);
+            Assert.Equal(0, tight.ActualFixedReturnMm, 6);
+            Assert.Equal(200, tight.OpeningLeftX, 6);
+            Assert.Equal(125, tight.PreferredOffsetMm, 6);
+            Assert.Equal(1750 - 25, tight.LandingRightX, 6);
+            var wide = DoorRules.Select(door, Plan(1900, 2800, door));
+            Assert.True(wide.Fits);
+            Assert.False(wide.Shifted);
+            Assert.Equal(125, wide.OpeningOffsetMm, 6);
+            Assert.Equal(125, wide.ActualFixedReturnMm, 6); // opening X 325: the preferred offset, 125 beyond the car side wall
+        }
+
+        // ---------- minimum shaft widths ----------
+        // The opening can reach the shaft wall only when the car side wall does: car width = shaft width (gap 0).
+        static ElevatorParameters FlushPlan(double sw)
+        {
+            var p = Reference(245);
+            p.SW = sw;
+            p.CarWidth = sw;
+            p.CarDbg = sw;
+            p.CwDbg = sw;
+            p.CwWidth = sw - 40;
+            return p;
+        }
+
+        [Theory]
+        [InlineData(700, 1100)]
+        [InlineData(800, 1250)]
+        [InlineData(900, 1400)]
+        [InlineData(1000, 1550)]
+        [InlineData(1200, 1850)]
+        public void Minimum_shaft_width_2S_with_the_opening_free_to_the_shaft_wall(double o, double min)
+        {
+            var d = Door(DoorTypes.Automatic2S);
+            var at = DoorRules.Layout(d, FlushPlan(min), o, false);
+            Assert.True(at.Fits, DoorFlow.FitMessage(at));
+            Assert.Equal(0, at.ActualFixedReturnMm, 6);
+            Assert.Equal(0, at.OpeningLeftX, 6);
+            Assert.Equal(min - 25, at.LandingRightX, 6);
+            var below = DoorRules.Layout(d, FlushPlan(min - 1), o, false);
+            Assert.False(below.Fits);
+            Assert.Equal(min, below.NeededShaftWidthMm.Value, 6);
+        }
+
+        [Theory]
+        [InlineData(700, 1300)]
+        [InlineData(800, 1450)]
+        [InlineData(900, 1600)]
+        [InlineData(1000, 1750)]
+        [InlineData(1200, 2050)]
+        public void Minimum_shaft_width_2S_with_the_recipe_car(double o, double min)
+        {
+            // g = 200 between the car side wall and the shaft wall: the opening edge can only reach the car side wall.
+            var d = Door(DoorTypes.Automatic2S, new DoorSettings { OpeningMm = o });
+            var at = DoorRules.Select(d, Plan(min, 2800, d));
+            Assert.True(at.Fits, DoorFlow.FitMessage(at));
+            Assert.Equal(0, at.ActualFixedReturnMm, 6);
+            var below = DoorRules.Select(d, Plan(min - 1, 2800, d));
+            Assert.False(below.Fits);
+            Assert.Equal(min, below.NeededShaftWidthMm.Value, 6);
+        }
+
+        [Fact]
+        public void Two_S_700_fits_a_1100_shaft_with_a_fixed_return_of_0()
+        {
+            var l = DoorRules.Layout(Door(DoorTypes.Automatic2S), FlushPlan(1100), 700, false);
+            Assert.True(l.Fits);
+            Assert.Equal(0, l.ActualFixedReturnMm, 6);
+            Assert.True(l.Shifted);
+            Assert.Equal(0, l.LandingFixedJambMm, 6); // the jamb went down to its minimum: flush with the shaft wall
+            Assert.Equal(0, l.LandingLeftX, 6);
+        }
+
+        [Theory]
+        [InlineData(700, 1500)]
+        [InlineData(800, 1700)]
+        [InlineData(900, 1900)]
+        [InlineData(1000, 2100)]
+        [InlineData(1200, 2500)]
+        public void Minimum_shaft_width_2C_is_opening_plus_two_pockets_and_two_wall_clearances(double o, double min)
+        {
+            var d = Door(DoorTypes.Automatic2C, new DoorSettings { OpeningMm = o });
+            foreach (var plan in new[] { FlushPlan(min), Plan(min, 2800, d) })
             {
-                var p = Plan(1750, 2800, Door(type));
-                Assert.Equal(1350, p.CarWidth);
-                Assert.Equal(800, p.DoorWidth);
+                var at = DoorRules.Select(d, plan);
+                Assert.True(at.Fits, DoorFlow.FitMessage(at));
+                Assert.Equal(25, at.LandingLeftX, 6);
+                Assert.Equal(min - 25, at.LandingRightX, 6);
             }
+            var below = DoorRules.Select(d, Plan(min - 1, 2800, d));
+            Assert.False(below.Fits);
+            Assert.Equal(min, below.NeededShaftWidthMm.Value, 6);
+            // The returns shrink to their minimum: the opening stays centred.
+            Assert.Equal(0, DoorRules.Layout(d, FlushPlan(min), o, false).CentreShiftMm, 6);
+        }
+
+        [Fact]
+        public void A_user_minimum_return_raises_the_needed_width()
+        {
+            var s = new DoorSettings { MinFixedReturnMm = 100, LandingWallClearanceMm = 40 };
+            var l = DoorRules.Layout(Door(DoorTypes.Automatic2S, s), FlushPlan(1250), 800, false);
+            // fixed edge >= g + 100 = 100; 100 + 800 + 425 + 40 = 1365
+            Assert.False(l.Fits);
+            Assert.Equal(1365, l.NeededShaftWidthMm.Value, 6);
         }
 
         [Fact]
@@ -351,10 +459,10 @@ namespace Elevator.Core.Tests
         {
             var p = NewProject();
             DoorFlow.SetType(p, DoorTypes.Automatic2S);
+            p.Shaft.WidthMm = 1500;
+            Assert.Equal(800, Opening(p)); // 800 needs a 1450 mm shaft, 900 needs 1600
             p.Shaft.WidthMm = 1750;
-            Assert.Equal(800, Opening(p));
-            p.Shaft.WidthMm = 1900;
-            Assert.Equal(900, Opening(p)); // 1.5 * 900 + 150 = 1500 <= car 1500
+            Assert.Equal(1000, Opening(p)); // 1000 needs 1750
             // Locked 700 stays when the shaft changes.
             DoorFlow.SetNumber(p, DoorSettings.OpeningKey, 700);
             Assert.True(DoorFlow.IsLocked(p, DoorSettings.OpeningKey));
@@ -364,7 +472,7 @@ namespace Elevator.Core.Tests
             // Reset: the opening follows again.
             DoorFlow.Reset(p, DoorSettings.OpeningKey);
             Assert.False(DoorFlow.IsLocked(p, DoorSettings.OpeningKey));
-            Assert.Equal(1000, Opening(p));
+            Assert.Equal(1200, Opening(p)); // 1200 needs 2050
             Assert.False(p.Extensions.ContainsKey("doors"));
         }
 
@@ -385,14 +493,14 @@ namespace Elevator.Core.Tests
             DoorFlow.SetNumber(p, DoorSettings.FixedReturnKey, 260);
             var after = Layout(p);
             Assert.Equal(260, after.FixedReturnMm);
-            // The opening offset follows the returns while it is not locked: (350 + ... - 260) / 2.
-            Assert.Equal((after.StackReturnMm - 260) / 2, after.OpeningOffsetMm, 6);
+            // The preferred offset follows the preferred returns while it is not locked.
+            Assert.Equal((after.StackReturnMm - 260) / 2, after.PreferredOffsetMm, 6);
             DoorFlow.SetNumber(p, DoorSettings.OffsetKey, 40);
-            Assert.Equal(40, Layout(p).OpeningOffsetMm);
+            Assert.Equal(40, Layout(p).PreferredOffsetMm);
             DoorFlow.Reset(p, DoorSettings.FixedReturnKey);
             DoorFlow.Reset(p, DoorSettings.OffsetKey);
             Assert.Equal(200, Layout(p).FixedReturnMm);
-            Assert.Equal(before.OpeningOffsetMm, Layout(p).OpeningOffsetMm, 6);
+            Assert.Equal(before.PreferredOffsetMm, Layout(p).PreferredOffsetMm, 6);
             Assert.Empty(DoorFlow.LockedKeys(p));
         }
 
@@ -501,8 +609,8 @@ namespace Elevator.Core.Tests
             string note = DoorFlow.DesignNote(l);
             Assert.Contains("Automatic 2C", note);
             Assert.Contains("1200 mm clear opening does not fit", note);
-            Assert.Contains("car width of at least 2120 mm", note);
-            Assert.Contains("shaft width of at least 2520 mm", note);
+            Assert.Contains("car width of at least 2100 mm", note);
+            Assert.Contains("shaft width of at least 2500 mm", note);
             Assert.Null(DoorFlow.DesignNote(DoorRules.Select(Door(DoorTypes.Automatic2C), Plan(1900, 2800, Door(DoorTypes.Automatic2C)))));
         }
     }

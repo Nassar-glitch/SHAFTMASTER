@@ -57,7 +57,7 @@ Shaft depth
 Car door
 Automatic 2S (side opening)
 Door clear opening
-900 mm
+1000 mm
 Door stacking side
 Right
 Roping

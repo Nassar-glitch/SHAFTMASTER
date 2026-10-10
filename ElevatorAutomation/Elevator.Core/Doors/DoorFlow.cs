@@ -29,17 +29,23 @@ namespace Elevator.Core.Doors
                 case DoorSettings.LandingZoneKey:
                     return "Landing door zone (mm)";
                 case DoorSettings.FixedReturnKey:
-                    return "Car return, fixed side (mm)";
+                    return "Car return, fixed side, preferred (mm)";
                 case DoorSettings.StackReturnKey:
-                    return "Car return, stacking side (mm)";
+                    return "Car return, stacking side, preferred (mm)";
                 case DoorSettings.OffsetKey:
-                    return "Opening offset (mm)";
+                    return "Opening offset, preferred (mm)";
                 case DoorSettings.LandingJambKey:
-                    return "Landing jamb, fixed side (mm)";
+                    return "Landing jamb, fixed side, preferred (mm)";
                 case DoorSettings.LandingPocketKey:
                     return "Landing stacking pocket (mm)";
                 case DoorSettings.WallClearanceKey:
-                    return "Landing frame to wall (mm)";
+                    return "Landing frame to wall, minimum (mm)";
+                case DoorSettings.MinFixedReturnKey:
+                    return "Car return, fixed side, minimum (mm)";
+                case DoorSettings.MinStackReturnKey:
+                    return "Car return, stacking side, minimum (mm)";
+                case DoorSettings.LandingJambMinKey:
+                    return "Landing jamb, fixed side, minimum (mm)";
                 default:
                     return key;
             }
@@ -150,9 +156,15 @@ namespace Elevator.Core.Doors
                 case DoorSettings.StackReturnKey:
                     return side ? l.StackReturnMm : (double?)null;
                 case DoorSettings.OffsetKey:
-                    return side ? l.OpeningOffsetMm : (double?)null;
+                    return side ? l.PreferredOffsetMm : (double?)null;
                 case DoorSettings.LandingJambKey:
-                    return side ? l.LandingFixedJambMm : (double?)null;
+                    return side ? l.LandingFixedJambPreferredMm : (double?)null;
+                case DoorSettings.MinFixedReturnKey:
+                    return l.FixedReturnMinMm;
+                case DoorSettings.MinStackReturnKey:
+                    return side ? l.StackReturnMinMm : (double?)null;
+                case DoorSettings.LandingJambMinKey:
+                    return side ? l.LandingFixedJambMinMm : (double?)null;
                 case DoorSettings.LandingPocketKey:
                     return l.LandingStackPocketMm;
                 case DoorSettings.WallClearanceKey:

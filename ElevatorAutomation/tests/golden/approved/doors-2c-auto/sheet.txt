@@ -57,7 +57,7 @@ Shaft depth
 Car door
 Automatic 2C (centre opening)
 Door clear opening
-800 mm
+900 mm
 Roping
 1:1
 Number of suspension ropes n

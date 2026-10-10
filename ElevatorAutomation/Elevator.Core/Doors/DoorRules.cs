@@ -58,7 +58,11 @@ namespace Elevator.Core.Doors
             return Select(door, plan);
         }
 
-        /// <summary>The layout of one clear-opening size.</summary>
+        /// <summary>
+        /// The layout of one clear-opening size. 2S: the preferred position is tried first; when it does not fit the opening is shifted
+        /// towards the fixed side, down to the minimum fixed-side return (the opening edge flush with the car side wall) and the minimum
+        /// fixed-side landing jamb. 2C: centred, the returns shrink to their minimum.
+        /// </summary>
         public static DoorLayout Layout(DoorInput door, ElevatorParameters plan, double openingMm, bool auto)
         {
             var cat = door.Catalog;
@@ -82,49 +86,85 @@ namespace Elevator.Core.Doors
                     {
                         Code = "opening-size",
                         Message = L(openingMm) + " mm is not a standard opening ("
-                            + String.Join(", ", cat.OpeningsMm.OrderBy(o => o).Select(L)) + " mm)"
+                            + String.Join(", ", cat.OpeningsMm.OrderBy(v => v).Select(L)) + " mm)"
                     });
                 l.Fits = false;
                 return l;
             }
-            double sw = plan.SW, cw = plan.CarWidth, c = sw / 2;
+            double sw = plan.SW, cw = plan.CarWidth, o = openingMm;
+            // The car side wall stands g inside the shaft wall: the opening cannot go beyond it.
+            double g = (sw - cw) / 2;
+            l.CarSideGapMm = g;
             l.FixedReturnMm = u.FixedReturnMm ?? row.FixedReturnMm;
             l.StackReturnMm = side ? (u.StackReturnMm ?? row.StackReturnMm) : l.FixedReturnMm;
-            l.LandingFixedJambMm = u.LandingFixedJambMm ?? row.LandingFixedJambMm;
+            l.FixedReturnMinMm = u.MinFixedReturnMm ?? t.MinFixedReturnMm ?? 0;
+            l.StackReturnMinMm = side ? (u.MinStackReturnMm ?? t.MinStackReturnMm ?? 0) : l.FixedReturnMinMm;
             l.LandingStackPocketMm = u.LandingStackPocketMm ?? row.LandingStackPocketMm;
-            if (!side)
-                l.LandingFixedJambMm = l.LandingStackPocketMm;
-            double off = side ? (u.OpeningOffsetMm ?? (l.StackReturnMm - l.FixedReturnMm) / 2) : 0;
-            l.OpeningOffsetMm = off;
+            double jambPreferred = side ? (u.LandingFixedJambMm ?? row.LandingFixedJambMm) : l.LandingStackPocketMm;
+            l.LandingFixedJambMinMm = side ? (u.LandingFixedJambMinMm ?? t.LandingFixedJambMinMm ?? 0) : l.LandingStackPocketMm;
             bool stackRight = u.Handing == DoorTypes.Right || (u.Handing != DoorTypes.Left && cat.GovernorSide == DoorTypes.Left);
             l.StackingSide = stackRight ? DoorTypes.Right : DoorTypes.Left;
-            int dir = stackRight ? 1 : -1;
-            l.CentreShiftMm = -dir * off;
-            double xo = c + l.CentreShiftMm;
-            l.OpeningLeftX = xo - openingMm / 2;
-            l.OpeningRightX = xo + openingMm / 2;
             l.PanelWidthMm = side
-                ? (openingMm + (t.PanelEdgeOvertravelMm ?? 0) + l.PanelOverlapMm) / 2
-                : (openingMm - l.PanelOverlapMm) / 2;
-            double stackJamb = l.LandingStackPocketMm, fixedJamb = l.LandingFixedJambMm;
-            l.LandingLeftX = l.OpeningLeftX - (stackRight || !side ? (side ? fixedJamb : stackJamb) : stackJamb);
-            l.LandingRightX = l.OpeningRightX + (stackRight ? stackJamb : (side ? fixedJamb : stackJamb));
-            l.ActualFixedReturnMm = side ? cw / 2 - off - openingMm / 2 : (cw - openingMm) / 2;
-            l.ActualStackReturnMm = side ? cw / 2 + off - openingMm / 2 : (cw - openingMm) / 2;
-            CheckFit(l, plan, side, cat, off);
+                ? (o + (t.PanelEdgeOvertravelMm ?? 0) + l.PanelOverlapMm) / 2
+                : (o - l.PanelOverlapMm) / 2;
+            // Placement in u: distance from the fixed-side shaft wall. The opening spans [x, x + o].
+            double pocket = l.LandingStackPocketMm, wc = l.LandingWallClearanceMm;
+            double prefOffset = side ? (u.OpeningOffsetMm ?? (l.StackReturnMm - l.FixedReturnMm) / 2) : 0;
+            l.PreferredOffsetMm = prefOffset;
+            double lo, hi, x;
+            if (side)
+            {
+                // 1 preferred layout; 2 shifted towards the fixed side while it does not fit, down to the fixed return minimum
+                // (and the landing jamb minimum); the landing door moves with the opening.
+                lo = Math.Max(g + l.FixedReturnMinMm, l.LandingFixedJambMinMm);
+                hi = Math.Min(sw - wc - pocket - o, sw - g - l.StackReturnMinMm - o);
+                double preferred = sw / 2 - prefOffset - o / 2;
+                x = Math.Max(lo, Math.Min(preferred, hi));
+                l.Shifted = x < preferred - Eps && hi >= lo - Eps;
+            }
+            else
+            {
+                // Centre opening: the opening stays centred; the returns shrink to their minimum, the landing binds.
+                lo = Math.Max(g + l.FixedReturnMinMm, pocket + wc);
+                hi = (sw - o) / 2;
+                x = hi;
+            }
+            l.ActualFixedReturnMm = x - g;
+            l.ActualStackReturnMm = sw - g - (x + o);
+            l.OpeningOffsetMm = sw / 2 - (x + o / 2);
+            double fixedJamb = Math.Min(jambPreferred, Math.Max(x, l.LandingFixedJambMinMm));
+            l.LandingFixedJambMm = side ? fixedJamb : pocket;
+            l.LandingFixedJambPreferredMm = jambPreferred;
+            double uFixedOuter = x - (side ? fixedJamb : pocket), uStackOuter = x + o + pocket;
+            double ux0 = x, ux1 = x + o;
+            if (stackRight)
+            {
+                l.OpeningLeftX = ux0;
+                l.OpeningRightX = ux1;
+                l.LandingLeftX = uFixedOuter;
+                l.LandingRightX = uStackOuter;
+            }
+            else
+            {
+                l.OpeningLeftX = sw - ux1;
+                l.OpeningRightX = sw - ux0;
+                l.LandingLeftX = sw - uStackOuter;
+                l.LandingRightX = sw - uFixedOuter;
+            }
+            l.CentreShiftMm = (l.OpeningLeftX + l.OpeningRightX) / 2 - sw / 2;
+            CheckFit(l, plan, side, g, lo);
             CheckEn(l, cat);
             CheckClashes(l, plan, cat, side, stackRight);
             l.Fits = l.Problems.Count == 0;
             return l;
         }
 
-        static void CheckFit(DoorLayout l, ElevatorParameters plan, bool side, DoorCatalog cat, double off)
+        // The car holds the opening and the minimum returns; the landing frame and the parked pocket stay inside the shaft. The needed
+        // widths are exact (the car side gap g is constant as the shaft grows).
+        static void CheckFit(DoorLayout l, ElevatorParameters plan, bool side, double g, double lo)
         {
-            double o = l.OpeningMm, sw = plan.SW, cw = plan.CarWidth, wc = l.LandingWallClearanceMm;
-            // The car must hold the opening and both returns.
-            double needFixed = 2 * (l.FixedReturnMm + off + o / 2);
-            double needStack = 2 * (l.StackReturnMm - off + o / 2);
-            double needCar = side ? Math.Max(needFixed, needStack) : o + 2 * l.FixedReturnMm;
+            double o = l.OpeningMm, sw = plan.SW, cw = plan.CarWidth, wc = l.LandingWallClearanceMm, pocket = l.LandingStackPocketMm;
+            double needCar = o + l.FixedReturnMinMm + l.StackReturnMinMm;
             if (needCar > cw + Eps)
             {
                 double needShaft = sw + (needCar - cw);
@@ -137,11 +177,10 @@ namespace Elevator.Core.Doors
                         NeededShaftWidthMm = needShaft
                     });
             }
-            // The landing frame and the parked panels stay inside the shaft with the wall clearance.
-            double stackReach = Math.Max(l.LandingStackPocketMm, l.PanelWidthMm);
+            double stackReach = Math.Max(pocket, l.PanelWidthMm);
             double needLanding = side
-                ? o + 2 * Math.Max(stackReach + wc - off, l.LandingFixedJambMm + wc + off)
-                : o + 2 * (stackReach + wc);
+                ? lo + o + Math.Max(stackReach + wc, g + l.StackReturnMinMm)
+                : o + 2 * Math.Max(g + l.FixedReturnMinMm, stackReach + wc);
             if (needLanding > sw + Eps)
             {
                 l.Problems.Add(
@@ -149,7 +188,7 @@ namespace Elevator.Core.Doors
                     {
                         Code = "landing-width",
                         Message = "needs shaft width " + L(needLanding) + " mm (now " + L(sw) + " mm)",
-                        NeededCarWidthMm = needLanding - (sw - cw),
+                        NeededCarWidthMm = cw + (needLanding - sw),
                         NeededShaftWidthMm = needLanding
                     });
             }

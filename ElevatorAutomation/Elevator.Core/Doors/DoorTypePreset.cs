@@ -15,8 +15,17 @@ namespace Elevator.Core.Doors
         /// <summary>Inner landing door face to the shaft front wall.</summary>
         public double? LandingZoneMm;
 
-        /// <summary>Smallest distance from the landing door frame to a shaft side wall.</summary>
+        /// <summary>Smallest distance from the landing door frame to the shaft wall on the stacking side (2C: each side).</summary>
         public double? LandingWallClearanceMm;
+
+        /// <summary>Smallest car return on the fixed side (2C: each side). The size rows hold the preferred values.</summary>
+        public double? MinFixedReturnMm;
+
+        /// <summary>Smallest car return on the stacking side (2S).</summary>
+        public double? MinStackReturnMm;
+
+        /// <summary>Smallest landing jamb on the fixed side, as the opening edge to the shaft wall (2S; 0 = flush with the wall).</summary>
+        public double? LandingFixedJambMinMm;
 
         /// <summary>Panel thickness (kept for the drawing stage).</summary>
         public double? PanelThicknessMm;

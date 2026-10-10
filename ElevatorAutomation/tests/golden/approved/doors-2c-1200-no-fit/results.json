@@ -13,7 +13,7 @@
     "FF2BaseN": 1152.5,
     "FF2DesignN": 2305,
     "GuideShoeSpacingMm": 1200,
-    "InputFingerprint": "BCB625D153D4B156D25D482E6A1CA96561EE123E150E052C6C2ECF5E3DABF1F8",
+    "InputFingerprint": "2E6D2E04A65EF832797ACC9B252C3074CAB916E62765FC126CB9DB2102CBA44D",
     "InternalDepthMm": 2305,
     "InternalWidthMm": 1500,
     "Issues": [],
@@ -32,7 +32,7 @@
     "CarPerRopeTensionN": 1602.3000000000002,
     "CounterweightBundleTensionN": 7259.4000000000005,
     "CounterweightPerRopeTensionN": 1209.9,
-    "InputFingerprint": "219F4823EE29658E34D4C68577235344206176F6D8808FB4C38603B3B46E5280",
+    "InputFingerprint": "D2DE0088BD8B5972846438196EEAB289F4699A9B02586891A1225BD26E6899C2",
     "Issues": [],
     "Loads": [
       {
@@ -219,7 +219,7 @@
     },
     "HangingLengthM": 16.7,
     "HasResults": true,
-    "InputFingerprint": "1A72F855484B85461CDAF94AA24626D89C4F0779B740758AE59FA49B5CB7EAC1",
+    "InputFingerprint": "4D2944B6A5DF424980277954D039C2711CADDD74A9EC07E4AA164627DED97B17",
     "Inputs": {
       "BrakingRetardationMps2": 0.5,
       "CapacityKg": 480,

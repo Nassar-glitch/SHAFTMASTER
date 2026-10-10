@@ -33,14 +33,20 @@ namespace Elevator.Core.Doors
         public const string LandingJambKey = "Doors.LandingFixedJambMm";
         /// <summary>Key of the landing stacking pocket.</summary>
         public const string LandingPocketKey = "Doors.LandingStackPocketMm";
-        /// <summary>Key of the landing frame clearance to the side walls.</summary>
+        /// <summary>Key of the minimum landing frame distance to the shaft wall.</summary>
         public const string WallClearanceKey = "Doors.LandingWallClearanceMm";
+        /// <summary>Key of the minimum car return, fixed side (2C: each side).</summary>
+        public const string MinFixedReturnKey = "Doors.MinFixedReturnMm";
+        /// <summary>Key of the minimum car return, stacking side.</summary>
+        public const string MinStackReturnKey = "Doors.MinStackReturnMm";
+        /// <summary>Key of the minimum landing jamb, fixed side.</summary>
+        public const string LandingJambMinKey = "Doors.LandingFixedJambMinMm";
 
         /// <summary>Every door key, in page order.</summary>
         public static readonly string[] Keys =
         {
             OpeningKey, HandingKey, CarZoneKey, SillGapKey, LandingZoneKey, FixedReturnKey, StackReturnKey, OffsetKey,
-            LandingJambKey, LandingPocketKey, WallClearanceKey
+            LandingJambKey, LandingPocketKey, WallClearanceKey, MinFixedReturnKey, MinStackReturnKey, LandingJambMinKey
         };
 
         const string ExtensionKey = "doors";
@@ -56,6 +62,9 @@ namespace Elevator.Core.Doors
         public double? LandingFixedJambMm;
         public double? LandingStackPocketMm;
         public double? LandingWallClearanceMm;
+        public double? MinFixedReturnMm;
+        public double? MinStackReturnMm;
+        public double? LandingFixedJambMinMm;
 
         /// <summary>The locked numeric value of a key (null: unlocked).</summary>
         public double? Number(string key)
@@ -82,6 +91,12 @@ namespace Elevator.Core.Doors
                     return LandingStackPocketMm;
                 case WallClearanceKey:
                     return LandingWallClearanceMm;
+                case MinFixedReturnKey:
+                    return MinFixedReturnMm;
+                case MinStackReturnKey:
+                    return MinStackReturnMm;
+                case LandingJambMinKey:
+                    return LandingFixedJambMinMm;
                 default:
                     return null;
             }
@@ -121,6 +136,15 @@ namespace Elevator.Core.Doors
                     break;
                 case WallClearanceKey:
                     LandingWallClearanceMm = v;
+                    break;
+                case MinFixedReturnKey:
+                    MinFixedReturnMm = v;
+                    break;
+                case MinStackReturnKey:
+                    MinStackReturnMm = v;
+                    break;
+                case LandingJambMinKey:
+                    LandingFixedJambMinMm = v;
                     break;
             }
         }

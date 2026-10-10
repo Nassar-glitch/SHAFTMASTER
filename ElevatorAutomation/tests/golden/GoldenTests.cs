@@ -318,6 +318,8 @@ public static class GoldenTests
         add("doors-2s-auto", s2, "Automatic 2S, opening selected by the rules, shaft 1900 x 2800 (D1).");
         var c2 = door("Golden D2 - 2C auto", Elevator.Core.Doors.DoorTypes.Automatic2C);
         add("doors-2c-auto", c2, "Automatic 2C, opening selected by the rules, shaft 1900 x 2800 (D1).");
+        var shifted = door("Golden D5 - 2S shifted", Elevator.Core.Doors.DoorTypes.Automatic2S); shifted.Shaft.WidthMm = 1750;
+        add("doors-2s-shifted", shifted, "Automatic 2S on the 1750 mm shaft: the 1000 mm opening is selected and shifted to the car side wall (fixed return 0) (D1).");
         var left = door("Golden D3 - 2S left 1000", Elevator.Core.Doors.DoorTypes.Automatic2S); left.Shaft.WidthMm = 2100;
         Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.OpeningKey, 1000); Elevator.Core.Doors.DoorFlow.SetHanding(left, Elevator.Core.Doors.DoorTypes.Left);
         Elevator.Core.Doors.DoorFlow.SetNumber(left, Elevator.Core.Doors.DoorSettings.SillGapKey, 30);
