@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Elevator.Core.Project;
 
@@ -161,12 +162,30 @@ namespace Elevator.Core.Doors
             }
         }
 
+        // A needed width rounded up to a whole millimetre.
+        static string Up(double v)
+        {
+            return Math.Ceiling(v - 1e-9).ToString("0", CultureInfo.InvariantCulture);
+        }
+
         /// <summary>The short field message "does not fit: …" of a layout, or null when it fits.</summary>
         public static string FitMessage(DoorLayout l)
         {
             if (l == null || l.Fits || l.Problems.Count == 0)
                 return null;
-            return "does not fit: " + String.Join("; ", l.Problems.Select(p => p.Message));
+            // One needed car width and shaft width for all width problems, then the other reasons.
+            var parts = new List<string>();
+            if (l.NeededCarWidthMm.HasValue || l.NeededShaftWidthMm.HasValue)
+            {
+                var widths = new List<string>();
+                if (l.NeededCarWidthMm.HasValue)
+                    widths.Add("car width " + Up(l.NeededCarWidthMm.Value) + " mm");
+                if (l.NeededShaftWidthMm.HasValue)
+                    widths.Add("shaft width " + Up(l.NeededShaftWidthMm.Value) + " mm");
+                parts.Add("needs " + String.Join(", ", widths));
+            }
+            parts.AddRange(l.Problems.Where(p => !p.NeededCarWidthMm.HasValue && !p.NeededShaftWidthMm.HasValue).Select(p => p.Message));
+            return "does not fit: " + String.Join("; ", parts);
         }
 
         /// <summary>The Design Notes advice for a door that does not fit, or null: one line with the needed car or shaft width.</summary>
@@ -174,7 +193,7 @@ namespace Elevator.Core.Doors
         {
             if (l == null || l.Fits || l.Problems.Count == 0)
                 return null;
-            string size = Math.Round(l.OpeningMm, 1).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+            string size = Math.Round(l.OpeningMm, 1).ToString("0.#", CultureInfo.InvariantCulture);
             string name = l.AutoSelected
                 ? DoorTypes.Display(l.Type) + " door: no standard clear opening fits, the smallest (" + size + " mm)"
                 : DoorTypes.Display(l.Type) + " door, " + size + " mm clear opening";
@@ -184,13 +203,11 @@ namespace Elevator.Core.Doors
                 var parts = new List<string>();
                 if (l.NeededCarWidthMm.HasValue)
                 {
-                    parts.Add("a car width of at least "
-                        + Math.Ceiling(l.NeededCarWidthMm.Value).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " mm");
+                    parts.Add("a car width of at least " + Up(l.NeededCarWidthMm.Value) + " mm");
                 }
                 if (l.NeededShaftWidthMm.HasValue)
                 {
-                    parts.Add("a shaft width of at least "
-                        + Math.Ceiling(l.NeededShaftWidthMm.Value).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " mm");
+                    parts.Add("a shaft width of at least " + Up(l.NeededShaftWidthMm.Value) + " mm");
                 }
                 advice = "needs " + String.Join(" and ", parts) + ".";
                 var others = l.Problems.Where(p => !p.NeededCarWidthMm.HasValue && !p.NeededShaftWidthMm.HasValue).ToList();
