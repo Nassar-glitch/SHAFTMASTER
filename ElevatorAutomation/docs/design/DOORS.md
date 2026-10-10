@@ -161,3 +161,52 @@ Selection and checks (all in `Elevator.Core/Doors/DoorRules`):
    profile library yet (DESIGN-FLOW stage 3); they are presets.
 7. **Drawings:** the plan and sections still draw the Manual door. `DoorLayout` (opening X, landing X, panels, zones, `CentreShiftMm`)
    is available for the drawing stage (D2).
+
+## 5. Drawings (D2)
+
+The automatic door is drawn from the `DoorLayout` of section 3 in the native plan, in the calculation-sheet figure F1 and in the STEP
+model. A Manual door is drawn exactly as before (no template entity is touched).
+
+### Native plan (`Elevator.AutoCAD/Plan/AutomaticDoorPlan`)
+
+- The template door geometry stays in the drawing, bound and updated as before, but is **hidden**: the door-role entities
+  (`doorLeft`, `doorRight`, `doorSpan`, `doorLeader`, `entrance`), the four car-return lines of the cabin front, the eight door dimensions
+  (`Plan.Dimension.Part006` to `Part013`) and the wall pieces that carry the opening (`Plan.Wall.Part001`, `Part004`, `Part005`, `Part006`
+  and the shaft inner outline). A Manual project, or a later update of the same drawing with a Manual door, erases the new entities and
+  shows the template geometry again (`AutomaticDoorPlan.Clear`).
+- New entities are tagged `Plan.AutoDoor.NNN` (role `autoDoor`), so they are read, arranged and counted as plan entities, and not as
+  unbound entities.
+- Drawn from the layout (X from the shaft left wall, D from the shaft front wall; mirrored for handing Left):
+
+| Item | 2S | 2C | Layer |
+|---|---|---|---|
+| Wall with the opening | the template wall pieces with the two jamb edges moved to opening edge -/+ jamb width | same | Wall |
+| Jamb blocks, sill box, leader | the template ones, moved with the opening | same | 0, CL |
+| Landing frame | fixed-side jamb and stacking pocket (D 0 to landing zone), line across the opening | box D (zone - 70) to zone over the whole landing frame width | 0 |
+| Landing panels (closed) | 2 x panel width; fixed-side panel at D (zone - t) to zone, leading panel at D (zone - 2t - 5) to (zone - t - 5), over-travel 5 | 2 centre panels, D (zone - 5 - t) to (zone - 5) | Car |
+| Car panels (closed) | same pattern at D (landing zone + sill gap) | 2 centre panels in a 70 deep box, 12 mm behind its outer face | Car, 0 |
+| Car front returns | car side wall (outer face) to the opening edge, 40 deep, ending at the car front | same | step&guides |
+| Sill lines | landing sill D 0, car sill D (car front - 40), across the opening | same | DL |
+| Dimensions (style Nassar2, text as in the references) | returns and OPENING above the car front; wall to opening, DOOR oX2000, the two halves below the wall; front-zone split 90 / 25 / 130 beside the total | same | 0 |
+
+Result for the three tier-3 cases: `output/doors-native/*-plan.png` (rendered from the generated DWG) against the reference renders
+`2S.png` and `2C.png`; the numbers of every entity are compared with the layout by `tests/integration/verify_doors.py`.
+
+### Sections
+
+- **A-A:** the door is the template's native door line (frame plane at the wall, clear head 2000, full head 2160, audited per served
+  floor): correct for 2S and 2C (door height 2000 = DOOR oX2000). The car front follows the front zone through the shared plan.
+  Only the experimental vertical geometry (`VerticalSource`) used the manual positions for the car and landing door boxes; for an
+  automatic door they are now the car door zone and the landing door zone.
+- **B-B and the plan recipe in the AutoCAD commands:** the section audit recalculated the plan with the Manual recipe and failed against the
+  new car depth ("shared car reference verification failed: 1385 versus 1325 mm"). Every plan recalculation in `Elevator.AutoCAD` now
+  takes the door of the project stored in the drawing (`AutomaticDoorPlan.InputFor`), and the door catalog comes from `config/presets.json`
+  (`Configuration.DoorCatalog`), also in the host context.
+
+### STEP (`Elevator.Solution.StepExport/BuildModel`)
+
+The model contains doors (two landing panels per served floor, two cabin panels, front-wall piers and spandrels around the opening). For an
+automatic door `StepModelParameters` carries the opening X range and the panels and frame as simple boxes (X, Y, width, depth, height
+above the floor, height); the piers and spandrels follow the opening position, the manual panels are replaced by the panel boxes and, per
+floor, the frame bodies (2S: fixed-side jamb, stacking pocket beyond the panel over-travel, header over the opening; 2C: header). A Manual
+door gives empty parameters and the same bodies as before.
