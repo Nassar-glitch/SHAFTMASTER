@@ -1,3 +1,4 @@
+using Elevator.Core.Doors;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Presets;
 
@@ -15,5 +16,8 @@ namespace Elevator.Core.Project
         public double RetainedDeflectorPitchMm;
         public bool RetainedDeflectorVisible;
         public ChassisGeometryEvidence ChassisEvidence;
+
+        /// <summary>The door catalog (preset library); null: the shipped default catalog.</summary>
+        public DoorCatalog Doors;
     }
 }

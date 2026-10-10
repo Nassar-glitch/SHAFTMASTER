@@ -46,7 +46,9 @@ namespace Elevator.Core.GuideRails
 
         internal static string GeometryInputHash(ElevatorProject p)
         {
-            return p == null || p.Shaft == null || p.Elevator == null || p.Standards == null ? null : CalculationFingerprint.Hash(new
+            if (p == null || p.Shaft == null || p.Elevator == null || p.Standards == null)
+                return null;
+            string hash = CalculationFingerprint.Hash(new
             {
                 p.Shaft.WidthMm,
                 p.Shaft.DepthMm,
@@ -55,6 +57,8 @@ namespace Elevator.Core.GuideRails
                 p.Elevator.TemplateId,
                 p.Standards.RuleSetId
             });
+            // An automatic door changes the car depth; a Manual door leaves the hash exactly as before.
+            return Doors.DoorFingerprint.Extend(hash, p, null);
         }
 
         internal static string GeometryContextHash(DesignContext c)

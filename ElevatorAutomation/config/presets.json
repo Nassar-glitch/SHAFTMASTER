@@ -46,6 +46,38 @@
   "SafetyGear": { "ProgressiveAboveSpeedMps": 0.63, "CarGuideCount": 2 },
   "Buffers": { "EnergyAccumulationUpToSpeedMps": 1.0, "CarCount": 1, "CounterweightCount": 1, "Sharing": "EqualSharing" },
   "BracketMaximumSpacingMm": 1500,
+  "Doors": {
+    "OpeningsMm": [ 700, 800, 900, 1000, 1200 ],
+    "MaxSillGapMm": 35,
+    "MaxCarToWallMm": 150,
+    "GovernorSide": "Left",
+    "Automatic2S": {
+      "CarZoneMm": 130, "SillGapMm": 25, "LandingZoneMm": 90, "LandingWallClearanceMm": 35,
+      "PanelThicknessMm": 40, "PanelOverlapMm": 10, "PanelEdgeOvertravelMm": 5,
+      "Sizes": [
+        { "OpeningMm": 700, "FixedReturnMm": 200, "StackReturnMm": 300, "LandingFixedJambMm": 30, "LandingStackPocketMm": 375 },
+        { "OpeningMm": 800, "FixedReturnMm": 200, "StackReturnMm": 350, "LandingFixedJambMm": 30, "LandingStackPocketMm": 425 },
+        { "OpeningMm": 900, "FixedReturnMm": 200, "StackReturnMm": 400, "LandingFixedJambMm": 30, "LandingStackPocketMm": 475 },
+        { "OpeningMm": 1000, "FixedReturnMm": 200, "StackReturnMm": 450, "LandingFixedJambMm": 30, "LandingStackPocketMm": 525 },
+        { "OpeningMm": 1200, "FixedReturnMm": 200, "StackReturnMm": 550, "LandingFixedJambMm": 30, "LandingStackPocketMm": 625 }
+      ]
+    },
+    "Automatic2C": {
+      "CarZoneMm": 110, "SillGapMm": 30, "LandingZoneMm": 80, "LandingWallClearanceMm": 35,
+      "PanelThicknessMm": 39, "PanelOverlapMm": 2, "PanelEdgeOvertravelMm": 0,
+      "Sizes": [
+        { "OpeningMm": 700, "FixedReturnMm": 250, "StackReturnMm": 250, "LandingFixedJambMm": 375, "LandingStackPocketMm": 375 },
+        { "OpeningMm": 800, "FixedReturnMm": 275, "StackReturnMm": 275, "LandingFixedJambMm": 425, "LandingStackPocketMm": 425 },
+        { "OpeningMm": 900, "FixedReturnMm": 300, "StackReturnMm": 300, "LandingFixedJambMm": 475, "LandingStackPocketMm": 475 },
+        { "OpeningMm": 1000, "FixedReturnMm": 325, "StackReturnMm": 325, "LandingFixedJambMm": 525, "LandingStackPocketMm": 525 },
+        { "OpeningMm": 1200, "FixedReturnMm": 375, "StackReturnMm": 375, "LandingFixedJambMm": 625, "LandingStackPocketMm": 625 }
+      ]
+    },
+    "Envelopes": {
+      "RailDepthMm": 70, "RailWidthMm": 65,
+      "GovernorGapToWallMm": 79, "GovernorWidthMm": 26, "GovernorFromGuideAxisMm": 159, "GovernorLengthMm": 240
+    }
+  },
   "Advanced": {
     "LoadCase": "StaticRatedLoad1To1",
     "TransferModel": "ReleasedTwoStageWithRigidSpreader-v1",

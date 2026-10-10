@@ -21,11 +21,26 @@ namespace Elevator.Core.Calculations
 
         internal static string Hash(object value)
         {
+            return HashWithout(value);
+        }
+
+        // The hash of a value's members except the named ones (a member added later that must not change the earlier hash).
+        internal static string HashWithout(object value, params string[] members)
+        {
             var serializer = CoreJson.Create();
             var canonical = new StringBuilder();
             try
             {
-                Canonical(serializer.DeserializeObject(serializer.Serialize(value)), serializer, canonical);
+                var tree = serializer.DeserializeObject(serializer.Serialize(value));
+                var map = tree as IDictionary<string, object>;
+                if (map != null && members.Length > 0)
+                {
+                    var copy = new Dictionary<string, object>(map);
+                    foreach (var m in members)
+                        copy.Remove(m);
+                    tree = copy;
+                }
+                Canonical(tree, serializer, canonical);
             }
             catch (ArgumentException)
             {

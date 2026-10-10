@@ -10,8 +10,17 @@ namespace Elevator.Core.Project
     /// </summary>
     public static class DesignRules
     {
-        /// <summary>Calculates the plan dimensions from the shaft size.</summary>
+        /// <summary>Calculates the plan dimensions from the shaft size (Manual door).</summary>
         public static ElevatorParameters Calculate(double sw, double sd, EquipmentProfile p, double existingCwDepth)
+        {
+            return Calculate(sw, sd, p, existingCwDepth, null);
+        }
+
+        /// <summary>
+        /// Calculates the plan dimensions from the shaft size. An automatic door (null: Manual, the existing recipe) sets the front zone,
+        /// and so the car depth, and selects or validates the clear opening.
+        /// </summary>
+        public static ElevatorParameters Calculate(double sw, double sd, EquipmentProfile p, double existingCwDepth, DoorInput door)
         {
             if (Double.IsNaN(sw) || Double.IsInfinity(sw) || Double.IsNaN(sd) || Double.IsInfinity(sd) || sw <= 0 || sd <= 0)
                 throw new ArgumentException("SW and SD must be finite positive millimetre values.");
@@ -22,10 +31,11 @@ namespace Elevator.Core.Project
             n.SD = sd;
             n.CarDbg = sw - 2 * p.CarRailSideAllowanceMm;
             n.CarWidth = n.CarDbg - p.CarWidthDeductionMm;
-            n.CarDepth = sd - p.CarFrontAllowanceMm - p.CarRearAllowanceMm - p.ShaftRearAllowanceMm;
+            double front = door == null ? p.CarFrontAllowanceMm : door.FrontZoneMm();
+            n.CarDepth = sd - front - p.CarRearAllowanceMm - p.ShaftRearAllowanceMm;
             if (n.CarWidth <= 0 || n.CarDepth <= 0)
                 throw new ArgumentException("The shaft is too small for the configured cabin allowances.");
-            n.CarFront = p.CarFrontAllowanceMm;
+            n.CarFront = front;
             n.CarRear = n.CarFront + n.CarDepth;
             n.TZ = n.CarDepth / 2 + p.TzAdditionMm;
             n.CwRow = sd - p.CounterweightRailRearAllowanceMm;
@@ -38,11 +48,14 @@ namespace Elevator.Core.Project
             n.CwFront = n.CwRow - n.CwDepth / 2;
             n.CwRear = n.CwRow + n.CwDepth / 2;
             n.JambWidth = p.DoorJambWidthMm;
-            n.DoorWidth = DoorRules.SelectWidth(sw, n.CarWidth, n.JambWidth, p);
-            if (n.DoorWidth <= 0)
+            if (door == null)
             {
-                throw new ArgumentException(
-                                    "No preferred door fits. The smallest door needs at least 1150 mm shaft width with this profile.");
+                n.DoorWidth = DoorRules.SelectWidth(sw, n.CarWidth, n.JambWidth, p);
+                if (n.DoorWidth <= 0)
+                {
+                    throw new ArgumentException(
+                                        "No preferred door fits. The smallest door needs at least 1150 mm shaft width with this profile.");
+                }
             }
             if (n.CwDepth <= 0
                 || n.CwWidth <= 0
@@ -51,6 +64,12 @@ namespace Elevator.Core.Project
                 || n.CarRow <= n.CarFront
                 || n.CarRow >= n.CarRear)
                 throw new ArgumentException("The calculated component positions do not fit this shaft depth.");
+            if (door != null)
+            {
+                // Automatic door: the size is selected (or the locked size validated) on the finished plan, which holds the front zone.
+                var layout = DoorRules.Select(door, n);
+                n.DoorWidth = layout.OpeningMm;
+            }
             return n;
         }
     }

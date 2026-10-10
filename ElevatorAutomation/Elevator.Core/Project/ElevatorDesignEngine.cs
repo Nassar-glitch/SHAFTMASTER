@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Elevator.Core.Calculations;
+using Elevator.Core.Doors;
 using Elevator.Core.Geometry;
 using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
@@ -51,7 +52,12 @@ namespace Elevator.Core.Project
             return new CarGuideForceGeometry(
                 project,
                 context,
-                () => DesignRules.Calculate(project.Shaft.WidthMm, project.Shaft.DepthMm, context.Equipment, context.CounterweightDepthMm));
+                () => DesignRules.Calculate(
+                    project.Shaft.WidthMm,
+                    project.Shaft.DepthMm,
+                    context.Equipment,
+                    context.CounterweightDepthMm,
+                    DoorInput.From(project, context.Doors)));
         }
 
         ElevatorDesignResult CalculateInternal(ElevatorProject project, DesignContext context, DrawingViews views, bool basicGeometry)
@@ -72,7 +78,12 @@ namespace Elevator.Core.Project
                     input.SuspensionRopeDiameterMm = null;
                     input.NumberOfSuspensionRopes = null;
                 }
-                result.Plan = DesignRules.Calculate(input.SW, input.SD, context.Equipment, context.CounterweightDepthMm);
+                result.Plan = DesignRules.Calculate(
+                    input.SW,
+                    input.SD,
+                    context.Equipment,
+                    context.CounterweightDepthMm,
+                    DoorInput.From(project, context.Doors));
                 result.LayoutStatus = ValidationStatus.PASS;
                 CalculateMachineRoom(context, views, result, input);
                 result.Floors = basicGeometry ? new List<FloorElevation>() : ProjectFloors.Elevations(project.Building);
