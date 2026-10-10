@@ -97,6 +97,7 @@ if($onWindows){
  AddSuite 2 'safety-pit-ui' 'desktop session' 'Safety gear / pit page (the Core part is in core-<framework>) and the project schema' {param($o) Run 'tests/solution/run-safety-pit-ui.ps1' @('-CandidateBin',$Bin,'-SkipBuild','-EvidenceDirectory',$o)}
  AddSuite 2 'safety-pit-draft-ui' 'desktop session' 'Safety gear / pit draft errors' {param($o) Run 'tests/solution/run-safety-pit-draft-ui.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
  AddSuite 2 'ff-ui' 'desktop session' 'Car guide force page' {param($o) Run 'tests/solution/run-ff-ui.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
+ AddSuite 2 'doors-ui' 'desktop session' 'Car & Doors page: automatic door type, opening, handing, clearances' {param($o) Run 'tests/solution/run-doors-ui.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
  AddSuite 3 'integration' 'AutoCAD 2023, Python (PyMuPDF), local evidence folder' 'Affected regressions, FF native / STEP, STEP input, native golden' {param($o) Run 'tests/integration/run-tier3.ps1' @('-Bin',$Bin,'-OutDir',$o)}
  AddSuite 3 'presets-native' 'AutoCAD 2023' 'Presets through the native drawings' {param($o) Run 'tests/integration/run-native-test.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o,'-Test','PresetsNativeTests')}
  AddSuite 3 'sheet-word-render' 'Microsoft Word, Python (PyMuPDF, python-docx)' 'Every calculation sheet rendered through Word to PDF' {param($o) Run 'tests/solution/run-calculation-sheet.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o,'-WordRender')}

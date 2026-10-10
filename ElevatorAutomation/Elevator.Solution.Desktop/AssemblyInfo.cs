@@ -9,6 +9,7 @@ using System.Reflection;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CalculationSheetUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CalculationUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CarGuideForceUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DoorsUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PresetsUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("RopeTractionUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SafetyPitDraftUiTests")]

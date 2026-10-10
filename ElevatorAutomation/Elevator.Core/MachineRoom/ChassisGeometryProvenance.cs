@@ -71,7 +71,7 @@ namespace Elevator.Core.MachineRoom
                 || p.Counterweight == null)
                 return null;
             // Chassis/view geometry drivers and equipment/rule identity, not load-only CG/masses.
-            return CalculationFingerprint.Hash(new
+            string hash = CalculationFingerprint.Hash(new
             {
                 Version = Version,
                 SW = p.Shaft.WidthMm,
@@ -86,6 +86,8 @@ namespace Elevator.Core.MachineRoom
                 CounterweightPosition = p.Counterweight.Position,
                 p.Standards.RuleSetId
             });
+            // An automatic door changes the car depth; a Manual door leaves the hash as before.
+            return Doors.DoorFingerprint.Extend(hash, p, null);
         }
 
         static string GeometryHash(ChassisCalculationGeometry g)
@@ -184,7 +186,7 @@ namespace Elevator.Core.MachineRoom
             }
             // The two-argument API also detects mutations of its originating live context.
             // Supply currentContext when replacing that context with another instance.
-            string context = CalculationFingerprint.Hash(currentContext ?? source.originContext);
+            string context = CalculationFingerprint.HashWithout(currentContext ?? source.originContext, "Doors");
             if (context == null || source.contextFingerprint == null || context != source.contextFingerprint)
             {
                 Reject(

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Elevator.Core.Calculations;
+using Elevator.Core.Doors;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Serialization;
 using Elevator.Core.Suspension;
@@ -40,6 +41,15 @@ namespace Elevator.Core.Presets
         public SafetyGearPreset SafetyGear;
         public BufferPreset Buffers;
         public AdvancedPreset Advanced;
+
+        /// <summary>The door catalog (DESIGN-FLOW "Doors"); null in an older library: the shipped default catalog applies.</summary>
+        public DoorCatalog Doors;
+
+        /// <summary>The door catalog of the library, or the shipped default.</summary>
+        public DoorCatalog DoorsOrDefault()
+        {
+            return Doors ?? DoorCatalog.Default();
+        }
 
         /// <summary>Reads and validates the preset library from a file.</summary>
         public static PresetLibrary Load(string path)
@@ -120,6 +130,8 @@ namespace Elevator.Core.Presets
             if (!TractionLimitingMethods.All.Contains(TractionLimitingMethod))
                 p.Add("TractionLimitingMethod must be one of " + String.Join(", ", TractionLimitingMethods.All));
             ValidateProject(p);
+            if (Doors != null)
+                p.AddRange(Doors.Validate());
             return p;
         }
 
@@ -356,7 +368,7 @@ namespace Elevator.Core.Presets
             var value = hash;
             if (value == null)
             {
-                value = CalculationFingerprint.Hash(this);
+                value = CalculationFingerprint.HashWithout(this, "Doors");
                 hash = value;
             }
             return value;

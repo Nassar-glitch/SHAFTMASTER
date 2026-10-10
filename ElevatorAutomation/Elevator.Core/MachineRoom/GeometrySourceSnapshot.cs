@@ -12,7 +12,8 @@ namespace Elevator.Core.MachineRoom
         internal GeometrySourceSnapshot(ElevatorProject project, DesignContext context)
         {
             InputFingerprint = ChassisGeometryProvenance.InputHash(project);
-            ContextFingerprint = CalculationFingerprint.Hash(context);
+            // The door catalog is not part of the reviewed context fingerprint (an automatic door adds it through DoorFingerprint).
+            ContextFingerprint = CalculationFingerprint.HashWithout(context, "Doors");
             OriginContext = context;
         }
     }

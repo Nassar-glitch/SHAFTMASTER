@@ -48,7 +48,12 @@ namespace Elevator.Core.Suspension
                     || !Positive(p.Shaft.WidthMm)
                     || !Positive(p.Shaft.DepthMm))
                     return null;
-                var plan = DesignRules.Calculate(p.Shaft.WidthMm, p.Shaft.DepthMm, c.Equipment, c.CounterweightDepthMm);
+                var plan = DesignRules.Calculate(
+                    p.Shaft.WidthMm,
+                    p.Shaft.DepthMm,
+                    c.Equipment,
+                    c.CounterweightDepthMm,
+                    Doors.DoorInput.From(p, c.Doors));
                 var d = MachineRoomRules.SelectDeflector(plan.TZ);
                 return d.IsRequired ? d.PitchDiameterMm : null;
             }
@@ -194,7 +199,7 @@ namespace Elevator.Core.Suspension
                 ? null
                 : p.Building.Floors.Select(f => f == null ? null : (object)new { f.HeightToNextMm, f.IsServed }).ToArray();
             var cc = p.Calculations;
-            return CalculationFingerprint.Hash(new
+            string hash = CalculationFingerprint.Hash(new
             {
                 Rule = RuleVersion,
                 Library = library == null ? null : library.Hash(),
@@ -226,6 +231,7 @@ namespace Elevator.Core.Suspension
                     c.RetainedDeflectorVisible
                 }
             });
+            return Doors.DoorFingerprint.Extend(hash, p, c);
         }
 
         /// <summary>True when the result matches the project, the context and the presets.</summary>

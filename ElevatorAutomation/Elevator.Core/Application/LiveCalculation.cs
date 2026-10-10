@@ -58,7 +58,8 @@ namespace Elevator.Core.Application
             if (path.StartsWith("Report."))
                 return InputEffect.None; // sheet metadata: no calculation or drawing input
             var effect = InputEffect.Design | InputEffect.Chassis | InputEffect.RopeTraction;
-            if (path == "Elevator.CapacityKg" || path == "Shaft.WidthMm" || path == "Shaft.DepthMm")
+            // A door type or clearance changes the front zone, so the car depth: FF1 / FF2 follow it too.
+            if (path == "Elevator.CapacityKg" || path == "Shaft.WidthMm" || path == "Shaft.DepthMm" || path.StartsWith("Doors."))
                 effect |= InputEffect.CarGuideForces;
             return effect;
         }

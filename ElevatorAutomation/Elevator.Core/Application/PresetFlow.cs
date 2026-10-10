@@ -27,6 +27,9 @@ namespace Elevator.Core.Application
             Library = library;
             Error = error;
             this.context = context;
+            // The editable door catalog of the library reaches every plan calculation through the design context.
+            if (library != null && context != null)
+                context.Doors = library.DoorsOrDefault();
         }
 
         /// <summary>Reads the preset library from a file; the flow keeps the error when it cannot be read.</summary>

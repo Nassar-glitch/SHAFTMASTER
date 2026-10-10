@@ -1,0 +1,163 @@
+# Automatic doors (D1): extracted dimensions and generalised rules
+
+Status: D1 (Core + UI, no drawing changes). Source: the user's reference drawings `Automatic 2S800 Geared Rear CW.dwg` and
+`Automatic 2C800 Geared Rear CW.dwg` (geared, rear counterweight, 1:1), read from their DXF copies. Product behaviour is governed by
+`DESIGN-FLOW.md` ("Doors"); this file records the numbers and the rules built from them (rules corrected 2026-10-11: the drawing values are preferred, the
+minimums bind). Everything below is a preset in
+`config/presets.json` (`Doors`), editable, with lock / follow / Reset.
+
+## 1. Plan sketch (2S 800, reference drawing, mm)
+
+X is measured from the shaft left wall, D from the shaft front wall (towards the rear). The governor is on the left, so the doors stack
+on the right.
+
+```
+ shaft left wall X=0                                                       shaft right wall X=1720
+ |  rail+bracket   car left X=185                          car right X=1535   rail+bracket |
+ |   X 65..135     |                                                      |  X 1585..1655  |
+ |                 |                    CAR  1350 x 1700                  |                |
+ |  governor       |                                                      |                |
+ |  X 79..105      |                                                      |                |
+ D=245 ------------+--<fixed return 200>--+==== opening 800 ====+--<stack return 350>--+---   car interior front
+ |                  car return 40 (D 205..245)                                         |
+ D=205 ..........  car front-wall outer face
+ D=200..115   car door panels: 2 x 40 + 5 gap, 5 clear of the return        |  CAR ZONE 130
+ D=115 ------------------------------------------------------------------   outer car door face
+ D=115..90   SILL GAP 25 (EN 81-20 5.3.6.2.2.1: <= 35)
+ D= 90..5    landing door panels 2 x 40 + 5 gap                              |  LANDING ZONE 90
+ D=  0 ------ shaft front wall
+
+ landing frame:  X 355 |--jamb 30--| 385 ===== opening 800 ===== 1185 |-- stacking pocket 425 --| 1610     (1720 - 1610 = 110 to the wall)
+ opening centre X=785 = shaft centre 860 - 75 (offset towards the fixed side)
+ panels: A X 385..792.5, B X 782.5..1190 (width 407.5, overlap 10, 5 beyond the opening on the stacking side)
+```
+
+## 2. Extracted dimensions
+
+### 2S 800 (shaft 1720 x 2800, car 1350 x 1700, DBG 1450, TZ 990)
+
+| Item | Value | Source in the drawing |
+|---|---|---|
+| Front zone | 245 = 130 + 25 + 90 | dimensions 245, 130, 25, 90 |
+| Car door zone (car interior front to outer car door face) | 130 | car return 40 + 5 + panel 40 + 5 + panel 40 |
+| Sill gap | 25 | outer car panel D 115 to landing panel D 90 |
+| Landing door zone | 90 | landing panels 5 + 40 + 5 + 40 to the front wall |
+| Car return, fixed side (left) | 200 | dimension 200 (car left X 185 to opening X 385) |
+| Car return, stacking side (right) | 350 = 800 / 2 - 50 | dimension 350 |
+| Opening | 800 clear, height 2000 | "DOOR 800X2000" |
+| Opening offset | 75 towards the fixed side | opening centre X 785, shaft centre X 860 |
+| Wall to opening | 385 left, 535 right | dimensions 385, 535 |
+| Landing jamb, fixed side | 30 (frame X 355 to opening X 385) | frame outline |
+| Landing stacking pocket | 425 = 800 / 2 + 25 (opening edge X 1185 to frame X 1610) | frame outline |
+| Panels | 2, width 407.5, thickness 40, overlap 10, 5 beyond the opening edge | panel outlines |
+| Car rail + bracket | X 65..135, 65 wide along the depth (guide axis D 1160) | imported rail outline |
+| Governor | X 79..105 (26 wide), starts 159 behind the guide axis, 240 long, left of the car | governor outline |
+| Car depth | 1700; guide axis 785 behind the car front, 915 in front of the rear (dimensions) | |
+
+### 2C 800 (same shaft and car)
+
+| Item | Value | Source in the drawing |
+|---|---|---|
+| Front zone | 220 = 110 + 30 + 80 (the 2C drawing gives only 220; the split is read from the door boxes) | dimension 220; door boxes |
+| Car door zone | 110 = car return 40 + car door box 70 (D 110..180) | polyline X 35..1686, D 110..180 |
+| Sill gap | 30 (box edge D 110 to landing box edge D 80) | polylines |
+| Landing door zone | 80 = 10 to the wall + landing box 70 (D 10..80) | polyline X 35..1686, D 10..80 |
+| Car returns | 275 each side (car X 185 to opening X 460) | dimensions 275 |
+| Opening | 800, centred (460 to each wall) | dimensions 460, 860 |
+| Landing pocket per side | 425 = 800 / 2 + 25 (opening edge X 460 to frame X 35) | frame outline |
+| Landing frame to the wall | 35 each side | polyline X 35.2..1685.9 |
+| Panels | 2, one per side, width 399, thickness 39, gap 2 | panel outlines |
+
+Both drawings fit their 1350 car exactly with the *preferred* returns (2S: 200 + 800 + 350; 2C: 800 + 2 x 275); these are preferred
+values, not minimums (section 3). The 2C shaft 1720 is exactly the 800 landing minimum with a 35 mm frame to the wall (the minimum is 25).
+
+## 3. Rules (700 / 800 / 900 / 1000 / 1200)
+
+**Preferred versus minimum (Planner correction 2026-10-11).** The returns, the offset and the fixed-side jamb measured in the reference
+drawings are *preferred* values. The binding values are the *minimums* (all presets, editable, Reset per field).
+
+Let `o` be the clear opening, `g` the distance from the car side wall to the shaft wall (each side; 200 in the current plan recipe,
+185 in the drawings).
+
+| Preset | 2S | 2C |
+|---|---|---|
+| Front zone: car zone / sill gap / landing zone | 130 / 25 / 90 = 245 | 110 / 30 / 80 = 220 |
+| Car return, fixed side, preferred | 200 | o / 4 + 75 (275 at 800), each side |
+| Car return, stacking side, preferred | o / 2 - 50 | same as the fixed side |
+| Opening offset towards the fixed side, preferred | (stack - fixed) / 2 = o / 4 - 125 (50, 75, 100, 125, 175) | 0 (centred) |
+| Landing jamb, fixed side, preferred | 30 | o / 2 + 25 (pocket) |
+| **Car return, fixed side, minimum** | **0** (opening edge flush with the car side wall) | **0**, each side |
+| **Car return, stacking side, minimum** | **0** | same |
+| **Landing jamb, fixed side, minimum** | **0** (opening edge flush with the shaft wall) | n/a |
+| Landing stacking pocket | o / 2 + 25 | o / 2 + 25, each side |
+| **Landing frame to the wall, minimum** (stacking side; 2C each side) | **25** | **25** |
+| Panel width | (o + 5 + 10) / 2 | (o - 2) / 2 |
+
+### 2S placement algorithm
+
+Positions are distances `u` from the fixed-side shaft wall; the opening spans `[x, x + o]`.
+
+1. **Preferred layout:** `x = SW / 2 - preferredOffset - o / 2`. This is the drawing (offset 75, fixed return 200 at 800 in 1350).
+2. **Shift:** when the preferred layout does not fit, the opening moves towards the fixed side to
+   `x = min(preferred, hi)`, where `hi = min(SW - 25 - (o/2 + 25) - o, SW - g - minStackReturn - o)`. The shift stops at
+   `lo = max(g + minFixedReturn, minFixedJamb)`: fixed return 0 (edge flush with the car side wall), jamb shrunk to its minimum.
+   The landing door moves with the opening; the fixed-side jamb is `min(preferred jamb, x)`. (The shift is computed in one step, not by
+   stepping; the result equals stepping down to the first position that fits.) If the preferred position lies on the other side of
+   `lo` (a car narrower than the preferred layout), the opening is placed at `lo`.
+3. **Next smaller size:** when `lo > hi` the size does not fit; with a blank size the next smaller standard size is tried
+   (largest first). The smallest size with its problems is the result when none fits.
+
+Conditions after shifting: car width >= o + minimum returns; shaft width >= `lo + o + max(o/2 + 25 + 25, g + minStackReturn)`.
+The parked panels may extend beyond the car side wall into the front zone; the clash checks (car guide rails and brackets, counterweight
+rails and frame, speed governor) stay.
+
+### 2C
+
+Centred; the returns shrink from their preferred value to the minimum (0). Binding: car width >= o + 2 x minimum return, and the landing
+`shaft width >= o + 2 x max(g + minimum return, o/2 + 25 + 25)`.
+
+### Minimum shaft widths
+
+| o | 2S, opening free to the shaft wall (g = 0) | 2S, plan recipe (g = 200) | 2C (g = 0 or 200) |
+|---|---|---|---|
+| 700 | 1100 | 1300 | 1500 |
+| 800 | 1250 | 1450 | 1700 |
+| 900 | 1400 | 1600 | 1900 |
+| 1000 | 1550 | 1750 | 2100 |
+| 1200 | 1850 | 2050 | 2500 |
+
+2S: `1.5 o + 50 + g`; 2C: `2 o + 100`. The first column is the Planner's expected table (shaft width >= opening + stacking pocket +
+25 + 0); it is exact only when the opening can reach the shaft wall. In a real shaft the car side wall stands `g` inside it
+(rail, bracket and clearance), and the car opening and the landing opening are the same opening, so the second column applies: +200 with
+the current recipe. `DoorRules` uses the real `g` of the plan; both columns are tested (`Minimum_shaft_width_2S_*`).
+
+Selection and checks (all in `Elevator.Core/Doors/DoorRules`):
+
+- **Blank size:** the largest standard size that passes every check after shifting; when none passes, the smallest, with its problems.
+- **User size:** validated. Reasons given: not a standard size; the true minimum car width and shaft width ("does not fit: needs car width
+  1350 mm, shaft width 1750 mm"); sill gap above 35 mm (EN 81-20 5.3.6.2.2.1); distance from the front wall to the car door above 150 mm
+  (EN 81-20 5.2.5.2.1; landing zone + sill gap); clash.
+- **Clash** (plan rectangles): the landing frame and the car door with its parked panels, against the car guide rails with brackets,
+  the counterweight rails and frame, and the speed governor. Envelope sizes are the measured ones above (`Doors.Envelopes`).
+- **Handing (2S):** stacking side opposite the governor (governor on the left in the catalog, so right); Left or Right can be locked.
+  The mirror image about the shaft centre is exact.
+- **The front zone sets the car depth:** `CarDepth = SD - frontZone - rear allowances` (Manual: the existing 125 mm front allowance,
+  unchanged).
+
+## 4. Findings and open decisions for the Planner
+
+1. **The expected minimum table (1100 ... 1850) needs g = 0.** The car side wall is 200 mm (recipe; 185 in the drawings) inside the shaft
+   wall, and the car door opening is the landing opening, so the opening edge can reach the car side wall but not the shaft wall.
+   Real minimums with the current recipe are 1300 / 1450 / 1600 / 1750 / 2050 (2S). If a car may stand closer to the shaft wall on the
+   fixed side, or the landing opening may differ from the car opening, that is an engineering decision for the Planner / user.
+2. **The equipment profile gives a 1320 mm car in 1720** (150 mm rail allowance per side), the drawings 1350 (135). On the reference
+   shaft 1720 x 2800 the rules select 900 (2S) and 800 (2C). The 800 numbers of the drawings are reproduced exactly with the drawing's
+   car (tests `Reference_2S_800_reproduces_the_drawing`, `Reference_2C_800_reproduces_the_drawing`). Changing the 150 allowance would
+   change the Manual recipe, which D1 does not touch.
+3. **Car depth in the references is 1700 on SD 2800**; the recipe gives 2280 with the 2S front zone. The recipe is unchanged.
+4. **2C preferred return generalisation** (o / 4 + 75, 275 at 800) is a proposal from one drawing; with minimum 0 it no longer binds.
+5. **2C front-zone split (110 / 30 / 80)** is read from the door box outlines, not from dimensions.
+6. **Rail, bracket and governor envelopes** are measured from the imported outlines (rail 70 x 65, governor 26 x 240). There is no rail
+   profile library yet (DESIGN-FLOW stage 3); they are presets.
+7. **Drawings:** the plan and sections still draw the Manual door. `DoorLayout` (opening X, landing X, panels, zones, `CentreShiftMm`)
+   is available for the drawing stage (D2).

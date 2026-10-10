@@ -1,9 +1,11 @@
-param([string]$Bin='artifacts/bin',[string]$OutDir='',[switch]$Approve,[switch]$MakeFixtures)
+param([string]$Bin='artifacts/bin',[string]$OutDir='',[switch]$Approve,[switch]$MakeFixtures,[switch]$MakeDoorFixtures,[switch]$ApproveNew)
 # Tier-1 golden-master suite (tests/golden). Compiles tests/golden/GoldenTests.cs with Elevator.Reporting and the WPF figure rasterizer of the desktop
 # application against the Core and Bridge of -Bin (default artifacts/bin; build it first with tools/build.ps1), runs it
 # into a fresh folder and compares every captured file with tests/golden/approved. On a mismatch the received file and a
 # readable diff are written under <OutDir>/mismatch and the run fails.
 # -Approve writes the initial baseline only (the approved folder must be empty). -MakeFixtures writes the fixture set once.
+# -MakeDoorFixtures adds the door fixtures (existing files are kept); -ApproveNew approves the files that have no approved copy yet
+# (an existing approved file is still compared, so nothing already approved can change).
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $binPath=Join-Path $root $Bin
@@ -22,6 +24,6 @@ $exeDir=Join-Path $out 'bin';New-Item -ItemType Directory -Force -Path $exeDir |
 foreach($dll in 'Elevator.Core.dll','Elevator.Solution.Bridge.dll','Elevator.Reporting.dll'){Copy-Item -LiteralPath (Join-Path $binPath $dll) -Destination $exeDir}
 & $compiler /nologo /target:exe /platform:x64 ('/out:'+(Join-Path $exeDir 'GoldenTests.exe')) @refs @sources
 if($LASTEXITCODE){throw 'Golden tests build failed'}
-$mode=if($MakeFixtures){'fixtures'}elseif($Approve){'approve'}else{'compare'}
+$mode=if($MakeFixtures){'fixtures'}elseif($MakeDoorFixtures){'door-fixtures'}elseif($Approve){'approve'}elseif($ApproveNew){'approve-new'}else{'compare'}
 & (Join-Path $exeDir 'GoldenTests.exe') $root $binPath (Join-Path $golden 'fixtures') (Join-Path $golden 'approved') $out $mode
 if($LASTEXITCODE){throw "Golden tests failed; see $out"}

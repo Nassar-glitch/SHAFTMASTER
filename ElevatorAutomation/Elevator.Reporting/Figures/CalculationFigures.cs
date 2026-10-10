@@ -66,12 +66,13 @@ namespace Elevator.Reporting.Figures
 
         // ---------- F1 shaft plan ----------
         /// <summary>Figure F1: shaft plan with car, counterweight, rails and dimensions.</summary>
-        public static Figure ShaftPlan(ElevatorParameters p, IRailSection carRail, IRailSection cwRail)
+        public static Figure ShaftPlan(ElevatorParameters p, IRailSection carRail, IRailSection cwRail, double doorShiftMm = 0)
         {
             var f = new Figure { Id = "F1", Title = "Shaft plan", Schematic = false };
             var v = new FigureView(-Wall, -Wall, p.SW + Wall, p.SD + Wall, 24, 16, 100, 136);
             f.View = v;
-            double dl = p.X("doorLeft"), dr = p.X("doorRight");
+            // An automatic side-opening door is shifted from the shaft centre (doorShiftMm; 0 for every other door).
+            double dl = p.X("doorLeft") + doorShiftMm, dr = p.X("doorRight") + doorShiftMm;
             bool door = p.DoorWidth > 0 && dl > 0 && dr < p.SW;
             // Walls (symbolic hatched band) with the entrance opening in the front wall, from the plan geometry.
             DrawWalls(p, f, v, dl, dr, door);
