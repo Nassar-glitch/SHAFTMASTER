@@ -31,7 +31,7 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 | 2 | System | Selection | Current: geared traction, machine room above, 1:1, with or without deflector. Future: 2:1, MRL gearless, hydraulic, home lift. |
 | 3 | Rated load Q | Input | Entered by the designer, or taken from the client requirement. A new project opens with 630 kg. Persons = floor(Q / 75) is shown. |
 | 4 | Rated speed | Preset | Geared traction: 1.0 m/s. |
-| 5 | Doors | Requirement + optional size | The requirement is one of: Manual, Automatic sliding side-opening (telescopic), or Automatic centre-opening. The clear opening is optional: when the designer gives it, it is used; otherwise the application selects the largest standard opening (700/800/900/1000/1100) that fits the shaft width/depth for that door type. |
+| 5 | Doors | User choice + optional size | See "Doors (agreed 2026-10-10)" below. |
 | 6 | Car internal dimensions | Derived | From the shaft, rails, counterweight and door allowances (the shared plan recipe). The Table 6 area-versus-load check goes to the Design Notes file only. |
 | 7 | Masses | Preset / derived | Car mass P and machine mass from the capacity table (interpolated). CW = P + q·Q, with q = 0.5. |
 | 8 | Guide rails | Ladder | Car rails: Q ≤ 800 kg T70/65/9; 801–1600 kg T89/62/16; above that, or goods/bed lifts, T90/75/16. CW rails: Q ≤ 1000 kg T50/50/5; above that T70/65/9. Verified by the EN 81-50 5.10 rail check once it exists. |
@@ -42,6 +42,30 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 | 12 | Guide-shoe spacing h | Preset | 2800 mm, the vertical centre-to-centre distance between the upper and lower car guide shoes on the car frame. Agreed 2026-10-08. |
 | 13 | Machine room | Ladder / check | Machine beams (existing selector). Lifting hook capacity of at least 10 kN. |
 | 14 | Outputs | Generated | Native drawings, STEP, the calculation sheet, and the Design Notes file. |
+
+## Doors (agreed 2026-10-10)
+
+- **Types:** Manual (existing), Automatic 2S (two-panel telescopic side opening), Automatic 2C (two-panel centre opening). The user chooses the type; new projects keep Manual.
+- **Clear opening:** optional. Standard sizes: 700, 800, 900, 1000, 1200.
+  - When blank, the application selects the largest size that fits by the rules.
+  - When the user enters a size that does not fit, the field shows a short "does not fit" message with the reason. Design Notes gives the car or shaft width needed.
+- **Handing (2S):** the stacking side is opposite the speed governor by default (right in the reference drawings). The user can choose left or right.
+- **Clearances are presets, calculated by default and editable** in an "Advanced dimensions" expander on the door page:
+  - front zone split: car door zone, sill gap, landing door zone;
+  - car side returns (fixed side and stacking side for 2S, both sides for 2C);
+  - landing jamb clearances;
+  - the 2S opening offset.
+  Default values come from the user's reference drawings `Automatic 2S800 Geared Rear CW.dwg` and `Automatic 2C800 Geared Rear CW.dwg`:
+  - 2S front zone 245 = 130 + 25 + 90; fixed return 200; stacking return = opening/2 − 50; opening offset 75 mm towards the fixed side for 800 mm;
+  - 2C front zone 220; centred opening.
+  The shaft and car sizes in those drawings are examples, not minimums.
+- **Constraints (logic and code; violations go to Design Notes with the needed dimension, never silently changed):**
+  - the opening fits the car width minus the returns;
+  - the landing door panels stack inside the shaft width with clearance;
+  - no clash with guide rails, brackets, the speed governor or the counterweight;
+  - sill gap ≤ 35 mm and front car-to-wall distance ≤ 150 mm (EN 81-20);
+  - the existing running clearances.
+- **Effects:** the door type changes the front zone, and so the car depth. Every dependent value (car area, Table 6, masses, calculations) follows automatically.
 
 ## Build stages (order)
 
