@@ -12,10 +12,59 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Refactor P0-P8 complete and merged into `main`; v04 released (2026-10-10); disk clean-up done (2026-10-10). Not pushed.
-- **Goal:** (done) ARCHITECTURE-PLAN P0-P8, then release v04.
-- **Last updated:** 2026-10-10 (Claude Code, Executor role; disk clean-up after v04)
+- **Status:** D1 (automatic doors, Core + UI) done on branch `feature/doors-d1`, tiers 1-3 PASS, awaiting Planner. Not merged, not pushed. `main`: refactor P0-P8 complete, v04 released, disk clean-up done.
+- **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
+- **Last updated:** 2026-10-11 (Claude Code, Executor role; D1 automatic doors)
 - **Completed:**
+  - **D1 automatic doors, Core + UI (2026-10-10/11), branch `feature/doors-d1` from `main` `4ec792d`. Not merged, not pushed. Awaiting Planner.** Full numbers and sketch: `ElevatorAutomation/docs/design/DOORS.md`.
+    - **Commits (oldest first):** `5cd59a7` Core: catalog, rules, plan integration, xUnit; `302ee28` Design Notes line, sheet input rows, door golden fixtures; `5818db8` Car & Doors page + tier-2 `doors-ui`; `395c647` DOORS.md, docs index, changelog; `2e3dbcf` fingerprint fix (missing catalog = default); plus this handoff commit. `DESIGN-FLOW.md` was already modified in the working tree when the task began (the Planner's edit): left untouched and not committed.
+    - **Extracted from the two reference drawings** (X from the shaft left wall, D from the shaft front wall; shaft 1720 x 2800, car 1350, DBG 1450, guide axis D 1160):
+
+      | Item | 2S 800 | 2C 800 |
+      |---|---|---|
+      | Front zone (car interior front to front wall) | 245 = 130 + 25 + 90 | 220 = 110 + 30 + 80 (split read from the door boxes; the drawing dimensions only 220) |
+      | Car door zone / sill gap / landing zone | 130 (return 40 + 5 + panel 40 + 5 + panel 40) / 25 / 90 (5 + 40 + 5 + 40) | 110 (return 40 + box 70) / 30 / 80 (10 + box 70) |
+      | Car returns | fixed 200, stacking 350 = 800/2 - 50 | 275 each side |
+      | Opening position | X 385..1185, offset 75 towards the fixed side (wall to opening 385 / 535) | X 460..1260, centred |
+      | Landing frame | X 355..1610: jamb 30, stacking pocket 425 = 800/2 + 25 (110 to the wall) | X 35..1685: pocket 425 each side, 35 to each wall |
+      | Panels | 2 x 407.5 wide, 40 thick, overlap 10, 5 beyond the opening edge | 2 x 399 wide, 39 thick, 2 gap |
+      | Governor | left of the car: X 79..105, starts 159 behind the guide axis, 240 long | same |
+      | Car rail + bracket | X 65..135 (rail face X 135), 65 wide along the depth | same |
+
+    - **Generalised rules** (all presets in `config/presets.json` `Doors`, editable, lock / follow / Reset; `o` = clear opening):
+
+      | Rule | 2S | 2C |
+      |---|---|---|
+      | Front zone | 130 + 25 + 90 = 245 | 110 + 30 + 80 = 220 |
+      | Car return fixed / stacking | 200 / o/2 - 50 | o/4 + 75 each side |
+      | Opening offset towards the fixed side | (stack - fixed)/2 = o/4 - 125 (50, 75, 100, 125, 175) | 0 |
+      | Landing jamb / stacking pocket | 30 / o/2 + 25 | o/2 + 25 each side |
+      | Landing frame to side wall | 35 | 35 |
+      | Min car width | 1.5 o + 150 | 1.5 o + 150 |
+      | Min shaft width (landing) | o + 2 max(o/2 + 25 + 35 - offset, 30 + 35 + offset) | 2 o + 120 |
+
+      Per size: min car 1200 / 1350 / 1500 / 1650 / 1950 for 700 / 800 / 900 / 1000 / 1200; 2S landing 1420 / 1570 / 1720 / 1870 / 2170; 2C landing 1520 / 1720 / 1920 / 2120 / 2520. Handing 2S: Auto = opposite the governor (catalog `GovernorSide` Left, so stacking right), or Left / Right locked; exact mirror. Returns are minimums: in a wider car the offset is kept and the slack is shared by both returns.
+    - **What was built:**
+      - Core (`Elevator.Core/Doors`): `DoorTypes`, `DoorCatalog` (+ `DoorTypePreset`, `DoorSizePreset`, `DoorEnvelopes`, in-code default equal to presets.json), `DoorSettings` (locked values in `ElevatorProject.Extensions["doors"]`, lock = key in `UserEditedFields`; a Manual project stores nothing, so its JSON is byte-identical), `DoorInput`, `DoorLayout` / `DoorProblem`, `DoorRules` (largest fitting size when blank; locked size validated with reason; opening position, landing geometry; checks for car width, landing width, standard size, sill gap <= 35, front wall to car door <= 150, clash with car rails and brackets, CW rails and frame, governor), `DoorFlow` (set / lock / reset, messages, Design Notes line).
+      - Plan: `DesignRules.Calculate(..., DoorInput)` overload (null = the existing recipe): the front zone replaces the 125 mm front allowance, so the car depth, TZ, car rows and everything downstream follow; the size is selected or validated on the finished plan. Wired in `ElevatorDesignEngine` (both calls), the rope / traction deflector pitch, the FF geometry and the calculation sheet. `DesignContext.Doors` carries the catalog (set by `PresetFlow` from the library; null = default).
+      - Fingerprints: Manual hashes are exactly as before (rope, FF, chassis-geometry, context, library hashes). An automatic door adds `DoorFingerprint.Extend`; the library hash and the context hash exclude `Doors`.
+      - Reporting: Design Notes one recommendation line when a size or type does not fit ("... door, 1200 mm clear opening does not fit: needs a car width of at least 2120 mm and a shaft width of at least 2520 mm."); the sheet input table adds Car door / Door clear opening / Door stacking side only for an automatic door (the calculation sheet itself carries no remark); figure F1 shifts the 2S opening.
+      - UI (`Pages/CarDoors`): door type, clear opening (empty while selected by the rules; "In use: N mm" shown), handing (2S), "Advanced dimensions" expander (every clearance, editable, Reset per field), red "does not fit: ..." message, nothing else. Manual: only the door type is added.
+    - **Findings / decisions for the Planner (details in DOORS.md section 4):**
+      1. The equipment profile gives a 1320 mm car in the 1720 shaft (150 per side), the drawings 135 and 1350. On the reference shaft 1720 x 2800 both types therefore auto-select 700; 800 needs a 1350 car, a 1750 shaft (user-locked 800 shows "does not fit: needs car width 1350 mm, shaft width 1750 mm"). The 800 numbers above are reproduced exactly when the car is 1350 (tests). Changing the allowance would change the Manual recipe: not done.
+      2. 2C car return generalisation (o/4 + 75) is a proposal from one drawing; the alternative is a constant 275. The 2C front-zone split 110 / 30 / 80 is read from the door boxes.
+      3. **Drawings are not changed (D2):** the plan, sections and STEP still draw the Manual door and read `ElevatorParameters.DoorWidth` centred. Generating drawings for an automatic door uses the new car depth (the engine plan feeds the updaters) but the door entities are not drawn from the layout; `DoorLayout` (opening X, landing X, panels, zones) is ready for D2. The AutoCAD commands that call `DesignRules.Calculate` from the legacy `ProjectInput` still use the Manual recipe. Please decide whether generation should be blocked for automatic doors until D2.
+      4. A locked clearance applies to both automatic types (keys are not per type).
+      5. `ElevatorParameters` was not extended (a new field changed the chassis fingerprint through its serialised plan); the 2S offset is `DoorLayout.CentreShiftMm`.
+    - **Tests:**
+      - Tier 1 (`20261011-001130`): core-net8.0 PASS (566 incl. checks), core-net48 PASS (698), reporting-net8.0 / net48 PASS (161 each), golden PASS (634 files: 566 existing compared unchanged + 68 new), sheet-wpf PASS (8285).
+      - Tier 2: presets-ui 59, rope-ui 33, sheet-ui 63, calculation-ui 54, basic 67, safety-pit-ui 35, safety-pit-draft-ui 117, ff-ui 126, new `doors-ui` 32: all PASS.
+      - Tier 3: integration 22 (four-view snapshots equal to the v01 Core, 32 protected files, FF native / STEP, native golden), presets-native 6, sheet-word-render 8285: all PASS. (An earlier all-tier run failed in `integration` and `sheet-word-render` only because the shell resolved `python` to the Windows Store stub; it passed with `C:\Users\ABDULLAH NASSAR\AppData\Local\Python\bin` first on PATH. An earlier tier-1 run failed on the four new door fixtures' rope fingerprint (catalog null versus default); fixed in `2e3dbcf`.)
+      - New xUnit `DoorTests` (29 per framework): reference 2S / 2C 800 numbers exact; handing mirror; governor side; every size x type x four shafts against the closed form (car and landing needs, auto = largest fitting); reference shaft gives 700 and the 800 message; non-standard size; front zone / car depth; Manual recipe and project JSON unchanged; clashes (car rail, CW rails, CW, governor); sill gap 35 / 36 and 150 / 151; lock / follow / reset (opening, clearances, handing); project round trip; presets.json equals the default catalog; library without Doors; catalog edit; engine and FF geometry follow the door; PresetFlow wiring; Design Notes text.
+      - New golden fixtures `doors-2s-auto`, `doors-2c-auto`, `doors-2s-left-1000`, `doors-2c-1200-no-fit` approved with the new `tools/run-golden.ps1 -MakeDoorFixtures` / `-ApproveNew` (writes only files without an approved copy; existing approved files are still compared). `git diff main` on `tests/golden/approved*`: 68 added files, 0 modified.
+    - **Release hashes unchanged:** ShaftMaster.exe v01 DC8A76A3, v02 57FBE447, v03 9CFD5FAB, v04 A0A3BA22; v02 / v03 / v04 `SHA256SUMS.txt` all OK (43 / 52 / 43 files). No release folder, template, DWG, DESIGN-FLOW.md or ARCHITECTURE-PLAN.md touched.
+    - **Not run / not done:** drawing and STEP output for automatic doors (D2); no manual check of the window by the user; the CI workflow (ubuntu) was not run; documents other than DOORS.md, the docs index, TESTING.md and CHANGELOG were not updated.
+    - **Next step:** Awaiting Planner (decisions 1-4 above, then D2 drawings).
   - **Disk clean-up (2026-10-10, approved by the user in chat; plan from `artifacts/disk-cleanup-proposal.md`, re-checked against v04):**
     - Before: tier 1 PASS (`20261010-082741`); v02, v03, v04 SHA256SUMS all OK (v01 has none; its ShaftMaster.exe DC8A76A3). After: tier 1 PASS (`20261010-083602`); v02, v03, v04 SHA256SUMS OK; ShaftMaster.exe v01 DC8A76A3, v02 57FBE447, v03 9CFD5FAB, v04 A0A3BA22 unchanged. `git status` shows no tracked file removed.
     - **Archived** (zipped to `ElevatorAutomation/archive/<name>.zip`, file counts checked against the folder, then the folder sent to the Recycle Bin): the 7 candidates `bin-shaftmaster-{presets,ropes,calcsheet,ff,safety-pit,basic,calculations}-candidate`. `archive/` is in `.gitignore`.
