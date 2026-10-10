@@ -12,10 +12,12 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** Complete, awaiting Planner (2026-10-10): ARCHITECTURE-PLAN P8 "Repository polish" on branch `refactor/p8-polish` (from `main`, after the P7 merge). Not merged, not pushed. P7 was merged into main after a passing tier 1 (`20261010-000239`, 141 s).
-- **Goal:** P8: docs reorganised, README per project, CHANGELOG, tools/release.ps1, tracked legacy outputs trimmed. No behaviour change; no ShaftMaster.* rename, no GitHub upload.
-- **Last updated:** 2026-10-10 (Claude Code, Executor role; P7 merge, then P8)
+- **Status:** Refactor P0-P8 complete and merged into `main`; v04 released (2026-10-10). Not pushed.
+- **Goal:** (done) ARCHITECTURE-PLAN P0-P8, then release v04.
+- **Last updated:** 2026-10-10 (Claude Code, Executor role; P8 merge, v04 release)
 - **Completed:**
+  - P8 merged into `main` (--no-ff) after a passing tier 1 (`20261010-080718`, 144 s). CHANGELOG "Unreleased" moved to `## [v04] - 2026-10-10`.
+  - **v04 released** with `tools/release.ps1 -Version v04` (user had tested STEP export, drawings and the calculation sheet in the dry-run build): tiers 1-3 PASS, 17 suites (`20261010-081016`); folder `ElevatorAutomation/bin-shaftmaster-v04` (43 files + SHA256SUMS.txt + RELEASE-NOTES.md); `ShaftMaster.exe` SHA-256 `A0A3BA227DB87323CA4BED277D5A06129EBE1E9B500C231CA4A39C5EFA9902BA` (identical to the dry-run build). `sha256sum -c SHA256SUMS.txt`: all OK. v01 DC8A76A3, v02 57FBE447, v03 9CFD5FAB unchanged; v03 and v02 still match their own SHA256SUMS.txt. The release folder is ignored by git (bin-*).
   - P7 merged into `main` (--no-ff) after the pending `.github/workflows/ci.yml` change was committed and tier 1 passed. Not pushed.
   - ARCHITECTURE-PLAN P8 "Repository polish" (2026-10-10), branch `refactor/p8-polish`. Commits (oldest first): `c0beb33` P8: untrack legacy outputs that no test reads (the seven golden drawings stay); `c106a51` P8: untrack legacy outputs that no test reads (the seven golden drawings and cad-test-results.json stay); `a2b56e8` P8: docs reorganised into architecture/, design/, calculations/, presets/, testing/, releases/; links fixed; `b8b9301` P8: docs overview and index, README per project, CHANGELOG; `07a03ac` P8: tools/release.ps1 (build, tiers 1-3, copy, release notes, SHA256SUMS, verify; -DryRun); `f13a281` P8: release.ps1 picks the latest timestamped test run.
     - **Docs tree (`ElevatorAutomation/docs/`):** `README.md` (index); `architecture/` (OVERVIEW.md new, ELEVATOR_SOLUTION_ARCHITECTURE, ELEVATOR_PROJECT_MODEL, CURRENT_INPUT_INVENTORY, MACHINE_ROOM_IMPLEMENTATION, MACHINE_ROOM_CODE_REQUIREMENTS, CHASSIS_DEPENDENCY_CORRECTION, SECTION_BB_IMPLEMENTATION, SECTION_BB_INSPECTION, STEP-EXPORT); `design/` (README.md linking to DESIGN-FLOW.md, ARCHITECTURE-PLAN.md, CALCULATION_ROADMAP.md); `calculations/` (CALCULATION-SHEET-EXPORT, CALCULATION-SHEET-FIGURES, CAR-GUIDE-FORCES, ROPE-TRACTION-CALCULATIONS, SAFETY-PIT-CALCULATIONS, SIMPLIFIED-CALCULATIONS); `presets/` (PRESETS); `testing/` (TESTING, evidence/); `releases/` (README, SHAFTMASTER-UI-RESULTS, STEP-EXPORT-RESULTS). Moves were `git mv`. Links fixed in CLAUDE.md, README.md, ElevatorAutomation/README.md, CALCULATION_ROADMAP.md, ci.yml, the Desktop csproj (STEP-EXPORT.md and SHAFTMASTER-UI-RESULTS.md still copied to the output), code comments and the docs themselves; a script checked every relative Markdown link of the 43 tracked .md files: 0 broken. SESSION_HANDOFF.md history and ARCHITECTURE-PLAN.md (not to be touched) still name the old flat paths in plain text; the release folders' own doc copies are unchanged.
@@ -1068,7 +1070,7 @@ This file is the shared status channel between the user's Planner chat and Execu
        - Proposal: the stalled check covers only the counterweight-on-buffers case (μ = 0.2 is given for "counterweight stalled"; EN 81-50 5.11.2.2.3 also mentions the lowest position). It applies only where EN 81-20 5.5.3 c) 1) traction limiting is used, not the 5.5.3 c) 2) electric safety device.
   1. Release target is the user's decision: keep FF as a separate candidate, combine it with the safety/pit candidate, or replace `bin-shaftmaster-v01`. This applies to release promotion and does not block planning or implementing the next calculation in a separate candidate.
   2. ~~Open FF engineering questions~~: resolved by the user decision on 2026-10-07 (user-approved interpretation; see `CAR-GUIDE-FORCES.md`).
-- **Next step:** Awaiting Planner (review and merge of `refactor/p8-polish`). v04 release only after the user has tested STEP export manually.
+- **Next step:** Awaiting Planner.
 
 ## Decisions and constraints
 
