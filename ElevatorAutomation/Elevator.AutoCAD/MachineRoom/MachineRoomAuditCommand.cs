@@ -28,7 +28,12 @@ namespace Elevator.AutoCAD.MachineRoom
                     var profile = Configuration.Read<EquipmentProfile>(family.ProfileFile);
                     var plan = DrawingReader.Read(doc.Database, tr);
                     var mr = MachineRoomDrawing.Read(doc.Database, tr);
-                    var design = DesignRules.Calculate(input.SW, input.SD, profile, plan.ElevatorParameters.CwDepth);
+                    var design = DesignRules.Calculate(
+                        input.SW,
+                        input.SD,
+                        profile,
+                        plan.ElevatorParameters.CwDepth,
+                        AutomaticDoorPlan.InputFor(doc.Database, tr));
                     design.MachineRoom = MachineRoomRules.Calculate(input, design, mr.Extensions);
                     MachineRoomUpdater.Validate(mr, design);
                     var result = MachineRoomGeometryAudit.Run(mr, design);

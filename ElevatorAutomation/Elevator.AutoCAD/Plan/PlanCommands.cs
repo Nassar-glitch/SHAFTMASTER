@@ -139,7 +139,12 @@ namespace Elevator.AutoCAD.Plan
                         var family = ElevatorProjectCommand.Family(input);
                         CommonRules.ValidateProject(input, family);
                         var profile = Configuration.Read<EquipmentProfile>(family.ProfileFile);
-                        var design = DesignRules.Calculate(input.SW, input.SD, profile, snapshot.ElevatorParameters.CwDepth);
+                        var design = DesignRules.Calculate(
+                            input.SW,
+                            input.SD,
+                            profile,
+                            snapshot.ElevatorParameters.CwDepth,
+                            AutomaticDoorPlan.InputFor(doc.Database, tr));
                         var gaps = DrawingUpdater.Preflight(snapshot, new PlanGeometryAdapter(snapshot, design));
                         PlanAnnotationRules.Render(recipe, PlanAnnotationRules.Values(input, design, gaps), PlanAnnotations.Escape);
                     }

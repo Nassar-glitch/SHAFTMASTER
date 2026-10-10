@@ -77,7 +77,12 @@ namespace Elevator.AutoCAD.Common
                 p.SW = sw;
                 p.SD = sd;
                 var profile = Configuration.Read<EquipmentProfile>(Family(p).ProfileFile);
-                var target = DesignRules.Calculate(p.SW, p.SD, profile, s.ElevatorParameters.CwDepth);
+                var target = DesignRules.Calculate(
+                    p.SW,
+                    p.SD,
+                    profile,
+                    s.ElevatorParameters.CwDepth,
+                    AutomaticDoorPlan.InputFor(doc.Database, tr));
                 DrawingUpdater.Preflight(s, new PlanGeometryAdapter(s, target));
                 ProjectDataStorage.Write(doc.Database, tr, "Project", p);
                 tr.Commit();

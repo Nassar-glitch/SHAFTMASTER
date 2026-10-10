@@ -1,6 +1,8 @@
 using System.IO;
 using System.Reflection;
 using Autodesk.AutoCAD.Geometry;
+using Elevator.Core.Doors;
+using Elevator.Core.Presets;
 using Elevator.Core.Serialization;
 
 namespace Elevator.AutoCAD.Common
@@ -32,6 +34,28 @@ namespace Elevator.AutoCAD.Common
                 .CoreJson
                 .CreateWithDefaultLimit()
                 .Deserialize<T>(File.ReadAllText(Path.Combine(Root, "config", file)));
+        }
+
+        static DoorCatalog doorCatalog;
+
+        /// <summary>
+        /// The door catalog of config/presets.json (the preset library of the application); the shipped default when the file or its
+        /// "Doors" section is missing.
+        /// </summary>
+        public static DoorCatalog DoorCatalog()
+        {
+            if (doorCatalog == null)
+            {
+                try
+                {
+                    doorCatalog = PresetLibrary.Load(Path.Combine(Root, "config", "presets.json")).DoorsOrDefault();
+                }
+                catch (System.Exception)
+                {
+                    doorCatalog = Elevator.Core.Doors.DoorCatalog.Default();
+                }
+            }
+            return doorCatalog;
         }
 
         /// <summary>Writes an object as a JSON file.</summary>

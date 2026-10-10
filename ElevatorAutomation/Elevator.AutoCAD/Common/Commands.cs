@@ -79,7 +79,12 @@ namespace Elevator.AutoCAD.Common
                     throw new InvalidOperationException("Project data and template identifiers differ.");
                 profile = Configuration.Read<EquipmentProfile>(family.ProfileFile);
                 var snapshot = DrawingReader.Read(doc.Database, tr);
-                design = DesignRules.Calculate(input.SW, input.SD, profile, snapshot.ElevatorParameters.CwDepth);
+                design = DesignRules.Calculate(
+                    input.SW,
+                    input.SD,
+                    profile,
+                    snapshot.ElevatorParameters.CwDepth,
+                    AutomaticDoorPlan.InputFor(doc.Database, tr));
                 if (views.Any(v => v.ViewId == "MachineRoom"))
                 {
                     var mr = MachineRoomDrawing.Read(doc.Database, tr);
