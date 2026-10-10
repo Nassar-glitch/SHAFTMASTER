@@ -6,7 +6,9 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
-Internal refactor ARCHITECTURE-PLAN P0–P8. No user-visible change: no equation, preset, output text, drawing entity or file format differs from v03
+## [v04] — 2026-10-10
+
+v04 is the first release built from the refactored sources (ARCHITECTURE-PLAN P0–P8). Internal; no user-visible change: no equation, preset, output text, drawing entity or file format differs from v03
 (golden-master tests and the four-view comparison with the release Core pass; the v01, v02 and v03 files are unchanged).
 
 - **P0 Safety net:** golden-master capture of 36 fixtures (results, fingerprints, project JSON round trips, calculation-sheet and Design Notes text, SVG
