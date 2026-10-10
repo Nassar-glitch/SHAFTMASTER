@@ -58,3 +58,6 @@ legacy/ElevatorPlanGenerator/output/*
 legacy/ElevatorPlanGenerator/tests/previous-runs/
 legacy/ElevatorPlanGenerator/tests/RuleTests.exe
 legacy/ElevatorPlanGenerator/tests/generated-preview.*
+
+# Zipped superseded candidate builds (disk clean-up 2026-10-10)
+ElevatorAutomation/archive/
