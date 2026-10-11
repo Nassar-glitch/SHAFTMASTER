@@ -11,6 +11,11 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
   (lock, follow, Reset). The front zone sets the car depth; a size or type that does not fit is reported with the needed car or shaft width (field
   message and Design Notes). Manual doors and existing projects are unchanged. See `ElevatorAutomation/docs/design/DOORS.md`.
 
+- **Automatic doors, D2 (drawings):** the native plan draws a 2S / 2C door from the door layout (closed car and landing panels, landing frame and
+  pocket, car returns, sill lines, wall opening, dimensions in the style of the reference drawings; handing mirrored); the machine-room and A-A
+  recalculations use the door of the project; the calculation-sheet figure F1 and the STEP model show the door. Manual drawings are unchanged.
+  Rules corrected: the returns and offsets of the references are preferred values, the minimums bind (see `docs/design/DOORS.md`).
+
 ## [v04] — 2026-10-10
 
 v04 is the first release built from the refactored sources (ARCHITECTURE-PLAN P0–P8). Internal; no user-visible change: no equation, preset, output text, drawing entity or file format differs from v03
