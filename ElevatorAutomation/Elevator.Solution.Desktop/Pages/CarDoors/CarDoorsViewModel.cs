@@ -13,7 +13,7 @@ namespace Elevator.Solution.Desktop.Pages
   public CarDoorsViewModel():base("CAR & DOORS"){}
   // Served floors only.
   public static List<Choice> DisplayFloors(ElevatorProject project){return project.Building.Floors.Where(f=>f.IsServed).Select(f=>new Choice{Id=f.FloorId,Name=f.Name}).ToList();}
-  public static List<Choice> Types(){return new List<Choice>{new Choice{Id=DoorTypes.Manual,Name="Manual"},new Choice{Id=DoorTypes.Automatic2S,Name="Automatic 2S · side opening"},new Choice{Id=DoorTypes.Automatic2C,Name="Automatic 2C · centre opening"}};}
+  public static List<Choice> Types(){return new List<Choice>{new Choice{Id=DoorTypes.Manual,Name="Manual"},new Choice{Id=DoorTypes.Automatic2S,Name="Side opening (2S)"},new Choice{Id=DoorTypes.Automatic2C,Name="Centre opening (2C)"}};}
   public static List<Choice> Sides(){return new List<Choice>{new Choice{Id=DoorTypes.Left,Name="Left"},new Choice{Id=DoorTypes.Right,Name="Right"}};}
   public static List<Choice> Handings(){return new List<Choice>{new Choice{Id=DoorTypes.Auto,Name="Auto"},new Choice{Id=DoorTypes.Left,Name="Left"},new Choice{Id=DoorTypes.Right,Name="Right"}};}
   // The clearances of the Advanced dimensions expander that a type uses, in order.
@@ -22,8 +22,19 @@ namespace Elevator.Solution.Desktop.Pages
    if(type==DoorTypes.Automatic2S)return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.StackReturnKey,DoorSettings.MinFixedReturnKey,DoorSettings.MinStackReturnKey,DoorSettings.LandingJambKey,DoorSettings.LandingJambMinKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
    return new[]{DoorSettings.CarZoneKey,DoorSettings.SillGapKey,DoorSettings.LandingZoneKey,DoorSettings.FixedReturnKey,DoorSettings.MinFixedReturnKey,DoorSettings.LandingPocketKey,DoorSettings.WallClearanceKey};
   }
-  public static string Label(string type,string key)
+  // stackRight: the panels stack on the right (the fixed side is then the left); the 2S labels name Left / Right as seen in the plan.
+  public static string Label(string type,string key,bool stackRight=true)
   {
+   if(type==DoorTypes.Automatic2S)
+   {
+    string fixedSide=stackRight?"left":"right",stackSide=stackRight?"right":"left";
+    if(key==DoorSettings.FixedReturnKey)return "Car return, "+fixedSide+", preferred (mm)";
+    if(key==DoorSettings.StackReturnKey)return "Car return, "+stackSide+", preferred (mm)";
+    if(key==DoorSettings.MinFixedReturnKey)return "Car return, "+fixedSide+", minimum (mm)";
+    if(key==DoorSettings.MinStackReturnKey)return "Car return, "+stackSide+", minimum (mm)";
+    if(key==DoorSettings.LandingJambKey)return "Landing jamb, "+fixedSide+", preferred (mm)";
+    if(key==DoorSettings.LandingJambMinKey)return "Landing jamb, "+fixedSide+", minimum (mm)";
+   }
    if(type==DoorTypes.Automatic2C)
    {
     if(key==DoorSettings.FixedReturnKey)return "Car return, each side, preferred (mm)";

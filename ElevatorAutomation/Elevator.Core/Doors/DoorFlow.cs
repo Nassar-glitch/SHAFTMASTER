@@ -21,13 +21,13 @@ namespace Elevator.Core.Doors
                 case DoorSettings.OpeningKey:
                     return "Clear opening (mm)";
                 case DoorSettings.HandingKey:
-                    return "Handing";
+                    return "Panels stack to";
                 case DoorSettings.CarZoneKey:
-                    return "Car door zone (mm)";
+                    return "Car door depth (mm)";
                 case DoorSettings.SillGapKey:
                     return "Sill gap (mm)";
                 case DoorSettings.LandingZoneKey:
-                    return "Landing door zone (mm)";
+                    return "Landing door depth (mm)";
                 case DoorSettings.FixedReturnKey:
                     return "Car return, fixed side, preferred (mm)";
                 case DoorSettings.StackReturnKey:

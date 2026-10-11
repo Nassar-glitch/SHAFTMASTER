@@ -89,8 +89,12 @@ public static class DoorsUiTests
                 // ---------- handing ----------
                 Choices()["Doors.Handing"].SelectedIndex = Array.IndexOf(DoorTypes.Handings, DoorTypes.Left); await Ready();
                 Check(DoorSettings.Read(Session().Project).Handing == DoorTypes.Left && Session().Project.UserEditedFields.Contains(DoorSettings.HandingKey), "Handing Left locks");
+                Check(Name(Editors()["Doors.FixedReturnMm"]) == "Car return, right, preferred (mm)" && Name(Editors()["Doors.StackReturnMm"]) == "Car return, left, preferred (mm)", "Panels stack left: the fixed return is the right one");
                 Choices()["Doors.Handing"].SelectedIndex = Array.IndexOf(DoorTypes.Handings, DoorTypes.Auto); await Ready();
                 Check(!Session().Project.UserEditedFields.Contains(DoorSettings.HandingKey), "Handing Auto resets");
+                Check(Name(Editors()["Doors.FixedReturnMm"]) == "Car return, left, preferred (mm)" && Name(Editors()["Doors.StackReturnMm"]) == "Car return, right, preferred (mm)" && Name(Editors()["Doors.CarZoneMm"]) == "Car door depth (mm)" && Name(Editors()["Doors.LandingZoneMm"]) == "Landing door depth (mm)", "Labels name Left / Right through the handing (stack right: fixed return left) and the depths");
+                Check(Name(Choices()["Doors.Handing"]) == "Panels stack to" && Name(Choices()["Doors.Type"]) == "Door type", "The handing field is called Panels stack to");
+                Check(((System.Collections.IEnumerable)Choices()["Doors.Type"].ItemsSource).Cast<Choice>().Select(c => c.Name).SequenceEqual(new[] { "Manual", "Side opening (2S)", "Centre opening (2C)" }), "Door type names are Manual, Side opening (2S), Centre opening (2C)");
                 // ---------- Doors Offset ----------
                 Check(Editors().ContainsKey("Doors.OffsetMm") && Choices().ContainsKey("Doors.OffsetSide") && !Editors().ContainsKey("Doors.OpeningOffsetMm"), "2S page offers the Doors Offset field with a Left / Right selector (no former opening offset)");
                 var off = Off();
@@ -115,7 +119,7 @@ public static class DoorsUiTests
                 Check(Block("Door fit message").Text.Contains("sill gap 40 mm exceeds 35 mm"), "A sill gap above 35 mm is reported");
                 await Expand();
                 Check(Editors().ContainsKey("Doors.MinFixedReturnMm") && Editors()["Doors.MinFixedReturnMm"].Text == "0" && Editors()["Doors.MinStackReturnMm"].Text == "0" && Editors()["Doors.LandingFixedJambMinMm"].Text == "0" && Editors()["Doors.LandingWallClearanceMm"].Text == "25", "Minimums are fields too: returns 0, fixed jamb 0, frame to wall 25");
-                Check(Editors()["Doors.CarZoneMm"].Text == "130" && ResetButton("Sill gap (mm)").IsEnabled && !ResetButton("Car door zone (mm)").IsEnabled, "Only the edited field is locked");
+                Check(Editors()["Doors.CarZoneMm"].Text == "130" && ResetButton("Sill gap (mm)").IsEnabled && !ResetButton("Car door depth (mm)").IsEnabled, "Only the edited field is locked");
                 ResetButton("Sill gap (mm)").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await Ready();
                 Check(Editors()["Doors.SillGapMm"].Text == "25" && Plan().CarFront == 245, "Reset per field restores the preset");
                 // ---------- unlocked values follow the shaft ----------

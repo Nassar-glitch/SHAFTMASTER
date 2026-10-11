@@ -48,10 +48,10 @@ namespace Elevator.Solution.Desktop.Pages
    if(type==DoorTypes.Automatic2S)
    {
     var hp=new StackPanel{MaxWidth=300,HorizontalAlignment=HorizontalAlignment.Left};
-    handing=new ComboBox{ItemsSource=CarDoorsViewModel.Handings(),DisplayMemberPath="Name",SelectedValuePath="Id",Padding=new Thickness(8)};AutomationProperties.SetName(handing,"Door handing");
+    handing=new ComboBox{ItemsSource=CarDoorsViewModel.Handings(),DisplayMemberPath="Name",SelectedValuePath="Id",Padding=new Thickness(8)};AutomationProperties.SetName(handing,DoorFlow.Label(DoorSettings.HandingKey));
     handing.SelectedValue=DoorFlow.IsLocked(Session.Project,DoorSettings.HandingKey)?DoorSettings.Read(Session.Project).Handing:DoorTypes.Auto;
-    handing.SelectionChanged+=(s,e)=>{if(programmatic)return;var id=handing.SelectedValue as string;if(id==null)return;DoorFlow.SetHanding(Session.Project,id);Changed();Refresh(null);};
-    Form.PresetChoices["Doors.Handing"]=handing;hp.Children.Add(handing);Content.Children.Add(Form.FormRow("Handing",hp));
+    handing.SelectionChanged+=(s,e)=>{if(programmatic)return;var id=handing.SelectedValue as string;if(id==null)return;DoorFlow.SetHanding(Session.Project,id);Changed();Shell.ShowPage(Key);};
+    Form.PresetChoices["Doors.Handing"]=handing;hp.Children.Add(handing);Content.Children.Add(Form.FormRow(DoorFlow.Label(DoorSettings.HandingKey),hp));
    }
    BuildOffset();
    // Advanced dimensions: every clearance, with Reset per field.
@@ -100,7 +100,7 @@ namespace Elevator.Solution.Desktop.Pages
   }
   void AddClearance(string type,string key)
   {
-   string label=CarDoorsViewModel.Label(type,key);var panel=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Left};
+   var stackLayout=CarDoorsViewModel.Layout(Session,Live,Context);string label=CarDoorsViewModel.Label(type,key,stackLayout==null||stackLayout.StackingSide!=DoorTypes.Left);var panel=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Left};
    var box=Box(key,label);box.Width=130;panel.Children.Add(box);panel.Children.Add(ResetButton(key,label));
    Content.Children.Add(Form.FormRow(label,panel));
   }
