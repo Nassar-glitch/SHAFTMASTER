@@ -1,4 +1,4 @@
-"""D2 tier 3: reads the automatic door geometry back from the generated DWGs and compares it with the DoorLayout numbers.
+"""D2 / D3 tier 3: reads the automatic door geometry back from the generated DWGs and compares it with the DoorLayout numbers.
 
 usage: verify_doors.py <output folder>   (the folder DoorsNativeTests wrote: <id>.dwg and <id>-expected.json)
 
@@ -117,7 +117,7 @@ def run_case(folder, case_id):
     expected_hidden = (["Plan.Door.Opening"] + ["Plan.CenterFront.Part%03d" % i for i in range(1, 14)] + ["Plan.Entrance.Part00%d" % i for i in range(2, 8)] + ["Plan.DoorLeft.Part00%d" % i for i in range(1, 5)]
                        + ["Plan.DoorRight.Part00%d" % i for i in range(1, 8)] + ["Plan.DoorSpan.Part00%d" % i for i in range(1, 4)]
                        + ["Plan.DoorLeader.Part001", "Plan.Cabin.Inner.Front", "Plan.Cabin.Part002", "Plan.Cabin.Part003", "Plan.Cabin.Part004"]
-                       + ["Plan.Dimension.Part0%02d" % i for i in range(6, 14)]
+                       + ["Plan.Dimension.Part0%02d" % i for i in range(6, 14)] + ["Plan.Dimension.Part020", "Plan.Dimension.Part031"]
                        + ["Plan.Wall.Part001", "Plan.Wall.Part004", "Plan.Wall.Part005", "Plan.Wall.Part006",
                           "Plan.Shaft.InnerOutline.EntranceDatum"])
     check(hidden == sorted(expected_hidden), case_id + ": hidden template entities (%d) equal the expected list; found %s" % (len(hidden), hidden))
@@ -156,11 +156,21 @@ def run_case(folder, case_id):
 
     want_rect = {"Car": [], "0": [], "step&guides": []}
     want_line = {"0": [], "DL": [], "CL": []}
+    want_open = []
+    cd_end = front - 40
 
     def panel(r, outline):
         want_rect[outline].append(r)
         for k in (1, 2, 3):
             want_line["0"].append(ln(r[0], r[2] + 10 * k, r[1], r[2] + 10 * k))
+
+    def band(x_closed, x_end, d0, d1, layer):
+        """The band of a panel row (D3): open outline with 1 mm stubs at the closed end and an open 1 mm inset line."""
+        if abs(x_end - x_closed) < 2:
+            return
+        inner = x_end - 1 if x_end > x_closed else x_end  # inset 1 mm short of the right-hand end only (the references)
+        want_open.append((layer, ((x_closed, d0 + 1), (x_closed, d0), (x_end, d0), (x_end, d1), (x_closed, d1), (x_closed, d1 - 1))))
+        want_open.append((layer, ((x_closed, d0 + 1), (inner, d0 + 1), (inner, d1 - 1), (x_closed, d1 - 1))))
 
     # jamb blocks in the wall opening (double line)
     jp = local(points(ents["Plan.DoorLeft.Part001"][0]))
@@ -177,40 +187,46 @@ def run_case(folder, case_id):
         ot = max(0.0, 2 * pw - o - layout["PanelOverlapMm"])
         ul = layout["LandingLeftX"] if right else sw - layout["LandingRightX"]
         ur = layout["LandingRightX"] if right else sw - layout["LandingLeftX"]
-        want_rect["0"].append(ru(ul, uf, 0, lz))
-        if uf - ul > 8:
-            a, b = sorted((m(ul), m(uf)))
-            want_rect["0"].append((round(a + 3, 2), round(b - 3, 2), 3.0, round(lz - 3, 2)))
-        want_line["0"] += [ln(m(uf + pw), lz, m(ur), lz), ln(m(us + ot), 0, m(ur), 0), ln(m(ur), 0, m(ur), lz)]
+        # frames: one rectangle each for the landing door and the car door, from the fixed-side jamb to the end of the pocket
+        want_rect["0"] += [ru(ul, ur, 0, lz), ru(ul, ur, cd, cd_end)]
+        # fixed-side jamb posts in both frames, inset line closed at the opening edge
+        if uf - ul > 0.5:
+            for d0, d1 in ((0, lz), (cd, cd_end)):
+                want_rect["0"].append(ru(ul, uf, d0, d1))
+                if uf - ul > 6:
+                    inset = m(ul) + (3 if m(ul) < m(uf) else -3)
+                    a_, b_ = sorted((inset, m(uf)))
+                    want_rect["0"].append((round(a_, 2), round(b_, 2), round(d0 + 3, 2), round(d1 - 3, 2)))
         panel(ru(uf, uf + pw, lz - t, lz), "Car")
         panel(ru(us + ot - pw, us + ot, lz - 2 * t - 5, lz - t - 5), "Car")
         panel(ru(uf, uf + pw, cd, cd + t), "Car")
         panel(ru(us + ot - pw, us + ot, cd + t + 5, cd + 2 * t + 5), "Car")
-        p1 = ur - 4
-        p0 = p1 - 106
-        if p0 > us + ot:
-            for d in (lz - t, lz - 2 * t - 5, cd, cd + t + 5):
-                want_rect["Car"].append(ru(p0, p1, d, d + t))
-                a, b = sorted((m(p0), m(p1)))
-                want_rect["Car"].append((round(a, 2), round(b - 1, 2), round(d + 1, 2), round(d + t - 1, 2)))
+        end = ur - 4
+        band(m(uf + pw), m(end), lz - t, lz, "Car")
+        band(m(us + ot), m(end), lz - 2 * t - 5, lz - t - 5, "Car")
+        band(m(uf + pw), m(end), cd, cd + t, "Car")
+        band(m(us + ot), m(end), cd + t + 5, cd + 2 * t + 5, "Car")
     else:
         ll, lr = layout["LandingLeftX"], layout["LandingRightX"]
-        want_rect["0"] += [rc(ll, lr, lz - 70, lz), rc(ll, lr, cd, cd + 70)]
-        dl, dc = lz - 5 - t, cd + 12
+        want_rect["0"] += [rc(ll, lr, max(0.0, lz - 70), lz), rc(ll, lr, cd, cd_end)]
+        dl = lz - min(5.0, max(0.0, (lz - t) / 2)) - t
+        dc = cd + min(12.0, max(0.0, (cd_end - cd - t) / 2))
+        e0, e1 = ll + 4, lr - 4
         for d in (dl, dc):
             panel(rc(ol, ol + pw, d, d + t), "0")
             panel(rc(orr - pw, orr, d, d + t), "0")
-            e0, e1 = ll + 4, lr - 4
-            for x0, x1 in ((e0, e0 + 141), (e1 - 141, e1)):
-                want_rect["0"].append(rc(x0, x1, d, d + t))
-                want_rect["0"].append((round(x0, 2), round(x1 - 1, 2), round(d + 1, 2), round(d + t - 1, 2)))
+            band(ol, e0, d, d + t, "0")
+            band(orr, e1, d, d + t, "0")
 
     got_rect = {"Car": [], "0": [], "step&guides": []}
     got_line = {"0": [], "DL": [], "CL": []}
+    got_open = []
     for k, e in new.items():
         ty = e.dxftype()
         if ty == "LWPOLYLINE" and e.closed and len(list(e.get_points())) == 4 and e.dxf.layer in got_rect:
             got_rect[e.dxf.layer].append(box(local(points(e))))
+        elif ty == "LWPOLYLINE" and not e.closed:
+            got_open.append((e.dxf.layer, tuple(local(points(e)))))
         elif ty == "LINE" and e.dxf.layer in got_line:
             pts = local(points(e))
             got_line[e.dxf.layer].append(ln(pts[0][0], pts[0][1], pts[1][0], pts[1][1]))
@@ -224,6 +240,16 @@ def run_case(folder, case_id):
         check(same(got_line[layer], want_line[layer]),
               "%s: lines on %s: %d found, %d expected\n  found %s\n  want  %s" % (
                   case_id, layer, len(got_line[layer]), len(want_line[layer]), sorted(got_line[layer]), sorted(want_line[layer])))
+    got_open_s = sorted((lay, tuple(round(c, 2) for pt in v for c in pt)) for lay, v in got_open)
+    want_open_s = sorted((lay, tuple(round(c, 2) for pt in v for c in pt)) for lay, v in want_open)
+    check(len(got_open_s) == len(want_open_s) and all(g[0] == w[0] and len(g[1]) == len(w[1]) and all(abs(x - y) <= TOL for x, y in zip(g[1], w[1]))
+                                                        for g, w in zip(got_open_s, want_open_s)),
+          "%s: panel bands (open polylines): %d found, %d expected\n  found %s\n  want  %s" % (case_id, len(got_open_s), len(want_open_s), got_open_s, want_open_s))
+    # every panel sits inside the frame of its door: the panel rectangles are within the frame rectangles (D3, DESIGN-FLOW principle 8)
+    frames = [r for r in want_rect["0"] if abs(r[3] - lz) < 0.01 and r[3] - r[2] >= min(lz, 70) - 0.01] + [r for r in want_rect["0"] if abs(r[2] - cd) < 0.01 and abs(r[3] - cd_end) < 0.01]
+    panels = [r for r in want_rect["Car"]] + ([r for r in want_rect["0"] if kind == "Automatic2C" and r[3] - r[2] <= t + 0.01])
+    inside = all(any(f_[0] - 0.01 <= r[0] and r[1] <= f_[1] + 0.01 and f_[2] - 0.01 <= r[2] and r[3] <= f_[3] + 0.01 for f_ in frames) for r in panels)
+    check(len(frames) >= 2 and inside, case_id + ": every panel is inside its door frame (floating panels: " + str([r for r in panels if not any(f_[0] - 0.01 <= r[0] and r[1] <= f_[1] + 0.01 and f_[2] - 0.01 <= r[2] and r[3] <= f_[3] + 0.01 for f_ in frames)]) + ")")
 
     # ---- the wall opening follows the door: inner outline with its opening at the opening edges +- jamb
     wall_pl = [local(points(e)) for k, e in mine.items() if k in wall_keys and e.dxf.layer == "Wall" and e.dxftype() == "LWPOLYLINE"
@@ -236,18 +262,61 @@ def run_case(folder, case_id):
     dims = [e for k, e in new.items() if e.dxftype() == "DIMENSION"]
     meas = sorted(round(e.get_measurement(), 1) for e in dims)
     centre = (ol + orr) / 2
-    want = [ol, o, sw - orr, o / 2, o / 2, o, ol - car_left, car_right - orr, lz, sg, front - cd]
+    rear = plan["CarRear"]
+    want = [ol, o, sw - orr, o / 2, o / 2, o, ol - car_left, car_right - orr, lz, sg, front - cd, front, rear - front]
     if kind == "Automatic2S" and abs(centre - sw / 2) > 0.05:
         want.append(abs(centre - sw / 2))
     want = sorted(round(v, 1) for v in want)
     check(len(meas) == len(want) and all(abs(a - b) <= 0.06 for a, b in zip(meas, want)), case_id + ": dimensions " + str(meas) + " vs " + str(want))
     texts = sorted(e.dxf.text for e in dims if e.dxf.text.strip())
     check(any("DOOR" in t_ and "X2000" in t_ for t_ in texts) and any("OPENING" in t_ for t_ in texts), case_id + ": DOOR <o>X2000 and OPENING texts")
-    # the three zone dimensions sit in their own columns (no overlap) beside the template front-zone dimension
-    zone = sorted(((round(e.dxf.defpoint.x - ox, 1), round(e.get_measurement(), 1)) for e in dims
-                   if abs(e.dxf.get("angle", 0) - 90) < 0.01 and round(e.get_measurement(), 1) in (lz, sg, front - cd)))
-    check(len(zone) == 3 and len({c for c, _ in zone}) == 3 and all(b[0] - a[0] >= 50 for a, b in zip(zone, zone[1:])),
-          case_id + ": front-zone split dimensions in separate columns " + str(zone))
+
+    def vertical(e):
+        return abs(e.dxf.get("angle", 0) - 90) < 0.01
+
+    def line_of(e):
+        return round((e.dxf.defpoint.x - ox) if vertical(e) else (e.dxf.defpoint.y - oy), 2)
+
+    def m_(e):
+        return round(e.get_measurement(), 1)
+
+    # DESIGN-FLOW principle 8: chains on one dimension line, equal spacing of the rows and columns
+    zone = [e for e in dims if vertical(e) and m_(e) in (round(lz, 1), round(sg, 1), round(front - cd, 1))]
+    total = [e for e in dims if vertical(e) and m_(e) == round(front, 1)]
+    depth_d = [e for e in dims if vertical(e) and m_(e) == round(rear - front, 1)]
+    # landing zone | sill gap | car door zone on one dimension line; when the sill gap text does not fit, the landing zone dimension
+    # is stepped out one text lane (60 mm) nearer the geometry and the small text stands outside the chain (the user's 2C correction)
+    zone.sort(key=lambda e: e.dxf.defpoint2.y)
+    chain_lines = {line_of(e) for e in zone[1:]}
+    stepped = len({line_of(e) for e in zone}) == 2 and abs(line_of(zone[0]) - (min(chain_lines) + 60)) < 0.1
+    check(len(zone) == 3 and len(chain_lines) == 1 and (len({line_of(e) for e in zone}) == 1 or stepped),
+          case_id + ": front-zone split on one dimension line (landing zone stepped out for a small sill gap) " + str(sorted(line_of(e) for e in zone)))
+    check(len(total) == 1 and len(depth_d) == 1 and line_of(total[0]) == line_of(depth_d[0]),
+          case_id + ": zone total and CAR DEPTH on one dimension line")
+    if zone and total:
+        check(abs(abs(line_of(total[0]) - line_of(zone[-1])) - 110) < 0.1, case_id + ": zone chain one column pitch (110) from the total")
+    above = [e for e in dims if not vertical(e) and line_of(e) > front]
+    check(len(above) == 3 and len({line_of(e) for e in above}) == 1, case_id + ": car returns and opening on ONE dimension line")
+    below = [e for e in dims if not vertical(e) and line_of(e) < 0]
+    rows = sorted({line_of(e) for e in below}, reverse=True)
+    check(len(rows) in (2, 3) and all(abs((rows[i] - rows[i + 1]) - (rows[0] - rows[1])) < 0.1 for i in range(len(rows) - 1)),
+          case_id + ": rows below the wall at equal spacing " + str(rows))
+    # no dimension text overlaps another: text boxes from the dimension blocks (0.7 x height per character, the placement rule)
+    boxes = []
+    for e in dims:
+        blk = doc.blocks.get(e.dxf.geometry)
+        for sub in blk:
+            if sub.dxftype() != "MTEXT":
+                continue
+            h_ = sub.dxf.char_height
+            length = len(sub.text) * 0.7 * h_
+            rot = round(sub.get_rotation()) % 180
+            cx, cy = sub.dxf.insert.x - ox, sub.dxf.insert.y - oy
+            half_x, half_y = (length / 2, h_ / 2) if rot == 0 else (h_ / 2, length / 2)
+            boxes.append((cx - half_x, cx + half_x, cy - half_y, cy + half_y, sub.text))
+    overlaps = [(a_[4], b_[4]) for i, a_ in enumerate(boxes) for b_ in boxes[i + 1:]
+                if a_[0] < b_[1] - 0.5 and b_[0] < a_[1] - 0.5 and a_[2] < b_[3] - 0.5 and b_[2] < a_[3] - 0.5]
+    check(not overlaps, case_id + ": dimension texts overlap " + str(overlaps))
 
     # ---- plan PNG (hidden entities left out)
     png = os.path.join(folder, case_id + "-plan.png")

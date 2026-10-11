@@ -22,6 +22,10 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
    - recommendations, for example: "bracket spacing ≤ 2000 mm recommended", "car rail T89/62/16 recommended", "these dimensions cannot be used because…".
    
    Each note is one or two lines. There are no long tables of passed checks. It is the only place for such text.
+8. **Drawing quality (agreed 2026-10-11).** Every generated drawing must look like a draughtsman's drawing:
+   - **Dimensions are arranged.** Chained dimensions sit on one common dimension line, and successive rows keep an equal spacing. Extension lines start at the real geometry edges. No text overlaps another text, line or dimension. A value too small to fit between its arrows is placed outside the chain, beside it, never on top of a neighbour.
+   - **Every component is drawn as a real part,** not as floating lines. For example, automatic door panels sit inside their door frame or header outline.
+9. **Clear names (agreed 2026-10-11).** Field and option names in the application are short, plain and self-explanatory, for example "Doors Offset". Directions are given as Left / Right (as seen in the plan drawing), never as internal terms such as "towards the fixed side" or a sign convention.
 
 ## Chain
 
@@ -49,6 +53,10 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 - **Clear opening:** optional. Standard sizes: 700, 800, 900, 1000, 1200.
   - When blank, the application selects the largest size that fits by the rules.
   - When the user enters a size that does not fit, the field shows a short "does not fit" message with the reason. Design Notes gives the car or shaft width needed.
+- **Doors Offset (agreed 2026-10-11), 2S and 2C:** a field named "Doors Offset" holds the distance in mm from the shaft centre line to the opening centre line, plus a direction **Left / Right** as seen in the plan drawing (standing at the landing, facing the door). It replaces the former "Opening offset, preferred".
+  - Defaults: 2S uses the preferred offset from the returns (75 mm towards the fixed side at 800) and shifts automatically in narrow shafts; 2C uses 0 (centred).
+  - The field shows the allowed range in Left/Right terms. The range keeps the returns at or above their minimums and the landing boxes at least 25 mm (the wall clearance preset) from the side walls.
+  - A value outside the range is kept, never clamped. The field shows a short "out of range" message with the maximum, and Design Notes explains why.
 - **Handing (2S):** the stacking side is opposite the speed governor by default (right in the reference drawings). The user can choose left or right.
 - **Clearances are presets, calculated by default and editable** in an "Advanced dimensions" expander on the door page:
   - front zone split: car door zone, sill gap, landing door zone;

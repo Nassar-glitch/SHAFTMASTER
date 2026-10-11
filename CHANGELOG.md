@@ -6,6 +6,10 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Automatic doors, D3 (drawing quality of the door plan):** the landing and car door panels sit inside a door frame (one rectangle each,
+  aligned), the fixed-side jamb post is drawn in both frames, panels continue into the stacking pocket, and the dimensions are arranged
+  (chains on one line, equal rows, extension lines from the real edges, a text too long for its interval placed outside or beside the chain).
+  Follows the user's own correction of the 2S drawing; values and Manual drawings are unchanged. See `ElevatorAutomation/docs/design/doors-d3/`.
 - **Automatic doors, D1 (Core and UI; no drawing change yet):** door type Manual / Automatic 2S / Automatic 2C on the Car & Doors page, optional clear
   opening (700 / 800 / 900 / 1000 / 1200; selected by the rules when empty), 2S handing, and an Advanced dimensions expander with every clearance
   (lock, follow, Reset). The front zone sets the car depth; a size or type that does not fit is reported with the needed car or shaft width (field
