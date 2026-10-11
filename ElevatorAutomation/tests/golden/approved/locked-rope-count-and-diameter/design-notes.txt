@@ -1,9 +1,9 @@
 === /word/document.xml
 Warnings
-•  Rope safety factor 10.3 is below the required 12.56 (EN 81-20 5.5.2.2; EN 81-50 5.12). Use 5 ropes (Sf 12.78), or 11 mm ropes with 53.2 kN MBL (Sf 27.23).
+•  Rope safety factor 10.3 is below the required 12.56 (EN 81-20 5.5.2.2; EN 81-50 5.12). Use 5 ropes (Sf 12.78), or 11 mm ropes with 53.2 kN (5425 kg) MBL (Sf 27.23).
 •  Car available area 1.54 m² exceeds the maximum 0.95 m² for 320 kg (EN 81-20 Table 6). Use a rated load of at least 570 kg, or reduce the car to ≤ 0.95 m².
 Recommendations
-•  No 1:1 arrangement passes every rope and traction check; the limiting check is rope safety factor. 2:1 roping is recommended for this rated load; on 1:1, 7 ropes of 10 mm would need MBL ≥ 14.3 kN each (EN 81-20 5.5; EN 81-50 5.11, 5.12).
+•  No 1:1 arrangement passes every rope and traction check; the limiting check is rope safety factor. 2:1 roping is recommended for this rated load; on 1:1, 7 ropes of 10 mm would need MBL ≥ 14.3 kN (1460 kg) each (EN 81-20 5.5; EN 81-50 5.11, 5.12).
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Calculations;
 using Elevator.Core.Car;
 using Elevator.Core.Doors;
 using Elevator.Core.Presets;
@@ -302,7 +303,9 @@ namespace Elevator.Reporting.DesignNotes
                         + L(sizing.RopeDiameterMm.Value)
                         + " mm would need MBL ≥ "
                         + mbl
-                        + " kN each")
+                        + " kN ("
+                        + LoadUnits.KgWithUnit(double.Parse(mbl, CultureInfo.InvariantCulture) * 1000)
+                        + ") each")
                     + " (EN 81-20 5.5; EN 81-50 5.11, 5.12).");
             }
         }
@@ -379,7 +382,7 @@ namespace Elevator.Reporting.DesignNotes
                     var c = res.Checks.FirstOrDefault(k => k.Id == "safety-factor");
                     if (c != null && c.Ok == true && res.Checks.Where(k => k.Id.StartsWith("dd-")).All(k => k.Ok == true))
                     {
-                        options.Add(L(row.DiameterMm) + " mm ropes with " + L(row.MinimumBreakingLoadKn) + " kN MBL (Sf " + c.Actual + ")");
+                        options.Add(L(row.DiameterMm) + " mm ropes with " + L(row.MinimumBreakingLoadKn) + " kN (" + LoadUnits.KgWithUnit(row.MinimumBreakingLoadKn * 1000) + ") MBL (Sf " + c.Actual + ")");
                         break;
                     }
                 }

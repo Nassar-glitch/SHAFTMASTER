@@ -359,6 +359,17 @@ namespace Elevator.Reporting.Sheet
             return LoadUnits.KgText(v.Value);
         }
 
+        // A force in N with its kg value beside it: "12345 N (1260 kg)" (DESIGN-FLOW principle 10).
+        static string NK(double? v)
+        {
+            return v.HasValue ? N(v) + " N (" + KG(v) + " kg)" : N(v) + " N";
+        }
+
+        static string LK(double v)
+        {
+            return L(v) + " N (" + KG(v) + " kg)";
+        }
+
         static string S(double v)
         {
             return v < 0 ? "(" + L(v) + ")" : L(v);
@@ -724,8 +735,7 @@ namespace Elevator.Reporting.Sheet
                 "W = Σm × g = ("
                     + String.Join(" + ", masses.Select(m => L(m.Value)))
                     + ") kg × 9.81 m/s² = "
-                    + N(r.TotalVerticalLoadN)
-                    + " N"
+                    + NK(r.TotalVerticalLoadN)
             });
         }
 
@@ -763,8 +773,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.LongitudinalSpanMm)
                     + " = "
-                    + L(g.FrontLoadN)
-                    + " N",
+                    + LK(g.FrontLoadN),
                 "F(rear) = W × a / L = "
                     + N(r.TotalVerticalLoadN)
                     + " × "
@@ -772,8 +781,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.LongitudinalSpanMm)
                     + " = "
-                    + L(g.RearLoadN)
-                    + " N"
+                    + LK(g.RearLoadN)
             });
             d.Equations(new[]
             {
@@ -785,8 +793,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.FrontTransverseSpanMm)
                     + " = "
-                    + N(R("P2"))
-                    + " N",
+                    + NK(R("P2")),
                 "P4 = F(front) × (x(P2) − x(W)) / s(f) = "
                     + S(g.FrontLoadN)
                     + " × "
@@ -794,8 +801,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.FrontTransverseSpanMm)
                     + " = "
-                    + N(R("P4"))
-                    + " N"
+                    + NK(R("P4"))
             });
             d.Equations(new[]
             {
@@ -807,8 +813,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.RearTransverseSpanMm)
                     + " = "
-                    + N(R("P1"))
-                    + " N",
+                    + NK(R("P1")),
                 "P3 = F(rear) × (x(P1) − x(W)) / s(r) = "
                     + S(g.RearLoadN)
                     + " × "
@@ -816,8 +821,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + S(g.RearTransverseSpanMm)
                     + " = "
-                    + N(R("P3"))
-                    + " N"
+                    + NK(R("P3"))
             });
         }
 
@@ -886,16 +890,16 @@ namespace Elevator.Reporting.Sheet
                 null,
                 true);
             d.Table(
-                new[] { "Load", "Position (mm)", "Force Fx, Fy, Fz (N)", "Couple Mx, My, Mz (N·mm)" },
-                r.Loads.Select(l => new[] { LoadName(l.Id), Pt(l.PositionMm), Pt(l.ForceN), Pt(l.CoupleNmm) }).ToList(),
-                new[] { 2638, 2200, 2300, 2500 },
+                new[] { "Load", "Position (mm)", "Force Fx, Fy, Fz (N)", "Fz (kg)", "Couple Mx, My, Mz (N·mm)" },
+                r.Loads.Select(l => new[] { LoadName(l.Id), Pt(l.PositionMm), Pt(l.ForceN), LoadUnits.KgText(l.ForceN.Z), Pt(l.CoupleNmm) }).ToList(),
+                new[] { 1938, 1800, 2000, 1000, 2900 },
                 new HashSet<int> { 0 });
             if (r.Transfers.Count > 0)
             {
                 d.Paragraph("Member transfers", "Heading2");
-                d.Table(new[] { "Load", "Member", "Front (N)", "Rear (N)" }, r.Transfers
-                    .Select(t => new[] { LoadName(t.LoadId), Member(t.MemberId), N(t.FrontDownwardN), N(t.RearDownwardN) })
-                    .ToList(), new[] { 2838, 2600, 2100, 2100 }, new HashSet<int> { 0 });
+                d.Table(new[] { "Load", "Member", "Front (N)", "Front (kg)", "Rear (N)", "Rear (kg)" }, r.Transfers
+                    .Select(t => new[] { LoadName(t.LoadId), Member(t.MemberId), N(t.FrontDownwardN), KG(t.FrontDownwardN), N(t.RearDownwardN), KG(t.RearDownwardN) })
+                    .ToList(), new[] { 2238, 2000, 1350, 1350, 1350, 1350 }, new HashSet<int> { 0 });
                 d.Paragraph("Positive member transfers act downwards on the supporting members; negative values act upwards.", "Small");
             }
             d.Paragraph("Bearing positions", "Heading2");
@@ -981,8 +985,8 @@ namespace Elevator.Reporting.Sheet
                 Positive(c.CounterweightSideAdditionalSuspendedMassKg) ? "(M(cwt) + M(cwt add.))" : "M(cwt)";
             Func<List<double>, string> sum = v => v.Count > 1 ? "(" + String.Join(" + ", v.Select(L)) + ")" : L(v[0]);
             var lines = new List<string>{
-    "T(car) = "+carTerms+" × g / r = "+sum(car)+" kg × 9.81 m/s² / 1 = "+N(r.CarBundleTensionN)+" N",
-    "T(cwt) = "+cwTerms+" × g / r = "+sum(cw)+" kg × 9.81 m/s² / 1 = "+N(r.CounterweightBundleTensionN)+" N"};
+    "T(car) = "+carTerms+" × g / r = "+sum(car)+" kg × 9.81 m/s² / 1 = "+NK(r.CarBundleTensionN),
+    "T(cwt) = "+cwTerms+" × g / r = "+sum(cw)+" kg × 9.81 m/s² / 1 = "+NK(r.CounterweightBundleTensionN)};
             bool perRope = r.CarPerRopeTensionN.HasValue
                 && r.CounterweightPerRopeTensionN.HasValue
                 && p.Suspension.RopeCount.HasValue
@@ -995,14 +999,13 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + count
                     + " = "
-                    + N(r.CarPerRopeTensionN)
-                    + " N      T(cwt) / n = "
+                    + NK(r.CarPerRopeTensionN)
+                    + "      T(cwt) / n = "
                     + N(r.CounterweightBundleTensionN)
                     + " / "
                     + count
                     + " = "
-                    + N(r.CounterweightPerRopeTensionN)
-                    + " N");
+                    + NK(r.CounterweightPerRopeTensionN));
             }
             d.Equations(true, lines);
             if (perRope)
@@ -1153,8 +1156,8 @@ namespace Elevator.Reporting.Sheet
                                         + " × 10 N/kg = "
                                         + L(m)
                                         + " kg × 10 N/kg = "
-                                        + N(load.PerComponentLoadN)
-                                        + " N per car guide rail");
+                                        + NK(load.PerComponentLoadN)
+                                        + " per car guide rail");
             }
             else
             {
@@ -1166,8 +1169,7 @@ namespace Elevator.Reporting.Sheet
                     + " kg × "
                     + L(SafetyPitCalculationEngine.BufferCoefficientNPerKg)
                     + " N/kg = "
-                    + N(load.GroupLoadN)
-                    + " N");
+                    + NK(load.GroupLoadN));
                 lines.Add(load.Id
                     + "(per buffer) = "
                     + load.Id
@@ -1176,8 +1178,7 @@ namespace Elevator.Reporting.Sheet
                     + " / "
                     + load.ComponentCount
                     + " = "
-                    + N(load.PerComponentLoadN)
-                    + " N");
+                    + NK(load.PerComponentLoadN));
             }
             d.Equations(true, lines);
         }
@@ -1228,13 +1229,13 @@ namespace Elevator.Reporting.Sheet
             d.Paragraph("Equations", "Heading2");
             d.Equations(true, new[]
             {
-                "FF1 = Q × 10 N/kg × W / (4 h) = " + q + " × 10 × " + w + " / (4 × " + h + ") = " + N(f.FF1BaseN) + " N",
-                "FF1(design) = 2 × FF1 = 2 × " + N(f.FF1BaseN) + " = " + N(f.FF1DesignN) + " N"
+                "FF1 = Q × 10 N/kg × W / (4 h) = " + q + " × 10 × " + w + " / (4 × " + h + ") = " + NK(f.FF1BaseN),
+                "FF1(design) = 2 × FF1 = 2 × " + N(f.FF1BaseN) + " = " + NK(f.FF1DesignN)
             });
             d.Equations(true, new[]
             {
-                "FF2 = Q × 10 N/kg × D / (8 h) = " + q + " × 10 × " + dd + " / (8 × " + h + ") = " + N(f.FF2BaseN) + " N",
-                "FF2(design) = 2 × FF2 = 2 × " + N(f.FF2BaseN) + " = " + N(f.FF2DesignN) + " N"
+                "FF2 = Q × 10 N/kg × D / (8 h) = " + q + " × 10 × " + dd + " / (8 × " + h + ") = " + NK(f.FF2BaseN),
+                "FF2(design) = 2 × FF2 = 2 × " + N(f.FF2BaseN) + " = " + NK(f.FF2DesignN)
             });
             d.Paragraph("Results", "Heading2");
             d.Table(new[] { "Force", "Direction", "FF (N)", "FF design (N)", "FF design (kN)", "FF design (kg)" }, new List<string[]>{

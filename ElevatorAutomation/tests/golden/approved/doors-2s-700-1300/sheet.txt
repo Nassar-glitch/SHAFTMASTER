@@ -31,19 +31,19 @@ Approved by
 Calculation
 Key result
 P1–P4 machine-room bearing reactions
-P1 5.461 kN; P2 3.939 kN; P3 6.051 kN; P4 4.365 kN
+P1 5.461 kN (560 kg); P2 3.939 kN (405 kg); P3 6.051 kN (620 kg); P4 4.365 kN (445 kg)
 Suspension rope tensions
-Car side 9.614 kN; counterweight side 7.259 kN
+Car side 9.614 kN (980 kg); counterweight side 7.259 kN (740 kg)
 Suspension rope and traction checks
 D/d OK
 P5 safety-gear load per car guide rail
-9.8 kN per car guide rail
+9.8 kN (1000 kg) per car guide rail
 P6 car-buffer reaction
-39.2 kN per buffer; 39.2 kN total
+39.2 kN (4000 kg) per buffer; 39.2 kN (4000 kg) total
 P7 counterweight-buffer reaction
-14.8 kN per buffer; 29.6 kN total
+14.8 kN (1510 kg) per buffer; 29.6 kN (3020 kg) total
 FF1 / FF2 car guide-rail forces
-FF1 1.8 kN; FF2 2.28 kN (design, per guide rail)
+FF1 1.8 kN (185 kg); FF2 2.28 kN (235 kg) (design, per guide rail)
 
 2  Input data
 Input
@@ -77,7 +77,7 @@ Rope designation
 Rope nominal diameter d
 8 mm
 Rope minimum breaking load MBL
-28.1 kN
+28.1 kN (2865 kg)
 Traction sheave pitch diameter Dt
 520 mm
 
@@ -101,7 +101,7 @@ Machine mass
 Total Σm
 2020 kg
 
-W = Σm × g = (480 + 500 + 740 + 300) kg × 9.81 m/s² = 19816.2 N
+W = Σm × g = (480 + 500 + 740 + 300) kg × 9.81 m/s² = 19816.2 N (2020 kg)
 Load position and bearing positions
 Machine-room axes in mm: +X to the right, +Y from the entrance towards the rear, +Z above the machine-room slab.
 Point
@@ -138,39 +138,45 @@ left / front
 Equations
 L = y(rear row) − y(front row) = 2913.38 − (-113.38) = 3026.75 mm
 a = y(W) − y(front row) = 1758.38 mm      b = y(rear row) − y(W) = 1268.38 mm
-F(front) = W × b / L = 19816.2 × 1268.38 / 3026.75 = 8304.08 N
-F(rear) = W × a / L = 19816.2 × 1758.38 / 3026.75 = 11512.12 N
+F(front) = W × b / L = 19816.2 × 1268.38 / 3026.75 = 8304.08 N (850 kg)
+F(rear) = W × a / L = 19816.2 × 1758.38 / 3026.75 = 11512.12 N (1175 kg)
 s(f) = x(P2) − x(P4) = 960.05 − 370.16 = 589.89 mm
-P2 = F(front) × (x(W) − x(P4)) / s(f) = 8304.08 × 279.84 / 589.89 = 3939.36 N
-P4 = F(front) × (x(P2) − x(W)) / s(f) = 8304.08 × 310.05 / 589.89 = 4364.72 N
+P2 = F(front) × (x(W) − x(P4)) / s(f) = 8304.08 × 279.84 / 589.89 = 3939.36 N (405 kg)
+P4 = F(front) × (x(P2) − x(W)) / s(f) = 8304.08 × 310.05 / 589.89 = 4364.72 N (445 kg)
 s(r) = x(P1) − x(P3) = 960.05 − 370.16 = 589.89 mm
-P1 = F(rear) × (x(W) − x(P3)) / s(r) = 11512.12 × 279.84 / 589.89 = 5461.22 N
-P3 = F(rear) × (x(P1) − x(W)) / s(r) = 11512.12 × 310.05 / 589.89 = 6050.9 N
+P1 = F(rear) × (x(W) − x(P3)) / s(r) = 11512.12 × 279.84 / 589.89 = 5461.22 N (560 kg)
+P3 = F(rear) × (x(P1) − x(W)) / s(r) = 11512.12 × 310.05 / 589.89 = 6050.9 N (620 kg)
 Results
 Bearing
 Location
 Reaction (N)
 Reaction (kN)
+Reaction (kg)
 P1
 right / rear
 5461.22
 5.461
+560
 P2
 right / front
 3939.36
 3.939
+405
 P3
 left / rear
 6050.9
 6.051
+620
 P4
 left / front
 4364.72
 4.365
+445
 ΣP
 
 19816.2
 19.816
+2020
 
 Positive values are upward (compressive) bearing reactions.
 
@@ -184,21 +190,27 @@ NTS
 
 4  Suspension rope tensions
 Static rope tensions on the car side and the counterweight side under rated load, with r the roping ratio and n the number of ropes.
-T(car) = (Q + M(car)) × g / r = (480 + 500) kg × 9.81 m/s² / 1 = 9613.8 N
-T(cwt) = M(cwt) × g / r = 740 kg × 9.81 m/s² / 1 = 7259.4 N
-T(car) / n = 9613.8 / 6 = 1602.3 N      T(cwt) / n = 7259.4 / 6 = 1209.9 N
+T(car) = (Q + M(car)) × g / r = (480 + 500) kg × 9.81 m/s² / 1 = 9613.8 N (980 kg)
+T(cwt) = M(cwt) × g / r = 740 kg × 9.81 m/s² / 1 = 7259.4 N (740 kg)
+T(car) / n = 9613.8 / 6 = 1602.3 N (165 kg)      T(cwt) / n = 7259.4 / 6 = 1209.9 N (125 kg)
 Rope tension
 All ropes (N)
 All ropes (kN)
+All ropes (kg)
 Per rope (N)
+Per rope (kg)
 Car side
 9613.8
 9.614
+980
 1602.3
+165
 Counterweight side
 7259.4
 7.259
+740
 1209.9
+125
 
 
 Figure 4 — Suspension — 1:1 roping and rope tensions
@@ -218,7 +230,7 @@ H
 16.7 m
 
 Rope checks
-Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN
+Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN (2295 kg)
 Check
 Clause
 Equation
@@ -246,8 +258,8 @@ OK
 Rope termination strength
 EN 81-20 5.5.2.3
 Ftermination ≥ 0.8 × MBL
-0.8 × MBL = 22.48 kN
-MBL = 28.1 kN
+0.8 × MBL = 22.48 kN (2295 kg)
+MBL = 28.1 kN (2865 kg)
 Required strength
 
 6  Safety-gear and buffer loads P5–P7
@@ -265,13 +277,13 @@ Counterweight buffers
 P5 — Safety-gear load per car guide rail
 P5 is the vertical load transmitted to each car guide rail when the progressive safety gear stops the car with rated load.
 m(car) = Q + M(car) = 480 + 500 = 980 kg
-P5 = m(car) × 10 N/kg = 980 kg × 10 N/kg = 9800 N per car guide rail
+P5 = m(car) × 10 N/kg = 980 kg × 10 N/kg = 9800 N (1000 kg) per car guide rail
 Quantity
 Value
 Event mass m(car)
 980 kg
 P5 per car guide rail
-9800 N (9.8 kN)
+9800 N (9.8 kN; 1000 kg)
 
 
 Figure 5 — Progressive safety gear — P5 on the car guide rails
@@ -281,8 +293,8 @@ NTS
 P6 — Car-buffer reaction
 P6 is the vertical reaction on the pit floor under the car buffers when the car with rated load strikes the buffers. The total acts on all car buffers together; the per-buffer value acts on each buffer.
 m(car) = Q + M(car) = 480 + 500 = 980 kg
-P6(total) = m(car) × max(40, 4 × 9.81) N/kg = 980 kg × 40 N/kg = 39200 N
-P6(per buffer) = P6(total) / n = 39200 / 1 = 39200 N
+P6(total) = m(car) × max(40, 4 × 9.81) N/kg = 980 kg × 40 N/kg = 39200 N (4000 kg)
+P6(per buffer) = P6(total) / n = 39200 / 1 = 39200 N (4000 kg)
 Quantity
 Value
 Event mass m(car)
@@ -290,15 +302,15 @@ Event mass m(car)
 Number of buffers n
 1
 P6 per buffer
-39200 N (39.2 kN)
+39200 N (39.2 kN; 4000 kg)
 P6 total
-39200 N (39.2 kN)
+39200 N (39.2 kN; 4000 kg)
 
 P7 — Counterweight-buffer reaction
 P7 is the vertical reaction on the pit floor under the counterweight buffers when the counterweight strikes the buffers. The total acts on all counterweight buffers together; the per-buffer value acts on each buffer.
 m(cwt) = 740 kg
-P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 740 kg × 40 N/kg = 29600 N
-P7(per buffer) = P7(total) / n = 29600 / 2 = 14800 N
+P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 740 kg × 40 N/kg = 29600 N (3020 kg)
+P7(per buffer) = P7(total) / n = 29600 / 2 = 14800 N (1510 kg)
 Quantity
 Value
 Event mass m(cwt)
@@ -306,9 +318,9 @@ Event mass m(cwt)
 Number of buffers n
 2
 P7 per buffer
-14800 N (14.8 kN)
+14800 N (14.8 kN; 1510 kg)
 P7 total
-29600 N (29.6 kN)
+29600 N (29.6 kN; 3020 kg)
 
 
 Figure 6 — Pit buffer loads P6 / P7 — pit section
@@ -330,26 +342,29 @@ Guide-shoe spacing h
 1200 mm
 
 Equations
-FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 900 / (4 × 1200) = 900 N
-FF1(design) = 2 × FF1 = 2 × 900 = 1800 N
-FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2280 / (8 × 1200) = 1140 N
-FF2(design) = 2 × FF2 = 2 × 1140 = 2280 N
+FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 900 / (4 × 1200) = 900 N (95 kg)
+FF1(design) = 2 × FF1 = 2 × 900 = 1800 N (185 kg)
+FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2280 / (8 × 1200) = 1140 N (120 kg)
+FF2(design) = 2 × FF2 = 2 × 1140 = 2280 N (235 kg)
 Results
 Force
 Direction
 FF (N)
 FF design (N)
 FF design (kN)
+FF design (kg)
 FF1
 Along the car-rail line (car width)
 900
 1800
 1.8
+185
 FF2
 Perpendicular to the car-rail line (car depth)
 1140
 2280
 2.28
+235
 
 Values per guide rail at one guide-shoe level.
 

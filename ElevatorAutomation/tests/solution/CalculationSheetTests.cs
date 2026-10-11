@@ -188,21 +188,21 @@ public static class CalculationSheetTests
         Check(Near(sheet.CarGuideForces.InternalWidthMm,1100)&&Near(sheet.CarGuideForces.InternalDepthMm,2100),"Live shared internal cabin 1100 × 2100 mm");
         Check(Near(sheet.CarGuideForces.FF1BaseN,1100)&&Near(sheet.CarGuideForces.FF1DesignN,2200)&&Near(sheet.CarGuideForces.FF2BaseN,1050)&&Near(sheet.CarGuideForces.FF2DesignN,2100),"FF fixture unchanged: FF1 1100/2200 N, FF2 1050/2100 N");
         string ff=Section(text,H(sheet,Guide),null);
-        Check(ff.Contains("FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 1100 / (4 × 1200) = 1100 N")&&ff.Contains("FF1(design) = 2 × FF1 = 2 × 1100 = 2200 N"),"FF1 equation with substitution and ×2 design factor");
-        Check(ff.Contains("FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2100 / (8 × 1200) = 1050 N")&&ff.Contains("FF2(design) = 2 × FF2 = 2 × 1050 = 2100 N"),"FF2 equation with substitution and ×2 design factor");
+        Check(ff.Contains("FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 1100 / (4 × 1200) = 1100 N (115 kg)")&&ff.Contains("FF1(design) = 2 × FF1 = 2 × 1100 = 2200 N (225 kg)"),"FF1 equation with substitution and ×2 design factor");
+        Check(ff.Contains("FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2100 / (8 × 1200) = 1050 N (110 kg)")&&ff.Contains("FF2(design) = 2 × FF2 = 2 × 1050 = 2100 N (215 kg)"),"FF2 equation with substitution and ×2 design factor");
         Check(ff.Contains("acts along the car-rail line, in the car-width direction")&&ff.Contains("acts perpendicular to the car-rail line, in the car-depth direction")&&ff.Contains("per guide rail at one guide-shoe level")&&ff.Contains("vertical centre-to-centre distance between the upper and lower car guide shoes"),"FF physical meaning stated plainly");
         var b=Section(text,H(sheet,Reactions),H(sheet,Ropes));
-        Check(b.Contains("W = Σm × g = (480 + 500 + 740 + 300) kg × 9.81 m/s² = 19816.2 N")&&sheet.Chassis.Reactions.Count==4,"Basic resultant from included masses only");
+        Check(b.Contains("W = Σm × g = (480 + 500 + 740 + 300) kg × 9.81 m/s² = 19816.2 N (2020 kg)")&&sheet.Chassis.Reactions.Count==4,"Basic resultant from included masses only");
         foreach(var r in sheet.Chassis.Reactions)Check(b.Contains(r.Id+" = F(")&&b.Contains(r.UpwardN.ToString("0.##",CultureInfo.InvariantCulture)),"Basic reaction equation and value: "+r.Id);
         Check(Math.Abs(sheet.Chassis.Reactions.Sum(r=>r.UpwardN)-2020*9.81)<1e-6,"Basic reactions sum to W (unchanged)");
         Check(!b.Contains("additional")&&!b.Contains("Chassis assembly")&&!b.Contains("Hanger"),"Mass table lists only included masses");
         var rope=Section(text,H(sheet,Ropes),H(sheet,Pit));
-        Check(rope.Contains("T(car) = (Q + M(car)) × g / r = (480 + 500) kg × 9.81 m/s² / 1 = 9613.8 N")&&rope.Contains("Per rope (N)")&&rope.Contains("1602.3"),"Rope tensions with per-rope values");
+        Check(rope.Contains("T(car) = (Q + M(car)) × g / r = (480 + 500) kg × 9.81 m/s² / 1 = 9613.8 N (980 kg)")&&rope.Contains("Per rope (N)")&&rope.Contains("1602.3"),"Rope tensions with per-rope values");
         var pit=Section(text,H(sheet,Pit),H(sheet,Guide));
-        Check(pit.Contains("m(car) = Q + M(car) = 480 + 500 = 980 kg")&&pit.Contains("P5 = m(car) × 10 N/kg = 980 kg × 10 N/kg = 9800 N per car guide rail"),"P5 per car guide rail unchanged (9800 N)");
-        Check(pit.Contains("P6(total) = m(car) × max(40, 4 × 9.81) N/kg = 980 kg × 40 N/kg = 39200 N")&&pit.Contains("P6(per buffer) = P6(total) / n = 39200 / 1 = 39200 N"),"P6 total and per buffer unchanged (39200 N)");
-        Check(pit.Contains("P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 740 kg × 40 N/kg = 29600 N")&&pit.Contains("P7(per buffer) = P7(total) / n = 29600 / 2 = 14800 N"),"P7 total and per buffer unchanged (29600 / 14800 N)");
-        Check(Section(text,H(sheet,Summary),H(sheet,Inputs)).Contains("P5 safety-gear load per car guide rail\n9.8 kN per car guide rail")&&Section(text,H(sheet,Summary),H(sheet,Inputs)).Contains("14.8 kN per buffer; 29.6 kN total"),"Summary key results");
+        Check(pit.Contains("m(car) = Q + M(car) = 480 + 500 = 980 kg")&&pit.Contains("P5 = m(car) × 10 N/kg = 980 kg × 10 N/kg = 9800 N (1000 kg) per car guide rail"),"P5 per car guide rail unchanged (9800 N)");
+        Check(pit.Contains("P6(total) = m(car) × max(40, 4 × 9.81) N/kg = 980 kg × 40 N/kg = 39200 N (4000 kg)")&&pit.Contains("P6(per buffer) = P6(total) / n = 39200 / 1 = 39200 N (4000 kg)"),"P6 total and per buffer unchanged (39200 N)");
+        Check(pit.Contains("P7(total) = m(cwt) × max(40, 4 × 9.81) N/kg = 740 kg × 40 N/kg = 29600 N (3020 kg)")&&pit.Contains("P7(per buffer) = P7(total) / n = 29600 / 2 = 14800 N (1510 kg)"),"P7 total and per buffer unchanged (29600 / 14800 N)");
+        Check(Section(text,H(sheet,Summary),H(sheet,Inputs)).Contains("P5 safety-gear load per car guide rail\n9.8 kN (1000 kg) per car guide rail")&&Section(text,H(sheet,Summary),H(sheet,Inputs)).Contains("14.8 kN (1510 kg) per buffer; 29.6 kN (3020 kg) total"),"Summary key results");
         var inputs=Section(text,H(sheet,Inputs),H(sheet,Reactions));
         Check(inputs.Contains("Rated load Q\n480 kg")&&inputs.Contains("Guide-shoe spacing h\n1200 mm")&&!inputs.Contains("speed")&&!inputs.Contains("additional"),"Inputs list only supplied values");
 
@@ -235,7 +235,7 @@ public static class CalculationSheetTests
         Numbered(text,Expect(sheet,new[]{Summary,Inputs,Guide}),"04");
         {var outside=sheet.RopeTractionAvailable?text.Replace(Section(text,H(sheet,RopeChecks),H(sheet,Guide)),"").Replace("Rope nominal diameter d","").Replace("Traction sheave pitch diameter Dt",""):text;Check(!outside.Contains("P1")&&!outside.Contains("P5")&&!outside.Contains("P7")&&!outside.Contains("T(car)")&&!outside.Contains("Car mass")&&!outside.Contains("Machine mass")&&!outside.Contains("Counterweight mass")&&!outside.Contains("ropes"),"Omitted sections leave no content or input rows");}
         Check(BaseOmitted(sheet).Count==4&&BaseOmitted(sheet).Any(o=>o.Reasons.Any(r=>r.StartsWith("Car mass")))&&BaseOmitted(sheet).Any(o=>o.Reasons.Any(r=>r.StartsWith("Safety-gear type"))),"Application omission list names missing masses and pit choices");
-        Check(Section(text,H(sheet,Guide),null).Contains("= 2200 N"),"FF unchanged when P1–P7 omitted");
+        Check(Section(text,H(sheet,Guide),null).Contains("= 2200 N (225 kg)"),"FF unchanged when P1–P7 omitted");
 
         // 5. Malformed UI text: dependent calculations omitted, never zero.
         p=BasicComplete("Test Tower E — malformed text");p.Calculations.CarMassKg=null;p.Calculations.CarGuideForces.GuideShoeSpacingMm=null;
@@ -254,7 +254,7 @@ public static class CalculationSheetTests
         p=BasicComplete("Test Tower F — changed inputs");
         var first=CalculationSheet.Build(p,ctx,new CalculationSheetInputs());p.Elevator.CapacityKg=600;p.Calculations.CarGuideForces.GuideShoeSpacingMm=1000;
         sheet=Export(p,"06-changed-inputs.docx",null,out text);
-        Check(Near(first.CarGuideForces.FF1BaseN,1100)&&Near(sheet.CarGuideForces.FF1BaseN,1650)&&text.Contains("600 × 10 × 1100 / (4 × 1000) = 1650 N")&&!text.Contains("= 1100 N"),"Changed Q/h recalculated; stale values absent");
+        Check(Near(first.CarGuideForces.FF1BaseN,1100)&&Near(sheet.CarGuideForces.FF1BaseN,1650)&&text.Contains("600 × 10 × 1100 / (4 × 1000) = 1650 N (170 kg)")&&!text.Contains("= 1100 N"),"Changed Q/h recalculated; stale values absent");
         Check(Near(sheet.SafetyPit.P5.PerComponentLoadN,11000),"P5 recalculated with changed load");
 
         // 7. Missing rope count: per-rope column omitted, bundle kept.
@@ -360,8 +360,8 @@ public static class CalculationSheetTests
         Check(sheet.RopeTractionAvailable&&r.Traction.Count==3&&r.Checks.Any(c=>c.Id=="safety-factor")&&!r.Checks.Any(c=>c.Id=="dd-deflector")&&r.DpOverDr.HasValue,"Complete rope / traction fixture: all checks and three traction cases; deflector D/d is a value only");
         var rt=Section(text,H(sheet,RopeChecks),H(sheet,Pit));
         Check(rt.Contains("Tmax = ((P + Q) / n + H · w) · gn = ((500 + 480) / 4 + 16.7 × 0.34) × 9.81 = ")&&rt.Contains("Sf = MBL / Tmax = 44000 / ")&&rt.Contains("Kp = (Dt / Dp)^4 = (520 / 400)^4 = 2.8561")&&rt.Contains("Sf required = max(12; "),"Sf equations with substitution");
-        Check(rt.Contains("Rope safety factor")&&rt.Contains("EN 81-20 5.5.2.2; EN 81-50 5.12")&&!rt.Contains("Deflector D/d")&&rt.Contains("Traction sheave D/d")&&rt.Contains("≥ 40")&&rt.Contains("Ftermination ≥ 0.8 × MBL = 0.8 × 44 = 35.2 kN"),"Rope checks table: check, clause, required, actual, result; termination requirement");
-        Check(rt.Contains("Rope termination strength\nEN 81-20 5.5.2.3\nFtermination ≥ 0.8 × MBL\n0.8 × MBL = 35.2 kN\nMBL = 44 kN\nRequired strength"),"Termination row: required 0.8 × MBL = 35.2 kN, actual MBL 44 kN, result Required strength (no empty cells)");
+        Check(rt.Contains("Rope safety factor")&&rt.Contains("EN 81-20 5.5.2.2; EN 81-50 5.12")&&!rt.Contains("Deflector D/d")&&rt.Contains("Traction sheave D/d")&&rt.Contains("≥ 40")&&rt.Contains("Ftermination ≥ 0.8 × MBL = 0.8 × 44 = 35.2 kN (3590 kg)"),"Rope checks table: check, clause, required, actual, result; termination requirement");
+        Check(rt.Contains("Rope termination strength\nEN 81-20 5.5.2.3\nFtermination ≥ 0.8 × MBL\n0.8 × MBL = 35.2 kN (3590 kg)\nMBL = 44 kN (4490 kg)\nRequired strength"),"Termination row: required 0.8 × MBL = 35.2 kN (3590 kg), actual MBL 44 kN, result Required strength (no empty cells)");
         Check(rt.Contains("μ = 0.1 / (1 + v/10) = 0.1 / (1 + 1/10) = 0.0909")&&rt.Contains("f = μ · 4 (cos(γ/2) − sin(β/2)) / (π − β − γ − sin β + sin γ) = ")&&rt.Contains("e^(f·α) = e^(")&&rt.Contains("Empty car, highest landing, retarding upwards")&&rt.Contains("mDP · a"),"Traction equations: μ, f, e^(fα), T1/T2 per position including mDP");
         Check(rt.Contains("Reduced mass of the deflector sheave (m/2)\nmDP\n22.5 kg")&&rt.Contains("Angle of wrap on the traction sheave\nα\n152°")&&rt.Contains("Suspended rope length (travel + overhead)\nH\n16.7 m"),"Geometry table: mDP shown, α from the reeving path, H = travel + overhead");
         var braking=r.Traction.Single(t=>t.Id=="braking");
@@ -369,7 +369,7 @@ public static class CalculationSheetTests
         var summary=Section(text,H(sheet,Summary),H(sheet,Inputs));
         Check(Regex.IsMatch(summary,@"Suspension rope and traction checks\nRope Sf \d+(\.\d+)? ≥ \d+(\.\d+)? OK; D/d OK; traction NOT OK"),"Summary row: Rope Sf ≥ required OK; D/d OK; traction NOT OK");
         var inputs=Section(text,H(sheet,Inputs),H(sheet,Reactions));
-        Check(inputs.Contains("Rope designation\n8×19 Seale FC 1370/1770")&&inputs.Contains("Rope minimum breaking load MBL\n44 kN")&&inputs.Contains("Rope mass per metre w\n0.34 kg/m")&&inputs.Contains("Traction sheave groove\nSemi-circular / undercut")&&inputs.Contains("Undercut angle β\n95°")&&inputs.Contains("Groove angle γ\n30°")&&inputs.Contains("Travelling cable mass per metre\n0.5 kg/m")&&inputs.Contains("Emergency braking retardation a\n0.5 m/s²")&&inputs.Contains("Deflector sheave mass\n45 kg")&&inputs.Contains("Traction limiting method\nRopes slip"),"New rope / traction inputs listed in the inputs table");
+        Check(inputs.Contains("Rope designation\n8×19 Seale FC 1370/1770")&&inputs.Contains("Rope minimum breaking load MBL\n44 kN (4490 kg)")&&inputs.Contains("Rope mass per metre w\n0.34 kg/m")&&inputs.Contains("Traction sheave groove\nSemi-circular / undercut")&&inputs.Contains("Undercut angle β\n95°")&&inputs.Contains("Groove angle γ\n30°")&&inputs.Contains("Travelling cable mass per metre\n0.5 kg/m")&&inputs.Contains("Emergency braking retardation a\n0.5 m/s²")&&inputs.Contains("Deflector sheave mass\n45 kg")&&inputs.Contains("Traction limiting method\nRopes slip"),"New rope / traction inputs listed in the inputs table");
         foreach(var w in new[]{"preset","assumed","review","not from catalog","Table 6","remark"})Check(!text.ToLowerInvariant().Contains(w.ToLowerInvariant()),"Calculation sheet stays clean of '"+w+"'");
         var f10=Svgs(sheet)["F10"];
         Check(Value(f10,"dim-alpha")=="152"&&Tagged(f10,"dim-alpha-text").InnerText=="α 152°"&&Value(f10,"groove-beta")=="95"&&Value(f10,"groove-gamma")=="30"&&Tagged(f10,"rope-t1")!=null&&Tagged(f10,"rope-t2")!=null&&Value(f10,"dt")=="520"&&Value(f10,"groove-type")==GrooveTypes.UndercutU,"F10: α 152° dimensioned from the geometry, β 95° / γ 30° from the inputs, T1 / T2 arrows, Dt 520");
@@ -405,7 +405,7 @@ public static class CalculationSheetTests
         int expected=0;for(int c=5;c<=7&&expected==0;c++){var q=ProjectJson.Clone(p);q.Suspension.RopeCount=c;var k=engine.Calculate(q,ctx,presets).Checks.First(z=>z.Id=="safety-factor");if(k.Ok==true)expected=c;}
         var d10=ProjectJson.Clone(p);d10.Suspension.RopeDiameterMm=10;PresetFields.MinimumBreakingLoad.Reset(d10);var sf10=engine.Calculate(d10,ctx,presets).Checks.First(z=>z.Id=="safety-factor");
         var sfNote=notes.Warnings.FirstOrDefault(w=>w.StartsWith("Rope safety factor "));
-        Check(expected>0&&sf10.Ok==true&&sfNote!=null&&sfNote.Contains("Use "+expected+" ropes (Sf ")&&sfNote.Contains("or 10 mm ropes with 44 kN MBL (Sf "+sf10.Actual+")"),"Design Notes: Sf NOT OK recommends the smallest rope count ("+expected+") and the next rope diameter (10 mm, Sf "+sf10.Actual+") from the same engine");
+        Check(expected>0&&sf10.Ok==true&&sfNote!=null&&sfNote.Contains("Use "+expected+" ropes (Sf ")&&sfNote.Contains("or 10 mm ropes with 44 kN (4490 kg) MBL (Sf "+sf10.Actual+")"),"Design Notes: Sf NOT OK recommends the smallest rope count ("+expected+") and the next rope diameter (10 mm, Sf "+sf10.Actual+") from the same engine");
         notesPath=Path.Combine(output,"18-design-notes-rope-upsize.docx");notes.Save(notesPath);DesignNotesClean(notesPath,Text(notesPath,out props),"18");
         // 19. Clean project (direct roping, 1100 × 700 car, all checks OK): a single line.
         p=BasicComplete("Test Tower R — clean design notes");p.Shaft.DepthMm=1100;p.Suspension.RopeDiameterMm=10;p.Suspension.RopeCount=4;
@@ -626,7 +626,7 @@ public static class CalculationSheetTests
     {
         string file=label+".docx";string text;var sheet=Export(p,file,inputs,out text);
         Check(Near(sheet.CarGuideForces.FF1DesignN,2200)&&Near(sheet.CarGuideForces.FF2DesignN,2100)&&Near(sheet.SafetyPit.P5.PerComponentLoadN,9800)&&Near(sheet.SafetyPit.P6.GroupLoadN,39200)&&Near(sheet.SafetyPit.P7.GroupLoadN,29600)&&Near(sheet.SafetyPit.P7.PerComponentLoadN,14800),"Numbers unchanged (FF 2200/2100, P5 9800, P6 39200, P7 29600/14800 N): "+label);
-        Check(text.Contains("= 2200 N")&&text.Contains("= 2100 N")&&text.Contains("9800 N per car guide rail")&&text.Contains("= 29600 N")&&text.Contains("= 14800 N"),"Numbers unchanged in document text: "+label);
+        Check(text.Contains("= 2200 N (225 kg)")&&text.Contains("= 2100 N (215 kg)")&&text.Contains("9800 N (1000 kg) per car guide rail")&&text.Contains("= 29600 N (3020 kg)")&&text.Contains("= 14800 N (1510 kg)"),"Numbers unchanged in document text: "+label);
         var ns=Ns();
         using(var package=Package.Open(Path.Combine(output,file),FileMode.Open,FileAccess.Read))
         {

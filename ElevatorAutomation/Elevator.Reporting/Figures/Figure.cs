@@ -41,10 +41,10 @@ namespace Elevator.Reporting.Figures
             return v.ToString(format, CultureInfo.InvariantCulture);
         }
 
-        /// <summary>Formats newtons as kN.</summary>
+        /// <summary>Formats newtons as kN with the kg value beside it (DESIGN-FLOW principle 10): "12.35 kN (1260 kg)".</summary>
         public static string Kn(double newtons)
         {
-            return Num(newtons / 1000, "0.###") + " kN";
+            return Num(newtons / 1000, "0.###") + " kN (" + Elevator.Core.Calculations.LoadUnits.KgWithUnit(newtons) + ")";
         }
 
         /// <summary>Formats a length in mm.</summary>
@@ -168,6 +168,13 @@ namespace Elevator.Reporting.Figures
                 t.At = c;
                 double x0, y0, x1, y1;
                 t.Box(out x0, out y0, out x1, out y1);
+                // A label wider than the room to the frame edge (a value with its kg beside it) moves inwards until it is inside.
+                if (!vertical && (x0 < 0 || x1 > WidthMm) && x1 - x0 <= WidthMm)
+                {
+                    double dx = x0 < 0 ? -x0 : WidthMm - x1;
+                    t.At = new FigurePoint(c.X + dx, c.Y);
+                    t.Box(out x0, out y0, out x1, out y1);
+                }
                 if (!Overlaps(x0, y0, x1, y1, t))
                 {
                     Entities.Add(t);

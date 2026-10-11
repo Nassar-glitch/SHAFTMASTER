@@ -64,7 +64,7 @@ namespace Elevator.Solution.Desktop.Pages
     if(current){
      Note("Load case: "+Session.Project.Calculations.LoadCase+" · Model: "+r.ModelVersion+"\nPositive = upward bearing reaction");
      foreach(var b in r.Reactions.OrderBy(b=>b.Id))Note(b.Id+" · "+DisplayText.BearingLabel(b.Id)+" · "+DisplayText.PointText(b.PositionMm)+" mm   →   "+DisplayText.N(b.UpwardN)+" N ("+DisplayText.N(b.UpwardN/1000)+" kN; "+DisplayText.Kg(b.UpwardN)+" kg)");
-     Note("Rope tensions · bundle / per rope (N)\nCar: "+DisplayText.N(r.CarBundleTensionN)+" / "+DisplayText.N(r.CarPerRopeTensionN)+"\nCounterweight: "+DisplayText.N(r.CounterweightBundleTensionN)+" / "+DisplayText.N(r.CounterweightPerRopeTensionN));
+     Note("Rope tensions · bundle / per rope (N; kg)\nCar: "+DisplayText.N(r.CarBundleTensionN)+" / "+DisplayText.N(r.CarPerRopeTensionN)+" ("+DisplayText.Kg(r.CarBundleTensionN)+" / "+DisplayText.Kg(r.CarPerRopeTensionN)+" kg)\nCounterweight: "+DisplayText.N(r.CounterweightBundleTensionN)+" / "+DisplayText.N(r.CounterweightPerRopeTensionN)+" ("+DisplayText.Kg(r.CounterweightBundleTensionN)+" / "+DisplayText.Kg(r.CounterweightPerRopeTensionN)+" kg)");
      Note("Equilibrium residuals: Fz "+DisplayText.N(r.VerticalResidualN)+" N · Mx "+DisplayText.N(r.MomentXResidualNmm)+" N.mm · My "+DisplayText.N(r.MomentYResidualNmm)+" N.mm");
      var detail=new StackPanel();
      foreach(var load in r.Loads)detail.Children.Add(new TextBlock{Text=load.Id+" · "+DisplayText.PointText(load.PositionMm)+" mm",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,5,0,5)});
