@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Elevator.AutoCAD.Common;
 using Elevator.Core.Doors;
+using Elevator.Core.Geometry;
 using Elevator.Core.Project;
 
 namespace Elevator.AutoCAD.Plan
@@ -21,15 +22,14 @@ namespace Elevator.AutoCAD.Plan
         /// <summary>Key prefix of the automatic door entities.</summary>
         public const string KeyPrefix = "Plan.AutoDoor.";
 
-        // Car front wall thickness (return) and door box depth of the 2C references, mm.
+        // Car front wall thickness (return) and the offsets of the 2C panels inside their frames (references), mm.
         const double CarReturn = 40;
-        const double BoxDepth = 70;
         const double CarBoxPanelOffset = 12;
         const double LandingBoxPanelOffset = 5;
-        // Parked-panel blocks of the references: 2S 106 wide at the end of the stacking pocket, 2C 141 wide at the ends of the boxes.
-        const double ParkedBlockWidth2S = 106;
-        const double ParkedBlockWidth2C = 141;
+        // Panel bands end this far inside the frame end (the references' parked-panel block inset).
         const double ParkedBlockInset = 4;
+        // Inset line of the jamb posts, mm.
+        const double PostInset = 3;
 
         const string LayerCar = "Car";
         const string LayerGuides = "step&guides";
@@ -66,7 +66,10 @@ namespace Elevator.AutoCAD.Plan
             "Plan.Dimension.Part010",
             "Plan.Dimension.Part011",
             "Plan.Dimension.Part012",
-            "Plan.Dimension.Part013"
+            "Plan.Dimension.Part013",
+            // CAR DEPTH and the front zone total: redrawn on one dimension line (D3), their extension lines from the car front return.
+            "Plan.Dimension.Part020",
+            "Plan.Dimension.Part031"
         };
 
         static readonly string[] WallKeys =
@@ -168,6 +171,7 @@ namespace Elevator.AutoCAD.Plan
             readonly ShaftFrame f;
             readonly BlockTableRecord model;
             int count;
+            double jambDepth;
 
             public Builder(Database db, Transaction tr, DrawingSnapshot s, DoorLayout l)
             {
@@ -317,6 +321,7 @@ namespace Elevator.AutoCAD.Plan
                 double depth = Math.Abs(f.Local(template.GetPoint3dAt(2)).Y - f.Local(template.GetPoint3dAt(0)).Y);
                 if (depth < 1)
                     depth = 63.1;
+                jambDepth = depth;
                 foreach (double[] block in new[] { new[] { l.OpeningLeftX - j, l.OpeningLeftX }, new[] { l.OpeningRightX, l.OpeningRightX + j } })
                 {
                     Rect(block[0], block[1], -depth, 0, LayerFrame);
@@ -343,11 +348,37 @@ namespace Elevator.AutoCAD.Plan
                 Panel(Mirror(u0), Mirror(u1), d0, d1, outline);
             }
 
-            // Parked-panel block: a rectangle and a second one 1 mm inside (the references' double line).
-            void Parked(double x0, double x1, double d0, double d1, string layer)
+            void Open(string layer, double[] x, double[] d)
             {
-                Rect(x0, x1, d0, d1, layer);
-                Rect(x0, x1 - 1, d0 + 1, d1 - 1, layer);
+                var pl = new Polyline();
+                for (int i = 0; i < x.Length; i++)
+                    pl.AddVertexAt(i, Pt(P(x[i], d[i])), 0, 0, 0);
+                pl.Closed = false;
+                pl.Elevation = f.Origin.Z;
+                Add(pl, layer);
+            }
+
+            // The band of a panel row (D3, the user's edit of the 2S drawing): the panel continues from its closed end into the stacking
+            // pocket / box up to the end of the frame. Outline and a 1 mm inset line, both open at the closed end (1 mm stubs on the
+            // outline), so that the panel and its band read as one bar inside the frame.
+            void Band(double xClosed, double xEnd, double d0, double d1, string layer)
+            {
+                if (Math.Abs(xEnd - xClosed) < 2)
+                    return;
+                double inner = xEnd + (xClosed < xEnd ? -1 : 1);
+                Open(layer, new[] { xClosed, xClosed, xEnd, xEnd, xClosed, xClosed }, new[] { d0 + 1, d0, d0, d1, d1, d1 - 1 });
+                Open(layer, new[] { xClosed, inner, inner, xClosed }, new[] { d0 + 1, d0 + 1, d1 - 1, d1 - 1 });
+            }
+
+            // A fixed-side jamb post of a frame: outline, and an inset line 3 mm inside it that is closed at the opening edge.
+            void Post(double xOuter, double xOpening, double d0, double d1)
+            {
+                Rect(xOuter, xOpening, d0, d1, LayerFrame);
+                if (Math.Abs(xOpening - xOuter) > 2 * PostInset)
+                {
+                    double inset = xOuter + (xOuter < xOpening ? PostInset : -PostInset);
+                    Rect(inset, xOpening, d0 + PostInset, d1 - PostInset, LayerFrame);
+                }
             }
 
             void SideOpening()
@@ -355,59 +386,71 @@ namespace Elevator.AutoCAD.Plan
                 double t = l.PanelThicknessMm, pw = l.PanelWidthMm, o = l.OpeningMm;
                 double ot = Math.Max(0, 2 * pw - o - l.PanelOverlapMm);
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
+                double cdEnd = s.ElevatorParameters.CarFront - CarReturn;
                 // u runs from the fixed-side wall: the opening spans [uf, uf + o].
                 double uf = l.StackingSide == DoorTypes.Right ? l.OpeningLeftX : s.ElevatorParameters.SW - l.OpeningRightX;
                 double us = uf + o;
                 double ul = l.StackingSide == DoorTypes.Right ? l.LandingLeftX : s.ElevatorParameters.SW - l.LandingRightX;
                 double ur = l.StackingSide == DoorTypes.Right ? l.LandingRightX : s.ElevatorParameters.SW - l.LandingLeftX;
-                // Landing frame: fixed-side jamb (double line) and the stacking pocket lines (top, bottom, outer edge).
-                double jw = uf - ul;
-                Rect(Mirror(ul), Mirror(uf), 0, lz, LayerFrame);
-                if (jw > 8)
-                    Rect(Mirror(ul) + (Mirror(ul) < Mirror(uf) ? 3 : -3), Mirror(uf) + (Mirror(ul) < Mirror(uf) ? -3 : 3), 3, lz - 3, LayerFrame);
-                Seg(Mirror(uf + pw), lz, Mirror(ur), lz, LayerFrame);
-                Seg(Mirror(us + ot), 0, Mirror(ur), 0, LayerFrame);
-                Seg(Mirror(ur), 0, Mirror(ur), lz, LayerFrame);
+                // Frames: the landing door frame over the landing zone and the car door frame from the sill gap to the car front return,
+                // each one rectangle from the outer edge of the fixed-side jamb to the end of the stacking pocket.
+                Rect(Mirror(ul), Mirror(ur), 0, lz, LayerFrame);
+                Rect(Mirror(ul), Mirror(ur), cd, cdEnd, LayerFrame);
+                // Fixed-side jamb posts (landing and car), as wide as the landing fixed jamb.
+                if (uf - ul > 0.5)
+                {
+                    Post(Mirror(ul), Mirror(uf), 0, lz);
+                    Post(Mirror(ul), Mirror(uf), cd, cdEnd);
+                }
                 // Panels (closed): the fixed-side panel next to the car and the leading panel behind it, landing and car.
                 PanelU(uf, uf + pw, lz - t, lz, LayerCar);
                 PanelU(us + ot - pw, us + ot, lz - 2 * t - 5, lz - t - 5, LayerCar);
                 PanelU(uf, uf + pw, cd, cd + t, LayerCar);
                 PanelU(us + ot - pw, us + ot, cd + t + 5, cd + 2 * t + 5, LayerCar);
-                // Parked panels in the pocket (stack ends), in the four panel rows.
-                double p1 = ur - ParkedBlockInset, p0 = p1 - ParkedBlockWidth2S;
-                if (p0 > us + ot)
-                {
-                    foreach (double d in new[] { lz - t, lz - 2 * t - 5, cd, cd + t + 5 })
-                        Parked(Math.Min(Mirror(p0), Mirror(p1)), Math.Max(Mirror(p0), Mirror(p1)), d, d + t, LayerCar);
-                }
+                // Bands of the four panel rows, from the closed end of the panel to the end of the pocket.
+                double end = ur - ParkedBlockInset;
+                Band(Mirror(uf + pw), Mirror(end), lz - t, lz, LayerCar);
+                Band(Mirror(us + ot), Mirror(end), lz - 2 * t - 5, lz - t - 5, LayerCar);
+                Band(Mirror(uf + pw), Mirror(end), cd, cd + t, LayerCar);
+                Band(Mirror(us + ot), Mirror(end), cd + t + 5, cd + 2 * t + 5, LayerCar);
             }
 
             void CentreOpening()
             {
                 double t = l.PanelThicknessMm, pw = l.PanelWidthMm;
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
-                // Door boxes of the landing and of the car, and the two centre panels of each (the references draw them on layer 0).
-                Rect(l.LandingLeftX, l.LandingRightX, lz - BoxDepth, lz, LayerFrame);
-                Rect(l.LandingLeftX, l.LandingRightX, cd, cd + BoxDepth, LayerFrame);
-                double dl = lz - LandingBoxPanelOffset - t, dc = cd + CarBoxPanelOffset;
+                double cdEnd = s.ElevatorParameters.CarFront - CarReturn;
+                // Frames across both stacking sides, centred on the opening: the landing frame over the landing zone and the car frame
+                // from the sill gap to the car front return (the 2S frame rules).
+                Rect(l.LandingLeftX, l.LandingRightX, 0, lz, LayerFrame);
+                Rect(l.LandingLeftX, l.LandingRightX, cd, cdEnd, LayerFrame);
+                // The two centre panels of the landing and of the car, inside their frames (the references draw them on layer 0).
+                double dl = lz - Math.Min(LandingBoxPanelOffset, Math.Max(0, (lz - t) / 2)) - t;
+                double dc = cd + Math.Min(CarBoxPanelOffset, Math.Max(0, (cdEnd - cd - t) / 2));
                 Panel(l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, LayerFrame);
                 Panel(l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, LayerFrame);
                 Panel(l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, LayerFrame);
                 Panel(l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, LayerFrame);
-                // Panel stack ends at both ends of the boxes.
+                // Bands from the closed panels to both ends of the frame.
                 double e0 = l.LandingLeftX + ParkedBlockInset, e1 = l.LandingRightX - ParkedBlockInset;
                 foreach (double d in new[] { dl, dc })
                 {
-                    Parked(e0, e0 + ParkedBlockWidth2C, d, d + t, LayerFrame);
-                    Parked(e1 - ParkedBlockWidth2C, e1, d, d + t, LayerFrame);
+                    Band(l.OpeningLeftX, e0, d, d + t, LayerFrame);
+                    Band(l.OpeningRightX, e1, d, d + t, LayerFrame);
                 }
+            }
+
+            // Thickness of the car side wall (the car outer face to the inner face).
+            double CarWallThickness()
+            {
+                return s.Frame.Local(s.Get<Line>("Plan.Cabin.Outer.Rear").StartPoint).Y - s.ElevatorParameters.CarRear;
             }
 
             // Car front returns: from the car side wall (outer face) to the opening edge.
             void CarReturns()
             {
                 var p = s.ElevatorParameters;
-                double wall = s.Frame.Local(s.Get<Line>("Plan.Cabin.Outer.Rear").StartPoint).Y - p.CarRear;
+                double wall = CarWallThickness();
                 double left = p.X("carLeft"), right = p.X("carRight");
                 double d0 = p.CarFront - CarReturn, d1 = p.CarFront;
                 Rect(left - wall, l.OpeningLeftX, d0, d1, LayerGuides);
@@ -424,70 +467,172 @@ namespace Elevator.AutoCAD.Plan
                 Seg(l.OpeningLeftX, s.ElevatorParameters.CarFront - CarReturn, l.OpeningRightX, s.ElevatorParameters.CarFront - CarReturn, LayerSill);
             }
 
-            // A copy of a template dimension with new points; the dimension line and text keep the band of the template (or the given
-            // depth band).
-            void Dim(string source, double x1, double x2, string text, double? band = null)
+            // One dimension of a chain: the template dimension it is a copy of, the two measured positions along the measuring axis
+            // (A < B) and the positions of the extension line origins across it (null: the template's).
+            sealed class Link
             {
-                var src = Source<RotatedDimension>(source);
-                var a = f.Local(src.XLine1Point);
-                var c = f.Local(src.XLine2Point);
-                var p = f.Local(src.DimLinePoint);
-                var t = f.Local(src.TextPosition);
-                var d = CloneOf<RotatedDimension>(src);
-                double mid = (x1 + x2) / 2;
-                double dy = band.HasValue ? band.Value - p.Y : 0;
-                d.XLine1Point = f.World(new Point3d(x1, a.Y, a.Z));
-                d.XLine2Point = f.World(new Point3d(x2, c.Y, c.Z));
-                d.DimLinePoint = f.World(new Point3d(mid, p.Y + dy, p.Z));
-                d.TextPosition = f.World(new Point3d(mid, t.Y + dy, t.Z));
-                if (text != null)
-                    d.DimensionText = text;
-                d.RecomputeDimensionBlock(true);
+                public string Source;
+                public double A;
+                public double B;
+                public double? CrossA;
+                public double? CrossB;
+
+                public Link(string source, double a, double b, double? crossA, double? crossB)
+                {
+                    Source = source;
+                    A = a;
+                    B = b;
+                    CrossA = crossA;
+                    CrossB = crossB;
+                }
             }
 
-            // A vertical copy of the car-front dimension between two depths, in a column shifted from the template one.
-            void DimDepth(string source, double d0, double d1, double columnShift)
+            // Draws a chain of contiguous dimensions on ONE dimension line (DESIGN-FLOW principle 8): vertical = measured along the depth,
+            // the line at x = line; otherwise measured along x, the line at depth = line. The text of an interval too small for it is
+            // placed by DimensionLayout outside the chain / beside it.
+            void Chain(bool vertical, double line, IList<Link> links, IList<double[]> blocked)
             {
-                var src = Source<RotatedDimension>(source);
-                var a = f.Local(src.XLine1Point);
-                var c = f.Local(src.XLine2Point);
-                var p = f.Local(src.DimLinePoint);
-                var d = CloneOf<RotatedDimension>(src);
-                double mid = (d0 + d1) / 2;
-                d.XLine1Point = f.World(new Point3d(a.X, d0, a.Z));
-                d.XLine2Point = f.World(new Point3d(c.X, d1, c.Z));
-                d.DimLinePoint = f.World(new Point3d(p.X + columnShift, mid, p.Z));
-                d.TextPosition = f.World(new Point3d(p.X + columnShift, mid, p.Z));
-                d.DimensionText = "";
-                d.RecomputeDimensionBlock(true);
+                int n = links.Count;
+                var dims = new RotatedDimension[n];
+                var boundaries = new double[n + 1];
+                var texts = new string[n];
+                double z = 0, height = 0, arrow = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    var k = links[i];
+                    if (i > 0 && Math.Abs(links[i - 1].B - k.A) > 1e-6)
+                        throw new ArgumentException("The dimensions of a chain are contiguous.");
+                    var src = Source<RotatedDimension>(k.Source);
+                    var a = f.Local(src.XLine1Point);
+                    var c = f.Local(src.XLine2Point);
+                    var d = CloneOf<RotatedDimension>(src);
+                    double ca = k.CrossA ?? (vertical ? a.X : a.Y);
+                    double cb = k.CrossB ?? (vertical ? c.X : c.Y);
+                    z = a.Z;
+                    d.XLine1Point = vertical ? f.World(new Point3d(ca, k.A, a.Z)) : f.World(new Point3d(k.A, ca, a.Z));
+                    d.XLine2Point = vertical ? f.World(new Point3d(cb, k.B, c.Z)) : f.World(new Point3d(k.B, cb, c.Z));
+                    dims[i] = d;
+                    boundaries[i] = k.A;
+                    boundaries[i + 1] = k.B;
+                    texts[i] = DimensionLayout.DisplayText(d.DimensionText, Math.Abs(k.B - k.A));
+                    height = Math.Max(height, TextHeightOf(d));
+                    arrow = Math.Max(arrow, d.Dimasz * d.Dimscale);
+                }
+                var place = DimensionLayout.PlaceChainTexts(boundaries, texts, height, arrow, blocked);
+                for (int i = 0; i < n; i++)
+                {
+                    double mid = (links[i].A + links[i].B) / 2;
+                    var d = dims[i];
+                    // A text moved off its dimension line stays where it is put (free text), the line does not follow it.
+                    if (place[i].LateralMm > 0)
+                        d.Dimtmove = 2;
+                    if (vertical)
+                    {
+                        d.DimLinePoint = f.World(new Point3d(line, mid, z));
+                        d.TextPosition = f.World(new Point3d(line - place[i].LateralMm, mid + place[i].AlongMm, z));
+                    }
+                    else
+                    {
+                        d.DimLinePoint = f.World(new Point3d(mid, line, z));
+                        d.TextPosition = f.World(new Point3d(mid + place[i].AlongMm, line + place[i].LateralMm, z));
+                    }
+                    d.RecomputeDimensionBlock(true);
+                }
+            }
+
+            // The height of the dimension text: the fixed height of its text style when it has one, else the dimension style's.
+            double TextHeightOf(Dimension d)
+            {
+                var style = tr.GetObject(d.TextStyleId, OpenMode.ForRead) as TextStyleTableRecord;
+                if (style != null && style.TextSize > 0)
+                    return style.TextSize;
+                return d.Dimtxt * d.Dimscale;
+            }
+
+            double LineOf(string key, bool vertical)
+            {
+                var p = f.Local(Source<RotatedDimension>(key).DimLinePoint);
+                return vertical ? p.X : p.Y;
             }
 
             void Dimensions()
             {
                 var p = s.ElevatorParameters;
-                double sw = p.SW, centre = (l.OpeningLeftX + l.OpeningRightX) / 2;
+                double sw = p.SW, front = p.CarFront;
+                double ol = l.OpeningLeftX, orr = l.OpeningRightX, centre = (ol + orr) / 2;
                 double carLeft = p.X("carLeft"), carRight = p.X("carRight");
-                // Opening, car returns (above the car front).
-                Dim("Plan.Dimension.Part009", carLeft, l.OpeningLeftX, null);
-                Dim("Plan.Dimension.Part010", l.OpeningLeftX, l.OpeningRightX, null);
-                Dim("Plan.Dimension.Part011", l.OpeningRightX, carRight, null);
-                // Wall to opening on both sides, DOOR o x 2000, and the two halves of the opening (below the front wall).
-                Dim("Plan.Dimension.Part013", 0, l.OpeningLeftX, null);
-                Dim("Plan.Dimension.Part008", l.OpeningLeftX, l.OpeningRightX, null);
-                Dim("Plan.Dimension.Part012", l.OpeningRightX, sw, null);
-                var halves = Source<RotatedDimension>("Plan.Dimension.Part006");
-                double halvesBand = f.Local(halves.DimLinePoint).Y;
-                Dim("Plan.Dimension.Part006", l.OpeningLeftX, centre, null);
-                Dim("Plan.Dimension.Part007", centre, l.OpeningRightX, null);
-                // 2S: the opening is off the shaft centre; its offset in the row nearest the wall (above the halves, as in the references).
-                if (l.Type == DoorTypes.Automatic2S && Math.Abs(centre - sw / 2) > 0.05)
-                    Dim("Plan.Dimension.Part006", Math.Min(centre, sw / 2), Math.Max(centre, sw / 2), null, halvesBand / 2);
-                // Front-zone split: landing door zone, sill gap, car door zone, each in its own column beside the total (the template
-                // dimension of the front zone), 60 mm apart, outside the wall.
+                double wall = CarWallThickness();
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
-                DimDepth("Plan.Dimension.Part031", 0, lz, 180);
-                DimDepth("Plan.Dimension.Part031", lz, cd, 120);
-                DimDepth("Plan.Dimension.Part031", cd, p.CarFront, 60);
+                double edge = -jambDepth;
+
+                // Above the car front: car return | opening | car return on the one line of the template opening dimension. The car side
+                // walls block the texts; a return too small for its text gets it outside the chain, beyond the wall.
+                Chain(false, LineOf("Plan.Dimension.Part010", false),
+                    new List<Link>
+                    {
+                        new Link("Plan.Dimension.Part009", carLeft, ol, null, null),
+                        new Link("Plan.Dimension.Part010", ol, orr, null, null),
+                        new Link("Plan.Dimension.Part011", orr, carRight, null, null)
+                    },
+                    new List<double[]> { new[] { carLeft - wall, carLeft }, new[] { carRight, carRight + wall } });
+
+                // Below the front wall, rows at the template's spacing: wall | DOOR | wall at the template door row, the two halves of
+                // the opening one row nearer, and (2S, opening off the shaft centre) its offset one row nearer still. The extension
+                // lines start at the wall inner face and at the bottom of the wall jamb blocks.
+                double doorRow = LineOf("Plan.Dimension.Part008", false);
+                double halvesRow = LineOf("Plan.Dimension.Part006", false);
+                double offsetRow = DimensionLayout.RowBefore(halvesRow, doorRow);
+                Chain(false, doorRow,
+                    new List<Link>
+                    {
+                        new Link("Plan.Dimension.Part013", 0, ol, 0, edge),
+                        new Link("Plan.Dimension.Part008", ol, orr, edge, edge),
+                        new Link("Plan.Dimension.Part012", orr, sw, edge, 0)
+                    },
+                    null);
+                Chain(false, halvesRow,
+                    new List<Link>
+                    {
+                        new Link("Plan.Dimension.Part006", ol, centre, edge, 0),
+                        new Link("Plan.Dimension.Part007", centre, orr, 0, edge)
+                    },
+                    null);
+                if (l.Type == DoorTypes.Automatic2S && Math.Abs(centre - sw / 2) > 0.05)
+                {
+                    bool openingFirst = centre < sw / 2;
+                    Chain(false, offsetRow,
+                        new List<Link>
+                        {
+                            new Link("Plan.Dimension.Part006", Math.Min(centre, sw / 2), Math.Max(centre, sw / 2),
+                                openingFirst ? 0 : edge, openingFirst ? edge : 0)
+                        },
+                        null);
+                }
+
+                // Left of the shaft: the front zone split (landing door zone | sill gap | car door zone) on one line, and, one column
+                // further out, the zone total and CAR DEPTH on one line. The extension lines start at the frame corners and at the
+                // car front return, not at the wall.
+                double totalColumn = LineOf("Plan.Dimension.Part020", true);
+                double chainColumn = totalColumn + DimensionLayout.ColumnPitchMm;
+                double wallX = f.Local(Source<RotatedDimension>("Plan.Dimension.Part031").XLine1Point).X;
+                double frameX = l.LandingLeftX;
+                double returnX = (carLeft - wall + ol) / 2;
+                double rearY = f.Local(Source<RotatedDimension>("Plan.Dimension.Part020").XLine2Point).Y;
+                Chain(true, chainColumn,
+                    new List<Link>
+                    {
+                        new Link("Plan.Dimension.Part031", 0, lz, wallX, frameX),
+                        new Link("Plan.Dimension.Part031", lz, cd, frameX, frameX),
+                        new Link("Plan.Dimension.Part031", cd, front, frameX, returnX)
+                    },
+                    null);
+                Chain(true, totalColumn,
+                    new List<Link>
+                    {
+                        new Link("Plan.Dimension.Part031", 0, front, wallX, returnX),
+                        new Link("Plan.Dimension.Part020", front, rearY, returnX, null)
+                    },
+                    null);
             }
         }
     }

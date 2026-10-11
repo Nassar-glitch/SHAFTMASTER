@@ -225,3 +225,27 @@ automatic door `StepModelParameters` carries the opening X range and the panels 
 above the floor, height); the piers and spandrels follow the opening position, the manual panels are replaced by the panel boxes and, per
 floor, the frame bodies (2S: fixed-side jamb, stacking pocket beyond the panel over-travel, header over the opening; 2C: header). A Manual
 door gives empty parameters and the same bodies as before.
+
+## 6. D3: frames, jamb posts, panel bands and arranged dimensions (the user's own correction)
+
+The user generated the 2S 700 / 1320 case and corrected the plan by hand; his file is kept in `docs/design/doors-d3/` and
+`docs/design/doors-d3/USER-EDIT-DIFF.md` states what he did as rules. They are implemented in `AutomaticDoorPlan` (principle 8 of
+DESIGN-FLOW, "Drawing quality"), values and recipe unchanged:
+
+* **Frames:** the landing door frame (d 0 .. landing zone) and the car door frame (d car zone start .. car front - 40) are one rectangle
+  each from the outer edge of the fixed-side jamb to the end of the stacking pocket (2C: across both stacking sides, centred), so the
+  panels sit inside a frame and the two frames are aligned. The loose pocket lines are replaced by the frame.
+* **Jamb posts (2S):** fixed-side post in both frames, outline plus a 3 mm inset line closed at the opening edge.
+* **Panel bands:** each panel row continues from the closed end of its panel to the end of the pocket (2C: to the ends of the frame),
+  outline and 1 mm inset line open at the closed end.
+* **Dimensions** (`Elevator.Core.Geometry.DimensionLayout`, pure and unit tested): chains on one dimension line (returns / opening; wall /
+  DOOR / wall; halves; landing zone / sill gap / car door zone; zone total / CAR DEPTH one column pitch of 110 mm further out); the rows
+  below the wall at the template spacing (the opening offset one pitch nearer); extension lines from the frame corners, the sill line and
+  the car front return; a text that does not fit its interval is placed outside the chain (beyond a car wall that blocks it) or beside
+  the chain on a second lane, so no dimension text overlaps another. CAR DEPTH and the zone total of the template are hidden and redrawn
+  in these places (`Plan.Dimension.Part020`, `Part031` join the hidden list of section 5).
+
+Tier 3 (`doors-native`): the user's project is regenerated and compared with his DWG (line work identical, every dimension present with the
+same interval and text, dimension lines within 15 mm); `verify_doors.py` checks the frame / post / band geometry of 2S right and left,
+2S shifted, 2C 800 and 2C 900, that every panel is inside its frame, the one-line chains, the equal rows and the text boxes.
+Images: `docs/design/doors-d3/`.

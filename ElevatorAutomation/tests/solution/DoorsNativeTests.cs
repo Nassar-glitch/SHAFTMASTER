@@ -8,7 +8,7 @@ using Elevator.Core.MachineRoom;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
 
-// D2: automatic doors (2S, 2C) in the native drawings. Four-view DWGs are generated and reopened (the packaged host verifies the
+// D2 / D3: automatic doors (2S, 2C) in the native drawings. Four-view DWGs are generated and reopened (the packaged host verifies the
 // save / reopen); the expected door layout of every case is written beside the DWG for tests/integration/verify_doors.py, which reads
 // the door geometry back from the DWG and compares it with the DoorLayout numbers.
 public static class DoorsNativeTests
@@ -18,7 +18,7 @@ public static class DoorsNativeTests
     static readonly List<string> names = new List<string>();
     static void Check(bool value, string name) { if (!value) throw new Exception(name); ++count; names.Add(name); }
 
-    static ElevatorProject Project(PresetLibrary lib, DesignContext ctx, string type, double width, double depth, double opening, string name)
+    static ElevatorProject Project(PresetLibrary lib, DesignContext ctx, string type, double width, double depth, double opening, string name, string handing)
     {
         var seed = ProjectJson.Deserialize(File.ReadAllText(Path.Combine(bin, "reviewed-example.elevator.json")));
         var p = ProjectPresets.CreateNew(lib, ctx, seed.Counterweight, seed.Rails.BracketSource);
@@ -29,6 +29,8 @@ public static class DoorsNativeTests
         p.Shaft.DepthMm = depth;
         DoorFlow.SetType(p, type);
         DoorFlow.SetNumber(p, DoorSettings.OpeningKey, opening);
+        if (handing != null)
+            DoorFlow.SetHanding(p, handing);
         return p;
     }
 
@@ -43,16 +45,24 @@ public static class DoorsNativeTests
             ctx.ChassisEvidence = Wire.Read<ChassisGeometryEvidence>(Path.Combine(bin, "reviewed-chassis-evidence.json"));
             var lib = PresetLibrary.Load(Path.Combine(bin, "presets.json"));
             ctx.Doors = lib.DoorsOrDefault();
+            // D3: the project the user generated and then corrected by hand in AutoCAD (2S 700 on a 1320 x 1800 shaft), stored from
+            // the DWG; and the mirrored (left-handed) 2S, to check that every frame rule holds for both handings.
+            const string UserProject = "docs/design/doors-d3/user-edit-2S-700-1320.elevator.json";
             var cases = new[]
             {
-                new { Id = "2S-800-1720", Type = DoorTypes.Automatic2S, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false },
-                new { Id = "2C-800-1720", Type = DoorTypes.Automatic2C, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false },
-                new { Id = "2S-700-1300", Type = DoorTypes.Automatic2S, Width = 1300.0, Depth = 2800.0, Opening = 700.0, Shifted = true }
+                new { Id = "2S-800-1720", Type = DoorTypes.Automatic2S, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = (string)null, Fixture = (string)null },
+                new { Id = "2C-800-1720", Type = DoorTypes.Automatic2C, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = (string)null, Fixture = (string)null },
+                new { Id = "2S-700-1300", Type = DoorTypes.Automatic2S, Width = 1300.0, Depth = 2800.0, Opening = 700.0, Shifted = true, Handing = (string)null, Fixture = (string)null },
+                new { Id = "2S-700-1320", Type = DoorTypes.Automatic2S, Width = 1320.0, Depth = 1800.0, Opening = 700.0, Shifted = true, Handing = (string)null, Fixture = UserProject },
+                new { Id = "2S-800-1720-left", Type = DoorTypes.Automatic2S, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = DoorTypes.Left, Fixture = (string)null },
+                new { Id = "2C-900-1900", Type = DoorTypes.Automatic2C, Width = 1900.0, Depth = 2800.0, Opening = 900.0, Shifted = false, Handing = (string)null, Fixture = (string)null }
             };
             var client = new GenerationClient(root, bin, @"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe");
             foreach (var c in cases)
             {
-                var p = Project(lib, ctx, c.Type, c.Width, c.Depth, c.Opening, "Doors " + c.Id);
+                var p = c.Fixture != null
+                    ? ProjectJson.Deserialize(File.ReadAllText(Path.Combine(root, c.Fixture.Replace('/', Path.DirectorySeparatorChar))))
+                    : Project(lib, ctx, c.Type, c.Width, c.Depth, c.Opening, "Doors " + c.Id, c.Handing);
                 var design = new ElevatorDesignEngine().Calculate(p, ctx, DrawingViews.All);
                 Check(design.CanGenerate && design.Plan != null, c.Id + ": shared design allows generation");
                 var layout = DoorRules.Evaluate(p, ctx.Doors, design.Plan);

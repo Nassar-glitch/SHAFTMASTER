@@ -1,7 +1,8 @@
 param([string]$CandidateBin='artifacts/bin',[string]$EvidenceDirectory)
-# Tier 3 (D2): automatic doors in the native drawings. Generates and reopens four-view DWGs (2S 800 and 2C 800 on 1720 x 2800, 2S 700 on a
-# 1300 shaft with the opening shifted), then reads the door geometry back from the DWGs and compares it with the D1 DoorLayout numbers
-# (tests/integration/verify_doors.py), and renders the plans to PNG.
+# Tier 3 (D2 / D3): automatic doors in the native drawings. Generates and reopens four-view DWGs (2S 800 and 2C 800 on 1720 x 2800, 2S 700 on a
+# 1300 shaft with the opening shifted, the user's own 2S 700 on 1320 x 1800, a left-handed 2S and a 2C 900 on 1900), then reads the door
+# geometry back from the DWGs and compares it with the D1 DoorLayout numbers (tests/integration/verify_doors.py), renders the plans to PNG
+# and checks the user's case against the user's own correction of the drawing (tests/integration/verify_user_edit.py).
 $ErrorActionPreference='Stop'
 $root=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bin=Join-Path $root $CandidateBin;$out=Join-Path $root $EvidenceDirectory
@@ -23,3 +24,6 @@ if($LASTEXITCODE){throw 'DoorsNativeTests build failed'}
 if($LASTEXITCODE){throw 'DoorsNativeTests failed'}
 & $python -I (Join-Path $PSScriptRoot 'verify_doors.py') $out
 if($LASTEXITCODE){throw 'Door geometry read back from the DWGs does not match the layout; see verify-doors.json'}
+$userEdit=Join-Path $root 'docs/design/doors-d3/user-edit-2S-700-1320.dwg'
+& $python -I (Join-Path $PSScriptRoot 'verify_user_edit.py') $userEdit (Join-Path $out '2S-700-1320.dwg') (Join-Path $out 'user-edit')
+if($LASTEXITCODE){throw 'The generated drawing of the user case differs from the user edit; see user-edit/verify-user-edit.json'}
