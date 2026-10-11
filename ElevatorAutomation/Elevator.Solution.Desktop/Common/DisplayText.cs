@@ -37,6 +37,7 @@ namespace Elevator.Solution.Desktop.Common
   public static string MessageText(string m){return m==null?null:Plain(System.Text.RegularExpressions.Regex.Replace(m.Replace("NOT YET EVALUABLE","not evaluated").Replace("NOT_YET_EVALUABLE","not evaluated").Replace("NOT PROVIDED","not entered").Replace("Not provided","Missing").Replace("Vertical upper-to-lower car guide-shoe spacing h (mm)","Guide-shoe spacing h (mm)"),@"\s*\((?:project )?rule [A-Z]{2}-[A-Z0-9-]+\)",""));}
   public static string BearingLabel(string id){return id=="P1"?"right / rear":id=="P2"?"right / front":id=="P3"?"left / rear":"left / front";}
   public static string N(double v){return v.ToString("0.###",CultureInfo.InvariantCulture);}public static string N(double? v){return v.HasValue?N(v.Value):"UNAVAILABLE";}
+  public static string Kg(double newtons){return Elevator.Core.Calculations.LoadUnits.KgText(newtons);}public static string Kg(double? newtons){return newtons.HasValue?Kg(newtons.Value):"UNAVAILABLE";}
   public static string PointText(LocalPoint p){return "("+N(p.X)+", "+N(p.Y)+", "+N(p.Z)+")";}
   public static string DisplayValue(string path,object value)
   {

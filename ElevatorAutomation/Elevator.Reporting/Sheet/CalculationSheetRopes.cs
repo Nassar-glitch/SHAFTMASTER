@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Calculations;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.Suspension;
@@ -132,7 +133,8 @@ namespace Elevator.Reporting.Sheet
                 (label, v, unit) =>
                 {
                     if (Positive(v))
-                        rows.Add(new[] { label, L(v.Value) + (unit == null ? "" : " " + unit) });
+                        rows.Add(new[] { label, L(v.Value) + (unit == null ? "" : " " + unit)
+                            + (unit == "kN" ? " (" + LoadUnits.KgWithUnit(v.Value * 1000) + ")" : "") });
                 };
             if (!String.IsNullOrWhiteSpace(x.RopeDesignation) && (sf || term))
                 rows.Add(new[] { "Rope designation", x.RopeDesignation });
@@ -189,7 +191,7 @@ namespace Elevator.Reporting.Sheet
             AddRopeCheckEquations(r, x, g, lines);
             var term = r.Checks.FirstOrDefault(c => c.Id == "termination");
             if (term != null)
-                lines.Add("Ftermination ≥ 0.8 × MBL = " + term.Substitution);
+                lines.Add("Ftermination ≥ 0.8 × MBL = " + term.Substitution + " (" + LoadUnits.KgWithUnit(term.RequiredValue.Value * 1000) + ")");
             if (lines.Count > 0)
                 d.Equations(true, lines);
             AddRopeCheckTable(d, r, x, term);
@@ -233,7 +235,7 @@ namespace Elevator.Reporting.Sheet
                     + L3(x.RopeMassKgPerM.Value)
                     + ") × 9.81 = "
                     + L(r.TmaxN.Value)
-                    + " N");
+                    + " N (" + LoadUnits.KgWithUnit(r.TmaxN.Value) + ")");
                 lines.Add("Sf = MBL / Tmax = "
                     + L(x.MinimumBreakingLoadKn.Value * 1000)
                     + " / "
@@ -283,15 +285,15 @@ namespace Elevator.Reporting.Sheet
                     term.Title,
                     term.Clause,
                     term.Equation,
-                    "0.8 × MBL = " + L(term.RequiredValue.Value) + " kN",
-                    "MBL = " + L(x.MinimumBreakingLoadKn.Value) + " kN",
+                    "0.8 × MBL = " + L(term.RequiredValue.Value) + " kN (" + LoadUnits.KgWithUnit(term.RequiredValue.Value * 1000) + ")",
+                    "MBL = " + L(x.MinimumBreakingLoadKn.Value) + " kN (" + LoadUnits.KgWithUnit(x.MinimumBreakingLoadKn.Value * 1000) + ")",
                     "Required strength"
                 });
             }
             d.Table(
                 new[] { "Check", "Clause", "Equation", "Required", "Actual", "Result" },
                 rows,
-                new[] { 1900, 1550, 2000, 1400, 1400, 1388 },
+                new[] { 1700, 1250, 1700, 1900, 1900, 1188 },
                 new HashSet<int> { 0, 5 });
         }
 
@@ -324,22 +326,24 @@ namespace Elevator.Reporting.Sheet
                     foreach (var q in t.Positions)
                     {
                         eq.Add(q.Name + ":");
-                        eq.Add("   " + q.T1Equation);
-                        eq.Add("   " + q.T2Equation);
+                        eq.Add("   " + q.T1Equation + " (" + LoadUnits.KgWithUnit(q.T1N) + ")");
+                        eq.Add("   " + q.T2Equation + " (" + LoadUnits.KgWithUnit(q.T2N) + ")");
                     }
                     d.Equations(true, eq);
                     d.Table(
-                        new[] { "Position", "T1 (N)", "T2 (N)", "T1 / T2", "Required", "Result" },
+                        new[] { "Position", "T1 (N)", "T1 (kg)", "T2 (N)", "T2 (kg)", "T1 / T2", "Required", "Result" },
                         t.Positions.Select(q => new[]
                         {
                             q.Name,
                             L(q.T1N),
+                            LoadUnits.KgText(q.T1N),
                             L(q.T2N),
+                            LoadUnits.KgText(q.T2N),
                             q.Ratio.ToString("0.###", Inv),
                             t.Condition + " " + t.EFAlpha.ToString("0.###", Inv),
                             (t.Condition == "≤" ? q.Ratio <= t.EFAlpha * (1 + 1e-12) : q.Ratio >= t.EFAlpha * (1 - 1e-12)) ? "OK" : "NOT OK"
                         })
-                            .ToList(), new[] { 3438, 1300, 1300, 1100, 1300, 1200 }, new HashSet<int> { 0, 5 });
+                            .ToList(), new[] { 2138, 1150, 1000, 1150, 1000, 900, 1100, 1200 }, new HashSet<int> { 0, 7 });
                 }
             }
         }

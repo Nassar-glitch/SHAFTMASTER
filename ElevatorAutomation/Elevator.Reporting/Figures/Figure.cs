@@ -41,10 +41,10 @@ namespace Elevator.Reporting.Figures
             return v.ToString(format, CultureInfo.InvariantCulture);
         }
 
-        /// <summary>Formats newtons as kN.</summary>
+        /// <summary>Formats newtons as kN with the kg value beside it (DESIGN-FLOW principle 10): "12.35 kN (1260 kg)".</summary>
         public static string Kn(double newtons)
         {
-            return Num(newtons / 1000, "0.###") + " kN";
+            return Num(newtons / 1000, "0.###") + " kN (" + Elevator.Core.Calculations.LoadUnits.KgWithUnit(newtons) + ")";
         }
 
         /// <summary>Formats a length in mm.</summary>
@@ -123,6 +123,55 @@ namespace Elevator.Reporting.Figures
             Poly(new[] { tip, baseCentre + n * halfWidthMm, baseCentre - n * halfWidthMm }, true, layer, null, true);
         }
 
+        // True when a drawn line (polyline segment, closed polylines included) passes through the box.
+        bool HitsLine(double x0, double y0, double x1, double y1)
+        {
+            foreach (var pl in Entities.OfType<FigurePolyline>())
+            {
+                if (pl.Filled || pl.Points.Count < 2)
+                    continue;
+                int n = pl.Points.Count;
+                for (int i = 0; i < (pl.Closed ? n : n - 1); i++)
+                {
+                    var a = pl.Points[i];
+                    var b = pl.Points[(i + 1) % n];
+                    if (SegmentHitsBox(a.X, a.Y, b.X, b.Y, x0, y0, x1, y1))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        static bool SegmentHitsBox(double ax, double ay, double bx, double by, double x0, double y0, double x1, double y1)
+        {
+            // Liang-Barsky clipping of the segment to the box, the box slightly shrunk so that a line touching an edge is not a hit.
+            const double e = 0.05;
+            x0 += e;
+            y0 += e;
+            x1 -= e;
+            y1 -= e;
+            double t0 = 0, t1 = 1, dx = bx - ax, dy = by - ay;
+            double[] p = { -dx, dx, -dy, dy };
+            double[] q = { ax - x0, x1 - ax, ay - y0, y1 - ay };
+            for (int i = 0; i < 4; i++)
+            {
+                if (Math.Abs(p[i]) < 1e-12)
+                {
+                    if (q[i] < 0)
+                        return false;
+                    continue;
+                }
+                double r = q[i] / p[i];
+                if (p[i] < 0)
+                    t0 = Math.Max(t0, r);
+                else
+                    t1 = Math.Min(t1, r);
+                if (t0 > t1)
+                    return false;
+            }
+            return true;
+        }
+
         bool Overlaps(double x0, double y0, double x1, double y1, FigureText self)
         {
             foreach (var t in Texts)
@@ -151,6 +200,57 @@ namespace Elevator.Reporting.Figures
         {
             // The Word SVG renderer adds space around U+002D between letters and ISOCPEUR has no U+2011, so word hyphens become spaces.
             content = System.Text.RegularExpressions.Regex.Replace(content ?? "", @"(?<=\p{L})-(?=\p{L})", " ");
+            // A value with its kg beside it ("12.35 kN (1260 kg)", DESIGN-FLOW principle 10): the kg stands as a second line under the
+            // value, so the label keeps its width and its place. The line is placed by the same overlap rule.
+            string kgLine = null, kgValue = null;
+            var kg = System.Text.RegularExpressions.Regex.Match(content, @"^(.*\S) \((-?\d+ kg)\)(.*)$");
+            if (kg.Success)
+            {
+                content = kg.Groups[1].Value + kg.Groups[3].Value;
+                kgLine = "(" + kg.Groups[2].Value + ")";
+                kgValue = kg.Groups[2].Value.Substring(0, kg.Groups[2].Value.Length - 3);
+            }
+            var placed = TextAt(content, candidates, anchor, layer, heightMm, vertical, tag, value, title);
+            if (kgLine != null)
+            {
+                // The kg line goes directly under the value when that place is free of texts and drawn lines. Otherwise the kg stays
+                // beside the value on one line ("FF2 2.1 kN (215 kg)"), placed by the same rules, so it is never read before the value.
+                double step = heightMm + 0.9;
+                var below = vertical
+                    ? new FigurePoint(placed.At.X + step, placed.At.Y)
+                    : new FigurePoint(placed.At.X, placed.At.Y + step);
+                var probe = new FigureText
+                {
+                    Content = kgLine, Anchor = anchor, Layer = layer ?? FigureLayer.Text, HeightMm = heightMm, Vertical = vertical, At = below
+                };
+                probe.WidthMm = Measure(kgLine, heightMm);
+                double x0, y0, x1, y1;
+                probe.Box(out x0, out y0, out x1, out y1);
+                if (!Overlaps(x0, y0, x1, y1, probe) && !HitsLine(x0, y0, x1, y1) && !(x0 < 0 || x1 > WidthMm))
+                {
+                    TextAt(kgLine, new[] { below }, anchor, layer, heightMm, vertical, tag == null ? "kg" : "kg-" + tag, kgValue, false);
+                }
+                else
+                {
+                    Entities.Remove(placed);
+                    placed = TextAt(content + " " + kgLine, candidates, anchor, layer, heightMm, vertical, tag, value, title, true);
+                }
+            }
+            return placed;
+        }
+
+        FigureText TextAt(
+            string content,
+            IList<FigurePoint> candidates,
+            string anchor,
+            FigureLayer layer,
+            double heightMm,
+            bool vertical,
+            string tag,
+            string value,
+            bool title,
+            bool avoidLines = false)
+        {
             var t = new FigureText
             {
                 Content = content,
@@ -163,15 +263,26 @@ namespace Elevator.Reporting.Figures
                 Title = title
             };
             t.WidthMm = Measure(content, heightMm);
-            foreach (var c in candidates)
+            // First pass: a free place that also keeps clear of the drawn lines (kg lines only); second pass: texts only.
+            for (int pass = avoidLines ? 0 : 1; pass < 2; pass++)
             {
-                t.At = c;
-                double x0, y0, x1, y1;
-                t.Box(out x0, out y0, out x1, out y1);
-                if (!Overlaps(x0, y0, x1, y1, t))
+                foreach (var c in candidates)
                 {
-                    Entities.Add(t);
-                    return t;
+                    t.At = c;
+                    double x0, y0, x1, y1;
+                    t.Box(out x0, out y0, out x1, out y1);
+                    // A label wider than the room to the frame edge (a value with its kg beside it) moves inwards until it is inside.
+                    if (!vertical && (x0 < 0 || x1 > WidthMm) && x1 - x0 <= WidthMm)
+                    {
+                        double dx = x0 < 0 ? -x0 : WidthMm - x1;
+                        t.At = new FigurePoint(c.X + dx, c.Y);
+                        t.Box(out x0, out y0, out x1, out y1);
+                    }
+                    if (!Overlaps(x0, y0, x1, y1, t) && (pass == 1 || !HitsLine(x0, y0, x1, y1)))
+                    {
+                        Entities.Add(t);
+                        return t;
+                    }
                 }
             }
             t.At = candidates[candidates.Count - 1];

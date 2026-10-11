@@ -69,12 +69,12 @@ namespace Elevator.Solution.Desktop.Pages
     if(r==null||(r.Reactions!=null&&!current))return;
     Content.Children.Add(new TextBlock{Text="Basic · "+DisplayText.StatusWord(r.Status),Foreground=current&&r.Status!="UPLIFT_REVIEW_REQUIRED"?Accent:Brushes.DarkRed,FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap});
     if(current){
-     Note("Total mass: "+DisplayText.N(r.TotalMassKg)+" kg · Vertical load: "+DisplayText.N(r.TotalVerticalLoadN/1000)+" kN (g = 9.81 m/s²)");
-     foreach(var b in r.Reactions.OrderBy(v=>v.Id))Note(b.Id+" · "+DisplayText.BearingLabel(b.Id)+"   "+DisplayText.N(b.UpwardN/1000)+" kN   ["+DisplayText.PointText(b.PositionMm)+" mm]");
+     Note("Total mass: "+DisplayText.N(r.TotalMassKg)+" kg · Vertical load: "+DisplayText.N(r.TotalVerticalLoadN/1000)+" kN ("+DisplayText.Kg(r.TotalVerticalLoadN)+" kg) (g = 9.81 m/s²)");
+     foreach(var b in r.Reactions.OrderBy(v=>v.Id))Note(b.Id+" · "+DisplayText.BearingLabel(b.Id)+"   "+DisplayText.N(b.UpwardN/1000)+" kN ("+DisplayText.Kg(b.UpwardN)+" kg)   ["+DisplayText.PointText(b.PositionMm)+" mm]");
      var d=r.SimplifiedGeometry;Content.Children.Add(new TextBlock{Text="Derived distances",FontWeight=FontWeights.SemiBold,Margin=new Thickness(0,4,0,6)});Content.Children.Add(DistanceTable(d));
      Form.CalculationGroup("Load composition & rope tensions",()=>{
       foreach(var mass in r.MassCompositionKg)Note(mass.Key+": "+DisplayText.N(mass.Value)+" kg");
-      Note("Rope tensions\nCar bundle: "+DisplayText.N(r.CarBundleTensionN)+" N · CW bundle: "+DisplayText.N(r.CounterweightBundleTensionN)+" N\nPer rope: car "+DisplayText.N(r.CarPerRopeTensionN)+" N · CW "+DisplayText.N(r.CounterweightPerRopeTensionN)+" N");
+      Note("Rope tensions\nCar bundle: "+DisplayText.N(r.CarBundleTensionN)+" N ("+DisplayText.Kg(r.CarBundleTensionN)+" kg) · CW bundle: "+DisplayText.N(r.CounterweightBundleTensionN)+" N ("+DisplayText.Kg(r.CounterweightBundleTensionN)+" kg)\nPer rope: car "+DisplayText.N(r.CarPerRopeTensionN)+" N ("+DisplayText.Kg(r.CarPerRopeTensionN)+" kg) · CW "+DisplayText.N(r.CounterweightPerRopeTensionN)+" N ("+DisplayText.Kg(r.CounterweightPerRopeTensionN)+" kg)");
       Note("Model: "+r.ModelVersion+" · Front row Y "+DisplayText.N(d.FrontRowY)+", rear row Y "+DisplayText.N(d.RearRowY)+" mm\nFront load "+DisplayText.N(d.FrontLoadN)+" N · Rear load "+DisplayText.N(d.RearLoadN)+" N\nEquilibrium residuals: "+DisplayText.N(r.VerticalResidualN)+" N, "+DisplayText.N(r.MomentXResidualNmm)+" / "+DisplayText.N(r.MomentYResidualNmm)+" N.mm");
      },false);
     }

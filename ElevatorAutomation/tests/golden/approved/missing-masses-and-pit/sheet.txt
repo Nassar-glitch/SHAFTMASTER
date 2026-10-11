@@ -33,7 +33,7 @@ Key result
 Suspension rope and traction checks
 D/d OK
 FF1 / FF2 car guide-rail forces
-FF1 2.2 kN; FF2 2.1 kN (design, per guide rail)
+FF1 2.2 kN (225 kg); FF2 2.1 kN (215 kg) (design, per guide rail)
 
 2  Input data
 Input
@@ -51,7 +51,7 @@ Rope designation
 Rope nominal diameter d
 8 mm
 Rope minimum breaking load MBL
-28.1 kN
+28.1 kN (2865 kg)
 Traction sheave pitch diameter Dt
 520 mm
 
@@ -72,7 +72,7 @@ H
 16.7 m
 
 Rope checks
-Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN
+Ftermination ≥ 0.8 × MBL = 0.8 × 28.1 = 22.48 kN (2295 kg)
 Check
 Clause
 Equation
@@ -100,8 +100,8 @@ OK
 Rope termination strength
 EN 81-20 5.5.2.3
 Ftermination ≥ 0.8 × MBL
-0.8 × MBL = 22.48 kN
-MBL = 28.1 kN
+0.8 × MBL = 22.48 kN (2295 kg)
+MBL = 28.1 kN (2865 kg)
 Required strength
 
 4  Car guide-rail forces FF1 / FF2
@@ -119,26 +119,29 @@ Guide-shoe spacing h
 1200 mm
 
 Equations
-FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 1100 / (4 × 1200) = 1100 N
-FF1(design) = 2 × FF1 = 2 × 1100 = 2200 N
-FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2100 / (8 × 1200) = 1050 N
-FF2(design) = 2 × FF2 = 2 × 1050 = 2100 N
+FF1 = Q × 10 N/kg × W / (4 h) = 480 × 10 × 1100 / (4 × 1200) = 1100 N (115 kg)
+FF1(design) = 2 × FF1 = 2 × 1100 = 2200 N (225 kg)
+FF2 = Q × 10 N/kg × D / (8 h) = 480 × 10 × 2100 / (8 × 1200) = 1050 N (110 kg)
+FF2(design) = 2 × FF2 = 2 × 1050 = 2100 N (215 kg)
 Results
 Force
 Direction
 FF (N)
 FF design (N)
 FF design (kN)
+FF design (kg)
 FF1
 Along the car-rail line (car width)
 1100
 2200
 2.2
+225
 FF2
 Perpendicular to the car-rail line (car depth)
 1050
 2100
 2.1
+215
 
 Values per guide rail at one guide-shoe level.
 

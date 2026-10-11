@@ -15,6 +15,21 @@
   - The UI, drawings and calculation sheet contain no disclaimers or remarks such as "preset", "assumed", "not from catalog", "review required" or "preliminary".
   - Code remarks and NOT OK items go only to the separate Design Notes file.
 
+## Cloud and local split (agreed 2026-10-12)
+
+- **Source of truth:** GitHub `main`. Local `main` is pushed before any cloud task starts, and a cloud task always starts from the latest `origin/main`.
+- **Cloud sessions** (no AutoCAD, SOLIDWORKS, Word or WPF) take the portable work:
+  - Elevator.Core and Elevator.Reporting: calculations, presets and rules, calculation sheet and Design Notes text, figure SVGs, layout and title-block data models, file-name builder;
+  - xUnit tests and docs.
+  
+  They install the .NET 8 SDK if it is missing, and run `ElevatorAutomation/tools/test.ps1 -Tier 1` (net8.0 suites) before pushing a branch `cloud/<topic>`. They never push to `main`, and never re-approve golden fixtures without listing every changed fixture and why.
+- **Local sessions** take only what needs the Windows tools:
+  - AutoCAD drawings and layouts, PDF plotting, STEP, the WPF UI, Word rendering;
+  - merging cloud branches, the net48 / WPF golden checks, releases.
+  
+  Local prompts are small and exact. They run tier 1 plus the suites the change touches. The full tiers 2–3 run only before a merge into `main` that touches those parts, and before a release.
+- **Never in parallel on the same files:** one branch per topic, and a cloud branch is merged locally (`git fetch` + `git merge`, no rebase) before local work on the same files continues.
+
 ## Start here
 
 - Read `DESIGN-FLOW.md` for the agreed design flow, presets and build stages.

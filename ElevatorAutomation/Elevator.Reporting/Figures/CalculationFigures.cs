@@ -385,7 +385,8 @@ namespace Elevator.Reporting.Figures
                 f.Rect(c.X - 1.6, c.Y - 1.6, c.X + 1.6, c.Y + 1.6, FigureLayer.Outline, "seat-" + b.Id).Value =
                     Figure.Mm(b.PositionMm.X) + "," + Figure.Mm(b.PositionMm.Y);
                 bool right = b.Id == "P1" || b.Id == "P2", rear = b.Id == "P1" || b.Id == "P3";
-                var at = c + Pt(right ? 3.5 : -3.5, rear ? -3.5 : 6);
+                // The kg line stands under the value: for the rear row the value moves one line up, so both lines stay clear of the seat.
+                var at = c + Pt(right ? 3.5 : -3.5, rear ? -6.9 : 6);
                 f.Text(
                     b.Id + " " + Figure.Kn(b.UpwardN),
                     new[] { at, at + Pt(0, rear ? -3.4 : 3.4), at + Pt(0, rear ? -6.8 : 6.8) },
@@ -1356,7 +1357,7 @@ namespace Elevator.Reporting.Figures
                         Pt(x, floor - 14),
                         Pt(x, floor),
                         load.Id + " " + Figure.Kn(load.PerComponentLoadN.Value),
-                        new[] { Pt(x, floor - 29), Pt(x, floor - 33), Pt(x, floor - 37) },
+                        new[] { Pt(x, floor - 32.4), Pt(x, floor - 36), Pt(x, floor - 40) },
                         "middle",
                         tag + "-force-" + (i + 1),
                         per);

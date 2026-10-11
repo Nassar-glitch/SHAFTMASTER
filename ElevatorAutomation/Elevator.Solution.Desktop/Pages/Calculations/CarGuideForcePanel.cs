@@ -59,7 +59,7 @@ namespace Elevator.Solution.Desktop.Pages
     }
     if(r.FF1BaseN.HasValue&&r.FF2BaseN.HasValue){
      Content.Children.Add(new TextBlock{Text="Calculated",Foreground=Accent,FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap});
-     Note("FF1 · Base: "+DisplayText.N(r.FF1BaseN)+" N ("+DisplayText.N(r.FF1BaseN/1000)+" kN) · Design: "+DisplayText.N(r.FF1DesignN)+" N ("+DisplayText.N(r.FF1DesignN/1000)+" kN)\nFF2 · Base: "+DisplayText.N(r.FF2BaseN)+" N ("+DisplayText.N(r.FF2BaseN/1000)+" kN) · Design: "+DisplayText.N(r.FF2DesignN)+" N ("+DisplayText.N(r.FF2DesignN/1000)+" kN)");
+     Note("FF1 · Base: "+DisplayText.N(r.FF1BaseN)+" N ("+DisplayText.N(r.FF1BaseN/1000)+" kN; "+DisplayText.Kg(r.FF1BaseN)+" kg) · Design: "+DisplayText.N(r.FF1DesignN)+" N ("+DisplayText.N(r.FF1DesignN/1000)+" kN; "+DisplayText.Kg(r.FF1DesignN)+" kg)\nFF2 · Base: "+DisplayText.N(r.FF2BaseN)+" N ("+DisplayText.N(r.FF2BaseN/1000)+" kN; "+DisplayText.Kg(r.FF2BaseN)+" kg) · Design: "+DisplayText.N(r.FF2DesignN)+" N ("+DisplayText.N(r.FF2DesignN/1000)+" kN; "+DisplayText.Kg(r.FF2DesignN)+" kg)");
     }else {Note("FF1 / FF2 · "+DisplayText.StatusWord(r.Status)+" · forces unavailable");foreach(var issue in r.Issues)Note(DisplayText.MessageText(issue.Message));}
     Form.CalculationGroup("Equations & definitions",()=>{
      Note("FF1 base = Q × 10 N/kg × internal width / (4h)\nFF2 base = Q × 10 N/kg × internal depth / (8h)\nEach design force = its base × 2, once. Length units cancel when consistent. The coefficient 10 N/kg remains separate from g = 9.81 m/s².");

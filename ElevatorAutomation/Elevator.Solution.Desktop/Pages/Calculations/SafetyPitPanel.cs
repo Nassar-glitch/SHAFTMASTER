@@ -77,7 +77,7 @@ namespace Elevator.Solution.Desktop.Pages
     if(!current){foreach(var error in Live.RelevantSafetyPitDraftErrors(Session.Project))Note(error.Value);return;}
     foreach(var load in new[]{r.P5,r.P6,r.P7}){
      if(load.PerComponentLoadN.HasValue){
-      string text=load.Id+" · "+load.Application+"\n"+DisplayText.N(load.PerComponentLoadN)+" N per "+(load.Id=="P5"?"car guide rail":"buffer pit support")+" ("+DisplayText.N(load.PerComponentLoadN/1000)+" kN) · "+load.ComponentCount+" component(s) · "+DisplayText.N(load.GroupLoadN)+" N total group";
+      string text=load.Id+" · "+load.Application+"\n"+DisplayText.N(load.PerComponentLoadN)+" N per "+(load.Id=="P5"?"car guide rail":"buffer pit support")+" ("+DisplayText.N(load.PerComponentLoadN/1000)+" kN; "+DisplayText.Kg(load.PerComponentLoadN)+" kg) · "+load.ComponentCount+" component(s) · "+DisplayText.N(load.GroupLoadN)+" N total group ("+DisplayText.Kg(load.GroupLoadN)+" kg)";
       Content.Children.Add(new TextBlock{Text=text,TextWrapping=TextWrapping.Wrap,Foreground=Ink,Margin=new Thickness(0,4,0,9)});
      }else {Note(load.Id+" · "+load.Application+" · "+DisplayText.StatusWord(load.Status)+" · load unavailable");foreach(var issue in load.Issues)Note(DisplayText.MessageText(issue.Message));}
     }
