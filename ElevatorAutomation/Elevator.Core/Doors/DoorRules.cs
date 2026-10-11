@@ -104,30 +104,46 @@ namespace Elevator.Core.Doors
             l.LandingFixedJambMinMm = side ? (u.LandingFixedJambMinMm ?? t.LandingFixedJambMinMm ?? 0) : l.LandingStackPocketMm;
             bool stackRight = u.Handing == DoorTypes.Right || (u.Handing != DoorTypes.Left && cat.GovernorSide == DoorTypes.Left);
             l.StackingSide = stackRight ? DoorTypes.Right : DoorTypes.Left;
+            // A centre opening has no stacking side: its plan X is the plan X of the drawing.
+            bool mirrored = side && !stackRight;
             l.PanelWidthMm = side
                 ? (o + (t.PanelEdgeOvertravelMm ?? 0) + l.PanelOverlapMm) / 2
                 : (o - l.PanelOverlapMm) / 2;
-            // Placement in u: distance from the fixed-side shaft wall. The opening spans [x, x + o].
+            // Placement in u: distance from the fixed-side shaft wall (2C: from the left wall). The opening spans [x, x + o].
             double pocket = l.LandingStackPocketMm, wc = l.LandingWallClearanceMm;
-            double prefOffset = side ? (u.OpeningOffsetMm ?? (l.StackReturnMm - l.FixedReturnMm) / 2) : 0;
+            // The requested position: the Doors Offset when the user set one, the offset of an earlier file (2S), else the preset.
+            double prefOffset = side ? (l.StackReturnMm - l.FixedReturnMm) / 2 : 0;
+            if (u.OffsetMm.HasValue)
+            {
+                // Left / Right as seen in the plan drawing; towards the fixed side is towards the left when the stack is on the right.
+                string sd = u.OffsetSide ?? (stackRight || !side ? DoorTypes.Left : DoorTypes.Right);
+                bool towardsLeft = sd == DoorTypes.Left;
+                prefOffset = towardsLeft == (stackRight || !side) ? u.OffsetMm.Value : 0.0 - u.OffsetMm.Value;
+            }
+            else if (side && u.OpeningOffsetMm.HasValue)
+                prefOffset = u.OpeningOffsetMm.Value;
             l.PreferredOffsetMm = prefOffset;
             double lo, hi, x;
+            double stackReach = Math.Max(pocket, l.PanelWidthMm);
             if (side)
             {
-                // 1 preferred layout; 2 shifted towards the fixed side while it does not fit, down to the fixed return minimum
-                // (and the landing jamb minimum); the landing door moves with the opening.
+                // 1 requested layout; 2 shifted towards the fixed side while it does not fit, down to the fixed return minimum
+                // (and the landing jamb minimum); the landing door moves with the opening. A requested position outside the limits
+                // is placed at the nearest allowed one (the Doors Offset message reports it).
                 lo = Math.Max(g + l.FixedReturnMinMm, l.LandingFixedJambMinMm);
-                hi = Math.Min(sw - wc - pocket - o, sw - g - l.StackReturnMinMm - o);
+                hi = Math.Min(sw - wc - stackReach - o, sw - g - l.StackReturnMinMm - o);
                 double preferred = sw / 2 - prefOffset - o / 2;
                 x = Math.Max(lo, Math.Min(preferred, hi));
                 l.Shifted = x < preferred - Eps && hi >= lo - Eps;
             }
             else
             {
-                // Centre opening: the opening stays centred; the returns shrink to their minimum, the landing binds.
-                lo = Math.Max(g + l.FixedReturnMinMm, pocket + wc);
-                hi = (sw - o) / 2;
-                x = hi;
+                // Centre opening: both returns at or above their minimum and both landing boxes inside the shaft with the wall
+                // clearance. The requested position (centred by default) is placed at the nearest allowed one.
+                lo = Math.Max(g + l.FixedReturnMinMm, stackReach + wc);
+                hi = sw - o - lo;
+                double preferred = sw / 2 - prefOffset - o / 2;
+                x = hi >= lo - Eps ? Math.Max(lo, Math.Min(preferred, hi)) : (sw - o) / 2;
             }
             l.ActualFixedReturnMm = x - g;
             l.ActualStackReturnMm = sw - g - (x + o);
@@ -137,7 +153,7 @@ namespace Elevator.Core.Doors
             l.LandingFixedJambPreferredMm = jambPreferred;
             double uFixedOuter = x - (side ? fixedJamb : pocket), uStackOuter = x + o + pocket;
             double ux0 = x, ux1 = x + o;
-            if (stackRight)
+            if (!mirrored)
             {
                 l.OpeningLeftX = ux0;
                 l.OpeningRightX = ux1;

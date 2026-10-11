@@ -33,6 +33,10 @@ namespace Elevator.Core.Doors
                 case DoorSettings.StackReturnKey:
                     return "Car return, stacking side, preferred (mm)";
                 case DoorSettings.OffsetKey:
+                    return "Doors Offset";
+                case DoorSettings.OffsetSideKey:
+                    return "Doors Offset side";
+                case DoorSettings.LegacyOffsetKey:
                     return "Opening offset, preferred (mm)";
                 case DoorSettings.LandingJambKey:
                     return "Landing jamb, fixed side, preferred (mm)";
@@ -97,9 +101,35 @@ namespace Elevator.Core.Doors
                 Reset(p, key);
                 return;
             }
+            if (key == DoorSettings.OffsetKey)
+            {
+                SetOffset(p, value, DoorSettings.Read(p).OffsetSide);
+                return;
+            }
             Lock(p, key);
             var s = DoorSettings.Read(p);
             s.SetNumber(key, value);
+            s.Write(p);
+        }
+
+        /// <summary>
+        /// Locks the Doors Offset: the distance in mm from the shaft centre line to the opening centre line and its side, Left or Right
+        /// as seen in the plan drawing. The distance and the side lock together. A null distance resets it.
+        /// </summary>
+        public static void SetOffset(ElevatorProject p, double? distanceMm, string side)
+        {
+            if (!distanceMm.HasValue)
+            {
+                Reset(p, DoorSettings.OffsetKey);
+                return;
+            }
+            Unlock(p, DoorSettings.LegacyOffsetKey);
+            Lock(p, DoorSettings.OffsetKey);
+            Lock(p, DoorSettings.OffsetSideKey);
+            var s = DoorSettings.Read(p);
+            s.OpeningOffsetMm = null;
+            s.OffsetMm = Math.Abs(distanceMm.Value);
+            s.OffsetSide = side == DoorTypes.Left ? DoorTypes.Left : DoorTypes.Right;
             s.Write(p);
         }
 
@@ -120,10 +150,25 @@ namespace Elevator.Core.Doors
         /// <summary>Reset to preset: the value unlocks and follows again.</summary>
         public static void Reset(ElevatorProject p, string key)
         {
-            Unlock(p, key);
+            // The Doors Offset (distance and side) resets as one value, and an offset of an earlier file with it.
+            bool offset = key == DoorSettings.OffsetKey || key == DoorSettings.OffsetSideKey || key == DoorSettings.LegacyOffsetKey;
+            if (offset)
+            {
+                Unlock(p, DoorSettings.OffsetKey);
+                Unlock(p, DoorSettings.OffsetSideKey);
+                Unlock(p, DoorSettings.LegacyOffsetKey);
+            }
+            else
+                Unlock(p, key);
             var s = DoorSettings.Read(p);
             if (key == DoorSettings.HandingKey)
                 s.Handing = null;
+            else if (offset)
+            {
+                s.OffsetMm = null;
+                s.OffsetSide = null;
+                s.OpeningOffsetMm = null;
+            }
             else
                 s.SetNumber(key, null);
             s.Write(p);
@@ -155,7 +200,7 @@ namespace Elevator.Core.Doors
                     return l.FixedReturnMm;
                 case DoorSettings.StackReturnKey:
                     return side ? l.StackReturnMm : (double?)null;
-                case DoorSettings.OffsetKey:
+                case DoorSettings.LegacyOffsetKey:
                     return side ? l.PreferredOffsetMm : (double?)null;
                 case DoorSettings.LandingJambKey:
                     return side ? l.LandingFixedJambPreferredMm : (double?)null;

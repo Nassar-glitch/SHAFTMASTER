@@ -337,6 +337,27 @@ public static class GoldenTests
         var big = door("Golden D4 - 2C 1200 does not fit", Elevator.Core.Doors.DoorTypes.Automatic2C);
         Elevator.Core.Doors.DoorFlow.SetNumber(big, Elevator.Core.Doors.DoorSettings.OpeningKey, 1200);
         add("doors-2c-1200-no-fit", big, "Automatic 2C with 1200 mm locked on a 1900 mm shaft: does not fit; Design Notes give the needed widths (D1).");
+        // D4 (Doors Offset): the new keys Doors.OffsetMm / Doors.OffsetSide, a value outside the range, and the key of earlier files.
+        var o2c = door("Golden D9 - 2C offset 60 Right", Elevator.Core.Doors.DoorTypes.Automatic2C);
+        Elevator.Core.Doors.DoorFlow.SetNumber(o2c, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        Elevator.Core.Doors.DoorFlow.SetOffset(o2c, 60, Elevator.Core.Doors.DoorTypes.Right);
+        add("doors-2c-offset-60-right", o2c, "Automatic 2C, 800 mm locked on a 1900 x 2800 shaft, Doors Offset 60 mm Right (D4).");
+        var o2s = door("Golden D10 - 2S offset 40 Left", Elevator.Core.Doors.DoorTypes.Automatic2S); o2s.Shaft.WidthMm = 1720;
+        Elevator.Core.Doors.DoorFlow.SetNumber(o2s, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        Elevator.Core.Doors.DoorFlow.SetOffset(o2s, 40, Elevator.Core.Doors.DoorTypes.Left);
+        add("doors-2s-offset-40-left", o2s, "Automatic 2S, 800 mm locked on a 1720 x 2800 shaft, Doors Offset 40 mm Left (D4).");
+        var oor = door("Golden D11 - 2S offset out of range", Elevator.Core.Doors.DoorTypes.Automatic2S); oor.Shaft.WidthMm = 1720;
+        Elevator.Core.Doors.DoorFlow.SetNumber(oor, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        Elevator.Core.Doors.DoorFlow.SetOffset(oor, 300, Elevator.Core.Doors.DoorTypes.Left);
+        add("doors-2s-offset-out-of-range", oor, "Automatic 2S, 800 mm locked on a 1720 x 2800 shaft, Doors Offset 300 mm Left: outside the range, kept; Design Notes give the limit (D4).");
+        var old = door("Golden D12 - 2S old opening offset", Elevator.Core.Doors.DoorTypes.Automatic2S); old.Shaft.WidthMm = 1720;
+        Elevator.Core.Doors.DoorFlow.SetNumber(old, Elevator.Core.Doors.DoorSettings.OpeningKey, 800);
+        {
+            var doorsExt = (Dictionary<string, object>)old.Extensions["doors"];
+            doorsExt["Doors.OpeningOffsetMm"] = 40.0;
+            old.UserEditedFields.Add("Doors.OpeningOffsetMm");
+        }
+        add("doors-2s-old-opening-offset", old, "Automatic 2S as an earlier version saved it: the locked key Doors.OpeningOffsetMm 40 mm towards the fixed side (D4 conversion).");
     }
 
     static void MakeFixtures()

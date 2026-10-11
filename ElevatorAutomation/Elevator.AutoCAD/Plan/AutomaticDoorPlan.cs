@@ -582,7 +582,7 @@ namespace Elevator.AutoCAD.Plan
                     new List<double[]> { new[] { carLeft - wall, carLeft }, new[] { carRight, carRight + wall } });
 
                 // Below the front wall, rows at the template's spacing: wall | DOOR | wall at the template door row, the two halves of
-                // the opening one row nearer, and (2S, opening off the shaft centre) its offset one row nearer still. The extension
+                // the opening one row nearer, and (opening off the shaft centre, 2S or 2C) the Doors Offset one row nearer still. The extension
                 // lines start at the wall inner face and at the bottom of the wall jamb blocks.
                 double doorRow = LineOf("Plan.Dimension.Part008", false);
                 double halvesRow = LineOf("Plan.Dimension.Part006", false);
@@ -602,7 +602,7 @@ namespace Elevator.AutoCAD.Plan
                         new Link("Plan.Dimension.Part007", centre, orr, 0, edge)
                     },
                     null);
-                if (l.Type == DoorTypes.Automatic2S && Math.Abs(centre - sw / 2) > 0.05)
+                if (Math.Abs(centre - sw / 2) > 0.05)
                 {
                     bool openingFirst = centre < sw / 2;
                     Chain(false, offsetRow, 1,

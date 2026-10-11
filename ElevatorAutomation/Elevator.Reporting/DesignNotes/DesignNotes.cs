@@ -258,9 +258,13 @@ namespace Elevator.Reporting.DesignNotes
                     context.Equipment,
                     context.CounterweightDepthMm,
                     door);
-                string note = DoorFlow.DesignNote(DoorRules.Select(door, plan));
+                var layout = DoorRules.Select(door, plan);
+                string note = DoorFlow.DesignNote(layout);
                 if (note != null)
                     n.Recommendations.Add(note);
+                var offset = DoorOffset.From(door, layout, plan);
+                if (offset != null && offset.DesignNote != null)
+                    n.Recommendations.Add(offset.DesignNote);
             }
             catch (ArgumentException)
             {

@@ -17,7 +17,7 @@ namespace Elevator.Core.Doors
             {
                 Base = hash,
                 Door = DoorTypes.Normalize(p.Doors.Type),
-                Settings = DoorSettings.Read(p),
+                Settings = DoorSettings.Read(p).ForFingerprint(),
                 // No catalog in the context means the shipped default: the same hash as a context that carries it.
                 Catalog = c == null || c.Doors == null ? DoorCatalog.Default() : c.Doors
             });

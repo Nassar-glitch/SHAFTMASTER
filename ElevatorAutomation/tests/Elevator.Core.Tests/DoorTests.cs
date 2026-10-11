@@ -495,7 +495,8 @@ namespace Elevator.Core.Tests
             Assert.Equal(260, after.FixedReturnMm);
             // The preferred offset follows the preferred returns while it is not locked.
             Assert.Equal((after.StackReturnMm - 260) / 2, after.PreferredOffsetMm, 6);
-            DoorFlow.SetNumber(p, DoorSettings.OffsetKey, 40);
+            // The Doors Offset: 40 mm Left. With the stack on the right the left is the fixed side.
+            DoorFlow.SetOffset(p, 40, DoorTypes.Left);
             Assert.Equal(40, Layout(p).PreferredOffsetMm);
             DoorFlow.Reset(p, DoorSettings.FixedReturnKey);
             DoorFlow.Reset(p, DoorSettings.OffsetKey);
