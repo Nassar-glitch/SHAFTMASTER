@@ -79,6 +79,23 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - the existing running clearances.
 - **Effects:** the door type changes the front zone, and so the car depth. Every dependent value (car area, Table 6, masses, calculations) follows automatically.
 
+## Layouts and PDF (agreed 2026-10-12)
+
+- **Sheets:** the generated DWG carries ready paper-space layouts built from the user's templates in `Layouts_Sec/`. The first is `01_Geared_MR_1-1_LAYOUT.dxf` (A1). The Gearless 2:1, Forklift and Hydraulic layouts wait for those systems.
+- **Everything is generated:**
+  - viewports show the project's own views;
+  - the title block is filled from the project and the calculations: company name and logo, project, client, speed, rated load and persons, travel, stops, supply, loads P1–P7 and the other values in the block, scale, date, prepared / checked / approved, and the revision.
+  
+  When the design changes, the layout follows it. Nothing on the sheet is typed twice.
+- **Company name:** entered once in the application settings, and used in the title block and in the file names.
+- **PDF:** exported from the same layout through AutoCAD, next to the DWG and the project file.
+- **File names** (DWG, PDF and project) follow one pattern: `COMPANY-TYPE-CW-W{SW}D{SD}-PROJECT-MODEL{NN}`, for example `ELEVATORSCOMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL00.pdf`.
+  - Type: GB geared (gearbox); later GL gearless, HY hydraulic, MRL.
+  - Counterweight: RCW rear, SCWL side left, SCWR side right.
+  - The project name is kept exactly as the user typed it. Only the characters Windows forbids in file names are replaced.
+  - NN is the two-digit drawing revision: 00 first, then 01, 02, … It is the same revision as the calculation sheet.
+- **Detailing (later stage):** detail views (rail size and bracket spacing, fixings, door elevation and so on) become generated from the project. Until then, the template's detail views stay as drawn.
+
 ## Build stages (order)
 
 Status 2026-10-09: stages 1 and 2 are done. After the heavy-load selection (joint β / q / Dt search; heavier car masses), 1:1 passes Q 320–1000 on every tested shaft, and 1275 on the default survey. The remaining 1275/1600 cases get a "2:1 roping is recommended" Design Notes recommendation and wait for the 2:1 stage. Next come release v03, then the repository and architecture cleanup and a push to the private GitHub repo (legacy ElevatorPlanGenerator under legacy/). Feature stages 3+ resume after that.
