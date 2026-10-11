@@ -34,16 +34,26 @@ def read(path):
         return f.read()
 
 
-TEXT_POS = re.compile(r'(<text [^>]*?) x="[-\d.]+" y="[-\d.]+"')
+TEXT_POS = re.compile(r'(<text\b[^>]*?) x="[-\d.]+" y="[-\d.]+"')
+
+
+KG_TEXT_ELEMENT = re.compile(r"<text [^>]*>\(-?\d+ kg\)</text>")
 
 
 def check_svg(approved, received):
-    stripped = strip_inline(received)
+    # The kg of a figure label is a second text line "(<n> kg)": remove those elements and any inline kg.
+    stripped = strip_inline(KG_TEXT_ELEMENT.sub("", received))
     if stripped == approved:
         return True, "", 0
     # A longer label may be moved by the figure's own placement rule: the text position of <text> elements is not compared, every
     # other element, attribute and text must be equal.
-    if TEXT_POS.sub(r"", stripped) == TEXT_POS.sub(r"", approved):
+    # The figure frame may grow (height, viewBox, background) when a label gained a second line.
+    def flat(t):
+        t = TEXT_POS.sub(r"", t)
+        t = re.sub(r'height="[\d.]+mm" viewBox="0 0 1650 [\d.]+"', "SIZE", t)
+        t = re.sub(r'<rect x="0" y="0" width="1650" height="[\d.]+"', "<rect BG", t)
+        return t
+    if flat(stripped) == flat(approved):
         return True, "label position adjusted", 1
     return False, "svg differs beyond kg text and label positions", 0
 

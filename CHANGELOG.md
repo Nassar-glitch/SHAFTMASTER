@@ -6,6 +6,9 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Loads also in kg:** wherever a load or force is shown in N or kN (application pages, calculation sheet, figures, Design Notes) its kg value is shown
+  beside it: kg = N / 9.81 rounded up to the next multiple of 5 kg. Display only; every calculation and OK / NOT OK result keeps the unrounded newtons.
+  See `ElevatorAutomation/docs/design/loads-kg/`.
 - **Automatic doors, D4 (Doors Offset):** a "Doors Offset" field on the door page (2S and 2C): the distance in mm from the shaft centre line to the
   opening centre line and a Left / Right selector, as seen in the plan drawing. It replaces "Opening offset, preferred". Default: 2S the preferred offset
   from the returns (with the automatic shift in narrow shafts), 2C centred. The allowed range is shown under the field; a value outside it is kept,

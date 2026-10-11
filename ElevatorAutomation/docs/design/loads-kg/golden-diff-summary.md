@@ -1,6 +1,6 @@
-﻿# Golden diff summary, loads in kg
+# Golden diff summary, loads in kg
 
-Produced by tests/golden/verify_kg_only.py before re-approval: every changed line of every fixture differs only by kg text (sheet.txt and design-notes.txt lines; figure SVG text, with label positions moved by the figure placement rule in F9 only). results.json, fingerprints.json, roundtrip and the other files are unchanged.
+Produced by tests/golden/verify_kg_only.py: the approved files of `main` against the re-approved files of feature/loads-kg. Every changed line of every fixture differs only by kg text: sheet.txt / design-notes.txt lines (inline kg, or an added kg column or header), and in the figures an added second text line "(<n> kg)" under the value. A label may move down by that line, and a figure frame may grow by it (figure placement rule; height, background and text positions only). No results.json, fingerprints.json, roundtrip, sheet-omitted or figure-error file changed. Columns: files changed, files proved kg-only, kg column lines added.
 
 | fixture | changed files | kg-only | kg column lines added |
 |---|---|---|---|
@@ -51,4 +51,3 @@ Produced by tests/golden/verify_kg_only.py before re-approval: every changed lin
 | sweep-table6-q1600 | 10 | 10 | 29 |
 | titleblock-blank | 9 | 9 | 15 |
 | titleblock-filled | 9 | 9 | 15 |
-

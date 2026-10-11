@@ -1241,7 +1241,7 @@ namespace Elevator.Reporting.Sheet
             d.Table(new[] { "Force", "Direction", "FF (N)", "FF design (N)", "FF design (kN)", "FF design (kg)" }, new List<string[]>{
     new[]{"FF1","Along the car-rail line (car width)",N(f.FF1BaseN),N(f.FF1DesignN),KN(f.FF1DesignN),KG(f.FF1DesignN)},
     new[]{"FF2","Perpendicular to the car-rail line (car depth)",N(f.FF2BaseN),N(f.FF2DesignN),KN(f.FF2DesignN),KG(f.FF2DesignN)}},
-        new[] { 800, 3038, 1400, 1500, 1450, 1450 },
+        new[] { 700, 3638, 1100, 1400, 1400, 1400 },
         new HashSet<int> { 0, 3 });
             d.Paragraph("Values per guide rail at one guide-shoe level.", "Small");
             // Text first, then the figures: a figure moves to the next page only when it does not fit.

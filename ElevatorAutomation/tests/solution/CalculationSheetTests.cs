@@ -157,6 +157,8 @@ public static class CalculationSheetTests
         string props;text=Text(path,out props);Clean(text,props,p,file);
         return sheet;
     }
+    // The kN text of a figure label; its kg stands as a second line under it (DESIGN-FLOW principle 10).
+    static string KnOnly(double newtons){return Regex.Replace(Figure.Kn(newtons),@" \(-?\d+ kg\)","");}
     static bool Near(double? a,double b){return a.HasValue&&Math.Abs(a.Value-b)<1e-6*Math.Max(1,Math.Abs(b));}
     const string Summary="Calculation summary",Inputs="Input data",Reactions="Machine-room bearing reactions P1–P4",Ropes="Suspension rope tensions",RopeChecks="Suspension rope and traction checks",Pit="Safety-gear and buffer loads P5–P7",Guide="Car guide-rail forces FF1 / FF2";
     [STAThread] // WPF figure rendering
@@ -518,7 +520,7 @@ public static class CalculationSheetTests
             }
             Check(Tagged(x,"entrance")!=null&&Value(x,"entrance")==Figure.Mm(pl.DoorWidth)&&Value(x,"door-jamb-left")==Figure.Mm(pl.X("doorLeft"))&&Value(x,"door-jamb-right")==Figure.Mm(pl.X("doorRight")),"F1 entrance opening from the plan door width: "+file);
         }
-        if(svg.ContainsKey("F2"))foreach(var r in sheet.Chassis.Reactions)Check(Value(svg["F2"],"reaction-"+r.Id)==Figure.Num(r.UpwardN/1000,"0.###")&&Tagged(svg["F2"],"reaction-"+r.Id).InnerText==r.Id+" "+Figure.Kn(r.UpwardN),"F2 label "+r.Id+" = "+Figure.Kn(r.UpwardN)+": "+file);
+        if(svg.ContainsKey("F2"))foreach(var r in sheet.Chassis.Reactions)Check(Value(svg["F2"],"reaction-"+r.Id)==Figure.Num(r.UpwardN/1000,"0.###")&&Tagged(svg["F2"],"reaction-"+r.Id).InnerText==r.Id+" "+KnOnly(r.UpwardN),"F2 label "+r.Id+" = "+KnOnly(r.UpwardN)+": "+file);
         if(svg.ContainsKey("F2")&&sheet.Mode=="Basic"){var g=sheet.Chassis.SimplifiedGeometry;Check(Value(svg["F2"],"dim-L")==Figure.Mm(g.LongitudinalSpanMm)&&Value(svg["F2"],"dim-a")==Figure.Mm(g.LoadFromFrontMm)&&Value(svg["F2"],"dim-b")==Figure.Mm(g.LoadToRearMm)&&Value(svg["F2"],"dim-sf")==Figure.Mm(g.FrontTransverseSpanMm)&&Value(svg["F2"],"dim-sr")==Figure.Mm(g.RearTransverseSpanMm),"F2 dimensions L, a, b, s(f), s(r): "+file);}
         if(svg.ContainsKey("F3")){var g=sheet.Chassis.SimplifiedGeometry;Check(Value(svg["F3"],"reaction-front")==Figure.Num(g.FrontLoadN/1000,"0.###")&&Value(svg["F3"],"reaction-rear")==Figure.Num(g.RearLoadN/1000,"0.###")&&Value(svg["F3"],"load-W")==Figure.Num(sheet.Chassis.TotalVerticalLoadN.Value/1000,"0.###"),"F3 W and row reactions: "+file);}
         if(svg.ContainsKey("F4"))
@@ -558,7 +560,7 @@ public static class CalculationSheetTests
         if(svg.ContainsKey("F7"))
         {
             var x=svg["F7"];var c=sheet.Chassis;int? n=proj.Suspension.RopeCount;
-            Check(Value(x,"tension-car")==Figure.Num(c.CarBundleTensionN.Value/1000,"0.###")&&Tagged(x,"tension-car-text").InnerText=="T(car) "+Figure.Kn(c.CarBundleTensionN.Value)&&Value(x,"tension-cwt")==Figure.Num(c.CounterweightBundleTensionN.Value/1000,"0.###")&&Tagged(x,"tension-cwt-text").InnerText=="T(cwt) "+Figure.Kn(c.CounterweightBundleTensionN.Value),"F7 T(car) / T(cwt) labels match the rope tensions: "+file);
+            Check(Value(x,"tension-car")==Figure.Num(c.CarBundleTensionN.Value/1000,"0.###")&&Tagged(x,"tension-car-text").InnerText=="T(car) "+KnOnly(c.CarBundleTensionN.Value)&&Value(x,"tension-cwt")==Figure.Num(c.CounterweightBundleTensionN.Value/1000,"0.###")&&Tagged(x,"tension-cwt-text").InnerText=="T(cwt) "+KnOnly(c.CounterweightBundleTensionN.Value),"F7 T(car) / T(cwt) labels match the rope tensions: "+file);
             if(n.HasValue&&n.Value>0)Check(Value(x,"tension-car-rope")==Figure.Num(c.CarPerRopeTensionN.Value/1000,"0.###")&&Value(x,"tension-cwt-rope")==Figure.Num(c.CounterweightPerRopeTensionN.Value/1000,"0.###")&&Tagged(x,"roping").InnerText=="n = "+n.Value+" ropes, "+Figure.Num(proj.Suspension.RopingRatio.Value,"0.##")+":1","F7 per-rope values and roping label from the project: "+file);
             bool deflector=MachineRoomRules.SelectDeflector(sheet.Plan.TZ).IsRequired;
             Check((Tagged(x,"deflector-sheave")!=null)==deflector&&Tagged(x,"traction-sheave")!=null&&Tagged(x,"car-hitch")!=null&&Tagged(x,"cw-hitch")!=null,"F7 deflector drawn only when the project rule selects one (TZ "+Figure.Mm(sheet.Plan.TZ)+"): "+file);
@@ -568,7 +570,7 @@ public static class CalculationSheetTests
         if(svg.ContainsKey("F8"))
         {
             var x=svg["F8"];var l=sheet.SafetyPit.P5;int n=l.ComponentCount.Value;string v=Figure.Num(l.PerComponentLoadN.Value/1000,"0.###");
-            Check(Enumerable.Range(1,n).All(i=>Tagged(x,"rail-"+i)!=null&&Tagged(x,"safety-gear-"+i)!=null&&Value(x,"force-p5-"+i)==v&&Tagged(x,"force-p5-"+i+"-text").InnerText=="P5 "+Figure.Kn(l.PerComponentLoadN.Value))&&Tagged(x,"rail-"+(n+1))==null,"F8 one rail, safety gear and P5 arrow per car guide rail ("+n+" × "+v+" kN): "+file);
+            Check(Enumerable.Range(1,n).All(i=>Tagged(x,"rail-"+i)!=null&&Tagged(x,"safety-gear-"+i)!=null&&Value(x,"force-p5-"+i)==v&&Tagged(x,"force-p5-"+i+"-text").InnerText=="P5 "+Regex.Replace(KnOnly(l.PerComponentLoadN.Value),@" \(-?\d+ kg\)",""))&&Tagged(x,"rail-"+(n+1))==null,"F8 one rail, safety gear and P5 arrow per car guide rail ("+n+" × "+v+" kN): "+file);
             Check(Tagged(x,"p5-per-rail").InnerText=="per car guide rail"&&Value(x,"rail-count")==n.ToString(CultureInfo.InvariantCulture)&&Tagged(x,"jaw-left")!=null&&Tagged(x,"jaw-right")!=null,"F8 per-rail note, rail count and jaw plan detail: "+file);
             var f8=sheet.Figures.Single(q=>q.Id=="F8");
             foreach(var a in f8.Entities.OfType<FigurePolyline>().Where(e=>e.Tag!=null&&e.Tag.StartsWith("force-p5-")))Check(a.Points[1].Y>a.Points[0].Y&&Math.Abs(a.Points[1].X-a.Points[0].X)<1e-9,"F8 "+a.Tag+" points vertically down: "+file);
@@ -580,13 +582,13 @@ public static class CalculationSheetTests
             {
                 if(!g.Load.PerComponentLoadN.HasValue){Check(Tagged(x,g.Tag+"-buffer-1")==null,"F9 no "+g.Tag+" buffers when unavailable: "+file);continue;}
                 int n=g.Load.ComponentCount.Value;string per=Figure.Num(g.Load.PerComponentLoadN.Value/1000,"0.###");
-                Check(Count(x,g.Tag+"-buffer-")==n&&Count(x,g.Tag+"-force-")==n&&Enumerable.Range(1,n).All(i=>Value(x,g.Tag+"-force-"+i)==per)&&Value(x,g.Tag+"-total")==Figure.Num(g.Load.GroupLoadN.Value/1000,"0.###")&&Tagged(x,g.Tag+"-total").InnerText.StartsWith(g.Load.Id+" total "+Figure.Kn(g.Load.GroupLoadN.Value)),"F9 "+g.Load.Id+": "+n+" buffers, "+per+" kN each, total labelled: "+file);
+                Check(Count(x,g.Tag+"-buffer-")==n&&Count(x,g.Tag+"-force-")==n&&Enumerable.Range(1,n).All(i=>Value(x,g.Tag+"-force-"+i)==per)&&Value(x,g.Tag+"-total")==Figure.Num(g.Load.GroupLoadN.Value/1000,"0.###")&&Tagged(x,g.Tag+"-total").InnerText.StartsWith(g.Load.Id+" total "+Regex.Replace(KnOnly(g.Load.GroupLoadN.Value),@" \(-?\d+ kg\)","")),"F9 "+g.Load.Id+": "+n+" buffers, "+per+" kN each, total labelled: "+file);
                 var f9=sheet.Figures.Single(q=>q.Id=="F9");
                 foreach(var a in f9.Entities.OfType<FigurePolyline>().Where(e=>e.Tag!=null&&e.Tag.StartsWith(g.Tag+"-force-")))
                 {
                     var body=f9.Entities.OfType<FigurePolyline>().Single(e=>e.Tag==g.Tag+"-buffer-"+a.Tag.Substring(a.Tag.LastIndexOf('-')+1));double axis=body.Points.Average(q=>q.X);
                     Check(a.Points[1].Y>a.Points[0].Y&&Math.Abs(a.Points[1].Y+2.0-CalculationFigures.F9Floor)<1e-6&&Math.Abs(a.Points[0].X-axis)<1e-6&&Math.Abs(a.Points[1].X-axis)<1e-6,"F9 "+a.Tag+" on its buffer centre line, down onto the pit floor at the buffer base: "+file);
-                    Check(f9.Texts.Single(t=>t.Tag==a.Tag+"-text").Content==g.Load.Id+" "+Figure.Kn(g.Load.PerComponentLoadN.Value),"F9 "+a.Tag+" labelled "+g.Load.Id+" per buffer: "+file);
+                    Check(f9.Texts.Single(t=>t.Tag==a.Tag+"-text").Content==g.Load.Id+" "+KnOnly(g.Load.PerComponentLoadN.Value),"F9 "+a.Tag+" labelled "+g.Load.Id+" per buffer: "+file);
                 }
             }
             double? pit=proj.Shaft==null?null:proj.Shaft.PitDepthMm;
