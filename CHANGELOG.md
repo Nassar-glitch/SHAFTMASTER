@@ -6,6 +6,12 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Automatic doors, D4 (Doors Offset):** a "Doors Offset" field on the door page (2S and 2C): the distance in mm from the shaft centre line to the
+  opening centre line and a Left / Right selector, as seen in the plan drawing. It replaces "Opening offset, preferred". Default: 2S the preferred offset
+  from the returns (with the automatic shift in narrow shafts), 2C centred. The allowed range is shown under the field; a value outside it is kept,
+  flagged "out of range: max N Left" (Design Notes and the export warning give the limit) and drawn / exported at the nearest allowed position.
+  The plan drawing shows the offset dimension for 2C too; figure F1 uses the D3 door style. Old projects with a locked opening offset give the
+  same position. See `ElevatorAutomation/docs/design/doors-d4/`.
 - **Automatic doors, D3 (drawing quality of the door plan):** the landing and car door panels sit inside a door frame (one rectangle each,
   aligned), the fixed-side jamb post is drawn in both frames, panels continue into the stacking pocket, and the dimensions are arranged
   (chains on one line, equal rows, extension lines from the real edges, a text too long for its interval placed outside or beside the chain).

@@ -264,7 +264,7 @@ def run_case(folder, case_id):
     centre = (ol + orr) / 2
     rear = plan["CarRear"]
     want = [ol, o, sw - orr, o / 2, o / 2, o, ol - car_left, car_right - orr, lz, sg, front - cd, front, rear - front]
-    if kind == "Automatic2S" and abs(centre - sw / 2) > 0.05:
+    if abs(centre - sw / 2) > 0.05:
         want.append(abs(centre - sw / 2))
     want = sorted(round(v, 1) for v in want)
     check(len(meas) == len(want) and all(abs(a - b) <= 0.06 for a, b in zip(meas, want)), case_id + ": dimensions " + str(meas) + " vs " + str(want))
@@ -326,6 +326,17 @@ def run_case(folder, case_id):
         return t_ is not None and t_[0].startswith("Plan.") and e.dxf.invisible == 0
 
     mpl.qsave(msp, png, bg="#FFFFFF", dpi=170, filter_func=plan_only)
+    # the door area at a larger scale (front zone, car returns, wall opening and the dimensions below), cropped from a high-resolution render
+    try:
+        from PIL import Image
+        big = os.path.join(folder, case_id + "-plan-large.png")
+        mpl.qsave(msp, big, bg="#FFFFFF", dpi=520, filter_func=plan_only)
+        im = Image.open(big)
+        w_, h_ = im.size
+        im.crop((int(0.10 * w_), int(0.70 * h_), int(0.82 * w_), int(0.93 * h_))).save(os.path.join(folder, case_id + "-zoom.png"))
+        os.remove(big)
+    except ImportError:
+        pass
     print(case_id, "checked", len(new), "new entities,", len(hidden), "hidden; png", png)
     return {"Id": case_id, "AutomaticDoorEntities": len(mine), "HiddenTemplateEntities": hidden,
             "Rectangles": {k: len(v) for k, v in got_rect.items()}, "Lines": {k: len(v) for k, v in got_line.items()},
