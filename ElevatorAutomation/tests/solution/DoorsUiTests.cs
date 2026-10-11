@@ -94,7 +94,7 @@ public static class DoorsUiTests
                 Check(!Session().Project.UserEditedFields.Contains(DoorSettings.HandingKey), "Handing Auto resets");
                 Check(Name(Editors()["Doors.FixedReturnMm"]) == "Car return, left, preferred (mm)" && Name(Editors()["Doors.StackReturnMm"]) == "Car return, right, preferred (mm)" && Name(Editors()["Doors.CarZoneMm"]) == "Car door depth (mm)" && Name(Editors()["Doors.LandingZoneMm"]) == "Landing door depth (mm)", "Labels name Left / Right through the handing (stack right: fixed return left) and the depths");
                 Check(Name(Choices()["Doors.Handing"]) == "Panels stack to" && Name(Choices()["Doors.Type"]) == "Door type", "The handing field is called Panels stack to");
-                Check(((System.Collections.IEnumerable)Choices()["Doors.Type"].ItemsSource).Cast<Choice>().Select(c => c.Name).SequenceEqual(new[] { "Manual", "Side opening (2S)", "Centre opening (2C)" }), "Door type names are Manual, Side opening (2S), Centre opening (2C)");
+                Check(((System.Collections.IEnumerable)Choices()["Doors.Type"].ItemsSource).Cast<object>().Select(o => (string)o.GetType().GetProperty("Name").GetValue(o, null)).SequenceEqual(new[] { "Manual", "Side opening (2S)", "Centre opening (2C)" }), "Door type names are Manual, Side opening (2S), Centre opening (2C)");
                 // ---------- Doors Offset ----------
                 Check(Editors().ContainsKey("Doors.OffsetMm") && Choices().ContainsKey("Doors.OffsetSide") && !Editors().ContainsKey("Doors.OpeningOffsetMm"), "2S page offers the Doors Offset field with a Left / Right selector (no former opening offset)");
                 var off = Off();
