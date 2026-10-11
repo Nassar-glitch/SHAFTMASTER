@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using Elevator.Core.Doors;
 using Elevator.Core.Project;
 
 namespace Elevator.Solution.Bridge
@@ -7,6 +9,56 @@ namespace Elevator.Solution.Bridge
     /// <summary>Builds the STEP model parameters from a project.</summary>
     public static class StepInputFactory
     {
+        // Automatic doors (2S, 2C): the panels and the frame as simple boxes from the shared door layout; Manual: nothing is set.
+        static void AutomaticDoor(StepModelParameters p, ElevatorProject project, DesignContext context, ElevatorParameters plan)
+        {
+            var l = DoorRules.Evaluate(project, context.Doors, plan);
+            if (!DoorTypes.IsAutomatic(l.Type))
+                return;
+            double t = l.PanelThicknessMm, pw = l.PanelWidthMm, o = l.OpeningMm, sw = plan.SW;
+            double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm, clear = p.DoorClearHeight, full = p.DoorConstructionHeight;
+            p.DoorOpeningLeft = l.OpeningLeftX;
+            p.DoorOpeningRight = l.OpeningRightX;
+            var landing = new List<double>();
+            var car = new List<double>();
+            var frame = new List<double>();
+            Action<List<double>, double, double, double, double, double, double> box =
+                (list, x0, x1, d0, d1, z0, h) =>
+                {
+                    list.AddRange(new[] { Math.Min(x0, x1), d0, Math.Abs(x1 - x0), d1 - d0, z0, h });
+                };
+            if (l.Type == DoorTypes.Automatic2S)
+            {
+                bool right = l.StackingSide == DoorTypes.Right;
+                Func<double, double> m = x => right ? x : sw - x;
+                double uf = right ? l.OpeningLeftX : sw - l.OpeningRightX, us = uf + o;
+                double ul = right ? l.LandingLeftX : sw - l.LandingRightX, ur = right ? l.LandingRightX : sw - l.LandingLeftX;
+                double ot = Math.Max(0, 2 * pw - o - l.PanelOverlapMm);
+                box(landing, m(uf), m(uf + pw), lz - t, lz, 0, clear);
+                box(landing, m(us + ot - pw), m(us + ot), lz - 2 * t - 5, lz - t - 5, 0, clear);
+                box(car, m(uf), m(uf + pw), cd, cd + t, 0, clear);
+                box(car, m(us + ot - pw), m(us + ot), cd + t + 5, cd + 2 * t + 5, 0, clear);
+                // Frame: fixed-side jamb, stacking pocket (beyond the panel over-travel), header over the opening.
+                if (uf - ul > 0)
+                    box(frame, m(ul), m(uf), 0, lz, 0, full);
+                if (ur - (us + ot) > 0)
+                    box(frame, m(us + ot), m(ur), 0, lz, 0, full);
+                box(frame, m(uf), m(us), 0, lz, clear, full - clear);
+            }
+            else
+            {
+                double dl = lz - 5 - t, dc = cd + 12;
+                box(landing, l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, 0, clear);
+                box(landing, l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, 0, clear);
+                box(car, l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, 0, clear);
+                box(car, l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, 0, clear);
+                box(frame, l.LandingLeftX, l.LandingRightX, lz - 70, lz, clear, full - clear);
+            }
+            p.LandingDoorPanels = landing.ToArray();
+            p.CarDoorPanels = car.ToArray();
+            p.LandingDoorFrame = frame.ToArray();
+        }
+
         /// <summary>Calculates the design and builds the STEP model parameters.</summary>
         public static StepModelParameters Create(
             ElevatorProject project,
@@ -43,6 +95,7 @@ namespace Elevator.Solution.Bridge
             p.CwDepth = plan.CwDepth;
             p.CwRow = plan.CwRow;
             p.DoorWidth = plan.DoorWidth;
+            AutomaticDoor(p, project, context, plan);
             p.Pit = -aa.PitZ;
             p.Travel = aa.Underside - project.Shaft.OverheadMm.Value;
             p.Overhead = project.Shaft.OverheadMm.Value;

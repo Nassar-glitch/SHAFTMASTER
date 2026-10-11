@@ -16,6 +16,14 @@ namespace Elevator.Solution.Bridge
         public double CwDepth = 100;
         public double CwRow = 1475;
         public double DoorWidth = 900;
+
+        // Automatic doors (2S, 2C): the clear opening X range (both 0: the manual door centred on the shaft) and simple bodies as
+        // groups of six numbers: X, Y (from the shaft front wall face), width, depth, height above the floor, height. Null: manual.
+        public double DoorOpeningLeft;
+        public double DoorOpeningRight;
+        public double[] LandingDoorPanels;
+        public double[] LandingDoorFrame;
+        public double[] CarDoorPanels;
         public double Pit = 1000;
         public double Travel = 12000;
         public double Overhead = 4200;

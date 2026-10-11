@@ -95,7 +95,8 @@ namespace Elevator.AutoCAD.Vertical
                 input.SW,
                 input.SD,
                 Configuration.Read<EquipmentProfile>(ElevatorProjectCommand.Family(input).ProfileFile),
-                plan.ElevatorParameters.CwDepth);
+                plan.ElevatorParameters.CwDepth,
+                AutomaticDoorPlan.InputFor(db, tr));
             if (Math.Abs(design.SW - plan.ElevatorParameters.SW) > .01 || Math.Abs(design.SD - plan.ElevatorParameters.SD) > .01)
                 throw new InvalidOperationException("Coordinated Plan is stale. Run its existing UPDATEALL workflow first.");
             design.MachineRoom = MachineRoomRules.Calculate(input, design, mr.Extensions);
@@ -139,6 +140,16 @@ namespace Elevator.AutoCAD.Vertical
                 : governorSpan != null
                     ? (double?)-mr.Frame.Local(governorSpan.XLine1Point + (governorSpan.XLine2Point - governorSpan.XLine1Point) / 2).Y
                     : null;
+            // An automatic door (2S, 2C) stands in the front zone: the landing panels in the landing door zone, the car panels in the car
+            // door zone. The manual door is a landing door in the wall opening and a car door across the whole front zone.
+            var autoDoor = AutomaticDoorPlan.LayoutFor(db, tr, design);
+            double landingBack = door.Min(), landingFront = door.Max(), carFront = door.Min();
+            if (autoDoor != null)
+            {
+                landingBack = -autoDoor.LandingZoneMm;
+                landingFront = 0;
+                carFront = -(autoDoor.LandingZoneMm + autoDoor.SillGapMm);
+            }
             return new VerticalSource
             {
                 Plan = plan.ElevatorParameters,
@@ -151,10 +162,10 @@ namespace Elevator.AutoCAD.Vertical
                 CwRailProjectedEdges = new[] { cwRail.Min(), cwRail.Max() },
                 CarBracketProjectedEdges = new[] { carSupport.Min(), carSupport.Max() },
                 CwBracketProjectedEdges = new[] { cwSupport.Min(), cwSupport.Max() },
-                LandingDoorBackX = door.Min(),
-                LandingDoorFrontX = door.Max(),
+                LandingDoorBackX = landingBack,
+                LandingDoorFrontX = landingFront,
                 CarDoorBackX = -design.CarFront,
-                CarDoorFrontX = door.Min(),
+                CarDoorFrontX = carFront,
                 CarRearOuterX = projected("Plan.Cabin.Outer.Rear").Min(),
                 GovernorProjectedAxisX = governorAxis,
                 CodeDiameterRatioStatus = design.MachineRoom.CodeDiameterRatioStatus,

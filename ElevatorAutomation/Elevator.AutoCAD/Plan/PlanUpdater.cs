@@ -18,6 +18,8 @@ namespace Elevator.AutoCAD.Plan
         /// <summary>Moves and reshapes the plan entities to the new design.</summary>
         public ViewUpdateResult Update(Database db, Transaction tr, ElevatorParameters design)
         {
+            // An earlier automatic door is removed first (reads only when the drawing has none).
+            AutomaticDoorPlan.Clear(db, tr);
             var snapshot = DrawingReader.Read(db, tr);
             var calculator = new PlanGeometryAdapter(snapshot, design);
             var gaps = DrawingUpdater.Preflight(snapshot, calculator);
@@ -30,6 +32,10 @@ namespace Elevator.AutoCAD.Plan
             var updated = DrawingReader.Read(db, tr);
             DrawingUpdater.Validate(updated, design, expected);
             PlanAnnotations.Validate(updated, annotations);
+            // The automatic door (2S, 2C) of the project stored in the drawing; a Manual door leaves the template geometry as it is.
+            var door = AutomaticDoorPlan.LayoutFor(db, tr, design);
+            if (door != null)
+                AutomaticDoorPlan.Draw(db, tr, updated, door);
             return new ViewUpdateResult
             {
                 Dimensions = expected,

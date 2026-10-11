@@ -35,7 +35,10 @@ namespace Elevator.AutoCAD.Plan
                     string type = entity.GetRXClass().DxfName;
                     using (var data = entity.GetXDataForApplication(DrawingReader.RegApp))
                     {
-                        if (data != null && data.AsArray().Length > 1 && otherKeys.Contains(Convert.ToString(data.AsArray()[1].Value)))
+                        if (data != null
+                            && data.AsArray().Length > 1
+                            && (otherKeys.Contains(Convert.ToString(data.AsArray()[1].Value))
+                                || Convert.ToString(data.AsArray()[1].Value).StartsWith(AutomaticDoorPlan.KeyPrefix)))
                         {
                             otherViewEntities++;
                             continue;

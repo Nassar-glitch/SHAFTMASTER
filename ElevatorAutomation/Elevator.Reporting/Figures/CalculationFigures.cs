@@ -4,6 +4,7 @@ using System.Linq;
 using Elevator.Core.Geometry;
 using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
+using Elevator.Core.Doors;
 using Elevator.Core.Project;
 using Elevator.Core.SafetyGear;
 
@@ -66,13 +67,15 @@ namespace Elevator.Reporting.Figures
 
         // ---------- F1 shaft plan ----------
         /// <summary>Figure F1: shaft plan with car, counterweight, rails and dimensions.</summary>
-        public static Figure ShaftPlan(ElevatorParameters p, IRailSection carRail, IRailSection cwRail, double doorShiftMm = 0)
+        public static Figure ShaftPlan(ElevatorParameters p, IRailSection carRail, IRailSection cwRail, DoorLayout automaticDoor = null)
         {
             var f = new Figure { Id = "F1", Title = "Shaft plan", Schematic = false };
             var v = new FigureView(-Wall, -Wall, p.SW + Wall, p.SD + Wall, 24, 16, 100, 136);
             f.View = v;
-            // An automatic side-opening door is shifted from the shaft centre (doorShiftMm; 0 for every other door).
-            double dl = p.X("doorLeft") + doorShiftMm, dr = p.X("doorRight") + doorShiftMm;
+            // An automatic door (2S, 2C) has its own opening position (the 2S opening is shifted from the shaft centre).
+            bool automatic = automaticDoor != null && DoorTypes.IsAutomatic(automaticDoor.Type) && automaticDoor.OpeningMm > 0;
+            double dl = automatic ? automaticDoor.OpeningLeftX : p.X("doorLeft");
+            double dr = automatic ? automaticDoor.OpeningRightX : p.X("doorRight");
             bool door = p.DoorWidth > 0 && dl > 0 && dr < p.SW;
             // Walls (symbolic hatched band) with the entrance opening in the front wall, from the plan geometry.
             DrawWalls(p, f, v, dl, dr, door);
@@ -113,6 +116,8 @@ namespace Elevator.Reporting.Figures
                     f.Poly(Map(v, RailPlan(cwRail, p.X("cwRailRight"), p.CwRow, -1, kw)), true, FigureLayer.Outline, "cw-rail-right", true);
                 cwRight.Value = Figure.Mm(p.X("cwRailRight"));
             }
+            if (automatic)
+                DrawAutomaticDoor(p, f, v, automaticDoor);
             var label = v.P(p.Center, (p.CarFront + p.CarRow) / 2);
             f.Text("CAR", label + Pt(0, -1.5), "middle");
             f.Text("internal W × D", label + Pt(0, 2.5), "middle");
@@ -124,6 +129,20 @@ namespace Elevator.Reporting.Figures
             double front = v.P(0, -Wall).Y, rear = v.P(0, p.SD + Wall).Y, left = v.P(-Wall, 0).X;
             DrawShaftDimensions(p, cwRail, f, v, cl, cr, front, rear, left);
             Axes(f, Pt(v.P(p.SW + Wall, 0).X + 8, front + 21));
+            if (automatic)
+            {
+                // Clear opening and stacking side of the automatic door.
+                string handing = automaticDoor.Type == DoorTypes.Automatic2S ? ", stacking " + automaticDoor.StackingSide.ToLowerInvariant() : "";
+                f.DimH(
+                    v.P(dl, 0),
+                    v.P(dr, 0),
+                    front + 28,
+                    "door " + Figure.Mm(automaticDoor.OpeningMm) + " x 2000" + handing,
+                    "dim-door",
+                    Figure.Mm(automaticDoor.OpeningMm));
+                Finish(f, front + 31);
+                return f;
+            }
             if (door)
             {
                 Finish(f, front + 24);
@@ -132,6 +151,49 @@ namespace Elevator.Reporting.Figures
             var note = f.Text("Entrance at the bottom", Pt(left - 14, front + 29), "start");
             Finish(f, note.At.Y);
             return f;
+        }
+
+        // Automatic door in plan, in the style of the reference drawings: car returns, landing frame (jamb, stacking pocket or door
+        // boxes), landing panels and car panels (closed), sill lines. Positions from the D1 door layout; the stacking side is mirrored.
+        private static void DrawAutomaticDoor(ElevatorParameters p, Figure f, FigureView v, DoorLayout l)
+        {
+            double t = l.PanelThicknessMm, pw = l.PanelWidthMm, o = l.OpeningMm;
+            double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
+            double sw = p.SW;
+            bool right = l.StackingSide == DoorTypes.Right;
+            Func<double, double> m = x => right ? x : sw - x;
+            Action<double, double, double, double, FigureLayer, string> rect =
+                (x0, x1, d0, d1, layer, tag) =>
+                {
+                    double a = Math.Min(x0, x1), b = Math.Max(x0, x1);
+                    f.Poly(Map(v, new[] { Pt(a, d0), Pt(b, d0), Pt(b, d1), Pt(a, d1) }), true, layer, tag);
+                };
+            // Car front returns: from the car side wall to the opening edge.
+            double carLeft = p.X("carLeft"), carRight = p.X("carRight");
+            rect(carLeft, l.OpeningLeftX, p.CarFront - 40, p.CarFront, FigureLayer.Outline, "door-car-return-left");
+            rect(l.OpeningRightX, carRight, p.CarFront - 40, p.CarFront, FigureLayer.Outline, "door-car-return-right");
+            if (l.Type == DoorTypes.Automatic2S)
+            {
+                double uf = right ? l.OpeningLeftX : sw - l.OpeningRightX, us = uf + o;
+                double ul = right ? l.LandingLeftX : sw - l.LandingRightX, ur = right ? l.LandingRightX : sw - l.LandingLeftX;
+                double ot = Math.Max(0, 2 * pw - o - l.PanelOverlapMm);
+                rect(m(ul), m(uf), 0, lz, FigureLayer.Outline, "door-frame-jamb");
+                rect(m(us), m(ur), 0, lz, FigureLayer.Outline, "door-frame-pocket");
+                rect(m(uf), m(uf + pw), lz - t, lz, FigureLayer.Secondary, "door-landing-panel-1");
+                rect(m(us + ot - pw), m(us + ot), lz - 2 * t - 5, lz - t - 5, FigureLayer.Secondary, "door-landing-panel-2");
+                rect(m(uf), m(uf + pw), cd, cd + t, FigureLayer.Secondary, "door-car-panel-1");
+                rect(m(us + ot - pw), m(us + ot), cd + t + 5, cd + 2 * t + 5, FigureLayer.Secondary, "door-car-panel-2");
+            }
+            else
+            {
+                rect(l.LandingLeftX, l.LandingRightX, lz - 70, lz, FigureLayer.Outline, "door-frame-landing-box");
+                rect(l.LandingLeftX, l.LandingRightX, cd, cd + 70, FigureLayer.Outline, "door-frame-car-box");
+                double dl = lz - 5 - t, dc = cd + 12;
+                rect(l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, FigureLayer.Secondary, "door-landing-panel-1");
+                rect(l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, FigureLayer.Secondary, "door-landing-panel-2");
+                rect(l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, FigureLayer.Secondary, "door-car-panel-1");
+                rect(l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, FigureLayer.Secondary, "door-car-panel-2");
+            }
         }
 
         private static void DrawWalls(ElevatorParameters p, Figure f, FigureView v, double dl, double dr, bool door)

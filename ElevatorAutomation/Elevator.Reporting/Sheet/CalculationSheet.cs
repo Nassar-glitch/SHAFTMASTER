@@ -655,7 +655,7 @@ namespace Elevator.Reporting.Sheet
                 RopeTractionInputRows(rows);
             d.Table(new[] { "Input", "Value" }, rows, TwoCol, new HashSet<int> { 0 });
             if (Plan != null && CarRail != null)
-                AddFigure(d, () => CalculationFigures.ShaftPlan(Plan, CarRail, CounterweightRail, Door == null ? 0 : Door.CentreShiftMm));
+                AddFigure(d, () => CalculationFigures.ShaftPlan(Plan, CarRail, CounterweightRail, Door));
         }
 
         // Automatic car door: type, clear opening and (side opening) the stacking side. Manual doors add no row.

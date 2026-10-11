@@ -161,3 +161,67 @@ Selection and checks (all in `Elevator.Core/Doors/DoorRules`):
    profile library yet (DESIGN-FLOW stage 3); they are presets.
 7. **Drawings:** the plan and sections still draw the Manual door. `DoorLayout` (opening X, landing X, panels, zones, `CentreShiftMm`)
    is available for the drawing stage (D2).
+
+## 5. Drawings (D2)
+
+The automatic door is drawn from the `DoorLayout` of section 3 in the native plan, in the calculation-sheet figure F1 and in the STEP
+model. A Manual door is drawn exactly as before (no template entity is touched).
+
+### Native plan (`Elevator.AutoCAD/Plan/AutomaticDoorPlan`)
+
+- The template door geometry stays in the drawing, bound and updated as before, but is **hidden** (nothing is cloned or moved any more).
+  Hidden for a 2S / 2C door, by tag (52 entities):
+  - manual door: `Plan.Door.Opening`, `Plan.DoorLeft.Part001-004`, `Plan.DoorRight.Part001-007` (jamb blocks, handles, ticks, the yellow
+    swing line), `Plan.DoorSpan.Part001-003` (landing sill box), `Plan.DoorLeader.Part001`;
+  - car entrance notch: `Plan.Entrance.Part002-007`;
+  - centre mark device of the manual landing door: `Plan.CenterFront.Part001-013` (the references have none; `Part014-019`, the section
+    arrow, stays);
+  - car front returns: `Plan.Cabin.Inner.Front`, `Plan.Cabin.Part002-004`;
+  - door dimensions: `Plan.Dimension.Part006-013`;
+  - wall pieces that carry the opening, redrawn with the opening where the door is: `Plan.Wall.Part001`, `Part004`, `Part005`, `Part006`
+    and `Plan.Shaft.InnerOutline.EntranceDatum` (hidden but still the frame datum).
+  A Manual project, or a later update of the same drawing with a Manual door, erases the new entities and shows the template geometry
+  again (`AutomaticDoorPlan.Clear`).
+- New entities are tagged `Plan.AutoDoor.NNN` (role `autoDoor`), so they are read, arranged and counted as plan entities, and not as
+  unbound entities.
+- Drawn from the layout (X from the shaft left wall, D from the shaft front wall; mirrored for handing Left). Style of the references:
+  a panel is its outline plus three construction lines at 10 mm inside it ("double line"), a parked panel block is a rectangle with a
+  second one 1 mm inside.
+
+| Item | 2S | 2C | Layer |
+|---|---|---|---|
+| Wall with the opening | the template wall pieces with the two jamb edges at opening edge -/+ jamb width | same | Wall |
+| Jamb blocks in the wall opening | double line blocks (outline and 3 mm inset), 135 wide, at the opening edges | same | 0 |
+| Landing frame | fixed-side jamb (outline and 3 mm inset, D 0 to landing zone); pocket lines: top from the fixed panel end to the pocket edge, bottom, outer edge | boxes D (zone - 70) to zone and D (zone + gap) to +70 over the landing frame width | 0 |
+| Landing and car panels (closed) | 2 x panel width, fixed-side panel next to the car, leading panel behind it, over-travel 5 beyond the opening, telescopic overlap 10; thickness 40, 5 between rows | 2 centre panels per door, 2 mm apart, thickness 39 | outline: Car (2S), 0 (2C); construction lines: 0 |
+| Parked panels | 4 blocks 106 wide, 4 mm inside the pocket edge, in the four panel rows | 4 blocks 141 wide at the ends of both boxes | Car (2S), 0 (2C) |
+| Car front returns | car side wall (outer face) to the opening edge, 40 deep, ending at the car front, with a centre line at each opening edge | same | step&guides, CL |
+| Sill lines | landing sill D 0, car sill D (car front - 40), across the opening | same | DL |
+| Dimensions (style Nassar2, texts as in the references) | returns and OPENING o above the car front; wall to opening, DOOR oX2000, the two halves and (offset only) the opening offset below the wall; front-zone split | same, without the offset | 0 |
+
+- Front-zone dimensions: the total (template dimension, 245 / 220) keeps its column; landing door zone, sill gap and car door zone have
+  their own columns 60, 120 and 180 mm towards the wall, outside the wall, so no text overlaps. The offset dimension (2S, e.g. 75) is
+  the row nearest the wall, between the opening centre and the shaft centre.
+
+Result for the three tier-3 cases: `output/doors-native/*-plan.png` (rendered from the generated DWG) against the reference renders
+`2S.png` and `2C.png`; every entity is compared with the layout by `tests/integration/verify_doors.py` (45 checks). The comparison images
+are in `docs/design/doors-d2/`.
+
+### Sections
+
+- **A-A:** the door is the template's native door line (frame plane at the wall, clear head 2000, full head 2160, audited per served
+  floor): correct for 2S and 2C (door height 2000 = DOOR oX2000). The car front follows the front zone through the shared plan.
+  Only the experimental vertical geometry (`VerticalSource`) used the manual positions for the car and landing door boxes; for an
+  automatic door they are now the car door zone and the landing door zone.
+- **B-B and the plan recipe in the AutoCAD commands:** the section audit recalculated the plan with the Manual recipe and failed against the
+  new car depth ("shared car reference verification failed: 1385 versus 1325 mm"). Every plan recalculation in `Elevator.AutoCAD` now
+  takes the door of the project stored in the drawing (`AutomaticDoorPlan.InputFor`), and the door catalog comes from `config/presets.json`
+  (`Configuration.DoorCatalog`), also in the host context.
+
+### STEP (`Elevator.Solution.StepExport/BuildModel`)
+
+The model contains doors (two landing panels per served floor, two cabin panels, front-wall piers and spandrels around the opening). For an
+automatic door `StepModelParameters` carries the opening X range and the panels and frame as simple boxes (X, Y, width, depth, height
+above the floor, height); the piers and spandrels follow the opening position, the manual panels are replaced by the panel boxes and, per
+floor, the frame bodies (2S: fixed-side jamb, stacking pocket beyond the panel over-travel, header over the opening; 2C: header). A Manual
+door gives empty parameters and the same bodies as before.

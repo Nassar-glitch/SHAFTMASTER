@@ -153,7 +153,8 @@ namespace Elevator.Solution.Host
             {
                 Equipment = Configuration.Read<EquipmentProfile>(ElevatorProjectCommand.Family(
                 LegacyProjectAdapter.ToLegacy(project)).ProfileFile),
-                CounterweightDepthMm = plan.ElevatorParameters.CwDepth
+                CounterweightDepthMm = plan.ElevatorParameters.CwDepth,
+                Doors = Configuration.DoorCatalog()
             };
             if ((views & ~DrawingViews.Plan) != 0)
             {

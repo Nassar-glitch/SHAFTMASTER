@@ -148,7 +148,8 @@ namespace Elevator.AutoCAD.SectionBB
                         input.SW,
                         input.SD,
                         Configuration.Read<EquipmentProfile>(ElevatorProjectCommand.Family(input).ProfileFile),
-                        plan.ElevatorParameters.CwDepth);
+                        plan.ElevatorParameters.CwDepth,
+                        AutomaticDoorPlan.InputFor(doc.Database, tr));
                     design.MachineRoom = MachineRoomRules.Calculate(input, design, mr.Extensions);
                     design.MachineRoomSection = MachineRoomSectionRules.Calculate(
                         input,
