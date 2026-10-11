@@ -33,6 +33,13 @@ namespace Elevator.Core.Geometry
         /// </summary>
         public double LateralMm;
 
+        /// <summary>
+        /// Distance by which this dimension's own line is moved from the chain line, towards the geometry (shorter extension lines), mm.
+        /// Used when the first or last dimension of a chain is stepped out of the chain so that the small text of its neighbour
+        /// can stand outside the chain (the user's 2C correction): zero for a dimension that stays on the chain line.
+        /// </summary>
+        public double LineOffsetMm;
+
         /// <summary>Estimated text length along the dimension line, mm.</summary>
         public double LengthMm;
 
@@ -55,6 +62,9 @@ namespace Elevator.Core.Geometry
 
         /// <summary>Spacing of two dimension columns / rows created by the automatic door drawing, mm.</summary>
         public const double ColumnPitchMm = 110;
+
+        /// <summary>Step of a dimension stepped out of a chain, as a multiple of the text height (a text lane plus clearance).</summary>
+        public const double StepFactor = 1.5;
 
         /// <summary>The estimated length of a dimension text along its dimension line.</summary>
         public static double TextLength(string text, double textHeight)
@@ -105,30 +115,57 @@ namespace Elevator.Core.Geometry
             if (boundaries.Length != n + 1)
                 throw new ArgumentException("A chain of n dimensions has n + 1 extension line positions.");
             double gap = GapFactor * textHeight;
-            double clear = arrowSize * 0.5 + gap;
-            var result = new DimensionTextPlacement[n];
-            bool beforeTaken = false, afterTaken = false;
+            var fits = new bool[n];
             for (int i = 0; i < n; i++)
+                fits[i] = Fits(boundaries[i + 1] - boundaries[i], TextLength(texts[i], textHeight), textHeight);
+            var result = new DimensionTextPlacement[n];
+            for (int i = 0; i < n; i++)
+                result[i] = new DimensionTextPlacement { Slot = DimensionTextSlot.Centred, LengthMm = TextLength(texts[i], textHeight), HeightMm = textHeight };
+            // First of the chain (or last) stepped out when its neighbour is the only inner interval that is too small: the small
+            // text then stands outside the shortened chain, on the line, beside the stepped-out dimension.
+            int first = 0, last = n - 1;
+            if (n >= 3)
             {
-                double length = TextLength(texts[i], textHeight);
-                double width = boundaries[i + 1] - boundaries[i];
-                var p = new DimensionTextPlacement { Slot = DimensionTextSlot.Centred, LengthMm = length, HeightMm = textHeight };
-                result[i] = p;
-                if (Fits(width, length, textHeight))
+                int small = -1, count = 0;
+                for (int i = 1; i < n - 1; i++)
+                {
+                    if (!fits[i])
+                    {
+                        small = i;
+                        count++;
+                    }
+                }
+                if (count == 1 && small == 1 && fits[0])
+                {
+                    result[0].LineOffsetMm = StepFactor * textHeight;
+                    first = 1;
+                }
+                else if (count == 1 && small == n - 2 && fits[n - 1])
+                {
+                    result[n - 1].LineOffsetMm = StepFactor * textHeight;
+                    last = n - 2;
+                }
+            }
+            double clear = arrowSize * 0.5 + gap;
+            bool beforeTaken = false, afterTaken = false;
+            for (int i = first; i <= last; i++)
+            {
+                var p = result[i];
+                if (fits[i])
                     continue;
                 double centre = (boundaries[i] + boundaries[i + 1]) / 2;
-                if (i == 0 && !beforeTaken)
+                if (i == first && !beforeTaken)
                 {
-                    double c = boundaries[0] - clear - length / 2;
-                    c = ClearOf(c, length, gap, -1, blocked);
+                    double c = boundaries[first] - clear - p.LengthMm / 2;
+                    c = ClearOf(c, p.LengthMm, gap, -1, blocked);
                     p.Slot = DimensionTextSlot.BeforeChain;
                     p.AlongMm = c - centre;
                     beforeTaken = true;
                 }
-                else if (i == n - 1 && !afterTaken)
+                else if (i == last && !afterTaken)
                 {
-                    double c = boundaries[n] + clear + length / 2;
-                    c = ClearOf(c, length, gap, +1, blocked);
+                    double c = boundaries[last + 1] + clear + p.LengthMm / 2;
+                    c = ClearOf(c, p.LengthMm, gap, +1, blocked);
                     p.Slot = DimensionTextSlot.AfterChain;
                     p.AlongMm = c - centre;
                     afterTaken = true;
@@ -181,7 +218,7 @@ namespace Elevator.Core.Geometry
                 from[i] = centre - placement[i].LengthMm / 2;
                 to[i] = centre + placement[i].LengthMm / 2;
                 // Distance of the text centre from the dimension line: a text on the line sits half its height plus a gap above it.
-                lane[i] = placement[i].LateralMm > 0 ? placement[i].LateralMm : placement[i].HeightMm / 2 + GapFactor * placement[i].HeightMm;
+                lane[i] = (placement[i].LateralMm > 0 ? placement[i].LateralMm : placement[i].HeightMm / 2 + GapFactor * placement[i].HeightMm) - placement[i].LineOffsetMm;
                 if (blocked != null)
                 {
                     foreach (var range in blocked)

@@ -24,6 +24,7 @@ namespace Elevator.AutoCAD.Plan
 
         // Car front wall thickness (return) and the offsets of the 2C panels inside their frames (references), mm.
         const double CarReturn = 40;
+        const double BoxDepth = 70;
         const double CarBoxPanelOffset = 12;
         const double LandingBoxPanelOffset = 5;
         // Panel bands end this far inside the frame end (the references' parked-panel block inset).
@@ -365,7 +366,8 @@ namespace Elevator.AutoCAD.Plan
             {
                 if (Math.Abs(xEnd - xClosed) < 2)
                     return;
-                double inner = xEnd + (xClosed < xEnd ? -1 : 1);
+                // The inset line is 1 mm short of the right-hand end only, as in the references (and the user's 2S and 2C edits).
+                double inner = xEnd > xClosed ? xEnd - 1 : xEnd;
                 Open(layer, new[] { xClosed, xClosed, xEnd, xEnd, xClosed, xClosed }, new[] { d0 + 1, d0, d0, d1, d1, d1 - 1 });
                 Open(layer, new[] { xClosed, inner, inner, xClosed }, new[] { d0 + 1, d0 + 1, d1 - 1, d1 - 1 });
             }
@@ -420,9 +422,10 @@ namespace Elevator.AutoCAD.Plan
                 double t = l.PanelThicknessMm, pw = l.PanelWidthMm;
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
                 double cdEnd = s.ElevatorParameters.CarFront - CarReturn;
-                // Frames across both stacking sides, centred on the opening: the landing frame over the landing zone and the car frame
-                // from the sill gap to the car front return (the 2S frame rules).
-                Rect(l.LandingLeftX, l.LandingRightX, 0, lz, LayerFrame);
+                // Frames across both stacking sides, centred on the opening, aligned with each other.
+                // The landing box keeps the reference depth (the user's 2C edit left it 10 mm off the wall face); the car frame runs
+                // from the sill gap to the car front return.
+                Rect(l.LandingLeftX, l.LandingRightX, Math.Max(0, lz - BoxDepth), lz, LayerFrame);
                 Rect(l.LandingLeftX, l.LandingRightX, cd, cdEnd, LayerFrame);
                 // The two centre panels of the landing and of the car, inside their frames (the references draw them on layer 0).
                 double dl = lz - Math.Min(LandingBoxPanelOffset, Math.Max(0, (lz - t) / 2)) - t;
@@ -489,8 +492,9 @@ namespace Elevator.AutoCAD.Plan
 
             // Draws a chain of contiguous dimensions on ONE dimension line (DESIGN-FLOW principle 8): vertical = measured along the depth,
             // the line at x = line; otherwise measured along x, the line at depth = line. The text of an interval too small for it is
-            // placed by DimensionLayout outside the chain / beside it.
-            void Chain(bool vertical, double line, IList<Link> links, IList<double[]> blocked)
+            // placed by DimensionLayout outside the chain / beside it; towardsGeometry (+1 / -1 along the axis across the line) is the
+            // direction in which a dimension stepped out of the chain moves.
+            void Chain(bool vertical, double line, int towardsGeometry, IList<Link> links, IList<double[]> blocked)
             {
                 int n = links.Count;
                 var dims = new RotatedDimension[n];
@@ -526,15 +530,16 @@ namespace Elevator.AutoCAD.Plan
                     // A text moved off its dimension line stays where it is put (free text), the line does not follow it.
                     if (place[i].LateralMm > 0)
                         d.Dimtmove = 2;
+                    double own = line + towardsGeometry * place[i].LineOffsetMm;
                     if (vertical)
                     {
-                        d.DimLinePoint = f.World(new Point3d(line, mid, z));
-                        d.TextPosition = f.World(new Point3d(line - place[i].LateralMm, mid + place[i].AlongMm, z));
+                        d.DimLinePoint = f.World(new Point3d(own, mid, z));
+                        d.TextPosition = f.World(new Point3d(own - place[i].LateralMm, mid + place[i].AlongMm, z));
                     }
                     else
                     {
-                        d.DimLinePoint = f.World(new Point3d(mid, line, z));
-                        d.TextPosition = f.World(new Point3d(mid + place[i].AlongMm, line + place[i].LateralMm, z));
+                        d.DimLinePoint = f.World(new Point3d(mid, own, z));
+                        d.TextPosition = f.World(new Point3d(mid + place[i].AlongMm, own + place[i].LateralMm, z));
                     }
                     d.RecomputeDimensionBlock(true);
                 }
@@ -567,7 +572,7 @@ namespace Elevator.AutoCAD.Plan
 
                 // Above the car front: car return | opening | car return on the one line of the template opening dimension. The car side
                 // walls block the texts; a return too small for its text gets it outside the chain, beyond the wall.
-                Chain(false, LineOf("Plan.Dimension.Part010", false),
+                Chain(false, LineOf("Plan.Dimension.Part010", false), -1,
                     new List<Link>
                     {
                         new Link("Plan.Dimension.Part009", carLeft, ol, null, null),
@@ -582,7 +587,7 @@ namespace Elevator.AutoCAD.Plan
                 double doorRow = LineOf("Plan.Dimension.Part008", false);
                 double halvesRow = LineOf("Plan.Dimension.Part006", false);
                 double offsetRow = DimensionLayout.RowBefore(halvesRow, doorRow);
-                Chain(false, doorRow,
+                Chain(false, doorRow, 1,
                     new List<Link>
                     {
                         new Link("Plan.Dimension.Part013", 0, ol, 0, edge),
@@ -590,7 +595,7 @@ namespace Elevator.AutoCAD.Plan
                         new Link("Plan.Dimension.Part012", orr, sw, edge, 0)
                     },
                     null);
-                Chain(false, halvesRow,
+                Chain(false, halvesRow, 1,
                     new List<Link>
                     {
                         new Link("Plan.Dimension.Part006", ol, centre, edge, 0),
@@ -600,7 +605,7 @@ namespace Elevator.AutoCAD.Plan
                 if (l.Type == DoorTypes.Automatic2S && Math.Abs(centre - sw / 2) > 0.05)
                 {
                     bool openingFirst = centre < sw / 2;
-                    Chain(false, offsetRow,
+                    Chain(false, offsetRow, 1,
                         new List<Link>
                         {
                             new Link("Plan.Dimension.Part006", Math.Min(centre, sw / 2), Math.Max(centre, sw / 2),
@@ -618,7 +623,7 @@ namespace Elevator.AutoCAD.Plan
                 double frameX = l.LandingLeftX;
                 double returnX = (carLeft - wall + ol) / 2;
                 double rearY = f.Local(Source<RotatedDimension>("Plan.Dimension.Part020").XLine2Point).Y;
-                Chain(true, chainColumn,
+                Chain(true, chainColumn, 1,
                     new List<Link>
                     {
                         new Link("Plan.Dimension.Part031", 0, lz, wallX, frameX),
@@ -626,7 +631,7 @@ namespace Elevator.AutoCAD.Plan
                         new Link("Plan.Dimension.Part031", cd, front, frameX, returnX)
                     },
                     null);
-                Chain(true, totalColumn,
+                Chain(true, totalColumn, 1,
                     new List<Link>
                     {
                         new Link("Plan.Dimension.Part031", 0, front, wallX, returnX),

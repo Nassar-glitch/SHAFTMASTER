@@ -2,6 +2,8 @@
 
 usage: verify_user_edit.py <user edit DWG> <generated DWG> <output folder>
 
+Used for the user's 2S correction (D3) and for his 2C correction (D3b).
+
 The user generated "2S 700 on a 1320 x 1800 shaft" with the bin-try build and corrected the door plan by hand in AutoCAD (car door frame,
 jamb post, the way the panels continue into the pocket, the arrangement of the dimensions). docs/design/doors-d3/ keeps that DWG; the
 generated drawing of the same project must contain the same line work in the door area and the same dimensions.
@@ -25,6 +27,9 @@ import ezdxf
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
 TOL = 0.06
 LINE_TOLERANCE = 15.0
+# The landing zone dimension (from the wall face, short) is stepped out of the front-zone chain by one text lane (60 mm) when the sill
+# gap text does not fit: the user's 2C correction does it, his 2S correction left the text overlapping.
+STEP_TOLERANCE = 80.0
 WINDOW = (-420.0, -210.0, 1600.0, 260.0)
 
 
@@ -163,7 +168,8 @@ def main():
         report.append({"vertical": u["vertical"], "from": u["lo"], "to": u["hi"], "text": u["text"], "user_line": u["line"], "generated_line": n["line"], "delta": round(delta, 2)})
         if n["text"] != u["text"]:
             problems.append("dimension %s..%s text %r vs %r" % (u["lo"], u["hi"], u["text"], n["text"]))
-        if delta > LINE_TOLERANCE:
+        allowed = STEP_TOLERANCE if (u["vertical"] and abs(u["lo"]) < 0.6 and u["hi"] < 150) else LINE_TOLERANCE
+        if delta > allowed:
             problems.append("dimension %s..%s line differs by %.2f mm" % (u["lo"], u["hi"], delta))
     extra = [n for i, n in enumerate(nd) if i not in used]
     if extra:

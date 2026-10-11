@@ -249,3 +249,9 @@ Tier 3 (`doors-native`): the user's project is regenerated and compared with his
 same interval and text, dimension lines within 15 mm); `verify_doors.py` checks the frame / post / band geometry of 2S right and left,
 2S shifted, 2C 800 and 2C 900, that every panel is inside its frame, the one-line chains, the equal rows and the text boxes.
 Images: `docs/design/doors-d3/`.
+
+D3b (the user's 2C correction, `USER-EDIT-DIFF.md` section C): the 2C landing box keeps the reference depth 70 (the car frame runs from the
+sill gap to the car front return); the inset line of a band is 1 mm short of the right-hand end only; and a first (or last) dimension of a
+chain is stepped out one text lane nearer the geometry when the second (last but one) interval is too small for its text, whose text then
+stands outside the shortened chain (applies to the 2S 90 | 25 | 130 and the 2C 80 | 30 | 110 front-zone chains). Tier 3 compares both
+user corrections with the regenerated drawings (`verify_user_edit.py`).

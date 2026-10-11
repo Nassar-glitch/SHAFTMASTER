@@ -168,7 +168,7 @@ def run_case(folder, case_id):
         """The band of a panel row (D3): open outline with 1 mm stubs at the closed end and an open 1 mm inset line."""
         if abs(x_end - x_closed) < 2:
             return
-        inner = x_end + (-1 if x_closed < x_end else 1)
+        inner = x_end - 1 if x_end > x_closed else x_end  # inset 1 mm short of the right-hand end only (the references)
         want_open.append((layer, ((x_closed, d0 + 1), (x_closed, d0), (x_end, d0), (x_end, d1), (x_closed, d1), (x_closed, d1 - 1))))
         want_open.append((layer, ((x_closed, d0 + 1), (inner, d0 + 1), (inner, d1 - 1), (x_closed, d1 - 1))))
 
@@ -208,7 +208,7 @@ def run_case(folder, case_id):
         band(m(us + ot), m(end), cd + t + 5, cd + 2 * t + 5, "Car")
     else:
         ll, lr = layout["LandingLeftX"], layout["LandingRightX"]
-        want_rect["0"] += [rc(ll, lr, 0, lz), rc(ll, lr, cd, cd_end)]
+        want_rect["0"] += [rc(ll, lr, max(0.0, lz - 70), lz), rc(ll, lr, cd, cd_end)]
         dl = lz - min(5.0, max(0.0, (lz - t) / 2)) - t
         dc = cd + min(12.0, max(0.0, (cd_end - cd - t) / 2))
         e0, e1 = ll + 4, lr - 4
@@ -246,7 +246,7 @@ def run_case(folder, case_id):
                                                         for g, w in zip(got_open_s, want_open_s)),
           "%s: panel bands (open polylines): %d found, %d expected\n  found %s\n  want  %s" % (case_id, len(got_open_s), len(want_open_s), got_open_s, want_open_s))
     # every panel sits inside the frame of its door: the panel rectangles are within the frame rectangles (D3, DESIGN-FLOW principle 8)
-    frames = [r for r in want_rect["0"] if abs(r[3] - r[2] - lz) < 0.01 and abs(r[2]) < 0.01] + [r for r in want_rect["0"] if abs(r[2] - cd) < 0.01 and abs(r[3] - cd_end) < 0.01]
+    frames = [r for r in want_rect["0"] if abs(r[3] - lz) < 0.01 and r[3] - r[2] >= min(lz, 70) - 0.01] + [r for r in want_rect["0"] if abs(r[2] - cd) < 0.01 and abs(r[3] - cd_end) < 0.01]
     panels = [r for r in want_rect["Car"]] + ([r for r in want_rect["0"] if kind == "Automatic2C" and r[3] - r[2] <= t + 0.01])
     inside = all(any(f_[0] - 0.01 <= r[0] and r[1] <= f_[1] + 0.01 and f_[2] - 0.01 <= r[2] and r[3] <= f_[3] + 0.01 for f_ in frames) for r in panels)
     check(len(frames) >= 2 and inside, case_id + ": every panel is inside its door frame (floating panels: " + str([r for r in panels if not any(f_[0] - 0.01 <= r[0] and r[1] <= f_[1] + 0.01 and f_[2] - 0.01 <= r[2] and r[3] <= f_[3] + 0.01 for f_ in frames)]) + ")")
@@ -284,11 +284,17 @@ def run_case(folder, case_id):
     zone = [e for e in dims if vertical(e) and m_(e) in (round(lz, 1), round(sg, 1), round(front - cd, 1))]
     total = [e for e in dims if vertical(e) and m_(e) == round(front, 1)]
     depth_d = [e for e in dims if vertical(e) and m_(e) == round(rear - front, 1)]
-    check(len(zone) == 3 and len({line_of(e) for e in zone}) == 1, case_id + ": front-zone split on ONE dimension line " + str(sorted(line_of(e) for e in zone)))
+    # landing zone | sill gap | car door zone on one dimension line; when the sill gap text does not fit, the landing zone dimension
+    # is stepped out one text lane (60 mm) nearer the geometry and the small text stands outside the chain (the user's 2C correction)
+    zone.sort(key=lambda e: e.dxf.defpoint2.y)
+    chain_lines = {line_of(e) for e in zone[1:]}
+    stepped = len({line_of(e) for e in zone}) == 2 and abs(line_of(zone[0]) - (min(chain_lines) + 60)) < 0.1
+    check(len(zone) == 3 and len(chain_lines) == 1 and (len({line_of(e) for e in zone}) == 1 or stepped),
+          case_id + ": front-zone split on one dimension line (landing zone stepped out for a small sill gap) " + str(sorted(line_of(e) for e in zone)))
     check(len(total) == 1 and len(depth_d) == 1 and line_of(total[0]) == line_of(depth_d[0]),
           case_id + ": zone total and CAR DEPTH on one dimension line")
     if zone and total:
-        check(abs(abs(line_of(total[0]) - line_of(zone[0])) - 110) < 0.1, case_id + ": zone chain one column pitch (110) from the total")
+        check(abs(abs(line_of(total[0]) - line_of(zone[-1])) - 110) < 0.1, case_id + ": zone chain one column pitch (110) from the total")
     above = [e for e in dims if not vertical(e) and line_of(e) > front]
     check(len(above) == 3 and len({line_of(e) for e in above}) == 1, case_id + ": car returns and opening on ONE dimension line")
     below = [e for e in dims if not vertical(e) and line_of(e) < 0]

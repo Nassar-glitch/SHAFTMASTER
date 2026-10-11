@@ -41,16 +41,34 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void InnerSmallTextGoesBesideTheChainOnASecondLane()
+        public void SmallSecondIntervalStepsTheFirstDimensionOutOfTheChain()
         {
-            // front zone 90 | 25 | 130
-            var b = new[] { 0.0, 90, 115, 245 };
-            var p = DimensionLayout.PlaceChainTexts(b, new[] { "90", "25", "130" }, H, Arrow, null);
-            Assert.Equal(DimensionTextSlot.Centred, p[0].Slot);
-            Assert.Equal(DimensionTextSlot.Beside, p[1].Slot);
-            Assert.Equal(DimensionTextSlot.Centred, p[2].Slot);
-            // one full text lane further than the usual text position (half a height + gap from the line)
-            Assert.True(p[1].LateralMm - (H / 2 + 0.25 * H) >= H - 1e-9);
+            // front zone 90 | 25 | 130 (2S) and 80 | 30 | 110 (2C): the landing zone moves one text lane nearer the geometry and the
+            // small text stands outside the shortened chain, level with it (the user's 2C correction)
+            foreach (var b in new[] { new[] { 0.0, 90, 115, 245 }, new[] { 0.0, 80, 110, 220 } })
+            {
+                var texts = new[] { (b[1] - b[0]).ToString(), (b[2] - b[1]).ToString(), (b[3] - b[2]).ToString() };
+                var p = DimensionLayout.PlaceChainTexts(b, texts, H, Arrow, null);
+                Assert.Equal(DimensionTextSlot.Centred, p[0].Slot);
+                Assert.Equal(1.5 * H, p[0].LineOffsetMm, 6);
+                Assert.Equal(DimensionTextSlot.BeforeChain, p[1].Slot);
+                Assert.Equal(0, p[1].LateralMm);
+                Assert.Equal(DimensionTextSlot.Centred, p[2].Slot);
+                // outside the chain: the text centre is below the start of the shortened chain (user's 2C: 80 - 20 - 28 = 32)
+                double centre = (b[1] + b[2]) / 2 + p[1].AlongMm;
+                Assert.Equal(b[1] - (Arrow * 0.5 + 0.25 * H) - p[1].LengthMm / 2, centre, 6);
+                Assert.False(DimensionLayout.TextsOverlap(b, p, null));
+            }
+        }
+
+        [Fact]
+        public void InnerSmallTextOfALongChainGoesBesideOnASecondLane()
+        {
+            var b = new[] { 0.0, 300, 600, 625, 900, 1200 };
+            var p = DimensionLayout.PlaceChainTexts(b, new[] { "300", "300", "25", "275", "300" }, H, Arrow, null);
+            Assert.Equal(DimensionTextSlot.Beside, p[2].Slot);
+            Assert.True(p[2].LateralMm - (H / 2 + 0.25 * H) >= H - 1e-9);
+            Assert.All(new[] { p[0], p[1], p[3], p[4] }, x => Assert.Equal(0, x.LineOffsetMm));
             Assert.False(DimensionLayout.TextsOverlap(b, p, null));
         }
 
@@ -84,7 +102,9 @@ namespace Elevator.Core.Tests
             var b = new[] { 0.0, 25, 50, 700 };
             var p = DimensionLayout.PlaceChainTexts(b, new[] { "25", "25", "650" }, H, Arrow, null);
             Assert.Equal(DimensionTextSlot.BeforeChain, p[0].Slot);
-            Assert.Equal(DimensionTextSlot.Beside, p[1].Slot);
+            // the long last dimension is stepped out, the second small text stands outside the shortened chain on its other end
+            Assert.Equal(DimensionTextSlot.AfterChain, p[1].Slot);
+            Assert.True(p[2].LineOffsetMm > 0);
             Assert.False(DimensionLayout.TextsOverlap(b, p, null));
         }
 

@@ -48,12 +48,14 @@ public static class DoorsNativeTests
             // D3: the project the user generated and then corrected by hand in AutoCAD (2S 700 on a 1320 x 1800 shaft), stored from
             // the DWG; and the mirrored (left-handed) 2S, to check that every frame rule holds for both handings.
             const string UserProject = "docs/design/doors-d3/user-edit-2S-700-1320.elevator.json";
+            const string UserProject2C = "docs/design/doors-d3/user-edit-2C.elevator.json";
             var cases = new[]
             {
                 new { Id = "2S-800-1720", Type = DoorTypes.Automatic2S, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = (string)null, Fixture = (string)null },
                 new { Id = "2C-800-1720", Type = DoorTypes.Automatic2C, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = (string)null, Fixture = (string)null },
                 new { Id = "2S-700-1300", Type = DoorTypes.Automatic2S, Width = 1300.0, Depth = 2800.0, Opening = 700.0, Shifted = true, Handing = (string)null, Fixture = (string)null },
                 new { Id = "2S-700-1320", Type = DoorTypes.Automatic2S, Width = 1320.0, Depth = 1800.0, Opening = 700.0, Shifted = true, Handing = (string)null, Fixture = UserProject },
+                new { Id = "2C-700-1500", Type = DoorTypes.Automatic2C, Width = 1500.0, Depth = 1800.0, Opening = 700.0, Shifted = false, Handing = (string)null, Fixture = UserProject2C },
                 new { Id = "2S-800-1720-left", Type = DoorTypes.Automatic2S, Width = 1720.0, Depth = 2800.0, Opening = 800.0, Shifted = false, Handing = DoorTypes.Left, Fixture = (string)null },
                 new { Id = "2C-900-1900", Type = DoorTypes.Automatic2C, Width = 1900.0, Depth = 2800.0, Opening = 900.0, Shifted = false, Handing = (string)null, Fixture = (string)null }
             };

@@ -27,3 +27,6 @@ if($LASTEXITCODE){throw 'Door geometry read back from the DWGs does not match th
 $userEdit=Join-Path $root 'docs/design/doors-d3/user-edit-2S-700-1320.dwg'
 & $python -I (Join-Path $PSScriptRoot 'verify_user_edit.py') $userEdit (Join-Path $out '2S-700-1320.dwg') (Join-Path $out 'user-edit')
 if($LASTEXITCODE){throw 'The generated drawing of the user case differs from the user edit; see user-edit/verify-user-edit.json'}
+$userEdit2C=Join-Path $root 'docs/design/doors-d3/user-edit-2C.dwg'
+& $python -I (Join-Path $PSScriptRoot 'verify_user_edit.py') $userEdit2C (Join-Path $out '2C-700-1500.dwg') (Join-Path $out 'user-edit-2C')
+if($LASTEXITCODE){throw 'The generated drawing of the user 2C case differs from the user edit; see user-edit-2C/verify-user-edit.json'}
