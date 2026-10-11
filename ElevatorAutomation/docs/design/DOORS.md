@@ -255,3 +255,18 @@ sill gap to the car front return); the inset line of a band is 1 mm short of the
 chain is stepped out one text lane nearer the geometry when the second (last but one) interval is too small for its text, whose text then
 stands outside the shortened chain (applies to the 2S 90 | 25 | 130 and the 2C 80 | 30 | 110 front-zone chains). Tier 3 compares both
 user corrections with the regenerated drawings (`verify_user_edit.py`).
+
+## 8. Doors Offset (D4)
+
+- **Field:** "Doors Offset" on the door page for 2S and 2C (hidden for Manual): the distance in mm from the shaft centre line to the opening centre line,
+  and Left / Right as seen in the plan drawing (standing at the landing, facing the door). Distance and side lock together; Reset returns the preset.
+- **Preset:** 2S the preferred offset from the returns, converted to Left / Right through the handing (75 at 800 towards the fixed side, the stack on the
+  right gives 75 Left), with the automatic shift in narrow shafts; 2C 0 (centred).
+- **Range (`DoorOffset`, Core):** 2S: fixed-side return at or above its minimum, fixed-side landing jamb at or above its minimum, stacking-side landing
+  frame (pocket or panel reach) at least the wall clearance from the wall and the stacking return at or above its minimum. 2C: both landing door boxes
+  at least the wall clearance from their walls and both car returns at or above their minimum. Example: 2C 800 on a 1720 shaft allows 10 Left to 10 Right only (boxes 425 + 25 clearance each side);
+  an automatic size that takes the whole width (2C 900 on 1900) leaves no room to move.
+- **Out of range:** the typed value is kept (field message "out of range: max N Left"), the drawings and STEP use the nearest allowed position, Design Notes
+  give one line with the reason and limit, the export warning lists it with the other NOT OK results, the calculation sheet input table shows the typed value.
+- **Files:** keys `Doors.OffsetMm` (distance, never negative) and `Doors.OffsetSide` (Left / Right), locked together. The key `Doors.OpeningOffsetMm` of
+  earlier files (towards the fixed side, 2S only) is still read with the same geometric result; it is replaced when the user sets a Doors Offset.

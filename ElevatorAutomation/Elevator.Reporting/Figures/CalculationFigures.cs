@@ -153,12 +153,17 @@ namespace Elevator.Reporting.Figures
             return f;
         }
 
-        // Automatic door in plan, in the style of the reference drawings: car returns, landing frame (jamb, stacking pocket or door
-        // boxes), landing panels and car panels (closed), sill lines. Positions from the D1 door layout; the stacking side is mirrored.
+        // Automatic door in plan, in the style of the plan drawing (D3): the landing door frame and the car door frame each as one
+        // outline, the fixed-side jamb posts, the panels inside their frames and the bands of the parked panels, and the car front
+        // returns. Positions from the door layout, so the Doors Offset and the handing are followed.
         private static void DrawAutomaticDoor(ElevatorParameters p, Figure f, FigureView v, DoorLayout l)
         {
+            const double carReturn = 40;
+            const double boxDepth = 70;
+            const double bandInset = 4;
             double t = l.PanelThicknessMm, pw = l.PanelWidthMm, o = l.OpeningMm;
             double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
+            double cdEnd = p.CarFront - carReturn;
             double sw = p.SW;
             bool right = l.StackingSide == DoorTypes.Right;
             Func<double, double> m = x => right ? x : sw - x;
@@ -168,31 +173,56 @@ namespace Elevator.Reporting.Figures
                     double a = Math.Min(x0, x1), b = Math.Max(x0, x1);
                     f.Poly(Map(v, new[] { Pt(a, d0), Pt(b, d0), Pt(b, d1), Pt(a, d1) }), true, layer, tag);
                 };
+            // Band of a parked panel: from the closed end of the panel to the end of the frame.
+            Action<double, double, double, double, string> band =
+                (xClosed, xEnd, d0, d1, tag) =>
+                {
+                    if (Math.Abs(xEnd - xClosed) >= 2)
+                        rect(xClosed, xEnd, d0, d1, FigureLayer.Thin, tag);
+                };
             // Car front returns: from the car side wall to the opening edge.
             double carLeft = p.X("carLeft"), carRight = p.X("carRight");
-            rect(carLeft, l.OpeningLeftX, p.CarFront - 40, p.CarFront, FigureLayer.Outline, "door-car-return-left");
-            rect(l.OpeningRightX, carRight, p.CarFront - 40, p.CarFront, FigureLayer.Outline, "door-car-return-right");
+            rect(carLeft, l.OpeningLeftX, p.CarFront - carReturn, p.CarFront, FigureLayer.Outline, "door-car-return-left");
+            rect(l.OpeningRightX, carRight, p.CarFront - carReturn, p.CarFront, FigureLayer.Outline, "door-car-return-right");
             if (l.Type == DoorTypes.Automatic2S)
             {
                 double uf = right ? l.OpeningLeftX : sw - l.OpeningRightX, us = uf + o;
                 double ul = right ? l.LandingLeftX : sw - l.LandingRightX, ur = right ? l.LandingRightX : sw - l.LandingLeftX;
                 double ot = Math.Max(0, 2 * pw - o - l.PanelOverlapMm);
-                rect(m(ul), m(uf), 0, lz, FigureLayer.Outline, "door-frame-jamb");
-                rect(m(us), m(ur), 0, lz, FigureLayer.Outline, "door-frame-pocket");
+                // Frames: one rectangle each, from the outer edge of the fixed-side jamb to the end of the stacking pocket.
+                rect(m(ul), m(ur), 0, lz, FigureLayer.Outline, "door-frame-landing");
+                rect(m(ul), m(ur), cd, cdEnd, FigureLayer.Outline, "door-frame-car");
+                if (uf - ul > 0.5)
+                {
+                    rect(m(ul), m(uf), 0, lz, FigureLayer.Secondary, "door-jamb-post-landing");
+                    rect(m(ul), m(uf), cd, cdEnd, FigureLayer.Secondary, "door-jamb-post-car");
+                }
                 rect(m(uf), m(uf + pw), lz - t, lz, FigureLayer.Secondary, "door-landing-panel-1");
                 rect(m(us + ot - pw), m(us + ot), lz - 2 * t - 5, lz - t - 5, FigureLayer.Secondary, "door-landing-panel-2");
                 rect(m(uf), m(uf + pw), cd, cd + t, FigureLayer.Secondary, "door-car-panel-1");
                 rect(m(us + ot - pw), m(us + ot), cd + t + 5, cd + 2 * t + 5, FigureLayer.Secondary, "door-car-panel-2");
+                double end = ur - bandInset;
+                band(m(uf + pw), m(end), lz - t, lz, "door-landing-band-1");
+                band(m(us + ot), m(end), lz - 2 * t - 5, lz - t - 5, "door-landing-band-2");
+                band(m(uf + pw), m(end), cd, cd + t, "door-car-band-1");
+                band(m(us + ot), m(end), cd + t + 5, cd + 2 * t + 5, "door-car-band-2");
             }
             else
             {
-                rect(l.LandingLeftX, l.LandingRightX, lz - 70, lz, FigureLayer.Outline, "door-frame-landing-box");
-                rect(l.LandingLeftX, l.LandingRightX, cd, cd + 70, FigureLayer.Outline, "door-frame-car-box");
-                double dl = lz - 5 - t, dc = cd + 12;
+                // Boxes across both stacking sides, centred on the opening (the Doors Offset moves them with it).
+                rect(l.LandingLeftX, l.LandingRightX, Math.Max(0, lz - boxDepth), lz, FigureLayer.Outline, "door-frame-landing");
+                rect(l.LandingLeftX, l.LandingRightX, cd, cdEnd, FigureLayer.Outline, "door-frame-car");
+                double dl = lz - Math.Min(5, Math.Max(0, (lz - t) / 2)) - t;
+                double dc = cd + Math.Min(12, Math.Max(0, (cdEnd - cd - t) / 2));
                 rect(l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, FigureLayer.Secondary, "door-landing-panel-1");
                 rect(l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, FigureLayer.Secondary, "door-landing-panel-2");
                 rect(l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, FigureLayer.Secondary, "door-car-panel-1");
                 rect(l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, FigureLayer.Secondary, "door-car-panel-2");
+                double e0 = l.LandingLeftX + bandInset, e1 = l.LandingRightX - bandInset;
+                band(l.OpeningLeftX, e0, dl, dl + t, "door-landing-band-1");
+                band(l.OpeningRightX, e1, dl, dl + t, "door-landing-band-2");
+                band(l.OpeningLeftX, e0, dc, dc + t, "door-car-band-1");
+                band(l.OpeningRightX, e1, dc, dc + t, "door-car-band-2");
             }
         }
 

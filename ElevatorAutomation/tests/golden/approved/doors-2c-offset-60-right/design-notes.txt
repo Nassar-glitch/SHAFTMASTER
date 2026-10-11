@@ -1,0 +1,17 @@
+=== /word/document.xml
+Warnings
+•  Traction and the EN 81-50 safety factor were not calculated: TZ 1302.5 mm is outside the deflector selection range 520–1100 mm. Keep TZ at 1100 mm or less.
+•  Car available area 3.46 m² exceeds the maximum 1.36 m² for 480 kg (EN 81-20 Table 6). Use a rated load of at least 1538 kg, or reduce the car to ≤ 1.36 m².
+=== /word/footer1.xml
+Prepared with ShaftMaster · 2026-10-09
+
+
+=== /word/header1.xml
+Design Notes
+Project
+Golden D9 - 2C offset 60 Right
+
+Page
+{PAGE}1 of {NUMPAGES}1
+
+

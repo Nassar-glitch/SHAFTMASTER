@@ -77,6 +77,9 @@ namespace Elevator.Reporting.Sheet
             s.CounterweightRail = ProportionalRailSection.Parse(profiles.CounterweightRailProfile);
             RecordOmissions(s);
             s.BuildRopeTraction(context);
+            // A Doors Offset outside its range is listed with the other NOT OK results before export.
+            if (s.DoorOffset != null && s.DoorOffset.Warning != null && s.NotOk != null)
+                s.NotOk.Add(s.DoorOffset.Warning);
             return s;
         }
 
@@ -193,7 +196,10 @@ namespace Elevator.Reporting.Sheet
             // Automatic door: the layout behind the plan (type, size and handing appear in the input table). Manual: none.
             var door = DoorInput.From(project, context == null ? null : context.Doors);
             if (s.Plan != null && door != null)
+            {
                 s.Door = DoorRules.Select(door, s.Plan);
+                s.DoorOffset = DoorOffset.From(door, s.Door, s.Plan);
+            }
         }
 
         private static void RecordOmissions(CalculationSheet s)
@@ -371,6 +377,9 @@ namespace Elevator.Reporting.Sheet
 
         /// <summary>The layout of an automatic car door (null for a Manual door).</summary>
         public DoorLayout Door { get; private set; }
+
+        /// <summary>The Doors Offset of the automatic door (range and state), or null for a Manual door.</summary>
+        public DoorOffset DoorOffset { get; private set; }
         public IRailSection CarRail { get; private set; }
         public IRailSection CounterweightRail { get; private set; }
 
@@ -665,6 +674,12 @@ namespace Elevator.Reporting.Sheet
             rows.Add(new[] { "Door clear opening", L(Door.OpeningMm) + " mm" });
             if (Door.Type == DoorTypes.Automatic2S)
                 rows.Add(new[] { "Door stacking side", Door.StackingSide });
+            // The offset appears only when the user has set it; the preset position is in the figure.
+            if (DoorOffset != null && DoorOffset.Locked)
+            {
+                double shift = DoorOffset.RequestedShiftMm;
+                rows.Add(new[] { "Doors Offset", L(Math.Abs(shift)) + " mm" + (Math.Abs(shift) < 0.05 ? "" : " " + DoorOffset.SideOf(shift, DoorTypes.Left)) });
+            }
         }
 
         void BasicChassis(DocxDocument d, int n)

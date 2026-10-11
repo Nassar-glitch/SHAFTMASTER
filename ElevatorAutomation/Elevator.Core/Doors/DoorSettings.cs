@@ -27,8 +27,15 @@ namespace Elevator.Core.Doors
         public const string FixedReturnKey = "Doors.FixedReturnMm";
         /// <summary>Key of the car return, stacking side.</summary>
         public const string StackReturnKey = "Doors.StackReturnMm";
-        /// <summary>Key of the 2S opening offset.</summary>
-        public const string OffsetKey = "Doors.OpeningOffsetMm";
+        /// <summary>
+        /// Key of the opening offset of earlier project files: the distance of the opening centre towards the fixed side (2S only).
+        /// Still read, with the same geometric result; a new Doors Offset replaces it.
+        /// </summary>
+        public const string LegacyOffsetKey = "Doors.OpeningOffsetMm";
+        /// <summary>Key of the Doors Offset: the distance in mm from the shaft centre line to the opening centre line.</summary>
+        public const string OffsetKey = "Doors.OffsetMm";
+        /// <summary>Key of the Doors Offset side, Left or Right as seen in the plan drawing. Locked together with <see cref="OffsetKey"/>.</summary>
+        public const string OffsetSideKey = "Doors.OffsetSide";
         /// <summary>Key of the landing jamb, fixed side.</summary>
         public const string LandingJambKey = "Doors.LandingFixedJambMm";
         /// <summary>Key of the landing stacking pocket.</summary>
@@ -45,7 +52,7 @@ namespace Elevator.Core.Doors
         /// <summary>Every door key, in page order.</summary>
         public static readonly string[] Keys =
         {
-            OpeningKey, HandingKey, CarZoneKey, SillGapKey, LandingZoneKey, FixedReturnKey, StackReturnKey, OffsetKey,
+            OpeningKey, HandingKey, CarZoneKey, SillGapKey, LandingZoneKey, FixedReturnKey, StackReturnKey, LegacyOffsetKey, OffsetKey, OffsetSideKey,
             LandingJambKey, LandingPocketKey, WallClearanceKey, MinFixedReturnKey, MinStackReturnKey, LandingJambMinKey
         };
 
@@ -58,7 +65,12 @@ namespace Elevator.Core.Doors
         public double? LandingZoneMm;
         public double? FixedReturnMm;
         public double? StackReturnMm;
+        /// <summary>The opening offset of an earlier file, towards the fixed side (2S).</summary>
         public double? OpeningOffsetMm;
+        /// <summary>The Doors Offset distance (never negative); with <see cref="OffsetSide"/>.</summary>
+        public double? OffsetMm;
+        /// <summary>The Doors Offset side, Left or Right in the plan drawing.</summary>
+        public string OffsetSide;
         public double? LandingFixedJambMm;
         public double? LandingStackPocketMm;
         public double? LandingWallClearanceMm;
@@ -83,8 +95,10 @@ namespace Elevator.Core.Doors
                     return FixedReturnMm;
                 case StackReturnKey:
                     return StackReturnMm;
-                case OffsetKey:
+                case LegacyOffsetKey:
                     return OpeningOffsetMm;
+                case OffsetKey:
+                    return OffsetMm;
                 case LandingJambKey:
                     return LandingFixedJambMm;
                 case LandingPocketKey:
@@ -125,8 +139,11 @@ namespace Elevator.Core.Doors
                 case StackReturnKey:
                     StackReturnMm = v;
                     break;
-                case OffsetKey:
+                case LegacyOffsetKey:
                     OpeningOffsetMm = v;
+                    break;
+                case OffsetKey:
+                    OffsetMm = v;
                     break;
                 case LandingJambKey:
                     LandingFixedJambMm = v;
@@ -154,8 +171,43 @@ namespace Elevator.Core.Doors
         {
             get
             {
-                return String.IsNullOrEmpty(Handing) && Keys.All(k => k == HandingKey || !Number(k).HasValue);
+                return String.IsNullOrEmpty(Handing)
+                    && String.IsNullOrEmpty(OffsetSide)
+                    && Keys.All(k => k == HandingKey || k == OffsetSideKey || !Number(k).HasValue);
             }
+        }
+
+        /// <summary>
+        /// The members that enter an input fingerprint: the members of the first door version always (null when not locked), the
+        /// Doors Offset only when locked, so a project without one keeps its earlier fingerprint.
+        /// </summary>
+        internal Dictionary<string, object> ForFingerprint()
+        {
+            var d = new Dictionary<string, object>();
+            // Every member of the first door version is present, null when not locked, with the read-only IsEmpty that the
+            // serializer wrote with them.
+            Action<string, object> put = (k, v) => d[k] = v;
+            put("OpeningMm", OpeningMm);
+            put("Handing", Handing);
+            put("CarZoneMm", CarZoneMm);
+            put("SillGapMm", SillGapMm);
+            put("LandingZoneMm", LandingZoneMm);
+            put("FixedReturnMm", FixedReturnMm);
+            put("StackReturnMm", StackReturnMm);
+            put("OpeningOffsetMm", OpeningOffsetMm);
+            put("LandingFixedJambMm", LandingFixedJambMm);
+            put("LandingStackPocketMm", LandingStackPocketMm);
+            put("LandingWallClearanceMm", LandingWallClearanceMm);
+            put("MinFixedReturnMm", MinFixedReturnMm);
+            put("MinStackReturnMm", MinStackReturnMm);
+            put("LandingFixedJambMinMm", LandingFixedJambMinMm);
+            put("IsEmpty", IsEmpty);
+            if (OffsetMm.HasValue)
+            {
+                d["OffsetMm"] = OffsetMm;
+                d["OffsetSide"] = OffsetSide;
+            }
+            return d;
         }
 
         static bool Locked(ElevatorProject p, string key)
@@ -196,11 +248,16 @@ namespace Elevator.Core.Doors
                 object v;
                 if (!raw.TryGetValue(key, out v) || v == null || !Locked(project, key))
                     continue;
-                if (key == HandingKey)
+                if (key == HandingKey || key == OffsetSideKey)
                 {
                     string h = v as string;
                     if (h == DoorTypes.Left || h == DoorTypes.Right)
-                        s.Handing = h;
+                    {
+                        if (key == HandingKey)
+                            s.Handing = h;
+                        else
+                            s.OffsetSide = h;
+                    }
                 }
                 else
                     s.SetNumber(key, ToNumber(v));
@@ -216,10 +273,11 @@ namespace Elevator.Core.Doors
             var d = new Dictionary<string, object>();
             foreach (string key in Keys)
             {
-                if (key == HandingKey)
+                if (key == HandingKey || key == OffsetSideKey)
                 {
-                    if (Handing == DoorTypes.Left || Handing == DoorTypes.Right)
-                        d[key] = Handing;
+                    string h = key == HandingKey ? Handing : OffsetSide;
+                    if (h == DoorTypes.Left || h == DoorTypes.Right)
+                        d[key] = h;
                 }
                 else if (Number(key).HasValue)
                     d[key] = Number(key).Value;
