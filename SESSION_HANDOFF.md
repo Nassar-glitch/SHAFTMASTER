@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** D3 + D3b (door plan drawing quality from the user's own 2S and 2C corrections) done on branch `feature/doors-d3`; tier 1 and tier 3 `integration` + `doors-native` PASS; fresh test copy in `ElevatorAutomation/artifacts/bin-try`. Not merged, not pushed, not released. Awaiting Planner. `main`: D1 + D2 merged.
+- **Status:** D3 + D3b merged into `main` (2026-10-11, tier 1 PASS `20261011-132919`: core-net8.0 597, core-net48 741, reporting 177 x 2, golden 702, sheet-wpf 8285; merge `4fa0ac6`, --no-ff; DESIGN-FLOW.md Planner edit committed separately `8b50b88`). Not pushed, not released. D4 (Doors Offset) in progress on `feature/doors-d4`.
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-11 (Claude Code, Executor role; D2 automatic doors in the drawings)
 - **Completed:**
