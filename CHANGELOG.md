@@ -6,6 +6,11 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+## [v05] — 2026-10-12
+
+v05 adds automatic car and landing doors (2S side opening, 2C centre opening) with their drawings, the Doors Offset, drawing-quality rules for the door plan, 
+and loads also shown in kg. Manual doors, existing projects and every calculation result are unchanged.
+
 - **Loads also in kg:** wherever a load or force is shown in N or kN (application pages, calculation sheet, figures, Design Notes) its kg value is shown
   beside it: kg = N / 9.81 rounded up to the next multiple of 5 kg. Display only; every calculation and OK / NOT OK result keeps the unrounded newtons.
   See `ElevatorAutomation/docs/design/loads-kg/`.
