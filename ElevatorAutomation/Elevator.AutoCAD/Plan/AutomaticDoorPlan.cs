@@ -26,6 +26,10 @@ namespace Elevator.AutoCAD.Plan
         const double BoxDepth = 70;
         const double CarBoxPanelOffset = 12;
         const double LandingBoxPanelOffset = 5;
+        // Parked-panel blocks of the references: 2S 106 wide at the end of the stacking pocket, 2C 141 wide at the ends of the boxes.
+        const double ParkedBlockWidth2S = 106;
+        const double ParkedBlockWidth2C = 141;
+        const double ParkedBlockInset = 4;
 
         const string LayerCar = "Car";
         const string LayerGuides = "step&guides";
@@ -35,8 +39,22 @@ namespace Elevator.AutoCAD.Plan
         static readonly string[] HiddenRoles = { "doorLeft", "doorRight", "doorSpan", "doorLeader", "entrance" };
 
         // The returns and the door dimensions are redrawn; the template wall pieces are redrawn with the opening where the door is.
+        // Plan.CenterFront.Part001-013 is the centre mark device of the manual landing door (not in the automatic door references).
         static readonly string[] HiddenKeys =
         {
+            "Plan.CenterFront.Part001",
+            "Plan.CenterFront.Part002",
+            "Plan.CenterFront.Part003",
+            "Plan.CenterFront.Part004",
+            "Plan.CenterFront.Part005",
+            "Plan.CenterFront.Part006",
+            "Plan.CenterFront.Part007",
+            "Plan.CenterFront.Part008",
+            "Plan.CenterFront.Part009",
+            "Plan.CenterFront.Part010",
+            "Plan.CenterFront.Part011",
+            "Plan.CenterFront.Part012",
+            "Plan.CenterFront.Part013",
             "Plan.Cabin.Inner.Front",
             "Plan.Cabin.Part002",
             "Plan.Cabin.Part003",
@@ -291,17 +309,18 @@ namespace Elevator.AutoCAD.Plan
                 return world;
             }
 
-            // Jamb blocks, span and leader of the template, moved with the opening.
+            // Jamb blocks in the wall opening, double line (outer outline and a 3 mm inset), as the template ones, at the opening edges.
             void Jambs()
             {
-                var move = Matrix3d.Displacement(f.Vector(l.CentreShiftMm, 0));
-                foreach (var b in s.Bindings.Values)
+                double j = s.ElevatorParameters.JambWidth;
+                var template = Source<Polyline>("Plan.DoorLeft.Part001");
+                double depth = Math.Abs(f.Local(template.GetPoint3dAt(2)).Y - f.Local(template.GetPoint3dAt(0)).Y);
+                if (depth < 1)
+                    depth = 63.1;
+                foreach (double[] block in new[] { new[] { l.OpeningLeftX - j, l.OpeningLeftX }, new[] { l.OpeningRightX, l.OpeningRightX + j } })
                 {
-                    if (b.Role == "doorLeft" || b.Role == "doorRight" || b.Role == "doorSpan" || b.Role == "doorLeader")
-                    {
-                        var c = CloneOf<Entity>(s.Entities[b.Key]);
-                        c.TransformBy(move);
-                    }
+                    Rect(block[0], block[1], -depth, 0, LayerFrame);
+                    Rect(block[0] + 3, block[1] - 3, -depth + 3, -3, LayerFrame);
                 }
             }
 
@@ -310,9 +329,25 @@ namespace Elevator.AutoCAD.Plan
                 return l.StackingSide == DoorTypes.Right ? x : s.ElevatorParameters.SW - x;
             }
 
-            void Panel(double u0, double u1, double d0, double d1, string layer)
+            // A panel in the style of the references: outline (layer given) and three construction lines at 10 mm in the panel.
+            void Panel(double x0, double x1, double d0, double d1, string outline)
             {
-                Rect(Mirror(u0), Mirror(u1), d0, d1, layer);
+                Rect(x0, x1, d0, d1, outline);
+                double a = Math.Min(x0, x1), b = Math.Max(x0, x1);
+                for (int k = 1; k <= 3; k++)
+                    Seg(a, d0 + 10 * k, b, d0 + 10 * k, LayerFrame);
+            }
+
+            void PanelU(double u0, double u1, double d0, double d1, string outline)
+            {
+                Panel(Mirror(u0), Mirror(u1), d0, d1, outline);
+            }
+
+            // Parked-panel block: a rectangle and a second one 1 mm inside (the references' double line).
+            void Parked(double x0, double x1, double d0, double d1, string layer)
+            {
+                Rect(x0, x1, d0, d1, layer);
+                Rect(x0, x1 - 1, d0 + 1, d1 - 1, layer);
             }
 
             void SideOpening()
@@ -325,30 +360,47 @@ namespace Elevator.AutoCAD.Plan
                 double us = uf + o;
                 double ul = l.StackingSide == DoorTypes.Right ? l.LandingLeftX : s.ElevatorParameters.SW - l.LandingRightX;
                 double ur = l.StackingSide == DoorTypes.Right ? l.LandingRightX : s.ElevatorParameters.SW - l.LandingLeftX;
-                // Landing frame: fixed-side jamb, stacking pocket, and the line across the opening.
-                Panel(ul, uf, 0, lz, LayerFrame);
-                Panel(us, ur, 0, lz, LayerFrame);
-                Seg(Mirror(uf), lz, Mirror(us), lz, LayerFrame);
-                // Landing panels (closed): the fixed-side panel next to the car, the leading panel behind it.
-                Panel(uf, uf + pw, lz - t, lz, LayerCar);
-                Panel(us + ot - pw, us + ot, lz - 2 * t - 5, lz - t - 5, LayerCar);
-                // Car panels (closed).
-                Panel(uf, uf + pw, cd, cd + t, LayerCar);
-                Panel(us + ot - pw, us + ot, cd + t + 5, cd + 2 * t + 5, LayerCar);
+                // Landing frame: fixed-side jamb (double line) and the stacking pocket lines (top, bottom, outer edge).
+                double jw = uf - ul;
+                Rect(Mirror(ul), Mirror(uf), 0, lz, LayerFrame);
+                if (jw > 8)
+                    Rect(Mirror(ul) + (Mirror(ul) < Mirror(uf) ? 3 : -3), Mirror(uf) + (Mirror(ul) < Mirror(uf) ? -3 : 3), 3, lz - 3, LayerFrame);
+                Seg(Mirror(uf + pw), lz, Mirror(ur), lz, LayerFrame);
+                Seg(Mirror(us + ot), 0, Mirror(ur), 0, LayerFrame);
+                Seg(Mirror(ur), 0, Mirror(ur), lz, LayerFrame);
+                // Panels (closed): the fixed-side panel next to the car and the leading panel behind it, landing and car.
+                PanelU(uf, uf + pw, lz - t, lz, LayerCar);
+                PanelU(us + ot - pw, us + ot, lz - 2 * t - 5, lz - t - 5, LayerCar);
+                PanelU(uf, uf + pw, cd, cd + t, LayerCar);
+                PanelU(us + ot - pw, us + ot, cd + t + 5, cd + 2 * t + 5, LayerCar);
+                // Parked panels in the pocket (stack ends), in the four panel rows.
+                double p1 = ur - ParkedBlockInset, p0 = p1 - ParkedBlockWidth2S;
+                if (p0 > us + ot)
+                {
+                    foreach (double d in new[] { lz - t, lz - 2 * t - 5, cd, cd + t + 5 })
+                        Parked(Math.Min(Mirror(p0), Mirror(p1)), Math.Max(Mirror(p0), Mirror(p1)), d, d + t, LayerCar);
+                }
             }
 
             void CentreOpening()
             {
                 double t = l.PanelThicknessMm, pw = l.PanelWidthMm;
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
-                // Door boxes of the landing and of the car, and the two centre panels of each.
+                // Door boxes of the landing and of the car, and the two centre panels of each (the references draw them on layer 0).
                 Rect(l.LandingLeftX, l.LandingRightX, lz - BoxDepth, lz, LayerFrame);
                 Rect(l.LandingLeftX, l.LandingRightX, cd, cd + BoxDepth, LayerFrame);
                 double dl = lz - LandingBoxPanelOffset - t, dc = cd + CarBoxPanelOffset;
-                Rect(l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, LayerCar);
-                Rect(l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, LayerCar);
-                Rect(l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, LayerCar);
-                Rect(l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, LayerCar);
+                Panel(l.OpeningLeftX, l.OpeningLeftX + pw, dl, dl + t, LayerFrame);
+                Panel(l.OpeningRightX - pw, l.OpeningRightX, dl, dl + t, LayerFrame);
+                Panel(l.OpeningLeftX, l.OpeningLeftX + pw, dc, dc + t, LayerFrame);
+                Panel(l.OpeningRightX - pw, l.OpeningRightX, dc, dc + t, LayerFrame);
+                // Panel stack ends at both ends of the boxes.
+                double e0 = l.LandingLeftX + ParkedBlockInset, e1 = l.LandingRightX - ParkedBlockInset;
+                foreach (double d in new[] { dl, dc })
+                {
+                    Parked(e0, e0 + ParkedBlockWidth2C, d, d + t, LayerFrame);
+                    Parked(e1 - ParkedBlockWidth2C, e1, d, d + t, LayerFrame);
+                }
             }
 
             // Car front returns: from the car side wall (outer face) to the opening edge.
@@ -360,6 +412,9 @@ namespace Elevator.AutoCAD.Plan
                 double d0 = p.CarFront - CarReturn, d1 = p.CarFront;
                 Rect(left - wall, l.OpeningLeftX, d0, d1, LayerGuides);
                 Rect(l.OpeningRightX, right + wall, d0, d1, LayerGuides);
+                // Centre lines of the opening edges across the return, as in the references.
+                Seg(l.OpeningLeftX, d0, l.OpeningLeftX, d1, "CL");
+                Seg(l.OpeningRightX, d0, l.OpeningRightX, d1, "CL");
             }
 
             // Landing sill at the shaft front wall face and car sill at the outer face of the car front.
@@ -369,8 +424,9 @@ namespace Elevator.AutoCAD.Plan
                 Seg(l.OpeningLeftX, s.ElevatorParameters.CarFront - CarReturn, l.OpeningRightX, s.ElevatorParameters.CarFront - CarReturn, LayerSill);
             }
 
-            // A copy of a template dimension with new points; the dimension line and text keep the band of the template.
-            void Dim(string source, double x1, double x2, string text)
+            // A copy of a template dimension with new points; the dimension line and text keep the band of the template (or the given
+            // depth band).
+            void Dim(string source, double x1, double x2, string text, double? band = null)
             {
                 var src = Source<RotatedDimension>(source);
                 var a = f.Local(src.XLine1Point);
@@ -379,16 +435,17 @@ namespace Elevator.AutoCAD.Plan
                 var t = f.Local(src.TextPosition);
                 var d = CloneOf<RotatedDimension>(src);
                 double mid = (x1 + x2) / 2;
+                double dy = band.HasValue ? band.Value - p.Y : 0;
                 d.XLine1Point = f.World(new Point3d(x1, a.Y, a.Z));
                 d.XLine2Point = f.World(new Point3d(x2, c.Y, c.Z));
-                d.DimLinePoint = f.World(new Point3d(mid, p.Y, p.Z));
-                d.TextPosition = f.World(new Point3d(mid, t.Y, t.Z));
+                d.DimLinePoint = f.World(new Point3d(mid, p.Y + dy, p.Z));
+                d.TextPosition = f.World(new Point3d(mid, t.Y + dy, t.Z));
                 if (text != null)
                     d.DimensionText = text;
                 d.RecomputeDimensionBlock(true);
             }
 
-            // A vertical copy of the car-front dimension between two depths, in a column left of the template one.
+            // A vertical copy of the car-front dimension between two depths, in a column shifted from the template one.
             void DimDepth(string source, double d0, double d1, double columnShift)
             {
                 var src = Source<RotatedDimension>(source);
@@ -418,13 +475,19 @@ namespace Elevator.AutoCAD.Plan
                 Dim("Plan.Dimension.Part013", 0, l.OpeningLeftX, null);
                 Dim("Plan.Dimension.Part008", l.OpeningLeftX, l.OpeningRightX, null);
                 Dim("Plan.Dimension.Part012", l.OpeningRightX, sw, null);
+                var halves = Source<RotatedDimension>("Plan.Dimension.Part006");
+                double halvesBand = f.Local(halves.DimLinePoint).Y;
                 Dim("Plan.Dimension.Part006", l.OpeningLeftX, centre, null);
                 Dim("Plan.Dimension.Part007", centre, l.OpeningRightX, null);
-                // Front-zone split: landing door zone, sill gap, car door zone.
+                // 2S: the opening is off the shaft centre; its offset in the row nearest the wall (above the halves, as in the references).
+                if (l.Type == DoorTypes.Automatic2S && Math.Abs(centre - sw / 2) > 0.05)
+                    Dim("Plan.Dimension.Part006", Math.Min(centre, sw / 2), Math.Max(centre, sw / 2), null, halvesBand / 2);
+                // Front-zone split: landing door zone, sill gap, car door zone, each in its own column beside the total (the template
+                // dimension of the front zone), 60 mm apart, outside the wall.
                 double lz = l.LandingZoneMm, cd = l.LandingZoneMm + l.SillGapMm;
-                DimDepth("Plan.Dimension.Part031", 0, lz, -35);
-                DimDepth("Plan.Dimension.Part031", lz, cd, -35);
-                DimDepth("Plan.Dimension.Part031", cd, p.CarFront, -35);
+                DimDepth("Plan.Dimension.Part031", 0, lz, 180);
+                DimDepth("Plan.Dimension.Part031", lz, cd, 120);
+                DimDepth("Plan.Dimension.Part031", cd, p.CarFront, 60);
             }
         }
     }

@@ -169,28 +169,43 @@ model. A Manual door is drawn exactly as before (no template entity is touched).
 
 ### Native plan (`Elevator.AutoCAD/Plan/AutomaticDoorPlan`)
 
-- The template door geometry stays in the drawing, bound and updated as before, but is **hidden**: the door-role entities
-  (`doorLeft`, `doorRight`, `doorSpan`, `doorLeader`, `entrance`), the four car-return lines of the cabin front, the eight door dimensions
-  (`Plan.Dimension.Part006` to `Part013`) and the wall pieces that carry the opening (`Plan.Wall.Part001`, `Part004`, `Part005`, `Part006`
-  and the shaft inner outline). A Manual project, or a later update of the same drawing with a Manual door, erases the new entities and
-  shows the template geometry again (`AutomaticDoorPlan.Clear`).
+- The template door geometry stays in the drawing, bound and updated as before, but is **hidden** (nothing is cloned or moved any more).
+  Hidden for a 2S / 2C door, by tag (52 entities):
+  - manual door: `Plan.Door.Opening`, `Plan.DoorLeft.Part001-004`, `Plan.DoorRight.Part001-007` (jamb blocks, handles, ticks, the yellow
+    swing line), `Plan.DoorSpan.Part001-003` (landing sill box), `Plan.DoorLeader.Part001`;
+  - car entrance notch: `Plan.Entrance.Part002-007`;
+  - centre mark device of the manual landing door: `Plan.CenterFront.Part001-013` (the references have none; `Part014-019`, the section
+    arrow, stays);
+  - car front returns: `Plan.Cabin.Inner.Front`, `Plan.Cabin.Part002-004`;
+  - door dimensions: `Plan.Dimension.Part006-013`;
+  - wall pieces that carry the opening, redrawn with the opening where the door is: `Plan.Wall.Part001`, `Part004`, `Part005`, `Part006`
+    and `Plan.Shaft.InnerOutline.EntranceDatum` (hidden but still the frame datum).
+  A Manual project, or a later update of the same drawing with a Manual door, erases the new entities and shows the template geometry
+  again (`AutomaticDoorPlan.Clear`).
 - New entities are tagged `Plan.AutoDoor.NNN` (role `autoDoor`), so they are read, arranged and counted as plan entities, and not as
   unbound entities.
-- Drawn from the layout (X from the shaft left wall, D from the shaft front wall; mirrored for handing Left):
+- Drawn from the layout (X from the shaft left wall, D from the shaft front wall; mirrored for handing Left). Style of the references:
+  a panel is its outline plus three construction lines at 10 mm inside it ("double line"), a parked panel block is a rectangle with a
+  second one 1 mm inside.
 
 | Item | 2S | 2C | Layer |
 |---|---|---|---|
-| Wall with the opening | the template wall pieces with the two jamb edges moved to opening edge -/+ jamb width | same | Wall |
-| Jamb blocks, sill box, leader | the template ones, moved with the opening | same | 0, CL |
-| Landing frame | fixed-side jamb and stacking pocket (D 0 to landing zone), line across the opening | box D (zone - 70) to zone over the whole landing frame width | 0 |
-| Landing panels (closed) | 2 x panel width; fixed-side panel at D (zone - t) to zone, leading panel at D (zone - 2t - 5) to (zone - t - 5), over-travel 5 | 2 centre panels, D (zone - 5 - t) to (zone - 5) | Car |
-| Car panels (closed) | same pattern at D (landing zone + sill gap) | 2 centre panels in a 70 deep box, 12 mm behind its outer face | Car, 0 |
-| Car front returns | car side wall (outer face) to the opening edge, 40 deep, ending at the car front | same | step&guides |
+| Wall with the opening | the template wall pieces with the two jamb edges at opening edge -/+ jamb width | same | Wall |
+| Jamb blocks in the wall opening | double line blocks (outline and 3 mm inset), 135 wide, at the opening edges | same | 0 |
+| Landing frame | fixed-side jamb (outline and 3 mm inset, D 0 to landing zone); pocket lines: top from the fixed panel end to the pocket edge, bottom, outer edge | boxes D (zone - 70) to zone and D (zone + gap) to +70 over the landing frame width | 0 |
+| Landing and car panels (closed) | 2 x panel width, fixed-side panel next to the car, leading panel behind it, over-travel 5 beyond the opening, telescopic overlap 10; thickness 40, 5 between rows | 2 centre panels per door, 2 mm apart, thickness 39 | outline: Car (2S), 0 (2C); construction lines: 0 |
+| Parked panels | 4 blocks 106 wide, 4 mm inside the pocket edge, in the four panel rows | 4 blocks 141 wide at the ends of both boxes | Car (2S), 0 (2C) |
+| Car front returns | car side wall (outer face) to the opening edge, 40 deep, ending at the car front, with a centre line at each opening edge | same | step&guides, CL |
 | Sill lines | landing sill D 0, car sill D (car front - 40), across the opening | same | DL |
-| Dimensions (style Nassar2, text as in the references) | returns and OPENING above the car front; wall to opening, DOOR oX2000, the two halves below the wall; front-zone split 90 / 25 / 130 beside the total | same | 0 |
+| Dimensions (style Nassar2, texts as in the references) | returns and OPENING o above the car front; wall to opening, DOOR oX2000, the two halves and (offset only) the opening offset below the wall; front-zone split | same, without the offset | 0 |
+
+- Front-zone dimensions: the total (template dimension, 245 / 220) keeps its column; landing door zone, sill gap and car door zone have
+  their own columns 60, 120 and 180 mm towards the wall, outside the wall, so no text overlaps. The offset dimension (2S, e.g. 75) is
+  the row nearest the wall, between the opening centre and the shaft centre.
 
 Result for the three tier-3 cases: `output/doors-native/*-plan.png` (rendered from the generated DWG) against the reference renders
-`2S.png` and `2C.png`; the numbers of every entity are compared with the layout by `tests/integration/verify_doors.py`.
+`2S.png` and `2C.png`; every entity is compared with the layout by `tests/integration/verify_doors.py` (45 checks). The comparison images
+are in `docs/design/doors-d2/`.
 
 ### Sections
 
