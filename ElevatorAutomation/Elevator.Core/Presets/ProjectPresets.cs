@@ -403,7 +403,7 @@ return m==null?(double?)null:m.MachineMassKg;
         /// <summary>The preset field with a key, or null.</summary>
         public static PresetField Find(string key)
         {
-            return Fields.FirstOrDefault(f => f.Key == key) ?? PresetFields.Find(key);
+            return Fields.FirstOrDefault(f => f.Key == key) ?? PresetFields.Find(key) ?? Layouts.TitleBlockFields.Find(key);
         }
 
         /// <summary>True when the project follows the presets.</summary>
