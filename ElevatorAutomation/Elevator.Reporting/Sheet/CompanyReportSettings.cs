@@ -16,6 +16,10 @@ namespace Elevator.Reporting.Sheet
     {
         public string CompanyName;
         public string LogoFile; // file name inside SettingsDirectory
+        // Defaults of the documents' prepared / checked / approved names (a project's own value wins). Optional; older files have none.
+        public string PreparedBy;
+        public string CheckedBy;
+        public string ApprovedBy;
 
         // Overridable so tests never touch the real user profile.
         public static string SettingsDirectory =
@@ -72,7 +76,7 @@ namespace Elevator.Reporting.Sheet
         /// <summary>The portable company model of these settings.</summary>
         public CompanySettings ToCompanySettings()
         {
-            return new CompanySettings { CompanyName = CompanyName, LogoFile = LogoFile };
+            return new CompanySettings { CompanyName = CompanyName, LogoFile = LogoFile, PreparedBy = PreparedBy, CheckedBy = CheckedBy, ApprovedBy = ApprovedBy };
         }
 
         /// <summary>Takes the values of the portable company model (Save writes them).</summary>
@@ -80,6 +84,9 @@ namespace Elevator.Reporting.Sheet
         {
             CompanyName = company == null ? null : company.CompanyName;
             LogoFile = company == null ? null : company.LogoFile;
+            PreparedBy = company == null ? null : company.PreparedBy;
+            CheckedBy = company == null ? null : company.CheckedBy;
+            ApprovedBy = company == null ? null : company.ApprovedBy;
         }
 
         public string LogoPath

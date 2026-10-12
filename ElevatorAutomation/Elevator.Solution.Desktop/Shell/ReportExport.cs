@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Win32;
+using Elevator.Core.Company;
 using Elevator.Reporting.Sheet;
 using Elevator.Reporting.DesignNotes;
 using Elevator.Reporting.Docx;
@@ -48,7 +49,7 @@ namespace Elevator.Solution.Desktop
    var company=CompanyReportSettings.Load();var project=shell.Session.Project;
    return new CalculationSheetInputs{
     ChassisDraftErrors=new Dictionary<string,string>(shell.Live.RelevantDraftErrors(project)),SafetyPitDraftErrors=shell.Live.RelevantSafetyPitDraftErrors(project),CarGuideForceDraftError=shell.Live.CarGuideForceDraftError,GeneratedLocal=ReportClock.Now(),
-    CompanyName=company.CompanyName,Logo=company.Logo(),Presets=shell.Presets.Library};
+    CompanyName=company.CompanyName,Logo=company.Logo(),Document=DocumentData.Resolve(project,company.ToCompanySettings()),Presets=shell.Presets.Library};
   }
   public CalculationSheet BuildCalculationSheet(){return CalculationSheet.Build(shell.Session.Project,shell.Context,Inputs());}
   static string OmissionText(CalculationSheet sheet)
@@ -98,8 +99,8 @@ namespace Elevator.Solution.Desktop
   }
   DesignNotes BuildDesignNotes()
   {
-   var company=CompanyReportSettings.Load();
-   return DesignNotes.Build(shell.Session.Project,shell.Context,new CalculationSheetInputs{GeneratedLocal=ReportClock.Now(),CompanyName=company.CompanyName,Logo=company.Logo(),Presets=shell.Presets.Library});
+   var company=CompanyReportSettings.Load();var project=shell.Session.Project;
+   return DesignNotes.Build(project,shell.Context,new CalculationSheetInputs{GeneratedLocal=ReportClock.Now(),CompanyName=company.CompanyName,Logo=company.Logo(),Document=DocumentData.Resolve(project,company.ToCompanySettings()),Presets=shell.Presets.Library});
   }
   void ExportDesignNotes()
   {

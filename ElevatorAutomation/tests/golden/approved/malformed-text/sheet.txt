@@ -2,6 +2,8 @@
 Elevator Calculation Sheet
 Project
 Golden E - malformed text
+Revision
+00
 Date
 2026-10-09
 Elevator system
@@ -127,13 +129,15 @@ NTS
 
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Elevator Calculation Sheet
 Project
 Golden E - malformed text
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

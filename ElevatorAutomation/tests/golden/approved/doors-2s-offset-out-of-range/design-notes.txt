@@ -6,13 +6,15 @@ Recommendations
 •  Automatic 2S (side opening) door: Doors Offset 300 Left is out of range; the maximum is 260 Left (the Left car return would fall below its minimum of 0 mm). The drawings and the STEP model use 260 Left.
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Design Notes
 Project
 Golden D11 - 2S offset out of range
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

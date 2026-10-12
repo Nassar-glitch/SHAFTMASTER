@@ -12,5 +12,11 @@ namespace Elevator.Core.Company
 
         /// <summary>The logo file name inside the settings folder; null: no logo.</summary>
         public string LogoFile;
+
+        /// <summary>The default prepared / checked / approved names of every project's documents. A project's own value (Report group)
+        /// wins; blank means the document leaves the name empty.</summary>
+        public string PreparedBy;
+        public string CheckedBy;
+        public string ApprovedBy;
     }
 }

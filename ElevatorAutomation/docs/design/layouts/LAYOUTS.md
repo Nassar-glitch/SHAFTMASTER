@@ -13,7 +13,7 @@ Conventions: coordinates are **paper-space units**; one unit is 9.969 mm (see 1)
 3. **The three big viewports (plan, section, overview) are empty in this file.** Their view definitions are kept, the sample project geometry is not in the model. Only four small detail viewports show anything.
 4. **93,012 model-space entities, of which 3,065 are used by this layout.** The rest is a library of other sheets (swing doors, automatic doors, rail-combination details, hydraulic jack-rail loads, roping symbols). That is why the file is 44 MB.
 5. **The title block is mostly geometry, not text.** 1,976 polylines and 1,492 splines on paper space are the flattened labels (English and Arabic). Only 36 TEXT and 29 MTEXT entities exist: the values and the Arabic field labels. The label text is not editable as text.
-6. **The Arabic texts need `xarab.shx` and `cadnw-1` / `cent.shx`**, which are not AutoCAD standard fonts. Without them the PDF shows Latin gibberish. Decoded in 2.3.
+6. **The Arabic texts need `xarab.shx`, the English ones `cent.shx`** (both ship with AutoCAD 2023; `cadnw-1` is dropped, see "Font decision" in section 5). Without xarab a PDF shows Latin gibberish. Decoded in 2.3.
 7. **The plot settings use `PDFCreator.pc3` (a third-party printer) and a stale plot window** that does not cover the sheet. Both must be replaced.
 8. **The L2a `TitleBlockData` covers the value block (speed, load, travel, stops, floors, control, supply, P1-P7) and company, project, client, prepared / checked / approved, date, revision.** It does not cover: the logo, the Arabic company line, the drawing number (sheet number), phase, project number, type of work, the Arabic drawing title, the revision table rows, the entrances count, the north arrow and the bar scale. P1-P7 are "N kN (kg)" on the L2a branch, but the 2026-10-12 decision is kg only.
 
@@ -218,6 +218,12 @@ So 3,065 entities (3.3 %) carry the four static detail viewports and everything 
 - Dimension styles: `Copy of ISO-25` (current, `DIMSCALE` 0.5), `ISO-25`, `Standard`, `Nassar2`, `top`. The model-space detail dimensions (354 dimensions) use them. **`ISO-25` and `Standard` clash with AutoCAD built-ins**: an inserted detail would take the target drawing's definition of those names (different text height or arrows). Rename on import (see 6.2).
 - Not present: no `IMAGE` in the geared file (the Forklift template has one `IMAGE` reference), one OLE frame (the logo).
 
+### Font decision (Planner, 2026-10-12)
+
+- **No font is copied into the repository or the release package.** `xarab.shx` and `cent.shx` ship with AutoCAD 2023 (`C:\Program Files\Autodesk\AutoCAD 2023\Fonts`: `XARAB.SHX`, `CENT.SHX`), which every ShaftMaster user has, so the plug-in and the Core Console find them in AutoCAD's own support path.
+- **`cadnw-1` is not needed.** It is only the inline font of the old value cells; DESIGN-FLOW says English text uses `cent` and Arabic text uses `xarab`. The template's value texts move to `cent`; nothing depends on `cadnw-1`.
+- The xarab encoding of Arabic typing is done by the program (`XarabText`, cloud C2); see `xarab-check.png` for the glyph check.
+
 ## 6. Proposed implementation for L2b / L3 (not implemented)
 
 ### 6.1 A smaller template under `ElevatorAutomation/Templates`
@@ -284,7 +290,7 @@ At the three outputs of one run, so one base name is computed once:
 6. **Revision table:** keep the table (3 rows, description + date) or only the revision number? A table needs a revision history in the project.
 7. Fields the template has and the model does not: logo (use the company logo; OK to drop OLE for an image), Arabic company line, project number (use `Report.DocumentNumber`), phase, type of work, drawing number, drawing name, entrances. Which are wanted, and with which value?
 8. **Language:** the notes and labels are English + Arabic. Keep both on every sheet? The Arabic needs a TrueType Arabic font and shaping; that is a rewrite of about 40 strings.
-9. **Fonts:** `xarab.shx`, `cadnw-1`, `cent.shx` are not standard. May the layout use only TrueType (Arial / Tahoma) instead, so a PDF made on any machine looks the same?
+9. **Fonts:** ~~`xarab.shx`, `cadnw-1`, `cent.shx` are not standard.~~ Decided 2026-10-12: English uses `cent`, Arabic uses `xarab` (both ship with AutoCAD 2023), `cadnw-1` is dropped, no font is copied. See "Font decision" in section 5.
 10. The L2a branch writes "N kN (kg)" for P1-P7 and one company line. Confirm both change to kg-only and to the shared company settings as the 2026-10-12 decision says (this needs a small L2a follow-up before L2b).
 11. The four DXFs are already tracked in git since commit `23b12df` and are on `origin/main` (about 17 MB packed). `.gitignore` now blocks further copies but does not untrack them. Untrack them (`git rm --cached`, files stay on disk; a cloud session would then not have the templates) or leave them tracked?
 
