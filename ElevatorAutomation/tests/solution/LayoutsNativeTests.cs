@@ -80,26 +80,36 @@ public static class LayoutsNativeTests
             var client = new GenerationClient(root, bin, @"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe");
             var cases = new[]
             {
-                new { Id = "2-stops-1600x1800", Stops = 2, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = false, Baseline = true },
-                new { Id = "6-stops-1600x1800-arabic", Stops = 6, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = true, Baseline = false },
-                new { Id = "15-stops-1600x1800", Stops = 15, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = false, Baseline = false },
-                new { Id = "2S-800-4-stops-1720x2800", Stops = 4, W = 1720.0, D = 2800.0, Door = DoorTypes.Automatic2S, Arabic = false, Baseline = false }
+                new { Id = "2-stops-1600x1800", Stops = 2, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = false, Baseline = true, Long = false },
+                new { Id = "6-stops-1600x1800-arabic", Stops = 6, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = true, Baseline = false, Long = false },
+                new { Id = "15-stops-1600x1800", Stops = 15, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = false, Baseline = false, Long = false },
+                new { Id = "2S-800-4-stops-1720x2800", Stops = 4, W = 1720.0, D = 2800.0, Door = DoorTypes.Automatic2S, Arabic = false, Baseline = false, Long = false },
+                // the longest realistic values of every attribute with a box: names, numbers, 20 stop names (the box check)
+                new { Id = "20-stops-long-values", Stops = 20, W = 1600.0, D = 1800.0, Door = (string)null, Arabic = false, Baseline = false, Long = true }
             };
-            foreach (var c in cases)
+            // LAYOUTS_CASES: a comma-separated list of case id parts, to run a subset (debugging)
+            string only = Environment.GetEnvironmentVariable("LAYOUTS_CASES");
+            foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {
-                string name = c.Arabic ? "فيلا التجمع الخامس" : "Villa bx12 - " + c.Id;
+                string name = c.Long ? "Residential Villa bx12 - Fifth Settlement - New Cairo - Block 7 - Plot 18"
+                    : c.Arabic ? "فيلا التجمع الخامس" : "Villa bx12 - " + c.Id;
                 var p = Project(lib, ctx, c.Stops, c.W, c.D, name, c.Door);
                 p.Report = new ProjectReportDetails
                 {
-                    ClientName = c.Arabic ? "السيد أحمد محمود" : "Delta Developments",
-                    DocumentNumber = "NL-" + c.Stops.ToString("00"),
+                    ClientName = c.Long ? "السيد المهندس محمد عبد الرحمن فتحي السيد وشركاه للمقاولات العامة والتوريدات"
+                        : c.Arabic ? "السيد أحمد محمود" : "Delta Developments",
+                    DocumentNumber = c.Long ? "NL-2026-ELV-0014-REV-03" : "NL-" + c.Stops.ToString("00"),
                     Revision = "1",
-                    PreparedBy = c.Arabic ? "م. محمد علي" : "A. Engineer",
-                    CheckedBy = "B. Checker",
-                    ApprovedBy = "C. Approver"
+                    PreparedBy = c.Long ? "Eng. Mohamed Abdelrahman Fathy" : c.Arabic ? "م. محمد علي" : "A. Engineer",
+                    CheckedBy = c.Long ? "Eng. Mohamed Abdelrahman Fathy" : "B. Checker",
+                    ApprovedBy = c.Long ? "Eng. Mohamed Abdelrahman Fathy" : "C. Approver"
                 };
-                DocumentData.SetPhase(p, c.Arabic ? "المرحلة الأولى" : "Tender");
-                var company = new CompanySettings { CompanyName = c.Arabic ? "شركة النيل للمصاعد" : "Nile Lifts Engineering" };
+                DocumentData.SetPhase(p, c.Long ? "Execution drawings" : c.Arabic ? "المرحلة الأولى" : "Tender");
+                var company = new CompanySettings
+                {
+                    CompanyName = c.Long ? "Elevators and Escalators Engineering and Trading Company Ltd."
+                        : c.Arabic ? "شركة النيل للمصاعد" : "Nile Lifts Engineering"
+                };
                 var design = new ElevatorDesignEngine().Calculate(p, ctx, DrawingViews.All);
                 Check(design.CanGenerate && design.Plan != null, c.Id + ": the design allows generation");
                 IList<BearingReaction> reactions = null;
@@ -118,6 +128,14 @@ public static class LayoutsNativeTests
                 Check(response.ViewsGenerated.Length == 4, c.Id + ": four views");
                 Check(response.Sheet != null && response.Sheet.LayoutName == SheetLayout.Name, c.Id + ": the host reports the sheet layout");
                 Check(response.Sheet.NotPlaced.Count == 0 && response.Sheet.Viewports.Count == 8, c.Id + ": four views and four reference details placed");
+                // one title per view: a viewport has a scale label only when its view has no title of its own that states the scale
+                foreach (var v in response.Sheet.Viewports)
+                    Check(v.HasLabel != (v.Titles.Count > 0), c.Id + ": " + v.Name + " has either its own title or a scale label, not both");
+                foreach (var v in response.Sheet.Viewports.Where(x => x.Kind != "Detail"))
+                    Check(v.Titles.Count > 0 && v.Titles.All(t => t.Contains(v.Label)), c.Id + ": the title of " + v.Name + " states " + v.Label + " (" + String.Join(" / ", v.Titles) + ")");
+                // every attribute fits its box (the longest realistic values in the last project)
+                foreach (var a in response.Sheet.Attributes)
+                    Check(a.Fits && (a.AvailableWidthMm == 0 || a.WidthMm <= a.AvailableWidthMm + 0.05), c.Id + ": attribute " + a.Tag + " fits its box (" + a.WidthMm.ToString("0.0") + " of " + a.AvailableWidthMm.ToString("0.0") + " mm, width factor " + a.WidthFactor.ToString("0.00") + ", height " + a.HeightMm.ToString("0.00") + ", " + a.Lines + " line(s))");
                 Check(response.Sheet.LogoPlaced, c.Id + ": the logo is placed (" + response.Sheet.LogoMessage + ")");
                 var verified = Wire.Read<GenerationResponse>(Path.Combine(client.LastJobDirectory, "verified.json"));
                 Check(verified.Success, c.Id + ": reopened and audited");
@@ -129,6 +147,7 @@ public static class LayoutsNativeTests
                     Area = new { response.Sheet.DrawingAreaX, response.Sheet.DrawingAreaY, response.Sheet.DrawingAreaWidth, response.Sheet.DrawingAreaHeight },
                     Attributes = attributes.Select(a => new { a.Tag, a.Value, a.Style, a.DrawingText }).ToList(),
                     Viewports = response.Sheet.Viewports,
+                    Fit = response.Sheet.Attributes,
                     response.EntityCounts,
                     response.Bounds,
                     Title = title

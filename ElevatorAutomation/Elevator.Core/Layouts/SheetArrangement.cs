@@ -88,6 +88,8 @@ namespace Elevator.Core.Layouts
         /// ("VIEW at D-D 1:20"), so it is never shown at a larger scale than the template's.
         /// </summary>
         public int MinScaleDenominator;
+        /// <summary>The largest scale denominator the view may take (0: none). A detail whose drawn title states a scale is fixed to it (Min = Max).</summary>
+        public int MaxScaleDenominator;
     }
 
     /// <summary>A view placed on the sheet: the viewport rectangle (paper mm), its standard scale and the scale label under it.</summary>
@@ -359,7 +361,7 @@ namespace Elevator.Core.Layouts
                 bool done = false;
                 foreach (int s in StandardScales)
                 {
-                    if (s < d.MinScaleDenominator)
+                    if (s < d.MinScaleDenominator || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
                         continue;
                     double w = W(d, s), h = H(d, s) + label;
                     foreach (var sh in shelves)

@@ -24,7 +24,7 @@ namespace Elevator.Core.Layouts
         public string CompanyName = "";
         public string ProjectName = "";
         public string Client = "";
-        /// <summary>No source yet: always "".</summary>
+        /// <summary>The drawing name: the title-block preset "لوحة الأعمال التنفيذية للمصعد", editable per project.</summary>
         public string DrawingTitle = "";
         /// <summary>"AS SHOWN": every view carries its own scale under it (DESIGN-FLOW "Sheet arrangement").</summary>
         public string Scale = "";
@@ -203,6 +203,7 @@ namespace Elevator.Core.Layouts
                 t.Control = Clean(TitleBlockFields.Effective(TitleBlockFields.Control, project, library));
                 t.Supply = Clean(TitleBlockFields.Effective(TitleBlockFields.Supply, project, library));
                 t.TypeOfWork = Clean(TitleBlockFields.Effective(TitleBlockFields.TypeOfWork, project, library));
+                t.DrawingTitle = Clean(TitleBlockFields.Effective(TitleBlockFields.DrawingName, project, library));
             }
             if (project != null)
             {
@@ -257,8 +258,25 @@ namespace Elevator.Core.Layouts
         {
             "P1", "P2", "P3", "P4", "P5", "P6", "P7", "LOAD", "SPEED", "TRAVEL", "STOPS", "FLOORS", "ENTRANCES", "ENTRANCE_NAMES", "CONTROL",
             "SUPPLY", "COMPANY_AR", "COMPANY", "REV_ROW1_NO", "REV_ROW1_DATE", "CLIENT", "PROJECT", "DOC_NO", "DRAWING_NAME", "TYPE_OF_WORK",
-            "SCALE", "PREPARED", "CHECKED", "APPROVED", "DATE", "PHASE", "SHEET_NO"
+            "SCALE", "PREPARED", "CHECKED", "APPROVED", "DATE", "PHASE", "SHEET_NO",
+            // second lines of the values that sit in a big frame: empty unless the first line does not fit (see SecondLine)
+            "COMPANY_AR_2", "COMPANY_2", "CLIENT_2", "PROJECT_2"
         };
+
+        /// <summary>The tag of the second line of a value that may take two lines, or null.</summary>
+        public static string SecondLine(string tag)
+        {
+            switch (tag)
+            {
+                case "COMPANY_AR":
+                case "COMPANY":
+                case "CLIENT":
+                case "PROJECT":
+                    return tag + "_2";
+                default:
+                    return null;
+            }
+        }
 
         /// <summary>
         /// The value of every attribute of the title block, with its script and text style: Arabic values go to the xarab style
@@ -272,7 +290,8 @@ namespace Elevator.Core.Layouts
             {
                 P1, P2, P3, P4, P5, P6, P7, RatedLoad, RatedSpeed, Travel, Stops, Floors, Entrances, EntranceNames, Control, Supply,
                 arabicCompany ? CompanyName : "", arabicCompany ? "" : CompanyName, Revision, Revision.Length > 0 ? Date : "", Client,
-                ProjectName, ProjectNumber, DrawingTitle, TypeOfWork, Scale, PreparedBy, CheckedBy, ApprovedBy, Date, Phase, SheetNo
+                ProjectName, ProjectNumber, DrawingTitle, TypeOfWork, Scale, PreparedBy, CheckedBy, ApprovedBy, Date, Phase, SheetNo,
+                "", "", "", ""
             };
             var list = new List<TitleBlockAttribute>(Tags.Length);
             for (int i = 0; i < Tags.Length; i++)

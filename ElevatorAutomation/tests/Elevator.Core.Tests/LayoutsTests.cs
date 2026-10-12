@@ -51,7 +51,7 @@ namespace Elevator.Core.Tests
         [Fact]
         public void An_older_library_without_the_new_members_takes_the_shipped_defaults()
         {
-            var old = Variant(s => s.Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\", \"TypeOfWork\": \"أعمال مصاعد\" },", ""));
+            var old = Variant(s => s.Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\", \"TypeOfWork\": \"أعمال مصاعد\", \"DrawingName\": \"لوحة الأعمال التنفيذية للمصعد\" },", ""));
             Assert.Null(old.TitleBlock);
             Assert.Equal(TitleBlockPreset.DefaultControl, old.TitleBlockOrDefault().Control);
             Assert.Equal(TitleBlockPreset.DefaultSupply, old.TitleBlockOrDefault().Supply);
@@ -182,7 +182,7 @@ namespace Elevator.Core.Tests
             var t = TitleBlockData.Build(p, Lib, null, null, null, null);
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
                 Assert.NotNull(f.GetValue(t));
-            Assert.Equal("", t.DrawingTitle);
+            Assert.Equal(TitleBlockPreset.DefaultDrawingName, t.DrawingTitle); // the drawing name follows its preset
             Assert.Equal("AS SHOWN", t.Scale); // every view carries its own scale
             Assert.Equal("1", t.SheetNo);
             Assert.Equal("", t.ProjectNumber);
@@ -793,7 +793,8 @@ namespace Elevator.Core.Tests
             Assert.Equal("P-14", at("DOC_NO").Value);
             Assert.Equal("AS SHOWN", at("SCALE").Value);
             Assert.Equal("1", at("SHEET_NO").Value);
-            Assert.Equal("", at("DRAWING_NAME").Value);
+            Assert.Equal(TitleBlockPreset.DefaultDrawingName, at("DRAWING_NAME").Value);
+            Assert.Equal(XarabText.StyleFor(TitleBlockPreset.DefaultDrawingName), at("DRAWING_NAME").Style);
             Assert.Equal(t.Stops, at("ENTRANCES").Value);
             foreach (var x in a.Where(x => x.Value.Length == 0))
             {
@@ -806,6 +807,28 @@ namespace Elevator.Core.Tests
             Assert.Equal("00", blank.Single(x => x.Tag == "REV_ROW1_NO").Value);
             Assert.Equal("12/10/2026", blank.Single(x => x.Tag == "REV_ROW1_DATE").Value);
             Assert.Equal("00", DocumentData.Resolve(p, null).Revision); // the calculation sheet and the Design Notes show 00 too (2026-10-12)
+        }
+
+        [Fact]
+        public void The_drawing_name_is_a_preset_that_the_project_can_edit()
+        {
+            var p = New();
+            Assert.Equal("لوحة الأعمال التنفيذية للمصعد", TitleBlockPreset.DefaultDrawingName);
+            Assert.Equal(TitleBlockPreset.DefaultDrawingName, TitleBlockData.Build(p, Lib, null, null, null, null).DrawingTitle);
+            // an older library has no drawing name: the shipped default
+            var old = Variant(x => x.Replace(", \"DrawingName\": \"لوحة الأعمال التنفيذية للمصعد\"", ""));
+            Assert.Null(old.TitleBlock.DrawingName);
+            Assert.Equal(TitleBlockPreset.DefaultDrawingName, TitleBlockData.Build(p, old, null, null, null, null).DrawingTitle);
+            // locked / follow like the other fields
+            var other = Variant(x => x.Replace("\"DrawingName\": \"لوحة الأعمال التنفيذية للمصعد\"", "\"DrawingName\": \"لوحة تنفيذية\""));
+            Assert.Equal("لوحة تنفيذية", TitleBlockFields.Effective(TitleBlockFields.DrawingName, p, other));
+            TitleBlockFields.DrawingName.Edit(p, "لوحة التركيبات");
+            Assert.Equal("لوحة التركيبات", TitleBlockData.Build(p, other, null, null, null, null).DrawingTitle);
+            Assert.Equal("لوحة التركيبات", TitleBlockFields.Effective(TitleBlockFields.DrawingName, p, Lib));
+            // the drawing name is written in the xarab style, joined letters encoded
+            var a = TitleBlockData.Build(New(), Lib, null, null, null, null).Attributes().Single(x => x.Tag == "DRAWING_NAME");
+            Assert.Equal(TextScript.Arabic, a.Script);
+            Assert.Equal(XarabText.Encode(TitleBlockPreset.DefaultDrawingName), a.DrawingText);
         }
 
         [Fact]

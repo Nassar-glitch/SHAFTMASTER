@@ -41,6 +41,11 @@ namespace Elevator.Core.Layouts
         public const double ViewMarginMm = 40;
         public const string TemplateFileName = "Layout_Geared_A0.dxf";
         public const string DetailsFileName = "Layout_Geared_A0.details.json";
+        public const string FieldsFileName = "Layout_Geared_A0.fields.json";
+        /// <summary>The narrowest width factor an attribute takes before its height is reduced.</summary>
+        public const double MinWidthFactor = 0.7;
+        /// <summary>The smallest height of a shrunk attribute, as a share of its nominal height, before it takes two lines.</summary>
+        public const double MinHeightShare = 0.55;
 
         /// <summary>The reference details shown for a project (Templates/Layout_Geared_A0.details.json), in sheet order.</summary>
         public static string[] ReferenceDetails(string doorType)
@@ -60,6 +65,26 @@ namespace Elevator.Core.Layouts
         public int ScaleDenominator;
         public string Label;
         public double ModelCenterX, ModelCenterY;
+        /// <summary>True when the scale label is drawn under the viewport (the view has no title of its own that states its scale).</summary>
+        public bool HasLabel;
+        /// <summary>The titles in the view's own drawing that carry its scale, as written ("SHAFT AND CAR 1:10"); empty when none.</summary>
+        public List<string> Titles = new List<string>();
+    }
+
+    /// <summary>How an attribute of the title block fits its box (L2b fix round).</summary>
+    public sealed class SheetAttributeFit
+    {
+        public string Tag;
+        /// <summary>The text written into the attribute.</summary>
+        public string Text;
+        public double AvailableWidthMm;
+        /// <summary>The widest line of the text as drawn (mm).</summary>
+        public double WidthMm;
+        public double WidthFactor;
+        public double HeightMm;
+        public double NominalHeightMm;
+        public int Lines;
+        public bool Fits;
     }
 
     /// <summary>What the host reports of the sheet it added.</summary>
@@ -72,6 +97,7 @@ namespace Elevator.Core.Layouts
         public bool LogoPlaced;
         public string LogoMessage;
         public List<string> NotPlaced = new List<string>();
+        public List<SheetAttributeFit> Attributes = new List<SheetAttributeFit>();
     }
 }
 
@@ -94,5 +120,29 @@ namespace Elevator.Core.Layouts
         public double[] Origin;
         public double PaperScaleFromSourceUnits;
         public System.Collections.Generic.List<SheetDetailSpec> Details = new System.Collections.Generic.List<SheetDetailSpec>();
+    }
+}
+
+namespace Elevator.Core.Layouts
+{
+    /// <summary>The room of one title-block attribute (Templates/Layout_Geared_A0.fields.json, written by tools/layouts/build_template.py).</summary>
+    public sealed class SheetFieldSpec
+    {
+        public string Tag;
+        public string Style;
+        public double HeightMm;
+        /// <summary>"Left" (top-left anchored) or "Center".</summary>
+        public string Justify;
+        public double[] AnchorMm;
+        /// <summary>The free width along the text band, from the static geometry around the anchor.</summary>
+        public double AvailableWidthMm;
+        public int MaxLines;
+        /// <summary>The longest realistic value of the tag, for the box check.</summary>
+        public string LongestValue;
+    }
+
+    public sealed class SheetFieldsFile
+    {
+        public System.Collections.Generic.List<SheetFieldSpec> Fields = new System.Collections.Generic.List<SheetFieldSpec>();
     }
 }

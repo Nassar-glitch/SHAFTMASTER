@@ -96,10 +96,26 @@ def run_case(folder, case_id):
     got = sorted((round(r[0], 1), round(r[1], 1), round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
     check(exp == got, case_id + ": viewport positions and scales equal the arrangement")
 
-    # scale labels
+    # scale labels: only under a view that has no title of its own stating the scale
     labels = [e.dxf.text for e in lay if e.dxftype() == "TEXT" and e.dxf.text.startswith("1:")]
-    want = sorted(v["Label"] for v in expected["Viewports"])
-    check(sorted(labels) == want, case_id + ": a scale label under each view " + str(sorted(labels)))
+    want = sorted(v["Label"] for v in expected["Viewports"] if v["HasLabel"])
+    check(sorted(labels) == want, case_id + ": a scale label only under the views without their own title " + str(sorted(labels)))
+    # one title per view with the real scale: the four view titles in model space
+    titles = {}
+    for e in doc.modelspace():
+        if e.dxftype() != "MTEXT":
+            continue
+        t = tag(e)
+        if t and "1:" in e.text and any(k in e.text for k in ("SHAFT AND CAR", "MACHINE ROOM", "SEC AT")):
+            titles[t.split(".")[0]] = e.text
+    scale_of = {v["Name"]: v["Label"] for v in expected["Viewports"]}
+    for root, view in (("Plan", "Shaft plan"), ("MachineRoom", "Machine-room plan"), ("SectionAA", "Section A-A"), ("MachineRoomSection", "Section B-B")):
+        check(root in titles and scale_of[view] in titles[root], case_id + ": the title of %s states %s (%r)" % (view, scale_of[view], titles.get(root)))
+        for old in ("1:8", "1:35"):
+            check(root not in titles or (old + "}") not in titles[root], case_id + ": no old scale %s in the title of %s" % (old, view))
+    # the fit report: every attribute inside its box
+    for f in expected.get("Fit", []):
+        check(f["Fits"], case_id + ": attribute %s fits its box" % f["Tag"])
 
     # title block
     block = [e for e in lay if e.dxftype() == "INSERT" and e.dxf.name == "SM_TITLEBLOCK"]
@@ -110,7 +126,13 @@ def run_case(folder, case_id):
         check(att is not None, case_id + ": attribute " + a["Tag"] + " present")
         if att is None:
             continue
-        check(att.dxf.text == a["DrawingText"], case_id + ": attribute %s = %r (expected %r)" % (a["Tag"], att.dxf.text, a["DrawingText"]))
+        got = att.dxf.text
+        if a["Tag"].endswith("_2"):
+            continue  # a second line: part of its first attribute below
+        second = values.get(a["Tag"] + "_2")
+        if second is not None and second.dxf.text:
+            got = got + " " + second.dxf.text  # a long value takes two lines (the value is the first line, a space, the second line)
+        check(" ".join(got.split()) == " ".join(a["DrawingText"].split()), case_id + ": attribute %s = %r (expected %r)" % (a["Tag"], got, a["DrawingText"]))
         if a["DrawingText"]:
             check(att.dxf.style == a["Style"], case_id + ": attribute %s in style %s (%s)" % (a["Tag"], a["Style"], att.dxf.style))
     check(len(values) == len(expected["Attributes"]), case_id + ": every attribute of the block is a title-block field")
@@ -139,7 +161,7 @@ def main():
     folder = sys.argv[1]
     out = sys.argv[2] if len(sys.argv) > 2 else None
     ids = sorted(n[:-len("-expected.json")] for n in os.listdir(folder) if n.endswith("-expected.json"))
-    check(len(ids) >= 4, "four sheets were generated")
+    check(len(ids) >= 5, "five sheets were generated")
     summary = [run_case(folder, i) for i in ids]
     if out:
         json.dump({"checks": checks, "failures": failures, "cases": summary}, open(out, "w"), indent=2)

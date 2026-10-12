@@ -78,16 +78,37 @@ VALUE_TEXTS = {
 BAR_SCALE = (61.1, -133.7, 64.7, -132.6)  # every entity inside is the bar scale (valid for one scale only)
 LOGO_AREA = (62.31, -106.68, 68.33, -102.17)
 
+# L2b fix round: the P values start 5 mm further left (the left frame is 8 mm away) so that "P5 = 1360 KG." clears the static
+# "IN CASE OF OPERATION ..." and the P6 / P7 bracket; DATE and PHASE sit in the lower part of their cells, under the Arabic label
+# in the upper right corner (they overlapped it at the old height).
+# Values whose box is a big frame may take two lines when even the narrowest width factor and the smallest height do not fit.
+NAME_TAGS = {"PREPARED", "CHECKED", "APPROVED"}
+TWO_LINE_TAGS = {"COMPANY_AR", "COMPANY", "CLIENT", "PROJECT"}  # their "_2" tags hold the second line
+# The longest realistic value of each tag, for the box check (Elevator.Core.Tests and layouts-native use them).
+LONGEST = {
+    "P1": "P1 = 99999 KG.", "P2": "P2 = 99999 KG.", "P3": "P3 = 99999 KG.", "P4": "P4 = 99999 KG.", "P5": "P5 = 99999 KG.",
+    "P6": "P6 = 99999 KG.", "P7": "P7 = 99999 KG.", "LOAD": "2000 KG. - 26 PASSENGERS.", "SPEED": "10.00 M/SEC.",
+    "TRAVEL": "120.00 METRES.", "STOPS": "30", "FLOORS": "(G-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29)",
+    "ENTRANCES": "30", "ENTRANCE_NAMES": "(G-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29)",
+    "CONTROL": "DUPLEX COLLECTIVE UP AND DOWN WITH ATTENDANT.", "SUPPLY": "3 PHASE 380 V. 50 Hz. + N + PE",
+    "COMPANY": "Elevators and Escalators Engineering and Trading Company Ltd.", "CLIENT": "Mr. Mohamed Abdelrahman Fathy El-Sayed and Partners",
+    "PROJECT": "Residential Villa bx12 - Fifth Settlement - New Cairo - Block 7 - Plot 18", "DOC_NO": "NL-2026-ELV-0014-REV-03",
+    "REV_ROW1_NO": "12", "REV_ROW1_DATE": "12/10/2026", "DRAWING_NAME": "لوحة الأعمال التنفيذية للمصعد", "TYPE_OF_WORK": "أعمال مصاعد وسلالم متحركة",
+    "SCALE": "AS SHOWN", "PREPARED": "Eng. Mohamed Abdelrahman Fathy", "CHECKED": "Eng. Mohamed Abdelrahman Fathy",
+    "APPROVED": "Eng. Mohamed Abdelrahman Fathy", "DATE": "12/10/2026", "PHASE": "Execution drawings", "SHEET_NO": "1",
+    "COMPANY_AR": "شركة النيل الحديثة للمصاعد والسلالم المتحركة والتجارة والمقاولات",
+}
+
 L, C = TextEntityAlignment.TOP_LEFT, TextEntityAlignment.MIDDLE_CENTER
 # tag, source position (cm), height (cm), alignment, style, prompt
 ATTRIBUTES = [
-    ("P1", (58.37, -58.40), 0.36, L, STYLE_EN, "P1 load"),
+    ("P1", (57.87, -58.40), 0.36, L, STYLE_EN, "P1 load"),
     ("P2", (65.53, -58.40), 0.36, L, STYLE_EN, "P2 load"),
-    ("P3", (58.37, -60.11), 0.36, L, STYLE_EN, "P3 load"),
+    ("P3", (57.87, -60.11), 0.36, L, STYLE_EN, "P3 load"),
     ("P4", (65.53, -60.12), 0.36, L, STYLE_EN, "P4 load"),
-    ("P5", (58.32, -62.47), 0.36, L, STYLE_EN, "P5 load, one car guide rail"),
-    ("P6", (58.32, -66.01), 0.36, L, STYLE_EN, "P6 load, one car buffer"),
-    ("P7", (58.32, -67.16), 0.36, L, STYLE_EN, "P7 load, one counterweight buffer"),
+    ("P5", (57.82, -62.47), 0.36, L, STYLE_EN, "P5 load, one car guide rail"),
+    ("P6", (57.82, -66.01), 0.36, L, STYLE_EN, "P6 load, one car buffer"),
+    ("P7", (57.82, -67.16), 0.36, L, STYLE_EN, "P7 load, one counterweight buffer"),
     ("LOAD", (63.55, -87.03), 0.36, L, STYLE_EN, "Capacity"),
     ("SPEED", (63.56, -87.99), 0.36, L, STYLE_EN, "Speed"),
     ("TRAVEL", (63.56, -88.95), 0.36, L, STYLE_EN, "Travel"),
@@ -107,12 +128,17 @@ ATTRIBUTES = [
     ("DRAWING_NAME", (66.00, -129.75), 0.29, C, STYLE_AR, "Drawing name"),
     ("TYPE_OF_WORK", (59.18, -130.00), 0.20, C, STYLE_AR, "Type of work"),
     ("SCALE", (62.90, -132.00), 0.34, C, STYLE_EN, "Scale"),
-    ("PREPARED", (68.85, -131.55), 0.24, C, STYLE_EN, "Prepared by"),
-    ("CHECKED", (68.85, -132.60), 0.24, C, STYLE_EN, "Checked by"),
-    ("APPROVED", (68.85, -133.35), 0.24, C, STYLE_EN, "Approved by"),
-    ("DATE", (62.60, -134.75), 0.24, C, STYLE_EN, "Date"),
-    ("PHASE", (66.20, -134.75), 0.24, C, STYLE_EN, "Phase"),
+    ("PREPARED", (68.55, -131.55), 0.24, C, STYLE_EN, "Prepared by"),
+    ("CHECKED", (68.55, -132.60), 0.24, C, STYLE_EN, "Checked by"),
+    ("APPROVED", (68.55, -133.35), 0.24, C, STYLE_EN, "Approved by"),
+    ("DATE", (62.91, -134.93), 0.24, C, STYLE_EN, "Date"),
+    ("PHASE", (67.04, -134.93), 0.24, C, STYLE_EN, "Phase"),
     ("SHEET_NO", (69.93, -134.70), 0.50, C, STYLE_EN, "Drawing number"),
+    # second lines of the values in the big frames: empty, at the anchor of the first line; the filler moves the two apart when used
+    ("COMPANY_AR_2", (65.33, -96.98), 0.64, C, STYLE_AR, "Company name (Arabic), second line"),
+    ("COMPANY_2", (65.33, -100.46), 0.60, C, STYLE_EN, "Company name, second line"),
+    ("CLIENT_2", (65.33, -115.32), 0.60, C, STYLE_EN, "Owner, second line"),
+    ("PROJECT_2", (65.34, -122.79), 0.60, C, STYLE_EN, "Project name, second line"),
 ]
 
 # Clashes with AutoCAD built-in names: the template's entities move to the SM_ copies.
@@ -247,7 +273,61 @@ def paper(doc):
         a.dxf.text = ""
     ref = layout.add_blockref(BLOCK_NAME, (0, 0), dxfattribs={"layer": "ACDC BANDA"})
     ref.add_auto_attribs({})
-    return s
+    return s, field_boxes(layout, s, to_mm)
+
+
+def field_boxes(layout, s, to_mm):
+    """The room of each attribute: the free width along its text band between the static geometry (flattened labels, cell borders).
+    TEXT entities are not obstacles here: the xarab labels run right to left, which a bounding-box estimate gets wrong; the
+    attributes were placed by hand clear of them (see the anchors above)."""
+    obstacles = []
+    for e in layout:
+        if e.dxftype() in ("INSERT", "VIEWPORT", "TEXT", "MTEXT"):
+            continue
+        try:
+            b = bbox.extents([e])
+        except Exception:
+            continue
+        if b.has_data:
+            obstacles.append((b.extmin.x, b.extmin.y, b.extmax.x, b.extmax.y))
+    out = []
+    for tag, pos, h, align, style, prompt in ATTRIBUTES:
+        ax, ay = to_mm(pos)
+        hh = h * s
+        top, bottom = (ay, ay - hh) if align == L else (ay + hh / 2, ay - hh / 2)
+        right, left = 1e9, -1e9
+        for x0, y0, x1, y1, in obstacles:
+            if y1 <= bottom + 0.1 * hh or y0 >= top - 0.1 * hh:
+                continue
+            if (y1 - y0) < 0.2 * hh and (x1 - x0) > 3 * hh:  # a long horizontal rule does not limit the width
+                continue
+            if x0 >= ax - 1e-6:
+                right = min(right, x0)
+            elif x1 <= ax + 1e-6:
+                left = max(left, x1)
+        # another attribute in the same band to the right is an obstacle too (P2 beside P1, STOPS beside its stop names)
+        for t2, pos2, h2, a2, st2, pr2 in ATTRIBUTES:
+            if t2 == tag:
+                continue
+            bx, by = to_mm(pos2)
+            hh2 = h2 * s
+            t2top, t2bottom = (by, by - hh2) if a2 == L else (by + hh2 / 2, by - hh2 / 2)
+            if t2bottom < top - 0.1 * hh and t2top > bottom + 0.1 * hh:
+                if a2 == L and bx > ax:
+                    right = min(right, bx)
+        pad = 4.0  # clear of the frame line and of the neighbouring text: the SHX extents measured in AutoCAD run a few mm short
+        if align == L:
+            avail = right - ax - pad
+        else:
+            avail = 2 * min(ax - left, right - ax) - 2 * pad
+        if tag in NAME_TAGS:
+            avail = min(avail, 26.0)  # the "م." prefix of the person's name sits at the right end of the cell
+        out.append({
+            "Tag": tag, "Style": style, "HeightMm": round(hh, 2), "Justify": "Left" if align == L else "Center",
+            "AnchorMm": [round(ax, 2), round(ay, 2)], "AvailableWidthMm": round(avail, 1),
+            "MaxLines": 2 if tag in TWO_LINE_TAGS else 1, "LongestValue": LONGEST.get(tag, ""),
+        })
+    return out
 
 
 def styles(doc):
@@ -350,7 +430,7 @@ def main(source=SOURCE, target=TARGET):
     ezdxf.options.write_fixed_meta_data_for_testing = True
     doc, auditor = recover.readfile(source)
     manifest = model_details(doc)
-    s = paper(doc)
+    s, fields = paper(doc)
     styles(doc)
     purge_blocks(doc)
     slim(doc)
@@ -371,12 +451,15 @@ def main(source=SOURCE, target=TARGET):
     tmp = target + ".tmp"
     doc.saveas(tmp, encoding="utf-8")
     with open(tmp, "r", encoding="utf-8", newline="") as f:
-        text = f.read()
+        text = f.read().replace(chr(13) + chr(10), chr(10))  # ezdxf writes CRLF on Windows; the template is LF everywhere (same bytes)
     with open(target, "w", encoding="utf-8", newline="") as f:
         f.write(round_coordinates(text))
     os.remove(tmp)
     with open(os.path.splitext(target)[0] + ".details.json", "w", encoding="utf-8", newline="\n") as f:
         json.dump({"Origin": DETAIL_ORIGIN, "PaperScaleFromSourceUnits": round(s, 6), "Details": manifest}, f, indent=2)
+        f.write("\n")
+    with open(os.path.splitext(target)[0] + ".fields.json", "w", encoding="utf-8", newline="\n") as f:
+        json.dump({"Fields": fields}, f, indent=2, ensure_ascii=False)
         f.write("\n")
     print("wrote %s (%.2f MB), %d details" % (target, os.path.getsize(target) / 1e6, len(manifest)))
 
