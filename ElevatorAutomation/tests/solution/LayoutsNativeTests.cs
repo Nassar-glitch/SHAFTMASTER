@@ -128,9 +128,14 @@ public static class LayoutsNativeTests
                 Check(response.ViewsGenerated.Length == 4, c.Id + ": four views");
                 Check(response.Sheet != null && response.Sheet.LayoutName == SheetLayout.Name, c.Id + ": the host reports the sheet layout");
                 Check(response.Sheet.NotPlaced.Count == 0 && response.Sheet.Viewports.Count == 8, c.Id + ": four views and four reference details placed");
-                // one title per view: a viewport has a scale label only when its view has no title of its own that states the scale
+                // one title per view (L2c: no scale label under any viewport): the generated views and every reference detail that has
+                // an editable title state their scale in it; the fish plate's titles are geometry and carry none
                 foreach (var v in response.Sheet.Viewports)
-                    Check(v.HasLabel != (v.Titles.Count > 0), c.Id + ": " + v.Name + " has either its own title or a scale label, not both");
+                {
+                    Check(!v.HasLabel, c.Id + ": " + v.Name + " has no label under it");
+                    if (v.Name != "FISH_PLATE")
+                        Check(v.Titles.Count > 0, c.Id + ": " + v.Name + " has its title with the scale");
+                }
                 foreach (var v in response.Sheet.Viewports.Where(x => x.Kind != "Detail"))
                     Check(v.Titles.Count > 0 && v.Titles.All(t => t.Contains(v.Label)), c.Id + ": the title of " + v.Name + " states " + v.Label + " (" + String.Join(" / ", v.Titles) + ")");
                 // every attribute fits its box (the longest realistic values in the last project)

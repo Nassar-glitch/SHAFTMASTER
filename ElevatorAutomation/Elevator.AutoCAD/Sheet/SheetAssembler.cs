@@ -37,47 +37,91 @@ namespace Elevator.AutoCAD.Sheet
             var details = ReadDetails(templateFile);
             var fields = ReadFields(templateFile);
 
-            // 1. The arrangement from the real extents.
-            var views = new List<SheetViewRequest>();
-            Action<DrawingViews, SheetViewKind, string> add = (v, kind, name) =>
-            {
-                var b = bounds.FirstOrDefault(x => x.View == v);
-                if (b != null)
-                    views.Add(new SheetViewRequest
-                    {
-                        Kind = kind,
-                        Name = name,
-                        ModelExtents = new SheetRect(b.MinX, b.MinY, b.MaxX - b.MinX, b.MaxY - b.MinY),
-                        MarginMm = SheetLayout.ViewMarginMm
-                    });
-            };
-            add(DrawingViews.Plan, SheetViewKind.ShaftPlan, "Shaft plan");
-            add(DrawingViews.MachineRoomPlan, SheetViewKind.MachineRoomPlan, "Machine-room plan");
-            add(DrawingViews.SectionAA, SheetViewKind.SectionAA, "Section A-A");
-            add(DrawingViews.SectionBB, SheetViewKind.SectionBB, "Section B-B");
+            // 1. The arrangement from the real extents of what each view draws (title and dimension texts at their drawn size, not the
+            //    MTEXT reference box: the title of A-A has a box 15 m wide for a 1.5 m text).
             var chosen = new Dictionary<string, SheetDetailSpec>();
             foreach (string name in SheetLayout.ReferenceDetails(request.DoorType))
             {
                 var d = details.Details.FirstOrDefault(x => x.Name == name);
-                if (d == null || d.Window == null || d.Window.Length != 4)
-                    continue;
-                chosen[name] = d;
-                // A detail keeps the scale its drawn texts state: never larger than the template's; the door elevation, whose
-                // title in the drawing says 1:20, is fixed to it.
-                bool fixedScale = d.Kind == "DoorElevationSection";
-                views.Add(new SheetViewRequest
-                {
-                    Kind = SheetViewKind.Detail,
-                    Name = name,
-                    ModelExtents = new SheetRect(d.Window[0], d.Window[1], d.Window[2] - d.Window[0], d.Window[3] - d.Window[1]),
-                    // the scale appended to a title may run past the template window: the viewport takes 150 mm more on every side
-                    MarginMm = 150,
-                    MinScaleDenominator = d.TemplateScale,
-                    MaxScaleDenominator = fixedScale ? d.TemplateScale : 0
-                });
+                if (d != null && d.Window != null && d.Window.Length == 4)
+                    chosen[name] = d;
             }
             var area = SheetArrangement.A0DrawingArea();
-            var arrangement = SheetArrangement.Arrange(area, views);
+            var previous = HostApplicationServices.WorkingDatabase;
+            HostApplicationServices.WorkingDatabase = db;
+            ObjectId layoutId;
+            try
+            {
+                // The layout and the reference details come first: their titles take the sheet scale below.
+                using (var src = new Database(false, true))
+                {
+                    src.DxfIn(templateFile, null);
+                    layoutId = CreateLayout(db, layoutName);
+                    CloneTemplate(db, src, layoutName, layoutId);
+                }
+            }
+            catch
+            {
+                HostApplicationServices.WorkingDatabase = previous;
+                throw;
+            }
+            SheetArrangementResult arrangement = null;
+            Dictionary<string, List<string>> titles = null;
+            string last = null;
+            var addedTitles = new Dictionary<DrawingViews, ObjectId>();
+            for (int pass = 0; pass < 4; pass++)
+            {
+                var measured = MeasureViews(db, addedTitles);
+                var views = new List<SheetViewRequest>();
+                Action<DrawingViews, SheetViewKind, string> add = (v, kind, name) =>
+                {
+                    SheetRect r;
+                    if (measured.TryGetValue(v, out r))
+                        views.Add(new SheetViewRequest { Kind = kind, Name = name, ModelExtents = r, MarginMm = SheetLayout.ViewMarginMm });
+                    else
+                    {
+                        var bb = bounds.FirstOrDefault(x => x.View == v);
+                        if (bb != null)
+                            views.Add(new SheetViewRequest
+                            {
+                                Kind = kind,
+                                Name = name,
+                                ModelExtents = new SheetRect(bb.MinX, bb.MinY, bb.MaxX - bb.MinX, bb.MaxY - bb.MinY),
+                                MarginMm = SheetLayout.ViewMarginMm
+                            });
+                    }
+                };
+                add(DrawingViews.Plan, SheetViewKind.ShaftPlan, "Shaft plan");
+                add(DrawingViews.MachineRoomPlan, SheetViewKind.MachineRoomPlan, "Machine-room plan");
+                add(DrawingViews.SectionAA, SheetViewKind.SectionAA, "Section A-A");
+                add(DrawingViews.SectionBB, SheetViewKind.SectionBB, "Section B-B");
+                foreach (var kv in chosen)
+                {
+                    var d = kv.Value;
+                    // A reference detail is shown at its template scale or larger, never smaller; the door elevation, whose title in the
+                    // drawing says 1:20, is fixed to it. The scale appended to a title may run past the template window: +150 mm.
+                    bool fixedScale = d.Kind == "DoorElevationSection";
+                    views.Add(new SheetViewRequest
+                    {
+                        Kind = SheetViewKind.Detail,
+                        Name = kv.Key,
+                        ModelExtents = new SheetRect(d.Window[0], d.Window[1], d.Window[2] - d.Window[0], d.Window[3] - d.Window[1]),
+                        MarginMm = 150,
+                        AllowedScales = SheetLayout.DetailScales,
+                        MinScaleDenominator = fixedScale ? d.TemplateScale : 0,
+                        MaxScaleDenominator = d.TemplateScale
+                    });
+                }
+                arrangement = SheetArrangement.Arrange(area, views);
+                if (arrangement.NotPlaced.Count > 0)
+                    break;
+                // the titles state the sheet scale at 8 mm printed height: apply them, measure again until the scales are stable
+                titles = UpdateTitles(db, arrangement.Viewports, chosen, measured, addedTitles);
+                string key = String.Join(";", arrangement.Viewports.Select(v => v.Name + "=" + v.ScaleDenominator));
+                if (key == last)
+                    break;
+                last = key;
+            }
             var result = new SheetResult
             {
                 LayoutName = layoutName,
@@ -98,18 +142,10 @@ namespace Elevator.AutoCAD.Sheet
             if (plan != null && (!attributes.TryGetValue("SCALE", out scale) || String.IsNullOrEmpty(scale.Value)))
                 attributes["SCALE"] = TitleBlockAttribute.Of("SCALE", plan.LabelText);
 
-            // 2. The layout and its content, cloned from the template (the template database is only read).
-            var previous = HostApplicationServices.WorkingDatabase;
-            HostApplicationServices.WorkingDatabase = db;
+            // 2. The layout (cloned above from the template, which is only read): viewports, title block, logo.
             try
             {
-                using (var src = new Database(false, true))
                 {
-                    src.DxfIn(templateFile, null);
-                    ObjectId layoutId = CreateLayout(db, layoutName);
-                    CloneTemplate(db, src, layoutName, layoutId);
-                    // The title of each view states the sheet scale (one title per view, no second label under it).
-                    var titles = UpdateTitles(db, arrangement.Viewports, chosen);
                     // A viewport can only be switched on while its layout is the current one; Model is current again afterwards.
                     LayoutManager.Current.CurrentLayout = layoutName;
                     using (var tr = db.TransactionManager.StartTransaction())
@@ -123,8 +159,7 @@ namespace Elevator.AutoCAD.Sheet
                             AddViewport(tr, paper, v);
                             List<string> own;
                             bool titled = titles.TryGetValue(v.Name, out own) && own.Count > 0;
-                            if (!titled)
-                                AddLabel(db, tr, paper, v);
+                            // one title per view, no scale label under a viewport (the fish plate's geometry titles carry none)
                             result.Viewports.Add(new SheetViewportInfo
                             {
                                 Name = v.Name,
@@ -137,7 +172,7 @@ namespace Elevator.AutoCAD.Sheet
                                 Label = v.LabelText,
                                 ModelCenterX = v.ModelCenterX,
                                 ModelCenterY = v.ModelCenterY,
-                                HasLabel = !titled,
+                                HasLabel = false,
                                 Titles = titled ? own : new List<string>()
                             });
                         }
@@ -221,6 +256,115 @@ namespace Elevator.AutoCAD.Sheet
                 src.WblockCloneObjects(modelIds, SymbolUtilityServices.GetBlockModelSpaceId(db), new IdMapping(), DuplicateRecordCloning.Ignore, false);
         }
 
+        // ---------- the extents of what each view draws ----------
+
+        // The extents of an entity as drawn: an MTEXT takes its actual text size, not its reference width.
+        static bool DrawnExtents(Entity e, out Extents3d box)
+        {
+            box = new Extents3d();
+            try
+            {
+                var mt = e as MText;
+                if (mt != null && Math.Abs(mt.Rotation) < 1e-9)
+                {
+                    double w = mt.ActualWidth, h = mt.ActualHeight;
+                    var p = mt.Location;
+                    double x0 = p.X, y1 = p.Y;
+                    switch (mt.Attachment)
+                    {
+                        case AttachmentPoint.TopCenter:
+                        case AttachmentPoint.MiddleCenter:
+                        case AttachmentPoint.BottomCenter:
+                            x0 = p.X - w / 2;
+                            break;
+                        case AttachmentPoint.TopRight:
+                        case AttachmentPoint.MiddleRight:
+                        case AttachmentPoint.BottomRight:
+                            x0 = p.X - w;
+                            break;
+                    }
+                    switch (mt.Attachment)
+                    {
+                        case AttachmentPoint.MiddleLeft:
+                        case AttachmentPoint.MiddleCenter:
+                        case AttachmentPoint.MiddleRight:
+                            y1 = p.Y + h / 2;
+                            break;
+                        case AttachmentPoint.BottomLeft:
+                        case AttachmentPoint.BottomCenter:
+                        case AttachmentPoint.BottomRight:
+                            y1 = p.Y + h;
+                            break;
+                    }
+                    box = new Extents3d(new Point3d(x0, y1 - h, p.Z), new Point3d(x0 + w, y1, p.Z));
+                    return true;
+                }
+                box = e.GeometricExtents;
+                return true;
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception)
+            {
+                return false;
+            }
+        }
+
+        static DrawingViews ViewFlag(string key)
+        {
+            if (key == null)
+                return 0;
+            if (key.StartsWith("MachineRoomSection.", StringComparison.Ordinal))
+                return DrawingViews.SectionBB;
+            if (key.StartsWith("MachineRoom.", StringComparison.Ordinal))
+                return DrawingViews.MachineRoomPlan;
+            if (key.StartsWith("SectionAA.", StringComparison.Ordinal))
+                return DrawingViews.SectionAA;
+            if (key.StartsWith("Plan.", StringComparison.Ordinal))
+                return DrawingViews.Plan;
+            return 0;
+        }
+
+        /// <summary>The extents (model mm) of every visible semantic entity of each view, texts at their drawn size.</summary>
+        static Dictionary<DrawingViews, SheetRect> MeasureViews(Database db, Dictionary<DrawingViews, ObjectId> addedTitles)
+        {
+            var acc = new Dictionary<DrawingViews, Extents3d>();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+                foreach (ObjectId id in model)
+                {
+                    var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (e == null || !e.Visible)
+                        continue;
+                    var tag = SectionAADrawing.Tag(e);
+                    DrawingViews view = 0;
+                    if (tag != null && tag.Length > 0)
+                        view = ViewFlag(tag[0]);
+                    else
+                    {
+                        // a title the sheet itself added to a view (the shaft plan's own title is hidden in the generated drawing)
+                        foreach (var kv in addedTitles)
+                            if (kv.Value == id)
+                                view = kv.Key;
+                    }
+                    Extents3d box;
+                    if (view == 0 || !DrawnExtents(e, out box))
+                        continue;
+
+                    Extents3d cur;
+                    if (acc.TryGetValue(view, out cur))
+                    {
+                        cur.AddExtents(box);
+                        acc[view] = cur;
+                    }
+                    else
+                        acc[view] = box;
+                }
+                tr.Commit();
+            }
+            return acc.ToDictionary(k => k.Key, k => new SheetRect(k.Value.MinPoint.X, k.Value.MinPoint.Y,
+                k.Value.MaxPoint.X - k.Value.MinPoint.X, k.Value.MaxPoint.Y - k.Value.MinPoint.Y));
+        }
+
         // ---------- one title per view, with the sheet scale ----------
 
         static string ViewOf(string key)
@@ -253,7 +397,12 @@ namespace Elevator.AutoCAD.Sheet
         /// elevation, fixed at its template scale) counts as titled with the template text. Semantic entities keep their keys and
         /// count; only the contents of the title text changes.
         /// </summary>
-        static Dictionary<string, List<string>> UpdateTitles(Database db, IList<SheetViewport> viewports, Dictionary<string, SheetDetailSpec> details)
+        static Dictionary<string, List<string>> UpdateTitles(
+            Database db,
+            IList<SheetViewport> viewports,
+            Dictionary<string, SheetDetailSpec> details,
+            Dictionary<DrawingViews, SheetRect> measured,
+            Dictionary<DrawingViews, ObjectId> addedTitles)
         {
             var result = new Dictionary<string, List<string>>();
             var scaleOf = viewports.ToDictionary(v => v.Name, v => v.ScaleDenominator);
@@ -268,13 +417,23 @@ namespace Elevator.AutoCAD.Sheet
                         continue;
                     var tag = SectionAADrawing.Tag(mt);
                     string view = tag == null || tag.Length == 0 ? null : ViewOf(tag[0]);
+                    if (view != null && !mt.Visible)
+                        continue; // a hidden title of the master (the shaft plan's): not a title of the sheet
                     if (view != null)
                     {
                         // a title of a generated view: any text of it that states a scale
                         if (scaleOf.ContainsKey(view) && ScaleText.IsMatch(mt.Contents))
                         {
                             mt.UpgradeOpen();
+                            // the section audit reads the centre of these texts: the title keeps its centre when its height changes
+                            var before = mt.GeometricExtents;
                             mt.Contents = ScaleText.Replace(mt.Contents, "1:" + scaleOf[view], 1);
+                            mt.TextHeight = SheetLayout.TitlePaperHeightMm * scaleOf[view];
+                            mt.Width = 0;
+                            var after = mt.GeometricExtents;
+                            mt.Location = mt.Location + new Vector3d(
+                                (before.MinPoint.X + before.MaxPoint.X - after.MinPoint.X - after.MaxPoint.X) / 2,
+                                (before.MinPoint.Y + before.MaxPoint.Y - after.MinPoint.Y - after.MaxPoint.Y) / 2, 0);
                             AddTitle(result, view, Plain(mt.Contents));
                         }
                         continue;
@@ -289,6 +448,36 @@ namespace Elevator.AutoCAD.Sheet
                         if (p.X >= w[0] && p.X <= w[2] && p.Y >= w[1] && p.Y <= w[3] && mt.Contents.Contains("\\L"))
                             detailTexts[d.Key].Add(mt);
                     }
+                }
+                // The shaft plan's own title text is hidden in the generated drawing (the master keeps it invisible): the sheet adds
+                // an untagged title "SHAFT AND CAR 1:N", centred under the plan, as the user did by hand.
+                SheetRect planBox;
+                int planScale;
+                if (!result.ContainsKey("Shaft plan") && scaleOf.TryGetValue("Shaft plan", out planScale) && measured.TryGetValue(DrawingViews.Plan, out planBox))
+                {
+                    var bt = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                    ObjectId existing;
+                    MText title;
+                    bool isNew = false;
+                    if (addedTitles.TryGetValue(DrawingViews.Plan, out existing))
+                        title = (MText)tr.GetObject(existing, OpenMode.ForWrite);
+                    else
+                    {
+                        isNew = true;
+                        title = new MText();
+                        title.SetDatabaseDefaults();
+                        bt.AppendEntity(title);
+                        tr.AddNewlyCreatedDBObject(title, true);
+                        addedTitles[DrawingViews.Plan] = title.ObjectId;
+                    }
+                    title.Contents = "{\\Fcent|c0;\\L\\C6;" + PlanTitleText(db, tr) + " 1:" + planScale + "}";
+                    title.TextHeight = SheetLayout.TitlePaperHeightMm * planScale;
+                    title.Width = 0;
+                    title.Attachment = AttachmentPoint.TopCenter;
+                    // under the plan content (measured before the title existed): its top stays where it was put
+                    if (isNew)
+                        title.Location = new Point3d(planBox.X + planBox.Width / 2, planBox.Y - 0.5 * title.TextHeight, 0);
+                    AddTitle(result, "Shaft plan", Plain(title.Contents));
                 }
                 foreach (var d in details)
                 {
@@ -321,6 +510,26 @@ namespace Elevator.AutoCAD.Sheet
                 tr.Commit();
             }
             return result;
+        }
+
+        // The text of the plan title: the project's own (hidden) title without its scale, else "SHAFT AND CAR".
+        static string PlanTitleText(Database db, Transaction tr)
+        {
+            var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+            foreach (ObjectId id in model)
+            {
+                var mt = tr.GetObject(id, OpenMode.ForRead) as MText;
+                if (mt == null)
+                    continue;
+                var tag = SectionAADrawing.Tag(mt);
+                if (tag != null && tag.Length > 0 && tag[0].StartsWith("Plan.", StringComparison.Ordinal) && ScaleText.IsMatch(mt.Contents))
+                {
+                    string t = Plain(ScaleText.Replace(mt.Contents, "", 1));
+                    if (t.Length > 0)
+                        return t;
+                }
+            }
+            return "SHAFT AND CAR";
         }
 
         static void AddTitle(Dictionary<string, List<string>> map, string view, string text)

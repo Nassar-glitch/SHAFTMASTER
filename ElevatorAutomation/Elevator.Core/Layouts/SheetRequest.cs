@@ -38,7 +38,11 @@ namespace Elevator.Core.Layouts
         /// <summary>The scale label height under each view, paper mm.</summary>
         public const double LabelHeight = 3.5;
         /// <summary>The margin around a generated view's extents, model mm (the dimensions are already inside the extents).</summary>
-        public const double ViewMarginMm = 40;
+        public const double ViewMarginMm = 100;
+        /// <summary>The printed height of a view title on the sheet (paper mm): the user's edit set the titles to 8 mm at 1:10.</summary>
+        public const double TitlePaperHeightMm = 8;
+        /// <summary>The scales a reference detail may take: its template scale or larger (the bracket detail was enlarged to 1:5).</summary>
+        public static readonly int[] DetailScales = { 5, 10, 20 };
         public const string TemplateFileName = "Layout_Geared_A0.dxf";
         public const string DetailsFileName = "Layout_Geared_A0.details.json";
         public const string FieldsFileName = "Layout_Geared_A0.fields.json";

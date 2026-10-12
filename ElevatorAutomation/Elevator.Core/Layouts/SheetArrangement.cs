@@ -90,6 +90,8 @@ namespace Elevator.Core.Layouts
         public int MinScaleDenominator;
         /// <summary>The largest scale denominator the view may take (0: none). A detail whose drawn title states a scale is fixed to it (Min = Max).</summary>
         public int MaxScaleDenominator;
+        /// <summary>The scales a view may take (null: <see cref="SheetArrangement.StandardScales"/>): reference details may be enlarged to 1:5.</summary>
+        public int[] AllowedScales;
     }
 
     /// <summary>A view placed on the sheet: the viewport rectangle (paper mm), its standard scale and the scale label under it.</summary>
@@ -288,8 +290,19 @@ namespace Elevator.Core.Layouts
                 return null;
             int columns = (w1 > 0 ? 1 : 0) + (w2 > 0 ? 1 : 0);
             double third = innerW - w1 - w2 - g * columns; // the right column takes what is left
-            if (third < -1e-9 || (bb != null && w3 > third + 1e-9))
+            // B-B does not fit beside A-A: it may sit above A-A and reach left over its column (never over the plans) when both
+            // stack within the height (the user's own arrangement of the sheet).
+            bool stacked = false;
+            if (third < -1e-9)
                 return null;
+            if (bb != null && w3 > third + 1e-9)
+            {
+                double beside = innerW - w1 - (w1 > 0 ? g : 0);
+                if (aa != null && w3 <= beside + 1e-9 && h2 + h3 + g <= innerH + 1e-9)
+                    stacked = true;
+                else
+                    return null;
+            }
 
             var l = new Layout();
             var column = new List<int>(); // per viewport: 1 plans, 2 A-A, 3 B-B and the details under it
@@ -319,11 +332,12 @@ namespace Elevator.Core.Layouts
                 l.Viewports.Add(Place(aa, sa, x, bottom + label));
                 column.Add(2);
                 double y = bottom + h2 + g;
-                if (top - y > 0)
-                    free.Add(Shelf.Of(new SheetRect(x, y, w2, top - y), 2));
+                double ceiling = stacked ? top - h3 - g : top; // B-B above A-A takes the top of this column
+                if (ceiling - y > 0)
+                    free.Add(Shelf.Of(new SheetRect(x, y, w2, ceiling - y), 2));
                 x += w2 + g;
             }
-            if (third > 1e-9)
+            if (third > 1e-9 || stacked)
             {
                 // B-B flush top right; the rest of the right part is free: the band beside B-B (full height above the band under it)
                 // and the band under B-B across the whole right part.
@@ -359,7 +373,7 @@ namespace Elevator.Core.Layouts
             foreach (var d in order)
             {
                 bool done = false;
-                foreach (int s in StandardScales)
+                foreach (int s in (d.AllowedScales ?? StandardScales).OrderByDescending(x => -x))
                 {
                     if (s < d.MinScaleDenominator || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
                         continue;

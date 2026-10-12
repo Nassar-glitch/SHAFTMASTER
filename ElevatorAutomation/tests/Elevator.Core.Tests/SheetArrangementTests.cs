@@ -170,8 +170,11 @@ namespace Elevator.Core.Tests
             }
             if (plan != null && aa != null && !(aa.Paper.X >= Math.Max(plan.Paper.Right, room != null ? room.Paper.Right : 0)))
                 p.Add("A-A is not right of the plans");
-            if (aa != null && bb != null && !(bb.Paper.X >= aa.Paper.Right))
-                p.Add("B-B is not right of A-A");
+            // B-B is right of A-A, or above it (the user's arrangement: it reaches left over the A-A column, never over the plans)
+            if (aa != null && bb != null && !(bb.Paper.X >= aa.Paper.Right) && !(bb.Paper.Y >= aa.Paper.Top))
+                p.Add("B-B is neither right of A-A nor above it");
+            if (plan != null && bb != null && bb.Paper.X < plan.Paper.Right - 1e-6 && bb.Paper.Y < plan.Paper.Top)
+                p.Add("B-B reaches over the plans");
             if (bb != null && (Math.Abs(bb.Paper.Top - inner.Top) > 1e-6 || Math.Abs(bb.Paper.Right - inner.Right) > 1e-6))
                 p.Add("B-B is not top right");
             if (r.FillRatio < FloorFill || (r.FillRatio < TargetFill && !Saturated(req, r)))

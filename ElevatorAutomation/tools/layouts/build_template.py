@@ -15,6 +15,7 @@ What it does (see tools/layouts/README.md and docs/design/layouts/LAYOUTS.md):
 - styles: keeps the SHX fonts, adds SM_AR (xarab.shx) and SM_EN (cent.shx), and renames the text and dimension styles that clash
   with AutoCAD built-ins (prefix SM_).
 """
+import io
 import json
 import os
 import re
@@ -426,10 +427,64 @@ def slim(doc):
             e.dxf.discard("color")
 
 
+DELETIONS = os.path.join(HERE, "user_edit_deletions.json")
+
+
+def _entity_signature(e):
+    """The type, layer and rounded coordinates that identify an entity (the same form as user_edit_deletions.json)."""
+    t, d = e.dxftype(), e.dxf
+    p3 = lambda v: [round(x, 2) for x in v.xyz]
+    if t == "LWPOLYLINE":
+        return {"t": t, "layer": d.layer, "pts": [[round(x, 2), round(y, 2)] for x, y, *_ in e.get_points()], "closed": bool(e.closed)}
+    if t == "ARC":
+        return {"t": t, "layer": d.layer, "c": p3(d.center), "r": round(d.radius, 2), "a0": round(d.start_angle, 2), "a1": round(d.end_angle, 2)}
+    if t == "MTEXT":
+        return {"t": t, "layer": d.layer, "at": p3(d.insert), "text": e.text}
+    if t == "DIMENSION":
+        return {"t": t, "layer": d.layer, "def": p3(d.defpoint), "text": d.get("text", "")}
+    return None
+
+
+def apply_user_edit(doc, manifest):
+    """L2c: the user's own edit of the reference details (docs/design/layouts/l2c/USER-EDIT-DIFF.md): the rail-size and bracket-spacing
+    texts of the two unused rail-bracket variants are removed (the shown detail keeps them; the labels become generated later)."""
+    if not os.path.exists(DELETIONS):
+        return 0
+    with io.open(DELETIONS, encoding="utf-8") as f:
+        wanted = [json.dumps(x, sort_keys=True) for x in json.load(f)["Delete"]]
+    pool = {}
+    for w in wanted:
+        pool[w] = pool.get(w, 0) + 1
+    removed = 0
+    for e in list(doc.modelspace()):
+        sig = _entity_signature(e)
+        if sig is None:
+            continue
+        key = json.dumps(sig, sort_keys=True)
+        if pool.get(key, 0) > 0:
+            pool[key] -= 1
+            doc.modelspace().delete_entity(e)
+            removed += 1
+    # the entity counts of the manifest follow
+    for d in manifest:
+        x0, y0, x1, y1 = d["Window"]
+        n = 0
+        for e in doc.modelspace():
+            try:
+                bb = bbox.extents([e])
+            except Exception:
+                continue
+            if bb.has_data and inside(bb, (x0, y0, x1, y1)):
+                n += 1
+        d["Entities"] = n
+    return removed
+
+
 def main(source=SOURCE, target=TARGET):
     ezdxf.options.write_fixed_meta_data_for_testing = True
     doc, auditor = recover.readfile(source)
     manifest = model_details(doc)
+    removed = apply_user_edit(doc, manifest)
     s, fields = paper(doc)
     styles(doc)
     purge_blocks(doc)
@@ -461,7 +516,7 @@ def main(source=SOURCE, target=TARGET):
     with open(os.path.splitext(target)[0] + ".fields.json", "w", encoding="utf-8", newline="\n") as f:
         json.dump({"Fields": fields}, f, indent=2, ensure_ascii=False)
         f.write("\n")
-    print("wrote %s (%.2f MB), %d details" % (target, os.path.getsize(target) / 1e6, len(manifest)))
+    print("wrote %s (%.2f MB), %d details, %d entities removed by the user edit" % (target, os.path.getsize(target) / 1e6, len(manifest), removed))
 
 
 if __name__ == "__main__":

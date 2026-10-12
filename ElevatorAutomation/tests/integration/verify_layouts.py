@@ -4,7 +4,7 @@ usage: verify_layouts.py <folder LayoutsNativeTests wrote> [<summary json to wri
 
 For each <id>.dwg (DWG -> DXF with the AutoCAD Core Console, read only; then ezdxf) and its <id>-expected.json:
   * the layout SM_Geared_A0 exists, and is the only layout added (the master has Model, Layout1, Layout2);
-  * every viewport is inside the drawing area, shows a standard scale (1 : 10 / 20 / 25 / 50 / 75 / 100 / 150 / 200) and is locked,
+  * every viewport is inside the drawing area, shows a standard scale (1 : 5 (details only) / 10 / 20 / 25 / 50 / 75 / 100 / 150 / 200) and is locked,
     and no two viewports overlap;
   * every attribute of SM_TITLEBLOCK equals the TitleBlockData value the test computed (the xarab codes for Arabic), in the cent / xarab style;
   * a scale label "1:N" under each viewport;
@@ -21,7 +21,7 @@ import tempfile
 import ezdxf
 
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
-STANDARD = (10, 20, 25, 50, 75, 100, 150, 200)
+STANDARD = (5, 10, 20, 25, 50, 75, 100, 150, 200)  # 1:5: a reference detail may be enlarged (L2c)
 failures = []
 checks = 0
 
@@ -103,16 +103,21 @@ def run_case(folder, case_id):
     # one title per view with the real scale: the four view titles in model space
     titles = {}
     for e in doc.modelspace():
-        if e.dxftype() != "MTEXT":
-            continue
-        t = tag(e)
-        if t and "1:" in e.text and any(k in e.text for k in ("SHAFT AND CAR", "MACHINE ROOM", "SEC AT")):
-            titles[t.split(".")[0]] = e.text
+        if e.dxftype() != "MTEXT" or e.dxf.get("invisible"):
+            continue  # the shaft plan's own title is hidden in the generated drawing; the sheet adds a visible one
+        for key, view in (("SHAFT AND CAR", "Shaft plan"), ("MACHINE ROOM", "Machine-room plan"), ("SEC AT A-A", "Section A-A"), ("SEC AT B-B", "Section B-B")):
+            if key in e.text:
+                titles[view] = e
     scale_of = {v["Name"]: v["Label"] for v in expected["Viewports"]}
-    for root, view in (("Plan", "Shaft plan"), ("MachineRoom", "Machine-room plan"), ("SectionAA", "Section A-A"), ("MachineRoomSection", "Section B-B")):
-        check(root in titles and scale_of[view] in titles[root], case_id + ": the title of %s states %s (%r)" % (view, scale_of[view], titles.get(root)))
+    for view in ("Shaft plan", "Machine-room plan", "Section A-A", "Section B-B"):
+        t = titles.get(view)
+        check(t is not None and scale_of[view] in t.text, case_id + ": the title of %s states %s (%r)" % (view, scale_of[view], t.text if t is not None else None))
+        if t is not None:
+            # printed height 8 mm: the model height is 8 x the scale denominator
+            den = int(scale_of[view].split(":")[1])
+            check(abs(t.dxf.char_height - 8 * den) < 0.5, case_id + ": the title of %s prints at 8 mm (height %.1f at 1:%d)" % (view, t.dxf.char_height, den))
         for old in ("1:8", "1:35"):
-            check(root not in titles or (old + "}") not in titles[root], case_id + ": no old scale %s in the title of %s" % (old, view))
+            check(t is None or (old + "}") not in t.text, case_id + ": no old scale %s in the title of %s" % (old, view))
     # the fit report: every attribute inside its box
     for f in expected.get("Fit", []):
         check(f["Fits"], case_id + ": attribute %s fits its box" % f["Tag"])
