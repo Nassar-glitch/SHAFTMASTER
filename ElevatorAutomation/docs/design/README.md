@@ -10,3 +10,5 @@ Automatic doors (extracted dimensions and generalised rules): [`DOORS.md`](DOORS
 
 How the design flow is implemented: [`presets/PRESETS.md`](../presets/PRESETS.md) (presets, lock / follow, automatic selection) and
 [`architecture/OVERVIEW.md`](../architecture/OVERVIEW.md).
+
+Layout templates (the user's `Layouts_Sec/` DXFs, title block, viewports, L2b / L3 proposal): [`layouts/LAYOUTS.md`](layouts/LAYOUTS.md).
