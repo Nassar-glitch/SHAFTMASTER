@@ -16,6 +16,74 @@ This file is the shared status channel between the user's Planner chat and Execu
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-12 (Claude Code, Executor role; L1 + cloud L2a merged into main, tier 1 PASS)
 - **Completed:**
+  - **Cloud C2: portable parts of the A0 geared sheet (2026-10-12), branch `cloud/layouts-c2` from `origin/main` (`2a6177c`). Pushed; not merged, no PR. No change to Elevator.Reporting/Sheet, Design Notes, Desktop or AutoCAD.**
+    - **Files:**
+      - Template: `ElevatorAutomation/tools/layouts/build_template.py` + `README.md`; `ElevatorAutomation/Templates/Layout_Geared_A0.dxf` (1.92 MB) + `Layout_Geared_A0.details.json`.
+      - Core, new: `Elevator.Core/Layouts/XarabText.cs`, `SheetArrangement.cs`.
+      - Core, changed: `TitleBlockData.cs` (new fields, `Tags`, `Attributes()`, `TitleBlockAttribute`), `TitleBlockFields.cs` (`TypeOfWork`, `Phase`), `Presets/TitleBlockPreset.cs` (`TypeOfWork`, default "أعمال مصاعد"), `config/presets.json` (`"TypeOfWork": "أعمال مصاعد"` in `TitleBlock`).
+      - Tests: `tests/Elevator.Core.Tests/XarabTextTests.cs`, `SheetArrangementTests.cs`, `LayoutsTests.cs` (+4 tests, 1 changed: Scale now "AS SHOWN").
+      - Docs: `docs/design/layouts/sheet-arrangement-02-stops.svg`, `-06-stops.svg`, `-15-stops.svg`.
+    - **1. Template** (`python -I tools/layouts/build_template.py`, ezdxf 1.4.4; source `Layouts_Sec/01_Geared_MR_1-1_LAYOUT.dxf` read-only):
+      - **Paper units:** the paper space is converted from the template's cm (1 unit = 9.969 mm) to mm. The scale is set so the outer border is exactly 841 mm high, centred on 1189. Layout `SM_Geared_A0`, A0 landscape.
+      - **Plot settings cleared:** no device, no style table, plot type layout, 1:1; the PDFCreator name in the layout's `ACAD_PSEXT` XDATA is removed too. `$INSUNITS` = 4.
+      - **Kept:** frame, zone marks, the whole title block (flattened labels, notes, legend, north arrow, the xarab labels).
+      - **Removed:** the sample values (P1–P7 values and their "P1 =" labels, data-table values, the company lines, owner / project placeholders, the old drawing-name value, "A1 - 1 \ 100", the drawing number), the bar scale, the OLE logo, the old viewports and the stray markers.
+      - **Logo area:** a no-plot frame on layer `SM_LOGO_AREA`.
+      - **`SM_TITLEBLOCK`:** 32 ATTDEFs, inserted once at (0, 0) with empty ATTRIBs. Tags: the 6.3 list plus `TYPE_OF_WORK`, `PHASE`, `SHEET_NO`, `ENTRANCES`, `ENTRANCE_NAMES` and `REV_ROW1_NO` / `REV_ROW1_DATE`. The revision row is two tags, number and date. The first row is the one just above the table header, which sits at the bottom of the table. Positions come from the old value texts or the box centres, checked on a render with every tag filled.
+      - **Styles:** `SM_AR` (xarab.shx) and `SM_EN` (cent.shx) added; all template styles and SHX fonts kept. Clashing names renamed and entities repointed: text style `Standard` → `SM_STANDARD`; dimension styles `ISO-25` → `SM_ISO25`, `Copy of ISO-25` → `SM_ISO25_COPY`, `Standard` → `SM_STANDARD` (`Standard` itself stays, as DXF requires).
+      - **Model space:** 7 reference details at x = 1,000,000 mm with 2 m gaps, windows in `details.json`:
+        - `FISH_PLATE` (VP2);
+        - `RAILS_PLAN_CW5_CAR9` (VP5, the only plan set in the library);
+        - `RAIL_BRACKETS_CW5_CAR9` / `_CW5_CAR16` / `_CW9_CAR16`: the bracket-elevation details, one per rail combination, with the bracket spacing. VP6 plus the same window around the other two sets' "C.W. GUIDE RAILS" text. "Bracket spacing" is not a separate kind: those details are the template's spacing detail;
+        - `DOOR_AUTOMATIC` (VP8, from the automatic-door library area);
+        - `DOOR_SWING` (first single-leaf swing door, window found from the library render).
+        
+        The library's duplicate copies were removed (fish plate 978 → 488 entities). The rest of the library, unused blocks, the association network and the image definitions are purged.
+      - **Size and checks:** 1.92 MB. Coordinates are written to 0.001 mm, and explicit colour / linetype equal to the layer's are dropped on paper space (same look). ezdxf audit: 0 errors.
+      - **Deterministic:** identical bytes across runs and across 3 different `PYTHONHASHSEED` values. ezdxf writes its required CLASS list in hash order, so the script sorts it.
+      - Renders of the sheet, title block and details were viewed (scratchpad, not committed).
+    - **2. `XarabText`:**
+      - **Encode / decode:** Unicode Arabic ↔ xarab codes; `%%nnn` above 127 (decoding accepts `%%nnn` and the raw character).
+      - **The font is a glyph-form encoding, not a plain keyboard map.** One code per joining form, in reading order, drawn right to left from the insertion point (that is why the labels sit at the right edge of their boxes).
+      - **Rule seen in the template:** a dual-joining letter on a letter key uses lowercase when joined to the next letter and uppercase when final / isolated. On a punctuation key the shifted key is the joined form (ج `{` / `[`, ك `:` / `;`). Special codes: ع medial `%%150` / final `%%154`, ق medial `%%158`, خ final `%%178`; lam-alef is `b` (joined) / `B`; kashida is `_`; a label's colon is `\`. Decode-only variants: ر `V`, م `%%226`, ف `%%156`.
+      - **Not verified:** letters absent from the template (ب ث ض ط ظ غ ز ذ ء ؤ ئ ى, and the final / isolated forms of ج ح ن ي ش ص ف ق ت) follow the keyboard key by the same rule. They are marked in the code and need one check in AutoCAD with xarab.shx (local).
+      - **Lossy on purpose:** hamza on alef (أ إ آ) is written as ا (no decoded glyph), tashkeel is dropped, Arabic-Indic digits become ASCII digits. `Normalize()` gives the round-trip form.
+      - **Script detection:** any Arabic letter → `SM_AR`, otherwise `SM_EN`; `ForDrawing()` encodes Arabic only.
+      - **Tests:** all 23 template xarab strings decode to their reading; 18 readings encode to exactly the template codes; company and project names (Arabic and English), every letter in 4 positions, joining forms and presentation forms round-trip.
+    - **3. `SheetArrangement`** (pure geometry):
+      - **Input:** the drawing area (`A0DrawingArea()` = (14.9, 12.4) 1001.9 x 816.4 mm, from the template) and per view its kind, model extents and, for details, a preferred scale.
+      - **Output:** per view the viewport rectangle, the scale (1:10 … 1:200), the model centre and the label point and text ("1:50") under the view, plus a fill ratio and the views that do not fit.
+      - **Arrangement:**
+        - left column: shaft plan at the bottom, machine-room plan above; the plans share one scale;
+        - then A-A, bottom-aligned;
+        - top right: B-B, which takes the plans' scale because it shows the same machine room;
+        - details shelf-packed under B-B first, then above A-A, then above the plans.
+        
+        One spacing constant (10 mm) sets the margin, the gaps and the label band. Leftover width is shared equally between the column gaps.
+      - **Choice:** all scale combinations; maximise the sum of ln(1 / scale), details weighted 0.25, then fill. A log measure stops one view being shrunk to win a step on another. Details keep their template scale (1:10 rails / fish plate, 1:20 doors), falling back to the next smaller scale for that detail only.
+      - **Rejected variants:** pure fill maximisation gave plans at 1:150 and B-B at 1:10; free details gave a 1:10 door larger than the main views. Both were rejected after viewing renders.
+      - **Grid test:** 480 projects (2–20 stops, shafts 1100–2600 x 1300–2800, 3 machine rooms). Every view placed, inside the margin, gaps kept, standard scales, order as DESIGN-FLOW, deterministic.
+      - **Thresholds:** fill ≥ 0.25 (grid minimum 0.269) and largest empty rectangle ≤ 30 % (grid maximum 0.271). The fill is limited by the scale steps: 1:10 → 1:20 halves a view, and on A0 the two stacked plans at 1:10 overflow the height of deep shafts by a few per cent.
+      - **Extra tests:** a 15-stop A-A takes > 80 % of the height; a 2–3 stop A-A is at 1:20 or larger with no band above it over 25 %; missing optional views; refused inputs.
+      - **Model extents in the tests are assumed** (walls 250, dimension bands 600 / 750, machine-room height 3000). The local generator gives the real extents.
+    - **4. `TitleBlockData`:**
+      - New fields: `TypeOfWork` (preset "أعمال مصاعد", lock / follow / reset per project, key `TitleBlock.TypeOfWork`); `Phase` (optional, no preset, key `TitleBlock.Phase`); `SheetNo` "1"; `Entrances` = `Stops` and `EntranceNames` = `Floors` (one entrance per served floor); `ProjectNumber` from `Report.DocumentNumber`; `Scale` "AS SHOWN".
+      - `Attributes()` gives one `TitleBlockAttribute` per tag: value, script, style, and `DrawingText` (xarab-encoded when Arabic). The company name fills `COMPANY_AR` when typed in Arabic, else `COMPANY`. `REV_ROW1_DATE` is filled only when there is a revision (a blank revision leaves the row empty).
+      - A test checks that `TitleBlockData.Tags` equals the ATTDEF tags of the DXF and that each style is `SM_AR` / `SM_EN`.
+    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (`20261012-112644`): core-net8.0 815 (715 + 100), reporting-net8.0 196. No file under `tests/golden` changed. net48, tiers 2-3 and AutoCAD were not run (Linux cloud).
+    - **Open questions (Planner / user):**
+      1. **Drawing name:** the template's drawing-name box held "أعمال مصاعد". DESIGN-FLOW makes that the type of work, so it now goes into the small type-of-work box and `DRAWING_NAME` stays empty (no source). Should the drawing name be, for example, "LAYOUT AND BUILDERS WORKS DRAWING" or the project name?
+      2. **Scale list:** with only the 8 standard scales, some sheets stay fairly empty (fill 0.27–0.6). Would company practice allow 1:15 / 1:30 / 1:40 for a fuller sheet?
+      3. **B-B scale:** B-B takes the plans' scale (my decision, since they show the same room). Confirm, or allow B-B larger.
+      4. **xarab letters not seen in the template:** they need one test print in AutoCAD with xarab.shx (local). Also: does `\` really draw a colon, and do digits draw as Arabic-Indic (the "م." prefix is written `L0`)?
+      5. **Paper units:** the source's 9.969 mm per unit was kept as the exact scale (border = 841 mm high), so the frame is 1183.4 mm wide, centred on 1189. Alternatively scale by exactly 10 (cm → mm), but then the border would be 843.6 mm high, over A0.
+    - **Next step (local):**
+      - merge `cloud/layouts-c2`;
+      - load `Templates/Layout_Geared_A0.dxf` with `Database.DxfIn` into the generated DWG;
+      - create the viewports from `SheetArrangement.Arrange` with the real view extents;
+      - fill `SM_TITLEBLOCK` from `TitleBlockData.Attributes()` and add the logo image in `SM_LOGO_AREA`;
+      - set the plot setup, then the PDF spike;
+      - print the xarab test sheet.
   - **Merge of L1 and cloud L2a into `main` (2026-10-12, Planner-approved). Not pushed (the user pushes), not released.**
     - **Commits on `main`:** `22ff426` "DESIGN-FLOW: layout sheet decisions (Planner)" (the Planner's edit, on `feature/layouts-l1`, own commit); `b189ac7` merge `feature/layouts-l1` (--no-ff); `703b5a0` merge `origin/cloud/layouts-l2a` (--no-ff, no rebase). Only conflict: this file (both entries kept).
     - **Tier 1 PASS** (`artifacts/test-results/20261012-133546`): core-net8.0 715, core-net48 871, reporting-net8.0 196, reporting-net48 196, golden 770, sheet-wpf 10763. **No golden file changed** (no `tests/golden` diff against v05).
@@ -1303,6 +1371,8 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 - **Next step:** The single next action
 
 ## Recent updates
+
+- 2026-10-12: Cloud Executor completed C2 on `cloud/layouts-c2` (pushed, not merged): reduced A0 template (1.92 MB, deterministic) with `SM_TITLEBLOCK` attributes and 7 reference details, `XarabText`, `SheetArrangement` (480-project grid), `TitleBlockData` additions. Tier 1 PASS, golden unchanged. See "Cloud C2".
 
 - 2026-10-12: Cloud Executor applied the user's answers (a) / (b) on `cloud/layouts-l2a` (pushed): the company name comes only from what the user enters (no default; left out everywhere when blank, NONE in the file name), and the sheet, Design Notes and title block share one revision text (as stored; NN for numbers). Tier 1 PASS, golden unchanged.
 
