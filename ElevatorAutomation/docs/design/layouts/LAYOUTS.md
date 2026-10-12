@@ -222,7 +222,7 @@ So 3,065 entities (3.3 %) carry the four static detail viewports and everything 
 
 - **No font is copied into the repository or the release package.** `xarab.shx` and `cent.shx` ship with AutoCAD 2023 (`C:\Program Files\Autodesk\AutoCAD 2023\Fonts`: `XARAB.SHX`, `CENT.SHX`), which every ShaftMaster user has, so the plug-in and the Core Console find them in AutoCAD's own support path.
 - **`cadnw-1` is not needed.** It is only the inline font of the old value cells; DESIGN-FLOW says English text uses `cent` and Arabic text uses `xarab`. The template's value texts move to `cent`; nothing depends on `cadnw-1`.
-- The xarab encoding of Arabic typing is done by the program (`XarabText`, cloud C2); see `xarab-check.png` for the glyph check.
+- The xarab encoding of Arabic typing is done by the program (`XarabText`, cloud C2); the glyph check is [XARAB-CHECK.md](XARAB-CHECK.md) (`xarab-check.png`). Real view extents of the generated views: [view-extents.json](view-extents.json).
 
 ## 6. Proposed implementation for L2b / L3 (not implemented)
 

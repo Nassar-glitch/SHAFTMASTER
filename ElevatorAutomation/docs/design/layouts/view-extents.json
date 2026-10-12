@@ -1,0 +1,366 @@
+{
+  "note": "Model-space millimetres of the generated four-view DWG (ArrangeViews on). extentsWithDimensionsAndLabels is the extents of every entity of the view (dimensions and text included, text width estimated by ezdxf); extentsGeometryOnly leaves the dimension and annotation entities out; generatorBounds is GenerationResponse.Bounds (the placement bounds the generator uses).",
+  "method": "AutoCAD 2023 Core Console GenerationClient -> DWG -> DXFOUT -> ezdxf, views told apart by the semantic key prefix.",
+  "cases": [
+    {
+      "id": "15-stops-1600x1800",
+      "stops": 15,
+      "shaftWidthMm": 1600,
+      "shaftDepthMm": 1800,
+      "views": {
+        "plan": {
+          "keyPrefix": "Plan",
+          "entities": 521,
+          "annotationEntities": 47,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -50.5,
+            "minY": -3197.2,
+            "maxX": 2595.4,
+            "maxY": -1.3,
+            "width": 2645.9,
+            "height": 3195.9
+          },
+          "extentsGeometryOnly": {
+            "minX": 283.8,
+            "minY": -3062.6,
+            "maxX": 2273.8,
+            "maxY": -5.5,
+            "width": 1990.0,
+            "height": 3057.1
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -3197.2,
+            "maxX": 2984.6,
+            "maxY": -0.0
+          }
+        },
+        "machineRoomPlan": {
+          "keyPrefix": "MachineRoom",
+          "entities": 1354,
+          "annotationEntities": 26,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20680.5,
+            "maxY": 158.6,
+            "width": 4253.5,
+            "height": 3986.8
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -3824.1,
+            "maxX": 20051.9,
+            "maxY": -369.1,
+            "width": 3624.9,
+            "height": 3455.1
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20796.6,
+            "maxY": 0.0
+          }
+        },
+        "sectionAA": {
+          "keyPrefix": "SectionAA",
+          "entities": 3263,
+          "annotationEntities": 61,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -661.0,
+            "minY": -60064.5,
+            "maxX": 8002.3,
+            "maxY": -6903.9,
+            "width": 8663.3,
+            "height": 53160.5
+          },
+          "extentsGeometryOnly": {
+            "minX": 1008.5,
+            "minY": -58665.6,
+            "maxX": 6150.6,
+            "maxY": -7661.6,
+            "width": 5142.1,
+            "height": 51004.1
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -60064.5,
+            "maxX": 15427.0,
+            "maxY": -6895.5
+          }
+        },
+        "sectionBB": {
+          "keyPrefix": "MachineRoomSection",
+          "entities": 709,
+          "annotationEntities": 16,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2,
+            "width": 3742.1,
+            "height": 2386.0
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -7016.8,
+            "maxX": 19361.2,
+            "maxY": -5129.8,
+            "width": 2934.2,
+            "height": 1886.9
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2
+          }
+        }
+      }
+    },
+    {
+      "id": "2-stops-1600x1800",
+      "stops": 2,
+      "shaftWidthMm": 1600,
+      "shaftDepthMm": 1800,
+      "views": {
+        "plan": {
+          "keyPrefix": "Plan",
+          "entities": 521,
+          "annotationEntities": 47,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -50.5,
+            "minY": -3197.2,
+            "maxX": 2595.4,
+            "maxY": -1.3,
+            "width": 2645.9,
+            "height": 3195.9
+          },
+          "extentsGeometryOnly": {
+            "minX": 283.8,
+            "minY": -3062.6,
+            "maxX": 2273.8,
+            "maxY": -5.5,
+            "width": 1990.0,
+            "height": 3057.1
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -3197.2,
+            "maxX": 2984.6,
+            "maxY": -0.0
+          }
+        },
+        "machineRoomPlan": {
+          "keyPrefix": "MachineRoom",
+          "entities": 1354,
+          "annotationEntities": 26,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20680.5,
+            "maxY": 158.6,
+            "width": 4253.5,
+            "height": 3986.8
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -3824.1,
+            "maxX": 20051.9,
+            "maxY": -369.1,
+            "width": 3624.9,
+            "height": 3455.1
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20796.6,
+            "maxY": 0.0
+          }
+        },
+        "sectionAA": {
+          "keyPrefix": "SectionAA",
+          "entities": 2977,
+          "annotationEntities": 22,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -661.0,
+            "minY": -23778.2,
+            "maxX": 8002.3,
+            "maxY": -4828.2,
+            "width": 8663.3,
+            "height": 18950.0
+          },
+          "extentsGeometryOnly": {
+            "minX": 1008.5,
+            "minY": -22379.4,
+            "maxX": 6150.6,
+            "maxY": -4828.2,
+            "width": 5142.1,
+            "height": 17551.2
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -23778.2,
+            "maxX": 15427.0,
+            "maxY": -4828.2
+          }
+        },
+        "sectionBB": {
+          "keyPrefix": "MachineRoomSection",
+          "entities": 709,
+          "annotationEntities": 16,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2,
+            "width": 3742.1,
+            "height": 2386.0
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -7016.8,
+            "maxX": 19361.2,
+            "maxY": -5129.8,
+            "width": 2934.2,
+            "height": 1886.9
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2
+          }
+        }
+      }
+    },
+    {
+      "id": "6-stops-1600x1800",
+      "stops": 6,
+      "shaftWidthMm": 1600,
+      "shaftDepthMm": 1800,
+      "views": {
+        "plan": {
+          "keyPrefix": "Plan",
+          "entities": 521,
+          "annotationEntities": 47,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -50.5,
+            "minY": -3197.2,
+            "maxX": 2595.4,
+            "maxY": -1.3,
+            "width": 2645.9,
+            "height": 3195.9
+          },
+          "extentsGeometryOnly": {
+            "minX": 283.8,
+            "minY": -3062.6,
+            "maxX": 2273.8,
+            "maxY": -5.5,
+            "width": 1990.0,
+            "height": 3057.1
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -3197.2,
+            "maxX": 2984.6,
+            "maxY": -0.0
+          }
+        },
+        "machineRoomPlan": {
+          "keyPrefix": "MachineRoom",
+          "entities": 1354,
+          "annotationEntities": 26,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20680.5,
+            "maxY": 158.6,
+            "width": 4253.5,
+            "height": 3986.8
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -3824.1,
+            "maxX": 20051.9,
+            "maxY": -369.1,
+            "width": 3624.9,
+            "height": 3455.1
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -3828.2,
+            "maxX": 20796.6,
+            "maxY": 0.0
+          }
+        },
+        "sectionAA": {
+          "keyPrefix": "SectionAA",
+          "entities": 3065,
+          "annotationEntities": 34,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": -661.0,
+            "minY": -30997.2,
+            "maxX": 8002.3,
+            "maxY": -4836.6,
+            "width": 8663.3,
+            "height": 26160.5
+          },
+          "extentsGeometryOnly": {
+            "minX": 1008.5,
+            "minY": -29598.3,
+            "maxX": 6150.6,
+            "maxY": -5594.2,
+            "width": 5142.1,
+            "height": 24004.1
+          },
+          "generatorBounds": {
+            "minX": -0.0,
+            "minY": -30997.2,
+            "maxX": 15427.0,
+            "maxY": -4828.2
+          }
+        },
+        "sectionBB": {
+          "keyPrefix": "MachineRoomSection",
+          "entities": 709,
+          "annotationEntities": 16,
+          "unmeasuredEntities": 0,
+          "extentsWithDimensionsAndLabels": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2,
+            "width": 3742.1,
+            "height": 2386.0
+          },
+          "extentsGeometryOnly": {
+            "minX": 16427.0,
+            "minY": -7016.8,
+            "maxX": 19361.2,
+            "maxY": -5129.8,
+            "width": 2934.2,
+            "height": 1886.9
+          },
+          "generatorBounds": {
+            "minX": 16427.0,
+            "minY": -7214.2,
+            "maxX": 20169.1,
+            "maxY": -4828.2
+          }
+        }
+      }
+    }
+  ]
+}
