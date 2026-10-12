@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Company;
 using Elevator.Core.Calculations;
 using Elevator.Core.Car;
 using Elevator.Core.Doors;
@@ -396,15 +397,16 @@ namespace Elevator.Reporting.DesignNotes
         public DocxDocument Render()
         {
             var p = Project;
-            var report = p.Report ?? new ProjectReportDetails();
+            // Company and report data: the one set shared with the calculation sheet, the title block and the file names.
+            var doc = DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
             string date = Inputs.GeneratedLocal.ToString("yyyy-MM-dd", Inv);
             Func<string, string> clean = v => String.IsNullOrWhiteSpace(v) ? null : v.Trim();
             string name = clean(p.Info.Name), number =
-                clean(report.DocumentNumber), revision = clean(report.Revision), client = clean(report.ClientName);
+                clean(doc.DocumentNumber), revision = clean(doc.Revision), client = clean(doc.Client);
             var d = new DocxDocument { Title = "Design Notes" + (name == null ? "" : " · " + name) };
             d.TitleBlock.Title = "Design Notes";
             d.TitleBlock.Logo = Inputs.Logo;
-            d.TitleBlock.Company = clean(Inputs.CompanyName);
+            d.TitleBlock.Company = clean(doc.CompanyName);
             if (name != null)
                 d.TitleBlock.ProjectRows.Add(new KeyValuePair<string, string>("Project", name));
             if (client != null)

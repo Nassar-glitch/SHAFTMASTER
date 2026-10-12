@@ -6,10 +6,10 @@ using Elevator.Core.Project;
 namespace Elevator.Core.Layouts
 {
     /// <summary>
-    /// The revision NN (DESIGN-FLOW "Layouts and PDF"): one value, the project's Report.Revision, for the calculation sheet, the title
-    /// block and the file names. The revision is a number only: blank is the first issue, 00; a whole number 0, 1, 2 … is written with at
-    /// least two digits (00, 01, 02 …). Any other text (an older file's "A") still loads and is kept as stored, has no number, and is
-    /// reported by <see cref="Validate(string)"/> for the application to show.
+    /// The revision (DESIGN-FLOW "Layouts and PDF"): one value, the project's Report.Revision, for the calculation sheet, the Design
+    /// Notes, the title block and the file names. The revision is a number: a whole number 0, 1, 2 … is written with at least two digits
+    /// (00, 01, 02 …). Blank is the first issue: the documents leave it out, the file names write 00. Any other text (an older file's "A")
+    /// still loads, is kept and shown as stored, has no number, and is reported by <see cref="Validate(string)"/> for the application.
     /// </summary>
     public static class DrawingRevision
     {
@@ -65,11 +65,13 @@ namespace Elevator.Core.Layouts
             return number.ToString("00", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>The NN text of a project's revision; "" when its revision text is not a whole number.</summary>
-        public static string Text(ElevatorProject project)
+        /// <summary>The revision shown on the documents: "" when blank, NN for a number, otherwise the stored text (trimmed) as it is.</summary>
+        public static string Display(string revision)
         {
-            int? n = Number(project);
-            return n.HasValue ? Text(n.Value) : "";
+            if (String.IsNullOrWhiteSpace(revision))
+                return "";
+            int? n = Number(revision);
+            return n.HasValue ? Text(n.Value) : revision.Trim();
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Elevator.Core.Company;
-using Elevator.Core.Presets;
 using Elevator.Core.Project;
 
 namespace Elevator.Core.Layouts
@@ -22,6 +21,9 @@ namespace Elevator.Core.Layouts
         public const string PdfExtension = ".pdf";
         /// <summary>The project file extension.</summary>
         public const string ProjectExtension = ".elevator.json";
+
+        /// <summary>The company part of the file names when no company name is entered.</summary>
+        public const string NoCompany = "NONE";
 
         const string Forbidden = "\\/:*?\"<>|";
 
@@ -72,7 +74,7 @@ namespace Elevator.Core.Layouts
         {
             string c = Clean(company), p = Clean(projectName);
             if (c.Trim().Length == 0)
-                throw new ArgumentException("The company name is needed for the file name.");
+                c = NoCompany;
             if (p.Trim().Length == 0)
                 throw new ArgumentException("The project name is needed for the file name.");
             return c
@@ -84,18 +86,17 @@ namespace Elevator.Core.Layouts
         }
 
         /// <summary>
-        /// The base name of a project: the company (<see cref="DocumentData"/>: company settings, else the preset library), the system
-        /// type, the counterweight code, SW and SD from the shaft, the project name and the revision NN.
+        /// The base name of a project: the company (<see cref="DocumentData"/>: the company settings; NONE when none is entered), the
+        /// system type, the counterweight code, SW and SD from the shaft, the project name and the revision NN (blank: 00).
         /// </summary>
-        public static string BaseName(ElevatorProject project, PresetLibrary library, CompanySettings company)
+        public static string BaseName(ElevatorProject project, CompanySettings company)
         {
-            return BaseName(project, library, company, CounterweightOf(project));
+            return BaseName(project, company, CounterweightOf(project));
         }
 
         /// <summary>The base name of a project with a given counterweight code.</summary>
         public static string BaseName(
             ElevatorProject project,
-            PresetLibrary library,
             CompanySettings company,
             CounterweightPositionCode counterweight)
         {
@@ -104,7 +105,7 @@ namespace Elevator.Core.Layouts
             var type = SystemTypeOf(project);
             if (!type.HasValue)
                 throw new ArgumentException("The elevator system has no file-name type code.");
-            var doc = DocumentData.Resolve(project, library, company);
+            var doc = DocumentData.Resolve(project, company);
             if (!doc.RevisionNumber.HasValue)
                 throw new ArgumentException(doc.RevisionIssue.Message);
             return BaseName(

@@ -33,7 +33,7 @@ namespace Elevator.Core.Layouts
         public string PreparedBy = "";
         public string CheckedBy = "";
         public string ApprovedBy = "";
-        /// <summary>The revision NN (Report.Revision): "00" when blank; "" when the stored revision is not a number.</summary>
+        /// <summary>The revision as on every document: "" when blank, NN for a number ("01"), otherwise the stored text.</summary>
         public string Revision = "";
         /// <summary>"1.00 M/SEC."</summary>
         public string RatedSpeed = "";
@@ -142,8 +142,8 @@ namespace Elevator.Core.Layouts
 
         /// <summary>
         /// Builds the title block. reactions: the current P1–P4 bearing reactions (null: unavailable); safetyPit: the current P5–P7 result
-        /// (null: unavailable; a result that no longer matches the project is not used); company: the company settings (null: the library
-        /// company name); date: the issue date (null: none).
+        /// (null: unavailable; a result that no longer matches the project is not used); company: the company settings (null: no company
+        /// name); date: the issue date (null: none).
         /// </summary>
         public static TitleBlockData Build(
             ElevatorProject project,
@@ -154,7 +154,7 @@ namespace Elevator.Core.Layouts
             DateTime? date)
         {
             var t = new TitleBlockData();
-            var doc = DocumentData.Resolve(project, library, company);
+            var doc = DocumentData.Resolve(project, company);
             t.CompanyName = Clean(doc.CompanyName);
             if (date.HasValue)
                 t.Date = date.Value.ToString("dd/MM/yyyy", Inv);

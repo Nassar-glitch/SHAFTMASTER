@@ -41,10 +41,9 @@ namespace Elevator.Core.Tests
 
         // ---------- presets ----------
         [Fact]
-        public void Shipped_library_holds_the_company_name_and_title_block_presets()
+        public void Shipped_library_holds_the_title_block_presets_and_no_company_name()
         {
-            Assert.Equal("ELEVATORS COMPANY", Lib.CompanyName);
-            Assert.Equal("ELEVATORS COMPANY", Lib.CompanyNameOrDefault());
+            Assert.DoesNotContain("CompanyName", File.ReadAllText(PresetsPath));
             Assert.Equal("SIMPLEX COLLECTIVE DOWN.", Lib.TitleBlock.Control);
             Assert.Equal("3 PHASE 380 V. 50 Hz.", Lib.TitleBlock.Supply);
         }
@@ -52,26 +51,19 @@ namespace Elevator.Core.Tests
         [Fact]
         public void An_older_library_without_the_new_members_takes_the_shipped_defaults()
         {
-            var old = Variant(s => s.Replace("\"CompanyName\": \"ELEVATORS COMPANY\",", "")
-                .Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\" },", ""));
-            Assert.Null(old.CompanyName);
+            var old = Variant(s => s.Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\" },", ""));
             Assert.Null(old.TitleBlock);
-            Assert.Equal(PresetLibrary.DefaultCompanyName, old.CompanyNameOrDefault());
             Assert.Equal(TitleBlockPreset.DefaultControl, old.TitleBlockOrDefault().Control);
             Assert.Equal(TitleBlockPreset.DefaultSupply, old.TitleBlockOrDefault().Supply);
             // Not calculation inputs: the library fingerprint is unchanged, so no stored result goes stale.
             Assert.Equal(old.Hash(), Lib.Hash());
-            Assert.Equal(Variant(s => s.Replace("ELEVATORS COMPANY", "NILE LIFTS").Replace("SIMPLEX COLLECTIVE DOWN.", "DUPLEX")).Hash(), Lib.Hash());
+            Assert.Equal(Variant(s => s.Replace("SIMPLEX COLLECTIVE DOWN.", "DUPLEX")).Hash(), Lib.Hash());
         }
 
         [Fact]
-        public void The_company_name_is_editable_in_the_library_and_validated()
+        public void The_title_block_presets_are_validated()
         {
-            var edited = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"Nile Lifts  Co.\""));
-            Assert.Equal("Nile Lifts  Co.", edited.CompanyNameOrDefault());
-            var e = Assert.Throws<ArgumentException>(() => Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"  \"")));
-            Assert.Contains("CompanyName must not be blank", e.Message);
-            e = Assert.Throws<ArgumentException>(() => Variant(s => s.Replace("\"Supply\": \"3 PHASE 380 V. 50 Hz.\"", "\"Supply\": null")));
+            var e = Assert.Throws<ArgumentException>(() => Variant(s => s.Replace("\"Supply\": \"3 PHASE 380 V. 50 Hz.\"", "\"Supply\": null")));
             Assert.Contains("TitleBlock needs Control and Supply", e.Message);
         }
 
@@ -80,7 +72,6 @@ namespace Elevator.Core.Tests
         {
             var json = Elevator.Core.Serialization.CoreJson.CreateWithDefaultLimit().Serialize(Lib);
             var back = PresetLibrary.Parse(json);
-            Assert.Equal(Lib.CompanyName, back.CompanyName);
             Assert.Equal(Lib.TitleBlock.Control, back.TitleBlock.Control);
             Assert.Equal(Lib.TitleBlock.Supply, back.TitleBlock.Supply);
             Assert.Equal(Lib.Hash(), back.Hash());
@@ -163,7 +154,7 @@ namespace Elevator.Core.Tests
             p.Elevator.SpeedMetresPerSecond = 1.0;
             Floors(p, "G", 3100.0, "1", 3060.0, "2", 3120.0, "3", null);
             var t = TitleBlockData.Build(p, Lib, null, null, null, Day);
-            Assert.Equal("ELEVATORS COMPANY", t.CompanyName);
+            Assert.Equal("", t.CompanyName); // no company name entered: left out
             Assert.Equal("VILLA bx12", t.ProjectName);
             Assert.Equal("Mr. Client", t.Client);
             Assert.Equal("12/10/2026", t.Date);
@@ -199,7 +190,8 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.PreparedBy);
             Assert.Equal("", t.CheckedBy);
             Assert.Equal("", t.ApprovedBy);
-            Assert.Equal("00", t.Revision); // blank revision: the first issue
+            Assert.Equal("", t.CompanyName);
+            Assert.Equal("", t.Revision); // blank revision: left out of the documents (the file names write 00)
             Assert.Equal("", t.RatedSpeed);
             Assert.Equal("", t.RatedLoad);
             foreach (var load in new[] { t.P1, t.P2, t.P3, t.P4, t.P5, t.P6, t.P7 })
@@ -211,7 +203,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.ProjectName);
             Assert.Equal("", t.Client);
             Assert.Equal("", t.PreparedBy);
-            Assert.Equal("00", t.Revision);
+            Assert.Equal("", t.Revision);
             // No remark text anywhere.
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
             {
@@ -402,12 +394,12 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void The_title_block_uses_the_edited_control_and_supply_and_the_library_company()
+        public void The_title_block_uses_the_edited_control_and_supply_and_the_entered_company()
         {
             var p = New();
             TitleBlockFields.Control.Edit(p, "  DUPLEX COLLECTIVE. ");
-            var lib = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"Nile Lifts\"").Replace("3 PHASE 380 V. 50 Hz.", "3 PHASE 400 V. 50 Hz."));
-            var t = TitleBlockData.Build(p, lib, null, null, null, null);
+            var lib = Variant(s => s.Replace("3 PHASE 380 V. 50 Hz.", "3 PHASE 400 V. 50 Hz."));
+            var t = TitleBlockData.Build(p, lib, new CompanySettings { CompanyName = " Nile Lifts " }, null, null, null);
             Assert.Equal("Nile Lifts", t.CompanyName);
             Assert.Equal("DUPLEX COLLECTIVE.", t.Control);
             Assert.Equal("3 PHASE 400 V. 50 Hz.", t.Supply);
@@ -415,23 +407,26 @@ namespace Elevator.Core.Tests
 
         // ---------- revision ----------
         [Theory]
-        [InlineData(null, 0, "00")]
-        [InlineData("", 0, "00")]
-        [InlineData("  ", 0, "00")]
-        [InlineData("0", 0, "00")]
-        [InlineData("1", 1, "01")]
-        [InlineData(" 7 ", 7, "07")]
-        [InlineData("02", 2, "02")]
-        [InlineData("12", 12, "12")]
-        [InlineData("100", 100, "100")]
-        public void Revision_numbers_are_written_with_two_digits(string revision, int number, string text)
+        [InlineData(null, 0, "00", "")]
+        [InlineData("", 0, "00", "")]
+        [InlineData("  ", 0, "00", "")]
+        [InlineData("0", 0, "00", "00")]
+        [InlineData("1", 1, "01", "01")]
+        [InlineData(" 7 ", 7, "07", "07")]
+        [InlineData("02", 2, "02", "02")]
+        [InlineData("12", 12, "12", "12")]
+        [InlineData("100", 100, "100", "100")]
+        public void Revision_numbers_are_written_with_two_digits(string revision, int number, string text, string shown)
         {
             Assert.Equal(number, DrawingRevision.Number(revision));
             Assert.Equal(text, DrawingRevision.Text(number));
+            Assert.Equal(shown, DrawingRevision.Display(revision));
             Assert.Null(DrawingRevision.Validate(revision));
             var p = New();
+            p.Info.Name = "P";
             p.Report = new ProjectReportDetails { Revision = revision };
-            Assert.Equal(text, TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.Equal(shown, TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.EndsWith("-MODEL" + text, DrawingFileName.BaseName(p, null));
         }
 
         [Theory]
@@ -447,8 +442,10 @@ namespace Elevator.Core.Tests
             var p = New();
             p.Info.Name = "VILLA";
             p.Report = new ProjectReportDetails { Revision = revision };
-            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
-            var e = Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, null));
+            // Shown as stored on every document, never changed.
+            Assert.Equal(revision.Trim(), DrawingRevision.Display(revision));
+            Assert.Equal(revision.Trim(), TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            var e = Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, null));
             Assert.Equal("Revision must be a number: 00, 01, 02 …", e.Message);
             Assert.Throws<ArgumentOutOfRangeException>(() => DrawingRevision.Text(-1));
             // Reported by validation, never changed.
@@ -458,9 +455,9 @@ namespace Elevator.Core.Tests
             Assert.Equal("Report.Revision", issue.Field);
             Assert.Equal(ValidationStatus.FAIL, issue.Status);
             Assert.Equal(revision, p.Report.Revision);
-            var doc = DocumentData.Resolve(p, Lib, null);
+            var doc = DocumentData.Resolve(p, null);
             Assert.Null(doc.RevisionNumber);
-            Assert.Equal("", doc.Revision);
+            Assert.Equal(revision.Trim(), doc.Revision);
             Assert.NotNull(doc.RevisionIssue);
         }
 
@@ -522,9 +519,11 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void Blank_names_or_invalid_sizes_are_refused()
+        public void A_blank_company_is_NONE_a_blank_project_or_invalid_size_is_refused()
         {
-            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(null, ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(" ..", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, null, 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, " . ", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 0, 1800, "P", 0));
@@ -544,7 +543,7 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void A_project_name_from_the_library_company_shaft_and_revision()
+        public void A_project_name_from_the_entered_company_shaft_and_revision()
         {
             var p = New();
             p.Info.Name = "VILLA bx12";
@@ -552,20 +551,22 @@ namespace Elevator.Core.Tests
             p.Shaft.DepthMm = 1600;
             Assert.Equal(ElevatorSystemType.GB, DrawingFileName.SystemTypeOf(p));
             Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p));
-            Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, Lib, null));
+            // No company name entered: NONE in the file name only.
+            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, null));
+            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, new CompanySettings { CompanyName = "  " }));
             p.Report = new ProjectReportDetails { Revision = "2" };
-            var lib = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"ELEVATORSCOMPANY\""));
-            Assert.Equal("ELEVATORSCOMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null));
-            // The company entered in the settings wins over the library, kept exactly as typed.
+            var company = new CompanySettings { CompanyName = "ELEVATORS COMPANY" };
+            Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, company));
+            // Kept exactly as typed.
             Assert.Equal(" Nile  Lifts-GB-RCW-W1500D1600-VILLA bx12-MODEL02",
-                DrawingFileName.BaseName(p, lib, new CompanySettings { CompanyName = " Nile  Lifts" }));
+                DrawingFileName.BaseName(p, new CompanySettings { CompanyName = " Nile  Lifts" }));
             // The enum is ready for the side-counterweight layout.
-            Assert.Equal("ELEVATORSCOMPANY-GB-SCWL-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null, CounterweightPositionCode.SCWL));
-            Assert.Equal("ELEVATORSCOMPANY-GB-SCWR-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null, CounterweightPositionCode.SCWR));
+            Assert.Equal("ELEVATORS COMPANY-GB-SCWL-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, company, CounterweightPositionCode.SCWL));
+            Assert.Equal("ELEVATORS COMPANY-GB-SCWR-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, company, CounterweightPositionCode.SCWR));
             // A system without a type code yet.
             p.Elevator.SystemId = "hydraulic";
             Assert.Null(DrawingFileName.SystemTypeOf(p));
-            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, null));
+            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, company));
         }
     
         // ---------- one set of company / report data ----------
@@ -581,17 +582,14 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void The_company_name_follows_the_library_until_entered_in_the_settings()
+        public void The_company_name_is_only_what_the_user_entered()
         {
-            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(null, Lib));
-            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(new CompanySettings(), Lib));
-            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(new CompanySettings { CompanyName = "   " }, Lib));
-            Assert.Equal("Nile  Lifts Co. ", DocumentData.Company(new CompanySettings { CompanyName = "Nile  Lifts Co. " }, Lib));
-            Assert.Equal("", DocumentData.Company(null, null));
-            // The library value follows an edit of the library.
-            var edited = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"Delta Lifts\""));
-            Assert.Equal("Delta Lifts", DocumentData.Company(null, edited));
-            Assert.Equal("Nile", DocumentData.Company(new CompanySettings { CompanyName = "Nile" }, edited));
+            Assert.Equal("", DocumentData.Company(null));
+            Assert.Equal("", DocumentData.Company(new CompanySettings()));
+            Assert.Equal("", DocumentData.Company(new CompanySettings { CompanyName = "   " }));
+            Assert.Equal("Nile  Lifts Co. ", DocumentData.Company(new CompanySettings { CompanyName = "Nile  Lifts Co. " }));
+            var t = TitleBlockData.Build(New(), Lib, null, null, null, null);
+            Assert.Equal("", t.CompanyName);
         }
 
         [Fact]
@@ -601,7 +599,7 @@ namespace Elevator.Core.Tests
             p.Info.Name = "VILLA bx12";
             p.Report = new ProjectReportDetails { ClientName = " Delta ", PreparedBy = "A. Engineer", CheckedBy = "B. Checker", ApprovedBy = "C. Approver", Revision = "3" };
             var company = new CompanySettings { CompanyName = "Nile Lifts ", LogoFile = "company-logo-1234abcd.png" };
-            var doc = DocumentData.Resolve(p, Lib, company);
+            var doc = DocumentData.Resolve(p, company);
             Assert.Equal("Nile Lifts ", doc.CompanyName);
             Assert.Equal("company-logo-1234abcd.png", doc.LogoFile);
             Assert.Equal("Delta", doc.Client);
@@ -618,13 +616,14 @@ namespace Elevator.Core.Tests
             Assert.Equal(doc.CheckedBy, t.CheckedBy);
             Assert.Equal(doc.ApprovedBy, t.ApprovedBy);
             Assert.Equal(doc.Revision, t.Revision);
-            Assert.EndsWith("-MODEL" + doc.Revision, DrawingFileName.BaseName(p, Lib, company));
-            Assert.StartsWith("Nile Lifts-GB-", DrawingFileName.BaseName(p, Lib, company));
+            Assert.EndsWith("-MODEL" + doc.Revision, DrawingFileName.BaseName(p, company));
+            Assert.StartsWith("Nile Lifts-GB-", DrawingFileName.BaseName(p, company));
             // No project: company data only.
-            var none = DocumentData.Resolve(null, Lib, null);
-            Assert.Equal("ELEVATORS COMPANY", none.CompanyName);
+            var none = DocumentData.Resolve(null, null);
+            Assert.Equal("", none.CompanyName);
             Assert.Equal("", none.Client);
-            Assert.Equal("00", none.Revision);
+            Assert.Equal("", none.Revision);
+            Assert.Equal(0, none.RevisionNumber);
         }
 
         [Fact]
@@ -635,7 +634,8 @@ namespace Elevator.Core.Tests
             Assert.Equal("A", p.Report.Revision);
             var issue = DrawingRevision.Validate(p);
             Assert.NotNull(issue);
-            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.Equal("A", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.Equal("A", DocumentData.Resolve(p, null).Revision);
             // Never silently changed: the revision text is saved back as it was.
             Assert.Equal("A", ProjectJson.Deserialize(ProjectJson.Serialize(p)).Report.Revision);
             Assert.Null(DrawingRevision.Validate(New()));
@@ -652,13 +652,13 @@ namespace Elevator.Core.Tests
                 // No file: blank settings, so the documents follow the library company name.
                 var empty = CompanyReportSettings.Load().ToCompanySettings();
                 Assert.Null(empty.CompanyName);
-                Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(empty, Lib));
+                Assert.Equal("", DocumentData.Company(empty));
                 // A settings file written by the current application still loads.
                 Directory.CreateDirectory(dir);
                 File.WriteAllText(Path.Combine(dir, "report-settings.json"), "{\"CompanyName\":\"Nile Lifts Engineering\",\"LogoFile\":null,\"LogoPath\":null}");
                 var loaded = CompanyReportSettings.Load();
                 Assert.Equal("Nile Lifts Engineering", loaded.ToCompanySettings().CompanyName);
-                Assert.Equal("Nile Lifts Engineering", DocumentData.Company(loaded.ToCompanySettings(), Lib));
+                Assert.Equal("Nile Lifts Engineering", DocumentData.Company(loaded.ToCompanySettings()));
                 // Apply + Save writes the same members as before.
                 var s = new CompanyReportSettings();
                 s.Apply(new CompanySettings { CompanyName = "Delta  Lifts" });

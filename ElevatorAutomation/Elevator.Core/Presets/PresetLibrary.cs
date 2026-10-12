@@ -45,23 +45,8 @@ namespace Elevator.Core.Presets
         /// <summary>The door catalog (DESIGN-FLOW "Doors"); null in an older library: the shipped default catalog applies.</summary>
         public DoorCatalog Doors;
 
-        /// <summary>
-        /// The company name used by the drawing title block and the file names (DESIGN-FLOW "Layouts and PDF"); null in an older library:
-        /// the shipped default applies. Not a calculation input: it never enters a fingerprint.
-        /// </summary>
-        public string CompanyName;
-
         /// <summary>The title-block presets (control, supply); null in an older library: the shipped defaults apply.</summary>
         public TitleBlockPreset TitleBlock;
-
-        /// <summary>The shipped company name.</summary>
-        public const string DefaultCompanyName = "ELEVATORS COMPANY";
-
-        /// <summary>The company name of the library, or the shipped default.</summary>
-        public string CompanyNameOrDefault()
-        {
-            return CompanyName ?? DefaultCompanyName;
-        }
 
         /// <summary>The title-block presets of the library, or the shipped defaults.</summary>
         public TitleBlockPreset TitleBlockOrDefault()
@@ -156,8 +141,6 @@ namespace Elevator.Core.Presets
             ValidateProject(p);
             if (Doors != null)
                 p.AddRange(Doors.Validate());
-            if (CompanyName != null && String.IsNullOrWhiteSpace(CompanyName))
-                p.Add("CompanyName must not be blank");
             if (TitleBlock != null && (TitleBlock.Control == null || TitleBlock.Supply == null))
                 p.Add("TitleBlock needs Control and Supply");
             return p;
@@ -396,7 +379,7 @@ namespace Elevator.Core.Presets
             var value = hash;
             if (value == null)
             {
-                value = CalculationFingerprint.HashWithout(this, "Doors", "CompanyName", "TitleBlock");
+                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock");
                 hash = value;
             }
             return value;

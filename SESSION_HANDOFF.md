@@ -16,36 +16,41 @@ This file is the shared status channel between the user's Planner chat and Execu
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-11 (Claude Code, Executor role; D2 automatic doors in the drawings)
 - **Completed:**
-  - **Cloud L2a: portable data behind the drawing sheet (2026-10-12), branch `cloud/layouts-l2a` from `origin/main` (`202b84a`). Approved by the Planner, then round 2 (the user's answers) on the same branch. Pushed; not merged, no PR.**
+  - **Cloud L2a: portable data behind the drawing sheet (2026-10-12), branch `cloud/layouts-l2a` from `origin/main` (`202b84a`). Planner-approved. Round 2 applied the user's answers; round 3 applied the user's answers (a) / (b) on the sheet. Pushed; not merged, no PR.**
     - **Files:**
-      - Core, new: `Elevator.Core/Presets/TitleBlockPreset.cs`; `Elevator.Core/Company/CompanySettings.cs`, `DocumentData.cs` (round 2); `Elevator.Core/Layouts/TitleBlockFields.cs`, `TitleBlockData.cs`, `DrawingFileName.cs` (+ `DrawingFileNames`), `DrawingRevision.cs`, `DrawingCodes.cs` (`ElevatorSystemType` GB / GL / HY / MRL, `CounterweightPositionCode` RCW / SCWL / SCWR).
-      - Core, changed: `Elevator.Core/Presets/PresetLibrary.cs` (`CompanyName`, `TitleBlock`, `CompanyNameOrDefault()`, `TitleBlockOrDefault()`, validation, both left out of `Hash()`); `config/presets.json` (`"CompanyName": "ELEVATORS COMPANY"`, `"TitleBlock": { "Control": "SIMPLEX COLLECTIVE DOWN.", "Supply": "3 PHASE 380 V. 50 Hz." }`); `Elevator.Core/Presets/ProjectPresets.cs` (`Find` also finds the title-block keys); `Elevator.Core/Application/LiveCalculation.cs` (`TitleBlock.*` paths recalculate nothing).
-      - Reporting, changed (round 2): `Elevator.Reporting/Sheet/CompanyReportSettings.cs` gets two methods only, `ToCompanySettings()` and `Apply(CompanySettings)`. There are no new serialized members, so `report-settings.json` keeps its format.
-      - Tests: `tests/Elevator.Core.Tests/LayoutsTests.cs` (74 tests).
-    - **User decisions applied (round 2):**
-      1. **CW code:** `DrawingFileName.CounterweightOf(project)` is always RCW today, because the plan geometry is always rear (`DesignRules`). `BaseName(project, library, company)` uses it. The enum and a `BaseName(…, cw)` overload stay ready for SCWL / SCWR. No UI field. `Counterweight.Position` is not read.
-      2. **Company name:** used exactly as typed (spaces kept, only the forbidden characters replaced). The default stays "ELEVATORS COMPANY". The title block shows it trimmed.
-      3. **One set of company / report data:**
-         - `DocumentData.Resolve(project, library, companySettings)` is the single resolver for company name, logo file, client, prepared / checked / approved and revision.
-         - The company name is the one entered in the company settings when it is not blank, otherwise the library's (preset library = preset, settings = the user's value).
-         - Report texts come from `project.Report`, the same group the sheet reads. The logo comes from the settings.
-         - `TitleBlockData` and `DrawingFileName` use it. `CompanyReportSettings` (%AppData%) is the storage adapter; old settings files still load (tested).
-      4. **Revision is a number only:** `DrawingRevision.Number / Text / Validate` (Core). Blank gives 00. A stored "A" loads, is kept as stored (saved back unchanged, tested) and gets a validation issue: code `REVISION_NOT_A_NUMBER`, field `Report.Revision`, message "Revision must be a number: 00, 01, 02 …", status FAIL, `BlocksGeneration` false. With an invalid revision, the title-block revision is "" and the file name throws that message.
-      5. **P6 / P7:** the calculated load of ONE buffer (`PerComponentLoadN`). P6 is the car buffer, P7 the counterweight buffer, P5 one car guide rail. The code names them that way (`carGuideRail`, `carBuffer`, `counterweightBuffer`, `OneComponentLoadN`), and a test with 2 buffers each proves per-buffer, not total.
-      6. **Formats:** loads in kg only, "P1 = 545 KG." (`LoadUnits`). Title-block date dd/MM/yyyy ("12/10/2026"). The sheet keeps its own date format.
-    - **Earlier decisions (round 1, unchanged):**
-      - Control / Supply are per-project preset fields `TitleBlock.Control` / `TitleBlock.Supply` (lock / follow / Reset, not materialized). An edited value is stored in the project extension `titleBlock`, so unedited and older files are byte-identical.
-      - The library fingerprint excludes `CompanyName` / `TitleBlock`.
-      - Formats: speed "1.00 M/SEC.", load "450 KG. - 6 PASSENGERS.", travel "9.28 METRES." (served floors), stops = served count, floors "(G-1-2-3)".
-      - File-name sanitising: `\ / : * ? " < > |` and control characters become `_`, and trailing dots and spaces are trimmed per part. SW / SD are rounded to integer mm. A blank company or project name throws. Extensions: `.dwg`, `.pdf`, `.elevator.json`.
-    - **Fields that stay empty (no source yet):** `DrawingTitle`, `Scale`. Empty when the input is missing: project, client, prepared / checked / approved, date, speed, load, travel, stops / floors, P1-P7 (no current result), revision (not a number).
-    - **STOPPED, waiting for approval (point 3 / 4 on the calculation sheet and Design Notes). Nothing changed there:**
-      - The sheet and Design Notes still take the company name and logo from `CalculationSheetInputs.CompanyName / Logo`, filled by the desktop (`Shell/ReportExport.cs`, local) from `CompanyReportSettings`. They take client / prepared / checked / approved / revision from `project.Report`, which is already the same source. Making them use `DocumentData` would change:
-        - **(a) Company name falls back to the library:** a user with no saved company name gets "ELEVATORS COMPANY" in the sheet and Design Notes title block, where today the block is blank. If done in the desktop wiring only, the golden fixtures do not change, because the harness passes `CompanyName` explicitly. If done inside `CalculationSheet` / `DesignNotes` (null leads to the library), then **46 `sheet.txt` and 47 `design-notes.txt`** change: every approved fixture except `titleblock-filled`, including `titleblock-blank`, whose "  " company would then show the default. Each would gain one company line in the title block.
-        - **(b) Revision NN on the sheet:** today the sheet prints `Report.Revision` raw, and only when it is not blank. NN with "blank means 00" adds a "Revision 00" info row, a "Rev." title-block row and the footer "Rev 00" (sheet) / "Rev 00" (Design Notes footer) to **46 `sheet.txt` and 47 `design-notes.txt`**. `titleblock-filled` stores "A": decide whether the sheet shows "A", or nothing plus the validation issue (the text is never changed).
-        - Approve (a) and/or (b), and where (desktop wiring or sheet code), before the golden re-approval.
-    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (`20261012-094241`): core-net8.0 715 (641 + 74), reporting-net8.0 193. No file under `tests/golden` changed. net48 and tiers 2-3 were not run (Linux cloud).
-    - **Next step:** Planner / user decide (a) and (b). Local: merge `cloud/layouts-l2a`, run net48 tier 1, wire the UI: company settings window via `CompanyReportSettings.ToCompanySettings()` / `Apply()`; Control / Supply fields; show `DrawingRevision.Validate` on the revision field; title-block fill of the A1 template from `TitleBlockData.Build(project, library, settings, live, date)`; file names from `DrawingFileName.BaseName(project, library, settings)`.
+      - Core, new: `Elevator.Core/Presets/TitleBlockPreset.cs`; `Elevator.Core/Company/CompanySettings.cs`, `DocumentData.cs`; `Elevator.Core/Layouts/TitleBlockFields.cs`, `TitleBlockData.cs`, `DrawingFileName.cs` (+ `DrawingFileNames`), `DrawingRevision.cs`, `DrawingCodes.cs` (`ElevatorSystemType` GB / GL / HY / MRL, `CounterweightPositionCode` RCW / SCWL / SCWR).
+      - Core, changed: `Elevator.Core/Presets/PresetLibrary.cs` (`TitleBlock`, `TitleBlockOrDefault()`, validation, left out of `Hash()`; no company name any more); `config/presets.json` (only `"TitleBlock": { "Control": "SIMPLEX COLLECTIVE DOWN.", "Supply": "3 PHASE 380 V. 50 Hz." }` added); `Elevator.Core/Presets/ProjectPresets.cs` (`Find` also finds the title-block keys); `Elevator.Core/Application/LiveCalculation.cs` (`TitleBlock.*` paths recalculate nothing).
+      - Reporting, changed:
+        - `Elevator.Reporting/Sheet/CalculationSheet.cs` and `Elevator.Reporting/DesignNotes/DesignNotes.cs`: `Render()` takes company, client, document number, prepared / checked / approved and revision from `DocumentData`.
+        - `Elevator.Reporting/Sheet/CompanyReportSettings.cs`: `ToCompanySettings()` / `Apply()`; file format unchanged.
+        - `Elevator.Reporting/Sheet/CalculationSheetInputs.cs`: comment only.
+      - Tests: `tests/Elevator.Core.Tests/LayoutsTests.cs` (74); `tests/Elevator.Reporting.Tests/DocumentDataTests.cs` (3, renders the sheet and the Design Notes).
+    - **User decisions (final):**
+      1. **CW:** `DrawingFileName.CounterweightOf(project)` is always RCW today, because the plan geometry is always rear. The enum and a `BaseName(project, company, cw)` overload stay ready for SCWL / SCWR. No UI field.
+      2. **Company name, one source = what the user enters** (`CompanySettings`, stored in %AppData% by `CompanyReportSettings`).
+         - Nothing is filled in: no library value, no default. "ELEVATORS COMPANY" was removed from `presets.json` and from the code (round 3, user answer (a)).
+         - Not entered (null / blank) means it is left out of the sheet, the Design Notes, the title block and so the PDF. Only the file name writes `NONE` (`DrawingFileName.NoCompany`).
+         - Kept exactly as typed in the file name; trimmed for display.
+      3. **One set of company / report data:** `DocumentData.Resolve(project, companySettings)` is used by the sheet, the Design Notes, `TitleBlockData` and `DrawingFileName`. It carries company, logo file, client, document number, prepared / checked / approved, revision (display text), revision number and the revision issue.
+      4. **Revision:** one value everywhere (round 3, user answer (b): shown as it is, all unified).
+         - `DrawingRevision.Display`: blank gives "" (left out of every document); a number gives NN ("1" → "01"); any other stored text ("A") is shown as it is, kept, saved back unchanged, and reported by `DrawingRevision.Validate`: code `REVISION_NOT_A_NUMBER`, field `Report.Revision`, message "Revision must be a number: 00, 01, 02 …", FAIL, `BlocksGeneration` false.
+         - File names: blank → `MODEL00`, a number → NN; a non-number throws the validation message.
+         - **Note:** "blank means 00" now applies to the file name only. The documents leave a blank revision out, to keep the user's rule "not entered, left out" and the golden fixtures unchanged. If the Planner wants "00" printed on the documents, 46 `sheet.txt` and 47 `design-notes.txt` would gain "Rev 00".
+      5. **P5–P7:** P5 one car guide rail, P6 ONE car buffer, P7 ONE counterweight buffer (`PerComponentLoadN`; named `carGuideRail` / `carBuffer` / `counterweightBuffer`); a test with 2 buffers each checks it.
+      6. **Title-block formats:** "P1 = 545 KG." (kg only, `LoadUnits`); date dd/MM/yyyy ("12/10/2026"); speed "1.00 M/SEC."; load "450 KG. - 6 PASSENGERS."; travel "9.28 METRES."; stops = served count; floors "(G-1-2-3)". The sheet keeps its own date format.
+    - **Earlier decisions (unchanged):**
+      - Control / Supply are per-project preset fields (`TitleBlock.Control` / `TitleBlock.Supply`, lock / follow / Reset). An edited value lives in the project extension `titleBlock`, so other files are byte-identical.
+      - File-name sanitising: `\ / : * ? " < > |` and control characters become `_`, and trailing dots and spaces are trimmed per part. SW / SD are rounded to integer mm. A blank project name throws. Extensions: `.dwg`, `.pdf`, `.elevator.json`.
+    - **Sheet output:** no golden fixture changed. Every fixture has a blank company (or "  ") or the typed "Nile Lifts Engineering", and a blank revision or "A", which render exactly as before. Visible changes for users: a numeric revision prints as NN ("1" → "01") on the sheet and the Design Notes.
+    - **Fields that stay empty:** `DrawingTitle`, `Scale` (no source yet). Also empty when not entered or not available: company, project, client, prepared / checked / approved, revision (blank), date, speed, load, travel, stops / floors, P1-P7.
+    - **Open (for the Planner):** a blank project name still refuses the file name (only the company gets NONE). Say if the project name should also become NONE.
+    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (`20261012-101435`): core-net8.0 715 (641 + 74), reporting-net8.0 196 (193 + 3). No file under `tests/golden` changed. net48 and tiers 2-3 were not run (Linux cloud). The new Reporting test uses the WPF rasterizer on an STA thread on net48, as `ReportContentTests` does; it was not run here.
+    - **Next step:** local: merge `cloud/layouts-l2a`, run net48 tier 1 (+ `sheet-wpf`), then wire the UI:
+      - the company settings window through `CompanyReportSettings.ToCompanySettings()` / `Apply()`; the General page summary still says "no name";
+      - Control / Supply fields;
+      - `DrawingRevision.Validate` shown on the revision field;
+      - the A1 title block from `TitleBlockData.Build(project, library, settings, live, date)`;
+      - file names from `DrawingFileName.BaseName(project, settings)`.
   - **v05 release (2026-10-12), Planner-approved.** Commits on `main`: Planner edit "layouts and PDF agreement, cloud/local split" (`c9efa63`, DESIGN-FLOW.md and CLAUDE.md, committed on `feature/loads-kg`), merge `e06ad70` "Merge feature/loads-kg: loads also in kg" (--no-ff), CHANGELOG `[v05] — 2026-10-12` (automatic doors 2S / 2C, drawing quality, Doors Offset, loads in kg), then `tools/release.ps1 -Version v05`: build, the one full run of tiers 1-3 (core-net8.0 641, core-net48 797, reporting 193 x 2, golden 770, sheet-wpf 10763, tier 2 all 9 suites incl. doors-ui 52, integration 22, presets-native 6, doors-native 63, doors-step 31, sheet-word-render 10763), copy, RELEASE-NOTES.md and SHA256SUMS.txt, verification. Release hashes: ShaftMaster.exe v05 F04C0BBD. The Planner's layout files (`Layouts_Sec/`) came in with that commit; nothing in them was used or changed by me.
     - **Next step:** the layouts work as CLAUDE.md splits it between the cloud and local chats; the Planner writes the prompt. Do not push: the user pushes.
   - **Loads also in kg (DESIGN-FLOW principle 10), branch `feature/loads-kg` from `main` (D4 merged). Not merged into `main`, not pushed, not released. Awaiting Planner.**
@@ -1281,6 +1286,8 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 - **Next step:** The single next action
 
 ## Recent updates
+
+- 2026-10-12: Cloud Executor applied the user's answers (a) / (b) on `cloud/layouts-l2a` (pushed): the company name comes only from what the user enters (no default; left out everywhere when blank, NONE in the file name), and the sheet, Design Notes and title block share one revision text (as stored; NN for numbers). Tier 1 PASS, golden unchanged.
 
 - 2026-10-12: Cloud Executor applied the user's L2a answers on `cloud/layouts-l2a` (pushed): RCW mapping, one `DocumentData` source (Core) with `CompanyReportSettings` as the %AppData% adapter, numeric revision with validation, P6 / P7 per buffer, title block "P1 = 545 KG." and dd/MM/yyyy. Tier 1 PASS, golden unchanged. Stopped before changing the sheet / Design Notes company and revision output (46 sheet + 47 notes fixtures would change).
 

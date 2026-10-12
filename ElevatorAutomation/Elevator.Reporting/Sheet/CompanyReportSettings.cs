@@ -9,7 +9,7 @@ namespace Elevator.Reporting.Sheet
     /// <summary>
     /// Company-level settings shared by all projects (never stored in a project file). Kept under %AppData%\ShaftMaster; the logo is a copy
     /// of the user's PNG/JPEG. Every value is optional. This is the storage adapter of the portable <see cref="CompanySettings"/> model:
-    /// the documents resolve their company data from it with <see cref="DocumentData.Resolve"/> (a blank name follows the preset library).
+    /// the documents resolve their company data from it with <see cref="DocumentData.Resolve"/> (a blank name stays blank).
     /// The file format is unchanged.
     /// </summary>
     public sealed class CompanyReportSettings
