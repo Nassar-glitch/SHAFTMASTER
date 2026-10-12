@@ -98,7 +98,7 @@ namespace Elevator.Reporting.Tests
         }
 
         [Fact]
-        public void A_stored_letter_revision_is_shown_as_it_is_and_a_blank_one_is_left_out()
+        public void A_stored_letter_revision_is_shown_as_it_is_and_a_blank_one_is_00()
         {
             var p = New();
             p.Report = new ProjectReportDetails { Revision = "A" };
@@ -113,10 +113,10 @@ namespace Elevator.Reporting.Tests
             p.Report.Revision = null;
             foreach (var d in Render(p, null))
             {
-                Assert.DoesNotContain(d.TitleBlock.DocumentRows, r => r.Key == "Rev.");
-                Assert.Null(d.FooterRight);
+                Assert.Contains(d.TitleBlock.DocumentRows, r => r.Key == "Rev." && r.Value == "00");
+                Assert.Equal("Rev 00", d.FooterRight);
             }
-            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.Equal("00", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
         }
     }
 }

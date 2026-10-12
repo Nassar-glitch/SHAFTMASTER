@@ -162,6 +162,14 @@ public static class CalculationSheetUiTests
                 foreach (var key in new[] { "Report.ClientName", "Report.DocumentNumber", "Report.Revision", "Report.PreparedBy", "Report.CheckedBy", "Report.ApprovedBy" }) Check(Editors().ContainsKey(key) && Editors()[key].Text == "", "Blank editor for " + key + " (no default)");
                 Editors()["Report.ClientName"].Text = "Delta Developments"; Editors()["Report.DocumentNumber"].Text = "NL-CS-002"; Editors()["Report.Revision"].Text = "Rev 1";
                 Editors()["Report.PreparedBy"].Text = "A. Engineer"; Editors()["Report.CheckedBy"].Text = "B. Checker"; Editors()["Report.ApprovedBy"].Text = "C. Approver";
+                // The revision is a number: a non-number keeps its text and shows the validation message; the phase is a per-project field.
+                var revisionMessage = Tree(window).OfType<TextBlock>().FirstOrDefault(t => Equals(t.Tag, "revision-message"));
+                Check(revisionMessage != null && revisionMessage.Text == "Revision must be a number: 00, 01, 02 …" && Editors()["Report.Revision"].Text == "Rev 1", "Revision 'Rev 1' shows the validation message and is not changed");
+                Editors()["Report.Revision"].Text = "02"; Check(revisionMessage.Text == "" && revisionMessage.Visibility == Visibility.Collapsed, "A numeric revision clears the message");
+                Editors()["Report.Revision"].Text = "Rev 1";
+                var phaseBox = Tree(window).OfType<TextBox>().FirstOrDefault(t => System.Windows.Automation.AutomationProperties.GetName(t) == "Phase");
+                Check(phaseBox != null && phaseBox.Text == "", "Phase field on the General page, blank by default");
+                phaseBox.Text = "Tender";
                 Check(workspace.Result != null && Get("safetyPitResult") == pitResult && Get("carGuideForceResult") == ffResult, "Typing report fields does not clear any displayed result");
                 await Navigate("CALCULATIONS"); await Ready();
                 var ctx = (DesignContext)Get("context");
@@ -169,6 +177,7 @@ public static class CalculationSheetUiTests
                 Check(Get("safetyPitResult") == pitResult && SafetyPitCalculationEngine.IsCurrent(pitResult, Session().Project), "P5–P7 result stays current after report edits");
                 Check(Get("carGuideForceResult") == ffResult && CarGuideForceCalculationEngine.IsCurrent(ffResult, Session().Project, ctx), "FF result stays current after report edits");
                 Check(Session().Project.Report.ClientName == "Delta Developments" && Session().Project.Report.ApprovedBy == "C. Approver" && Session().Dirty, "Report fields committed to the project (unsaved changes)");
+                Check(Elevator.Core.Company.DocumentData.PhaseOf(Session().Project) == "Tender" && Session().Project.Report.Revision == "Rev 1", "Phase committed as a project extension; the non-numeric revision is kept as typed");
 
                 // Company / report settings dialog: name and logo (PNG made here), stored in the redirected settings folder.
                 string logoPath = Path.Combine(output, "test-logo.png");
@@ -176,7 +185,9 @@ public static class CalculationSheetUiTests
                   var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap(240, 80, 96, 96, PixelFormats.Pbgra32); bmp.Render(visual); var enc = new System.Windows.Media.Imaging.PngBitmapEncoder(); enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp)); using (var f = File.Create(logoPath)) enc.Save(f); }
                 var settingsWindow = new CompanySettingsWindow(CompanyReportSettings.Load());
                 Check(settingsWindow.CompanyBox.Text == "" && settingsWindow.Preview.Source == null, "Settings dialog starts blank");
+                Check(settingsWindow.PreparedBox.Text == "" && settingsWindow.CheckedBox.Text == "" && settingsWindow.ApprovedBox.Text == "", "Settings dialog: prepared / checked / approved defaults start blank");
                 settingsWindow.CompanyBox.Text = "Nile Lifts Engineering"; settingsWindow.LoadLogo(logoPath);
+                settingsWindow.PreparedBox.Text = " Default Preparer "; settingsWindow.CheckedBox.Text = "Default Checker"; settingsWindow.ApprovedBox.Text = "";
                 Check(settingsWindow.Preview.Source != null, "Logo preview shown");
                 settingsWindow.WindowStartupLocation = WindowStartupLocation.Manual; settingsWindow.Left = 40; settingsWindow.Top = 40; settingsWindow.Show(); await Ready();
                 { var c = (FrameworkElement)settingsWindow.Content; var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap((int)c.ActualWidth + 40, (int)c.ActualHeight + 40, 96, 96, PixelFormats.Pbgra32); bmp.Render(c); var enc = new System.Windows.Media.Imaging.PngBitmapEncoder(); enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bmp)); using (var f = File.Create(Path.Combine(output, "03-company-settings-dialog.png"))) enc.Save(f); }
@@ -184,6 +195,7 @@ public static class CalculationSheetUiTests
                 var stored = CompanyReportSettings.Load();
                 Check(stored.CompanyName == "Nile Lifts Engineering" && stored.Logo() != null && stored.Logo().PixelWidth == 240 && Path.GetDirectoryName(stored.LogoPath) == CompanyReportSettings.SettingsDirectory, "Settings saved with a copied logo in the settings folder");
                 Check(!ProjectJson.Serialize(Session().Project).Contains("Nile Lifts"), "Company settings are not stored in the project");
+                Check(stored.PreparedBy == "Default Preparer" && stored.CheckedBy == "Default Checker" && stored.ApprovedBy == null && !ProjectJson.Serialize(Session().Project).Contains("Default Preparer"), "Company defaults for prepared / checked saved with the company settings, not in the project");
                 sheet = Export("ui-01b-title-block.docx", out text);
                 Check(text.Contains("Nile Lifts Engineering\nElevator Calculation Sheet") && text.Contains("Project\nUI Test Tower — Lift 1") && text.Contains("Doc. No.\nNL-CS-002") &&text.Contains("Client\nDelta Developments") && text.Contains("Document No.\nNL-CS-002") && text.Contains("Revision\nRev 1") && text.Contains("Prepared by\nA. Engineer"), "Exported title block and header use the report fields and company name");
                 using (var package = System.IO.Packaging.Package.Open(Path.Combine(output, "ui-01b-title-block.docx"), FileMode.Open, FileAccess.Read))

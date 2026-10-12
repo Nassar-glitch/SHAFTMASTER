@@ -681,19 +681,19 @@ public static class CalculationSheetTests
         TitleCase("20-titleblock-complete",p,new CalculationSheetInputs{CompanyName="Nile Lifts Engineering",Logo=pngImage},new[]{"Project","Client","Document No.","Revision","Date","Elevator system","Rated load"},"Nile Lifts Engineering",new[]{"Project","Client"},new[]{"Doc. No.","Rev."},"Doc. No. NL-CS-001 · Rev A",new[]{"A. Engineer","B. Checker","C. Approver"},"png");
         // B) All blank (including whitespace-only text).
         p=BasicComplete("Test Tower T2");p.Report=new ProjectReportDetails{ClientName="  ",DocumentNumber="",Revision=null,PreparedBy=" ",CheckedBy=null,ApprovedBy=""};
-        TitleCase("21-titleblock-all-blank",p,new CalculationSheetInputs{CompanyName="  "},new[]{"Project","Date","Elevator system","Rated load"},null,new[]{"Project"},new string[0],null,new[]{"","",""},null);
+        TitleCase("21-titleblock-all-blank",p,new CalculationSheetInputs{CompanyName="  "},new[]{"Project","Revision","Date","Elevator system","Rated load"},null,new[]{"Project"},new[]{"Rev."},"Rev 00",new[]{"","",""},null);
         // C) Logo only (JPEG).
         p=BasicComplete("Test Tower T3");
-        TitleCase("22-titleblock-logo-only",p,new CalculationSheetInputs{Logo=jpgImage},new[]{"Project","Date","Elevator system","Rated load"},null,new[]{"Project"},new string[0],null,new[]{"","",""},"jpg");
+        TitleCase("22-titleblock-logo-only",p,new CalculationSheetInputs{Logo=jpgImage},new[]{"Project","Revision","Date","Elevator system","Rated load"},null,new[]{"Project"},new[]{"Rev."},"Rev 00",new[]{"","",""},"jpg");
         // D) Company name only.
         p=BasicComplete("Test Tower T4");
-        TitleCase("23-titleblock-company-only",p,new CalculationSheetInputs{CompanyName="Nile Lifts Engineering"},new[]{"Project","Date","Elevator system","Rated load"},"Nile Lifts Engineering",new[]{"Project"},new string[0],null,new[]{"","",""},null);
+        TitleCase("23-titleblock-company-only",p,new CalculationSheetInputs{CompanyName="Nile Lifts Engineering"},new[]{"Project","Revision","Date","Elevator system","Rated load"},"Nile Lifts Engineering",new[]{"Project"},new[]{"Rev."},"Rev 00",new[]{"","",""},null);
         // E) Older project file without the Report group.
         string json=ProjectJson.Serialize(BasicComplete("Test Tower T5"));
         var raw=new System.Web.Script.Serialization.JavaScriptSerializer().DeserializeObject(json) as Dictionary<string,object>;((Dictionary<string,object>)raw["project"]).Remove("Report");
         string olderJson=new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(raw);Check(!olderJson.Contains("\"Report\""),"Older project JSON has no Report group");
         var older=ProjectJson.Deserialize(olderJson);Check(older.Report==null,"Older project opens with Report blank");
-        TitleCase("24-titleblock-older-project",older,new CalculationSheetInputs(),new[]{"Project","Date","Elevator system","Rated load"},null,new[]{"Project"},new string[0],null,new[]{"","",""},null);
+        TitleCase("24-titleblock-older-project",older,new CalculationSheetInputs(),new[]{"Project","Revision","Date","Elevator system","Rated load"},null,new[]{"Project"},new[]{"Rev."},"Rev 00",new[]{"","",""},null);
 
         // Report edits never make results stale, and never change drawing geometry or STEP parameters.
         p=BasicComplete("Test Tower T6");

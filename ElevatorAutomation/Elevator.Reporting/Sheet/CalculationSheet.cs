@@ -512,7 +512,7 @@ namespace Elevator.Reporting.Sheet
                 throw new InvalidOperationException("No calculation is available to export.");
             var p = Project;
             // Company and report data: the one set shared with the Design Notes, the title block and the file names.
-            var doc = DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
+            var doc = Inputs.Document ?? DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
             string date = Inputs.GeneratedLocal.ToString("yyyy-MM-dd", Inv);
             string name = Clean(p.Info.Name), company = Clean(doc.CompanyName), client =
                 Clean(doc.Client), number = Clean(doc.DocumentNumber), revision = Clean(doc.Revision);

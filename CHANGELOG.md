@@ -6,6 +6,12 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **One set of company and report data (L2b prep):** Company / report settings now holds the company name (as typed, Arabic or English), the logo and
+  the default prepared / checked / approved names; a project's own value wins while it is not blank. Client, document number, revision and the new
+  phase stay in the project (General page). The calculation sheet and the Design Notes read the same resolved data as the drawing title block and the
+  file names. The revision is a number (00, 01, 02 …): a stored non-number keeps loading and shows the validation message, never changed silently.
+  A blank revision is shown as 00 ("Rev 00" in the title block and the footer of both documents). See `ElevatorAutomation/docs/design/layouts/`.
+
 ## [v05] — 2026-10-12
 
 v05 adds automatic car and landing doors (2S side opening, 2C centre opening) with their drawings, the Doors Offset, drawing-quality rules for the door plan, 

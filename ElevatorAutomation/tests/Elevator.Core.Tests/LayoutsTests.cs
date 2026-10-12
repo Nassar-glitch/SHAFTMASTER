@@ -191,7 +191,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.CheckedBy);
             Assert.Equal("", t.ApprovedBy);
             Assert.Equal("", t.CompanyName);
-            Assert.Equal("", t.Revision); // blank revision: left out of the documents (the file names write 00)
+            Assert.Equal("00", t.Revision); // blank revision is the first issue: 00 on every document and in the file names
             Assert.Equal("", t.RatedSpeed);
             Assert.Equal("", t.RatedLoad);
             foreach (var load in new[] { t.P1, t.P2, t.P3, t.P4, t.P5, t.P6, t.P7 })
@@ -203,7 +203,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.ProjectName);
             Assert.Equal("", t.Client);
             Assert.Equal("", t.PreparedBy);
-            Assert.Equal("", t.Revision);
+            Assert.Equal("00", t.Revision);
             // No remark text anywhere.
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
             {
@@ -425,7 +425,9 @@ namespace Elevator.Core.Tests
             var p = New();
             p.Info.Name = "P";
             p.Report = new ProjectReportDetails { Revision = revision };
-            Assert.Equal(shown, TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            // The documents and the title block show a blank revision (the first issue) as 00.
+            Assert.Equal(shown.Length == 0 ? "00" : shown, TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            Assert.Equal(shown.Length == 0 ? "00" : shown, DocumentData.Resolve(p, null).Revision);
             Assert.EndsWith("-MODEL" + text, DrawingFileName.BaseName(p, null));
         }
 
@@ -622,7 +624,7 @@ namespace Elevator.Core.Tests
             var none = DocumentData.Resolve(null, null);
             Assert.Equal("", none.CompanyName);
             Assert.Equal("", none.Client);
-            Assert.Equal("", none.Revision);
+            Assert.Equal("00", none.Revision);
             Assert.Equal(0, none.RevisionNumber);
         }
 
@@ -639,6 +641,40 @@ namespace Elevator.Core.Tests
             // Never silently changed: the revision text is saved back as it was.
             Assert.Equal("A", ProjectJson.Deserialize(ProjectJson.Serialize(p)).Report.Revision);
             Assert.Null(DrawingRevision.Validate(New()));
+        }
+
+        [Fact]
+        public void Company_defaults_fill_the_names_a_project_leaves_blank()
+        {
+            var p = New();
+            p.Report = new ProjectReportDetails { PreparedBy = "A. Engineer" };
+            var company = new CompanySettings { PreparedBy = "Default P", CheckedBy = " Default C ", ApprovedBy = "Default A" };
+            var doc = DocumentData.Resolve(p, company);
+            Assert.Equal("A. Engineer", doc.PreparedBy); // the project's own value wins
+            Assert.Equal("Default C", doc.CheckedBy);
+            Assert.Equal("Default A", doc.ApprovedBy);
+            var t = TitleBlockData.Build(p, Lib, company, null, null, null);
+            Assert.Equal("Default C", t.CheckedBy);
+            // No project report group at all: the defaults still apply; no defaults: blank.
+            p.Report = null;
+            Assert.Equal("Default P", DocumentData.Resolve(p, company).PreparedBy);
+            Assert.Equal("", DocumentData.Resolve(p, new CompanySettings()).PreparedBy);
+            Assert.Equal("", DocumentData.Resolve(p, null).ApprovedBy);
+        }
+
+        [Fact]
+        public void The_phase_is_a_project_extension_and_adds_nothing_to_older_files()
+        {
+            var p = New();
+            string before = ProjectJson.Serialize(p);
+            Assert.Equal("", DocumentData.PhaseOf(p));
+            DocumentData.SetPhase(p, "  Tender ");
+            Assert.Equal("Tender", DocumentData.PhaseOf(p));
+            Assert.Equal("Tender", DocumentData.Resolve(p, null).Phase);
+            Assert.Equal("Tender", DocumentData.PhaseOf(ProjectJson.Deserialize(ProjectJson.Serialize(p))));
+            DocumentData.SetPhase(p, " ");
+            Assert.Equal("", DocumentData.PhaseOf(p));
+            Assert.Equal(before, ProjectJson.Serialize(p)); // blank removes it: byte for byte as before
         }
 
         [Fact]
@@ -659,13 +695,13 @@ namespace Elevator.Core.Tests
                 var loaded = CompanyReportSettings.Load();
                 Assert.Equal("Nile Lifts Engineering", loaded.ToCompanySettings().CompanyName);
                 Assert.Equal("Nile Lifts Engineering", DocumentData.Company(loaded.ToCompanySettings()));
-                // Apply + Save writes the same members as before.
+                // Apply + Save writes the file members: the company name, the logo and the optional defaults (older files have none).
                 var s = new CompanyReportSettings();
                 s.Apply(new CompanySettings { CompanyName = "Delta  Lifts" });
                 s.Save();
                 string text = File.ReadAllText(Path.Combine(dir, "report-settings.json"));
                 var members = ((IDictionary<string, object>)Elevator.Core.Serialization.CoreJson.Create().DeserializeObject(text)).Keys.OrderBy(k => k, StringComparer.Ordinal);
-                Assert.Equal(new[] { "CompanyName", "LogoFile", "LogoPath" }, members);
+                Assert.Equal(new[] { "ApprovedBy", "CheckedBy", "CompanyName", "LogoFile", "LogoPath", "PreparedBy" }, members);
                 Assert.Equal("Delta  Lifts", CompanyReportSettings.Load().ToCompanySettings().CompanyName);
             }
             finally

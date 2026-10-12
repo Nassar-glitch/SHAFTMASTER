@@ -1,8 +1,11 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Elevator.Core.Company;
+using Elevator.Core.Layouts;
 using Elevator.Core.Project;
 using Elevator.Reporting.Sheet;
 using Elevator.Solution.Desktop.Common;
@@ -48,8 +51,28 @@ namespace Elevator.Solution.Desktop.Pages
    if(Session.Project.Report==null)Session.Project.Report=new ProjectReportDetails();
    Heading("Calculation sheet details");
    Form.Fields(GeneralViewModel.ReportFields);
+   RevisionMessage();Phase();
+   Note(GeneralViewModel.ReportNote);
    Note(GeneralViewModel.CompanySummary(CompanyReportSettings.Load()));
    Content.Children.Add(Form.Button("Company / report settings…",ShowCompanySettings));
+  }
+  // The revision is a number (00, 01, 02 …). A stored non-number is kept as it is and shows the validation message; typing accepts digits only.
+  void RevisionMessage()
+  {
+   TextBox revision;StackPanel panel;
+   if(!Form.Editors.TryGetValue("Report.Revision",out revision)||(panel=revision.Parent as StackPanel)==null)return;
+   var message=new TextBlock{FontSize=11,Foreground=Brushes.DarkRed,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(1,5,0,0),Tag="revision-message"};panel.Children.Add(message);
+   Action show=()=>{var issue=DrawingRevision.Validate(revision.Text);message.Text=issue==null?"":issue.Message;message.Visibility=issue==null?Visibility.Collapsed:Visibility.Visible;};
+   revision.TextChanged+=(s,e)=>show();revision.PreviewTextInput+=(s,e)=>{if(e.Text.Any(c=>c<'0'||c>'9'))e.Handled=true;};show();
+  }
+  // The project phase (a project extension, not a member of the Report group, so older project files stay byte for byte the same).
+  void Phase()
+  {
+   var panel=new StackPanel();var row=Form.FormRow("Phase",panel);
+   var box=new TextBox{Text=DocumentData.PhaseOf(Session.Project)};System.Windows.Automation.AutomationProperties.SetName(box,"Phase");panel.Children.Add(box);
+   box.TextChanged+=(s,e)=>{Session.Dirty=true;Shell.RefreshProjectStatus();};
+   Form.Committers.Add(()=>DocumentData.SetPhase(Session.Project,box.Text));
+   Content.Children.Add(row);
   }
   void ShowCompanySettings()
   {

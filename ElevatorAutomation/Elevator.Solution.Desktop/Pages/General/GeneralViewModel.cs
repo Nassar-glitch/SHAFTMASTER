@@ -14,10 +14,12 @@ namespace Elevator.Solution.Desktop.Pages
   // Calculation-sheet title block fields of the project.
   public static readonly FieldSpec[] ReportFields=
   {
-   new FieldSpec("Client","Report.ClientName"),new FieldSpec("Document number","Report.DocumentNumber"),new FieldSpec("Revision","Report.Revision"),
+   new FieldSpec("Client","Report.ClientName"),new FieldSpec("Document number","Report.DocumentNumber"),new FieldSpec("Revision","Report.Revision","A number: 00, 01, 02 … (blank is 00)"),
    new FieldSpec("Prepared by","Report.PreparedBy"),new FieldSpec("Checked by","Report.CheckedBy"),new FieldSpec("Approved by","Report.ApprovedBy"),
   };
   // Company name and logo are shared by all projects (Company / report settings).
   public static string CompanySummary(CompanyReportSettings company){return "Company (all projects): "+(company.CompanyName??"no name")+" · "+(company.LogoFile!=null?"logo set":"no logo");}
+  // Blank prepared / checked / approved fields follow the company defaults of the Company / report settings.
+  public const string ReportNote="Prepared by, checked by and approved by follow the company defaults (Company / report settings) while blank.";
  }
 }

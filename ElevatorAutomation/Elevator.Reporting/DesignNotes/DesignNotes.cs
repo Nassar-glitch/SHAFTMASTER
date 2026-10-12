@@ -398,7 +398,7 @@ namespace Elevator.Reporting.DesignNotes
         {
             var p = Project;
             // Company and report data: the one set shared with the calculation sheet, the title block and the file names.
-            var doc = DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
+            var doc = Inputs.Document ?? DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
             string date = Inputs.GeneratedLocal.ToString("yyyy-MM-dd", Inv);
             Func<string, string> clean = v => String.IsNullOrWhiteSpace(v) ? null : v.Trim();
             string name = clean(p.Info.Name), number =

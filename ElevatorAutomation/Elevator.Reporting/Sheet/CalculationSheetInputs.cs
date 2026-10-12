@@ -19,6 +19,10 @@ namespace Elevator.Reporting.Sheet
         public string CompanyName;
         public DocxImage Logo;
 
+        // The resolved company and report data (Elevator.Core.Company.DocumentData: company settings + the project's Report group).
+        // The desktop wiring (Shell/ReportExport.cs) sets it; null resolves from CompanyName and the project, as before.
+        public Elevator.Core.Company.DocumentData Document;
+
         // Editable preset library (config/presets.json); null loads presets.json beside the application.
         public PresetLibrary Presets;
     }
