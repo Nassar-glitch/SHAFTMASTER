@@ -6,9 +6,10 @@ using Elevator.Core.Project;
 namespace Elevator.Core.Layouts
 {
     /// <summary>
-    /// The drawing revision NN (DESIGN-FLOW "Layouts and PDF"): the same revision field as the calculation sheet (Report.Revision). Blank
-    /// is the first issue, 00; a whole number 0, 1, 2 … is written with at least two digits (00, 01, 02 …). Any other text is not a
-    /// drawing revision: it has no number.
+    /// The revision NN (DESIGN-FLOW "Layouts and PDF"): one value, the project's Report.Revision, for the calculation sheet, the title
+    /// block and the file names. The revision is a number only: blank is the first issue, 00; a whole number 0, 1, 2 … is written with at
+    /// least two digits (00, 01, 02 …). Any other text (an older file's "A") still loads and is kept as stored, has no number, and is
+    /// reported by <see cref="Validate(string)"/> for the application to show.
     /// </summary>
     public static class DrawingRevision
     {
@@ -22,6 +23,32 @@ namespace Elevator.Core.Layouts
             if (t.Length > 9 || !t.All(c => c >= '0' && c <= '9') || !Int32.TryParse(t, NumberStyles.None, CultureInfo.InvariantCulture, out n))
                 return null;
             return n;
+        }
+
+        /// <summary>Validation field of the revision.</summary>
+        public const string Field = "Report.Revision";
+        /// <summary>Validation code of a revision that is not a number.</summary>
+        public const string NotANumberCode = "REVISION_NOT_A_NUMBER";
+
+        /// <summary>The issue of a revision text that is not a number (00, 01, 02 …); null when it is valid (blank is valid: 00).</summary>
+        public static ValidationIssue Validate(string revision)
+        {
+            if (Number(revision).HasValue)
+                return null;
+            return new ValidationIssue
+            {
+                Code = NotANumberCode,
+                Field = Field,
+                Message = "Revision must be a number: 00, 01, 02 …",
+                Status = ValidationStatus.FAIL,
+                BlocksGeneration = false
+            };
+        }
+
+        /// <summary>The revision issue of a project; null when its revision is valid.</summary>
+        public static ValidationIssue Validate(ElevatorProject project)
+        {
+            return Validate(project == null || project.Report == null ? null : project.Report.Revision);
         }
 
         /// <summary>The revision number of a project; null when its revision text is not a whole number.</summary>

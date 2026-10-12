@@ -1,13 +1,16 @@
 using System;
 using System.IO;
+using Elevator.Core.Company;
 using Elevator.Core.Serialization;
 using Elevator.Reporting.Docx;
 
 namespace Elevator.Reporting.Sheet
 {
     /// <summary>
-    /// Company-level calculation-sheet settings shared by all projects (never stored in a project file). Kept under %AppData%\ShaftMaster;
-    /// the logo is a copy of the user's PNG/JPEG. Every value is optional.
+    /// Company-level settings shared by all projects (never stored in a project file). Kept under %AppData%\ShaftMaster; the logo is a copy
+    /// of the user's PNG/JPEG. Every value is optional. This is the storage adapter of the portable <see cref="CompanySettings"/> model:
+    /// the documents resolve their company data from it with <see cref="DocumentData.Resolve"/> (a blank name follows the preset library).
+    /// The file format is unchanged.
     /// </summary>
     public sealed class CompanyReportSettings
     {
@@ -64,6 +67,19 @@ namespace Elevator.Reporting.Sheet
                 if (File.Exists(temporary))
                     File.Delete(temporary);
             }
+        }
+
+        /// <summary>The portable company model of these settings.</summary>
+        public CompanySettings ToCompanySettings()
+        {
+            return new CompanySettings { CompanyName = CompanyName, LogoFile = LogoFile };
+        }
+
+        /// <summary>Takes the values of the portable company model (Save writes them).</summary>
+        public void Apply(CompanySettings company)
+        {
+            CompanyName = company == null ? null : company.CompanyName;
+            LogoFile = company == null ? null : company.LogoFile;
         }
 
         public string LogoPath

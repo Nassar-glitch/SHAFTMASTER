@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Company;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
@@ -12,8 +13,9 @@ using Elevator.Core.SafetyGear;
 namespace Elevator.Core.Layouts
 {
     /// <summary>
-    /// The display-ready texts of the drawing title block (DESIGN-FLOW "Layouts and PDF"), built from the project, the preset library
-    /// and the calculation results. UI-free. A field whose source is missing is "" (never a placeholder or a remark, principle 6).
+    /// The display-ready texts of the drawing title block (DESIGN-FLOW "Layouts and PDF"), built from the project, the preset library,
+    /// the company settings and the calculation results. Company, client, prepared / checked / approved and revision come from the one
+    /// <see cref="DocumentData"/> set shared with the other documents. UI-free. A field whose source is missing is "" (never a placeholder or a remark, principle 6).
     /// </summary>
     public sealed class TitleBlockData
     {
@@ -26,12 +28,12 @@ namespace Elevator.Core.Layouts
         public string DrawingTitle = "";
         /// <summary>No source yet: always "".</summary>
         public string Scale = "";
-        /// <summary>The issue date, yyyy-MM-dd (as the calculation sheet).</summary>
+        /// <summary>The issue date, dd/MM/yyyy ("12/10/2026").</summary>
         public string Date = "";
         public string PreparedBy = "";
         public string CheckedBy = "";
         public string ApprovedBy = "";
-        /// <summary>The revision NN (Report.Revision, the calculation sheet's field): "00" when blank.</summary>
+        /// <summary>The revision NN (Report.Revision): "00" when blank; "" when the stored revision is not a number.</summary>
         public string Revision = "";
         /// <summary>"1.00 M/SEC."</summary>
         public string RatedSpeed = "";
@@ -45,10 +47,14 @@ namespace Elevator.Core.Layouts
         public string Floors = "";
         public string Control = "";
         public string Supply = "";
-        /// <summary>"N kN (kg)", for example "12.35 kN (1260 kg)": P1–P4 bearing reactions.</summary>
+        /// <summary>Loads in kg only, "P1 = 545 KG.": P1–P4, the machine-room bearing reactions.</summary>
         public string P1 = "", P2 = "", P3 = "", P4 = "";
-        /// <summary>"N kN (kg)": P5 per car guide rail, P6 per car buffer, P7 per counterweight buffer.</summary>
-        public string P5 = "", P6 = "", P7 = "";
+        /// <summary>"P5 = … KG.": the safety-gear load on ONE car guide rail.</summary>
+        public string P5 = "";
+        /// <summary>"P6 = … KG.": the load of ONE car buffer.</summary>
+        public string P6 = "";
+        /// <summary>"P7 = … KG.": the load of ONE counterweight buffer.</summary>
+        public string P7 = "";
 
         static string Clean(string v)
         {
@@ -60,12 +66,12 @@ namespace Elevator.Core.Layouts
             return v.HasValue && !Double.IsNaN(v.Value) && !Double.IsInfinity(v.Value);
         }
 
-        /// <summary>A force as "N kN (kg)": kN with two decimals, kg by DESIGN-FLOW principle 10.</summary>
-        public static string Load(double? newtons)
+        /// <summary>A load in kg only: "P1 = 545 KG.", kg by DESIGN-FLOW principle 10 (N / 9.81 rounded up to 5 kg).</summary>
+        public static string Load(string id, double? newtons)
         {
             if (!Finite(newtons))
                 return "";
-            return LoadUnits.Beside((newtons.Value / 1000).ToString("0.00", Inv) + " kN", newtons.Value);
+            return id + " = " + LoadUnits.KgText(newtons.Value) + " KG.";
         }
 
         /// <summary>The rated speed: "1.00 M/SEC.".</summary>
@@ -126,36 +132,40 @@ namespace Elevator.Core.Layouts
             return names.Count == 0 || names.Any(n => n.Length == 0) ? "" : "(" + String.Join("-", names) + ")";
         }
 
-        static bool Available(SafetyPitLoad load)
+        // The calculated load of ONE component of a P5–P7 result (one car guide rail for P5, one buffer for P6 / P7); null when the
+        // result is not available.
+        static double? OneComponentLoadN(SafetyPitLoad load)
         {
-            return load != null && load.PerComponentLoadN.HasValue && load.GroupLoadN.HasValue && load.ParticipatingMassKg.HasValue;
+            bool available = load != null && load.PerComponentLoadN.HasValue && load.GroupLoadN.HasValue && load.ParticipatingMassKg.HasValue;
+            return available ? load.PerComponentLoadN : null;
         }
 
         /// <summary>
         /// Builds the title block. reactions: the current P1–P4 bearing reactions (null: unavailable); safetyPit: the current P5–P7 result
-        /// (null: unavailable; a result that no longer matches the project is not used); date: the issue date (null: none).
+        /// (null: unavailable; a result that no longer matches the project is not used); company: the company settings (null: the library
+        /// company name); date: the issue date (null: none).
         /// </summary>
         public static TitleBlockData Build(
             ElevatorProject project,
             PresetLibrary library,
+            CompanySettings company,
             IList<BearingReaction> reactions,
             SafetyPitCalculationResult safetyPit,
             DateTime? date)
         {
             var t = new TitleBlockData();
-            if (library != null)
-                t.CompanyName = Clean(library.CompanyNameOrDefault());
+            var doc = DocumentData.Resolve(project, library, company);
+            t.CompanyName = Clean(doc.CompanyName);
             if (date.HasValue)
-                t.Date = date.Value.ToString("yyyy-MM-dd", Inv);
+                t.Date = date.Value.ToString("dd/MM/yyyy", Inv);
             if (project == null)
                 return t;
-            var report = project.Report ?? new ProjectReportDetails();
             t.ProjectName = Clean(project.Info == null ? null : project.Info.Name);
-            t.Client = Clean(report.ClientName);
-            t.PreparedBy = Clean(report.PreparedBy);
-            t.CheckedBy = Clean(report.CheckedBy);
-            t.ApprovedBy = Clean(report.ApprovedBy);
-            t.Revision = DrawingRevision.Text(project);
+            t.Client = doc.Client;
+            t.PreparedBy = doc.PreparedBy;
+            t.CheckedBy = doc.CheckedBy;
+            t.ApprovedBy = doc.ApprovedBy;
+            t.Revision = doc.Revision;
             if (project.Elevator != null)
             {
                 t.RatedSpeed = Speed(project.Elevator.SpeedMetresPerSecond);
@@ -174,7 +184,7 @@ namespace Elevator.Core.Layouts
                 Func<string, string> r = id =>
                 {
                     var b = reactions.FirstOrDefault(x => x != null && x.Id == id);
-                    return b == null ? "" : Load(b.UpwardN);
+                    return b == null ? "" : Load(id, b.UpwardN);
                 };
                 t.P1 = r("P1");
                 t.P2 = r("P2");
@@ -183,15 +193,21 @@ namespace Elevator.Core.Layouts
             }
             if (safetyPit != null && SafetyPitCalculationEngine.IsCurrent(safetyPit, project))
             {
-                t.P5 = Available(safetyPit.P5) ? Load(safetyPit.P5.PerComponentLoadN) : "";
-                t.P6 = Available(safetyPit.P6) ? Load(safetyPit.P6.PerComponentLoadN) : "";
-                t.P7 = Available(safetyPit.P7) ? Load(safetyPit.P7.PerComponentLoadN) : "";
+                SafetyPitLoad carGuideRail = safetyPit.P5, carBuffer = safetyPit.P6, counterweightBuffer = safetyPit.P7;
+                t.P5 = Load("P5", OneComponentLoadN(carGuideRail));
+                t.P6 = Load("P6", OneComponentLoadN(carBuffer));
+                t.P7 = Load("P7", OneComponentLoadN(counterweightBuffer));
             }
             return t;
         }
 
         /// <summary>Builds the title block from the live results; a result that no longer matches the project is not used.</summary>
-        public static TitleBlockData Build(ElevatorProject project, PresetLibrary library, LiveCalculation live, DateTime? date)
+        public static TitleBlockData Build(
+            ElevatorProject project,
+            PresetLibrary library,
+            CompanySettings company,
+            LiveCalculation live,
+            DateTime? date)
         {
             IList<BearingReaction> reactions = null;
             SafetyPitCalculationResult pit = null;
@@ -203,7 +219,7 @@ namespace Elevator.Core.Layouts
                 if (live.SafetyPit != null && !live.SafetyPitStale(project))
                     pit = live.SafetyPit;
             }
-            return Build(project, library, reactions, pit, date);
+            return Build(project, library, company, reactions, pit, date);
         }
     }
 }

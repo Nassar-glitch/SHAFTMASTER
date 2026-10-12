@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Elevator.Core.Company;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 
@@ -43,6 +44,15 @@ namespace Elevator.Core.Layouts
             return project.Elevator.SystemId == "traction-geared" ? ElevatorSystemType.GB : (ElevatorSystemType?)null;
         }
 
+        /// <summary>
+        /// The counterweight code of a project. Today always RCW: the plan geometry of every current system places the counterweight at
+        /// the rear (DesignRules). SCWL / SCWR wait for the side-counterweight layout.
+        /// </summary>
+        public static CounterweightPositionCode CounterweightOf(ElevatorProject project)
+        {
+            return CounterweightPositionCode.RCW;
+        }
+
         static string Millimetres(double mm, string name)
         {
             if (Double.IsNaN(mm) || Double.IsInfinity(mm) || mm <= 0)
@@ -74,29 +84,37 @@ namespace Elevator.Core.Layouts
         }
 
         /// <summary>
-        /// The base name of a project: the company from the preset library, the system type, SW and SD from the shaft, the project name
-        /// and the revision NN. The counterweight code is given by the caller (see SESSION_HANDOFF "Cloud L2a": the project does not yet
-        /// store a counterweight position that maps to RCW / SCWL / SCWR).
+        /// The base name of a project: the company (<see cref="DocumentData"/>: company settings, else the preset library), the system
+        /// type, the counterweight code, SW and SD from the shaft, the project name and the revision NN.
         /// </summary>
-        public static string BaseName(ElevatorProject project, PresetLibrary library, CounterweightPositionCode counterweight)
+        public static string BaseName(ElevatorProject project, PresetLibrary library, CompanySettings company)
+        {
+            return BaseName(project, library, company, CounterweightOf(project));
+        }
+
+        /// <summary>The base name of a project with a given counterweight code.</summary>
+        public static string BaseName(
+            ElevatorProject project,
+            PresetLibrary library,
+            CompanySettings company,
+            CounterweightPositionCode counterweight)
         {
             if (project == null)
                 throw new ArgumentNullException("project");
             var type = SystemTypeOf(project);
             if (!type.HasValue)
                 throw new ArgumentException("The elevator system has no file-name type code.");
-            int? revision = DrawingRevision.Number(project);
-            if (!revision.HasValue)
-                throw new ArgumentException("The revision must be a whole number (00, 01, 02 …) for the file name.");
-            string company = library == null ? PresetLibrary.DefaultCompanyName : library.CompanyNameOrDefault();
+            var doc = DocumentData.Resolve(project, library, company);
+            if (!doc.RevisionNumber.HasValue)
+                throw new ArgumentException(doc.RevisionIssue.Message);
             return BaseName(
-                company,
+                doc.CompanyName,
                 type.Value,
                 counterweight,
                 project.Shaft == null ? 0 : project.Shaft.WidthMm,
                 project.Shaft == null ? 0 : project.Shaft.DepthMm,
                 project.Info == null ? null : project.Info.Name,
-                revision.Value);
+                doc.RevisionNumber.Value);
         }
 
         /// <summary>The DWG, PDF and project file names of one base name.</summary>

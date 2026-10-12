@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
+using Elevator.Core.Company;
 using Elevator.Core.Layouts;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.SafetyGear;
+using Elevator.Reporting.Sheet;
 using Xunit;
 
 namespace Elevator.Core.Tests
@@ -160,11 +162,11 @@ namespace Elevator.Core.Tests
             p.Elevator.CapacityKg = 450;
             p.Elevator.SpeedMetresPerSecond = 1.0;
             Floors(p, "G", 3100.0, "1", 3060.0, "2", 3120.0, "3", null);
-            var t = TitleBlockData.Build(p, Lib, null, null, Day);
+            var t = TitleBlockData.Build(p, Lib, null, null, null, Day);
             Assert.Equal("ELEVATORS COMPANY", t.CompanyName);
             Assert.Equal("VILLA bx12", t.ProjectName);
             Assert.Equal("Mr. Client", t.Client);
-            Assert.Equal("2026-10-12", t.Date);
+            Assert.Equal("12/10/2026", t.Date);
             Assert.Equal("A. Engineer", t.PreparedBy);
             Assert.Equal("B. Checker", t.CheckedBy);
             Assert.Equal("C. Approver", t.ApprovedBy);
@@ -186,7 +188,7 @@ namespace Elevator.Core.Tests
             p.Report = null;
             p.Elevator.CapacityKg = null;
             p.Elevator.SpeedMetresPerSecond = null;
-            var t = TitleBlockData.Build(p, Lib, null, null, null);
+            var t = TitleBlockData.Build(p, Lib, null, null, null, null);
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
                 Assert.NotNull(f.GetValue(t));
             Assert.Equal("", t.DrawingTitle);
@@ -205,7 +207,7 @@ namespace Elevator.Core.Tests
             // Whitespace-only texts are blank too.
             p.Info.Name = "   ";
             p.Report = new ProjectReportDetails { ClientName = " ", PreparedBy = "\t", Revision = "  " };
-            t = TitleBlockData.Build(p, Lib, null, null, null);
+            t = TitleBlockData.Build(p, Lib, null, null, null, null);
             Assert.Equal("", t.ProjectName);
             Assert.Equal("", t.Client);
             Assert.Equal("", t.PreparedBy);
@@ -218,11 +220,11 @@ namespace Elevator.Core.Tests
                     Assert.DoesNotContain(word, v, StringComparison.OrdinalIgnoreCase);
             }
             // Without a library: no company, persons, control or supply.
-            t = TitleBlockData.Build(p, null, null, null, null);
+            t = TitleBlockData.Build(p, null, null, null, null, null);
             Assert.Equal("", t.CompanyName);
             Assert.Equal("", t.Control);
             Assert.Equal("", t.Supply);
-            Assert.NotNull(TitleBlockData.Build(null, Lib, null, null, null));
+            Assert.NotNull(TitleBlockData.Build(null, Lib, null, null, null, null));
         }
 
         [Theory]
@@ -252,9 +254,9 @@ namespace Elevator.Core.Tests
         {
             var p = New();
             p.Elevator.CapacityKg = 630;
-            Assert.Equal("630 KG. - 8 PASSENGERS.", TitleBlockData.Build(p, Lib, null, null, null).RatedLoad);
+            Assert.Equal("630 KG. - 8 PASSENGERS.", TitleBlockData.Build(p, Lib, null, null, null, null).RatedLoad);
             p.Elevator.CapacityKg = 1000;
-            Assert.Equal("1000 KG. - 13 PASSENGERS.", TitleBlockData.Build(p, Lib, null, null, null).RatedLoad);
+            Assert.Equal("1000 KG. - 13 PASSENGERS.", TitleBlockData.Build(p, Lib, null, null, null, null).RatedLoad);
         }
 
         [Fact]
@@ -305,14 +307,17 @@ namespace Elevator.Core.Tests
         }
 
         [Theory]
-        [InlineData(12345.0, "12.35 kN (1260 kg)")]
-        [InlineData(11772.0, "11.77 kN (1200 kg)")] // 1200 kg exactly stays
-        [InlineData(11781.81, "11.78 kN (1205 kg)")] // 1201 kg rounds up to the next 5 kg
-        [InlineData(0.0, "0.00 kN (0 kg)")]
-        [InlineData(-11781.81, "-11.78 kN (-1205 kg)")]
-        public void Loads_show_kN_with_kg_beside(double n, string text)
+        [InlineData(5346.45, "P1 = 545 KG.")]   // 545 kg exactly stays
+        [InlineData(12345.0, "P1 = 1260 KG.")]  // 1258.4 kg -> 1260
+        [InlineData(11772.0, "P1 = 1200 KG.")]  // 1200 kg exactly stays
+        [InlineData(11781.81, "P1 = 1205 KG.")] // 1201 kg rounds up to the next 5 kg
+        [InlineData(0.0, "P1 = 0 KG.")]
+        [InlineData(-11781.81, "P1 = -1205 KG.")]
+        public void Loads_show_kg_only(double n, string text)
         {
-            Assert.Equal(text, TitleBlockData.Load(n));
+            Assert.Equal(text, TitleBlockData.Load("P1", n));
+            Assert.Equal("", TitleBlockData.Load("P1", null));
+            Assert.Equal("", TitleBlockData.Load("P1", double.NaN));
         }
 
         [Fact]
@@ -322,20 +327,35 @@ namespace Elevator.Core.Tests
             var chassis = new CalculationWorkspace().Calculate(p, Ctx);
             var pit = new SafetyPitCalculationEngine().Calculate(p);
             Assert.NotNull(chassis.Reactions);
-            var t = TitleBlockData.Build(p, Lib, chassis.Reactions, pit, Day);
+            var t = TitleBlockData.Build(p, Lib, null, chassis.Reactions, pit, Day);
             var byId = chassis.Reactions.ToDictionary(r => r.Id, r => r.UpwardN);
-            Assert.Equal(TitleBlockData.Load(byId["P1"]), t.P1);
-            Assert.Equal(TitleBlockData.Load(byId["P2"]), t.P2);
-            Assert.Equal(TitleBlockData.Load(byId["P3"]), t.P3);
-            Assert.Equal(TitleBlockData.Load(byId["P4"]), t.P4);
-            Assert.Equal(TitleBlockData.Load(pit.P5.PerComponentLoadN), t.P5);
-            Assert.Equal(TitleBlockData.Load(pit.P6.PerComponentLoadN), t.P6);
-            Assert.Equal(TitleBlockData.Load(pit.P7.PerComponentLoadN), t.P7);
+            Assert.Equal("P1 = " + LoadUnits.KgText(byId["P1"]) + " KG.", t.P1);
+            Assert.Equal("P2 = " + LoadUnits.KgText(byId["P2"]) + " KG.", t.P2);
+            Assert.Equal("P3 = " + LoadUnits.KgText(byId["P3"]) + " KG.", t.P3);
+            Assert.Equal("P4 = " + LoadUnits.KgText(byId["P4"]) + " KG.", t.P4);
+            // P5: one car guide rail; P6: one car buffer; P7: one counterweight buffer.
+            Assert.Equal("P5 = " + LoadUnits.KgText(pit.P5.PerComponentLoadN.Value) + " KG.", t.P5);
+            Assert.Equal("P6 = " + LoadUnits.KgText(pit.P6.PerComponentLoadN.Value) + " KG.", t.P6);
+            Assert.Equal("P7 = " + LoadUnits.KgText(pit.P7.PerComponentLoadN.Value) + " KG.", t.P7);
+            int i = 1;
             foreach (var load in new[] { t.P1, t.P2, t.P3, t.P4, t.P5, t.P6, t.P7 })
-                Assert.Matches(@"^-?\d+\.\d\d kN \(-?\d+ kg\)$", load);
-            // kg beside each value follows principle 10 exactly.
-            Assert.EndsWith("(" + LoadUnits.KgText(byId["P1"]) + " kg)", t.P1);
-            Assert.EndsWith("(" + LoadUnits.KgText(pit.P5.PerComponentLoadN.Value) + " kg)", t.P5);
+                Assert.Matches(@"^P" + (i++) + @" = -?\d+ KG\.$", load);
+            foreach (var r in chassis.Reactions)
+                Assert.Equal(0.0, LoadUnits.Kg(r.UpwardN) % 5);
+        }
+
+        [Fact]
+        public void P6_and_P7_are_the_load_of_one_buffer()
+        {
+            var p = New();
+            ProjectPresets.Find("Calculations.SafetyPit.CarBufferCount").Edit(p, 2);
+            ProjectPresets.Find("Calculations.SafetyPit.CounterweightBufferCount").Edit(p, 2);
+            var pit = new SafetyPitCalculationEngine().Calculate(p);
+            Assert.True(pit.P6.GroupLoadN > pit.P6.PerComponentLoadN);
+            Assert.True(pit.P7.GroupLoadN > pit.P7.PerComponentLoadN);
+            var t = TitleBlockData.Build(p, Lib, null, null, pit, null);
+            Assert.Equal("P6 = " + LoadUnits.KgText(pit.P6.PerComponentLoadN.Value) + " KG.", t.P6);
+            Assert.Equal("P7 = " + LoadUnits.KgText(pit.P7.PerComponentLoadN.Value) + " KG.", t.P7);
         }
 
         [Fact]
@@ -345,14 +365,14 @@ namespace Elevator.Core.Tests
             var pit = new SafetyPitCalculationEngine().Calculate(p);
             // A missing P7 input: P7 empty, P5 / P6 kept.
             pit.P7.PerComponentLoadN = null;
-            var t = TitleBlockData.Build(p, Lib, new List<BearingReaction>(), pit, null);
+            var t = TitleBlockData.Build(p, Lib, null, new List<BearingReaction>(), pit, null);
             Assert.Equal("", t.P1);
             Assert.NotEqual("", t.P5);
             Assert.Equal("", t.P7);
             // A P5–P7 result of other inputs is not used.
             var stale = new SafetyPitCalculationEngine().Calculate(p);
             p.Calculations.CarMassKg = p.Calculations.CarMassKg + 100;
-            t = TitleBlockData.Build(p, Lib, null, stale, null);
+            t = TitleBlockData.Build(p, Lib, null, null, stale, null);
             Assert.Equal("", t.P5);
             Assert.Equal("", t.P6);
             Assert.Equal("", t.P7);
@@ -364,9 +384,9 @@ namespace Elevator.Core.Tests
             var flow = PresetFlow.Load(PresetsPath, Ctx);
             var live = new LiveCalculation(Ctx, flow);
             var p = New();
-            Assert.Equal("", TitleBlockData.Build(p, Lib, live, null).P1);
+            Assert.Equal("", TitleBlockData.Build(p, Lib, null, live, null).P1);
             live.Recalculate(p);
-            var t = TitleBlockData.Build(p, Lib, live, Day);
+            var t = TitleBlockData.Build(p, Lib, null, live, Day);
             Assert.NotEqual("", t.P1);
             Assert.NotEqual("", t.P4);
             Assert.NotEqual("", t.P5);
@@ -374,11 +394,11 @@ namespace Elevator.Core.Tests
             // An input change makes both results outdated until the next recalculation.
             ProjectPresets.Lock(p, "Calculations.CarMassKg");
             p.Calculations.CarMassKg = p.Calculations.CarMassKg + 50;
-            t = TitleBlockData.Build(p, Lib, live, Day);
+            t = TitleBlockData.Build(p, Lib, null, live, Day);
             Assert.Equal("", t.P1);
             Assert.Equal("", t.P5);
             live.Recalculate(p);
-            Assert.NotEqual("", TitleBlockData.Build(p, Lib, live, Day).P1);
+            Assert.NotEqual("", TitleBlockData.Build(p, Lib, null, live, Day).P1);
         }
 
         [Fact]
@@ -387,7 +407,7 @@ namespace Elevator.Core.Tests
             var p = New();
             TitleBlockFields.Control.Edit(p, "  DUPLEX COLLECTIVE. ");
             var lib = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"Nile Lifts\"").Replace("3 PHASE 380 V. 50 Hz.", "3 PHASE 400 V. 50 Hz."));
-            var t = TitleBlockData.Build(p, lib, null, null, null);
+            var t = TitleBlockData.Build(p, lib, null, null, null, null);
             Assert.Equal("Nile Lifts", t.CompanyName);
             Assert.Equal("DUPLEX COLLECTIVE.", t.Control);
             Assert.Equal("3 PHASE 400 V. 50 Hz.", t.Supply);
@@ -408,9 +428,10 @@ namespace Elevator.Core.Tests
         {
             Assert.Equal(number, DrawingRevision.Number(revision));
             Assert.Equal(text, DrawingRevision.Text(number));
+            Assert.Null(DrawingRevision.Validate(revision));
             var p = New();
             p.Report = new ProjectReportDetails { Revision = revision };
-            Assert.Equal(text, TitleBlockData.Build(p, Lib, null, null, null).Revision);
+            Assert.Equal(text, TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
         }
 
         [Theory]
@@ -426,9 +447,21 @@ namespace Elevator.Core.Tests
             var p = New();
             p.Info.Name = "VILLA";
             p.Report = new ProjectReportDetails { Revision = revision };
-            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null).Revision);
-            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, CounterweightPositionCode.RCW));
+            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            var e = Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, null));
+            Assert.Equal("Revision must be a number: 00, 01, 02 …", e.Message);
             Assert.Throws<ArgumentOutOfRangeException>(() => DrawingRevision.Text(-1));
+            // Reported by validation, never changed.
+            var issue = DrawingRevision.Validate(p);
+            Assert.NotNull(issue);
+            Assert.Equal(DrawingRevision.NotANumberCode, issue.Code);
+            Assert.Equal("Report.Revision", issue.Field);
+            Assert.Equal(ValidationStatus.FAIL, issue.Status);
+            Assert.Equal(revision, p.Report.Revision);
+            var doc = DocumentData.Resolve(p, Lib, null);
+            Assert.Null(doc.RevisionNumber);
+            Assert.Equal("", doc.Revision);
+            Assert.NotNull(doc.RevisionIssue);
         }
 
         // ---------- file names ----------
@@ -518,14 +551,127 @@ namespace Elevator.Core.Tests
             p.Shaft.WidthMm = 1500;
             p.Shaft.DepthMm = 1600;
             Assert.Equal(ElevatorSystemType.GB, DrawingFileName.SystemTypeOf(p));
-            Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, Lib, CounterweightPositionCode.RCW));
+            Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p));
+            Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, Lib, null));
             p.Report = new ProjectReportDetails { Revision = "2" };
             var lib = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"ELEVATORSCOMPANY\""));
-            Assert.Equal("ELEVATORSCOMPANY-GB-SCWL-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, CounterweightPositionCode.SCWL));
+            Assert.Equal("ELEVATORSCOMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null));
+            // The company entered in the settings wins over the library, kept exactly as typed.
+            Assert.Equal(" Nile  Lifts-GB-RCW-W1500D1600-VILLA bx12-MODEL02",
+                DrawingFileName.BaseName(p, lib, new CompanySettings { CompanyName = " Nile  Lifts" }));
+            // The enum is ready for the side-counterweight layout.
+            Assert.Equal("ELEVATORSCOMPANY-GB-SCWL-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null, CounterweightPositionCode.SCWL));
+            Assert.Equal("ELEVATORSCOMPANY-GB-SCWR-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, lib, null, CounterweightPositionCode.SCWR));
             // A system without a type code yet.
             p.Elevator.SystemId = "hydraulic";
             Assert.Null(DrawingFileName.SystemTypeOf(p));
-            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, CounterweightPositionCode.RCW));
+            Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName(p, Lib, null));
+        }
+    
+        // ---------- one set of company / report data ----------
+        [Fact]
+        public void Every_current_project_maps_to_a_rear_counterweight()
+        {
+            Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(New()));
+            var p = ProjectJson.Deserialize(File.ReadAllText(Path.Combine(TestData.Bin, "reviewed-example.elevator.json")));
+            Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p));
+            p.Counterweight.Position = "side";
+            Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p)); // the plan geometry is always rear today
+            Assert.Equal(new[] { "RCW", "SCWL", "SCWR" }, Enum.GetNames(typeof(CounterweightPositionCode)));
+        }
+
+        [Fact]
+        public void The_company_name_follows_the_library_until_entered_in_the_settings()
+        {
+            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(null, Lib));
+            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(new CompanySettings(), Lib));
+            Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(new CompanySettings { CompanyName = "   " }, Lib));
+            Assert.Equal("Nile  Lifts Co. ", DocumentData.Company(new CompanySettings { CompanyName = "Nile  Lifts Co. " }, Lib));
+            Assert.Equal("", DocumentData.Company(null, null));
+            // The library value follows an edit of the library.
+            var edited = Variant(s => s.Replace("\"ELEVATORS COMPANY\"", "\"Delta Lifts\""));
+            Assert.Equal("Delta Lifts", DocumentData.Company(null, edited));
+            Assert.Equal("Nile", DocumentData.Company(new CompanySettings { CompanyName = "Nile" }, edited));
+        }
+
+        [Fact]
+        public void One_set_of_report_data_for_the_title_block_and_the_file_name()
+        {
+            var p = New();
+            p.Info.Name = "VILLA bx12";
+            p.Report = new ProjectReportDetails { ClientName = " Delta ", PreparedBy = "A. Engineer", CheckedBy = "B. Checker", ApprovedBy = "C. Approver", Revision = "3" };
+            var company = new CompanySettings { CompanyName = "Nile Lifts ", LogoFile = "company-logo-1234abcd.png" };
+            var doc = DocumentData.Resolve(p, Lib, company);
+            Assert.Equal("Nile Lifts ", doc.CompanyName);
+            Assert.Equal("company-logo-1234abcd.png", doc.LogoFile);
+            Assert.Equal("Delta", doc.Client);
+            Assert.Equal("A. Engineer", doc.PreparedBy);
+            Assert.Equal("B. Checker", doc.CheckedBy);
+            Assert.Equal("C. Approver", doc.ApprovedBy);
+            Assert.Equal(3, doc.RevisionNumber);
+            Assert.Equal("03", doc.Revision);
+            Assert.Null(doc.RevisionIssue);
+            var t = TitleBlockData.Build(p, Lib, company, null, null, null);
+            Assert.Equal("Nile Lifts", t.CompanyName);
+            Assert.Equal(doc.Client, t.Client);
+            Assert.Equal(doc.PreparedBy, t.PreparedBy);
+            Assert.Equal(doc.CheckedBy, t.CheckedBy);
+            Assert.Equal(doc.ApprovedBy, t.ApprovedBy);
+            Assert.Equal(doc.Revision, t.Revision);
+            Assert.EndsWith("-MODEL" + doc.Revision, DrawingFileName.BaseName(p, Lib, company));
+            Assert.StartsWith("Nile Lifts-GB-", DrawingFileName.BaseName(p, Lib, company));
+            // No project: company data only.
+            var none = DocumentData.Resolve(null, Lib, null);
+            Assert.Equal("ELEVATORS COMPANY", none.CompanyName);
+            Assert.Equal("", none.Client);
+            Assert.Equal("00", none.Revision);
+        }
+
+        [Fact]
+        public void An_older_project_with_a_letter_revision_loads_and_is_reported()
+        {
+            var json = File.ReadAllText(Path.Combine(TestData.Root, "tests", "golden", "fixtures", "titleblock-filled.elevator.json"));
+            var p = ProjectJson.Deserialize(json);
+            Assert.Equal("A", p.Report.Revision);
+            var issue = DrawingRevision.Validate(p);
+            Assert.NotNull(issue);
+            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            // Never silently changed: the revision text is saved back as it was.
+            Assert.Equal("A", ProjectJson.Deserialize(ProjectJson.Serialize(p)).Report.Revision);
+            Assert.Null(DrawingRevision.Validate(New()));
+        }
+
+        [Fact]
+        public void The_settings_file_adapter_keeps_its_format_and_maps_to_the_portable_model()
+        {
+            string saved = CompanyReportSettings.SettingsDirectory;
+            string dir = Path.Combine(TestData.Folder("layouts-company-settings"), Guid.NewGuid().ToString("N"));
+            try
+            {
+                CompanyReportSettings.SettingsDirectory = dir;
+                // No file: blank settings, so the documents follow the library company name.
+                var empty = CompanyReportSettings.Load().ToCompanySettings();
+                Assert.Null(empty.CompanyName);
+                Assert.Equal("ELEVATORS COMPANY", DocumentData.Company(empty, Lib));
+                // A settings file written by the current application still loads.
+                Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, "report-settings.json"), "{\"CompanyName\":\"Nile Lifts Engineering\",\"LogoFile\":null,\"LogoPath\":null}");
+                var loaded = CompanyReportSettings.Load();
+                Assert.Equal("Nile Lifts Engineering", loaded.ToCompanySettings().CompanyName);
+                Assert.Equal("Nile Lifts Engineering", DocumentData.Company(loaded.ToCompanySettings(), Lib));
+                // Apply + Save writes the same members as before.
+                var s = new CompanyReportSettings();
+                s.Apply(new CompanySettings { CompanyName = "Delta  Lifts" });
+                s.Save();
+                string text = File.ReadAllText(Path.Combine(dir, "report-settings.json"));
+                var members = ((IDictionary<string, object>)Elevator.Core.Serialization.CoreJson.Create().DeserializeObject(text)).Keys.OrderBy(k => k, StringComparer.Ordinal);
+                Assert.Equal(new[] { "CompanyName", "LogoFile", "LogoPath" }, members);
+                Assert.Equal("Delta  Lifts", CompanyReportSettings.Load().ToCompanySettings().CompanyName);
+            }
+            finally
+            {
+                CompanyReportSettings.SettingsDirectory = saved;
+            }
         }
     }
 }
