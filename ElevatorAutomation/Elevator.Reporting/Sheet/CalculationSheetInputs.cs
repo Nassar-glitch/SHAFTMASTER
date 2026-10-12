@@ -14,7 +14,8 @@ namespace Elevator.Reporting.Sheet
         public string CarGuideForceDraftError;
         public DateTime GeneratedLocal = ReportClock.Now();
 
-        // Company-level settings (application, not project); both optional.
+        // Company-level settings (application, not project; Elevator.Core.Company.CompanySettings, stored by CompanyReportSettings);
+        // both optional: a blank company name is left out.
         public string CompanyName;
         public DocxImage Logo;
 

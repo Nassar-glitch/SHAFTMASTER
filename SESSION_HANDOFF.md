@@ -25,6 +25,42 @@ This file is the shared status channel between the user's Planner chat and Execu
     - **Checks:** none of the test tiers apply (docs only). The ezdxf script was run on the geared DXF; renders reviewed by eye. Not run: any AutoCAD / Core Console plot (no plot was needed to answer the questions; the PDF route in 6.4 is a proposal that needs a local spike), tiers 1-3.
     - **Read-only:** the source DXFs were not modified (read with ezdxf; the reduced-size experiment was saved in the scratchpad, not in the repository).
     - **Next step:** the Planner answers the open questions in LAYOUTS.md section 7 (A0 / A1, view assignment, scale field, fonts, revision table), reviews the L2a gaps above, then writes the L2b prompt.
+
+  - **Cloud L2a: portable data behind the drawing sheet (2026-10-12), branch `cloud/layouts-l2a` from `origin/main` (`202b84a`). Planner-approved. Round 2 applied the user's answers; round 3 applied the user's answers (a) / (b) on the sheet. Pushed; not merged, no PR.**
+    - **Files:**
+      - Core, new: `Elevator.Core/Presets/TitleBlockPreset.cs`; `Elevator.Core/Company/CompanySettings.cs`, `DocumentData.cs`; `Elevator.Core/Layouts/TitleBlockFields.cs`, `TitleBlockData.cs`, `DrawingFileName.cs` (+ `DrawingFileNames`), `DrawingRevision.cs`, `DrawingCodes.cs` (`ElevatorSystemType` GB / GL / HY / MRL, `CounterweightPositionCode` RCW / SCWL / SCWR).
+      - Core, changed: `Elevator.Core/Presets/PresetLibrary.cs` (`TitleBlock`, `TitleBlockOrDefault()`, validation, left out of `Hash()`; no company name any more); `config/presets.json` (only `"TitleBlock": { "Control": "SIMPLEX COLLECTIVE DOWN.", "Supply": "3 PHASE 380 V. 50 Hz." }` added); `Elevator.Core/Presets/ProjectPresets.cs` (`Find` also finds the title-block keys); `Elevator.Core/Application/LiveCalculation.cs` (`TitleBlock.*` paths recalculate nothing).
+      - Reporting, changed:
+        - `Elevator.Reporting/Sheet/CalculationSheet.cs` and `Elevator.Reporting/DesignNotes/DesignNotes.cs`: `Render()` takes company, client, document number, prepared / checked / approved and revision from `DocumentData`.
+        - `Elevator.Reporting/Sheet/CompanyReportSettings.cs`: `ToCompanySettings()` / `Apply()`; file format unchanged.
+        - `Elevator.Reporting/Sheet/CalculationSheetInputs.cs`: comment only.
+      - Tests: `tests/Elevator.Core.Tests/LayoutsTests.cs` (74); `tests/Elevator.Reporting.Tests/DocumentDataTests.cs` (3, renders the sheet and the Design Notes).
+    - **User decisions (final):**
+      1. **CW:** `DrawingFileName.CounterweightOf(project)` is always RCW today, because the plan geometry is always rear. The enum and a `BaseName(project, company, cw)` overload stay ready for SCWL / SCWR. No UI field.
+      2. **Company name, one source = what the user enters** (`CompanySettings`, stored in %AppData% by `CompanyReportSettings`).
+         - Nothing is filled in: no library value, no default. "ELEVATORS COMPANY" was removed from `presets.json` and from the code (round 3, user answer (a)).
+         - Not entered (null / blank) means it is left out of the sheet, the Design Notes, the title block and so the PDF. Only the file name writes `NONE` (`DrawingFileName.NoCompany`).
+         - Kept exactly as typed in the file name; trimmed for display.
+      3. **One set of company / report data:** `DocumentData.Resolve(project, companySettings)` is used by the sheet, the Design Notes, `TitleBlockData` and `DrawingFileName`. It carries company, logo file, client, document number, prepared / checked / approved, revision (display text), revision number and the revision issue.
+      4. **Revision:** one value everywhere (round 3, user answer (b): shown as it is, all unified).
+         - `DrawingRevision.Display`: blank gives "" (left out of every document); a number gives NN ("1" → "01"); any other stored text ("A") is shown as it is, kept, saved back unchanged, and reported by `DrawingRevision.Validate`: code `REVISION_NOT_A_NUMBER`, field `Report.Revision`, message "Revision must be a number: 00, 01, 02 …", FAIL, `BlocksGeneration` false.
+         - File names: blank → `MODEL00`, a number → NN; a non-number throws the validation message.
+         - **Note:** "blank means 00" now applies to the file name only. The documents leave a blank revision out, to keep the user's rule "not entered, left out" and the golden fixtures unchanged. If the Planner wants "00" printed on the documents, 46 `sheet.txt` and 47 `design-notes.txt` would gain "Rev 00".
+      5. **P5–P7:** P5 one car guide rail, P6 ONE car buffer, P7 ONE counterweight buffer (`PerComponentLoadN`; named `carGuideRail` / `carBuffer` / `counterweightBuffer`); a test with 2 buffers each checks it.
+      6. **Title-block formats:** "P1 = 545 KG." (kg only, `LoadUnits`); date dd/MM/yyyy ("12/10/2026"); speed "1.00 M/SEC."; load "450 KG. - 6 PASSENGERS."; travel "9.28 METRES."; stops = served count; floors "(G-1-2-3)". The sheet keeps its own date format.
+    - **Earlier decisions (unchanged):**
+      - Control / Supply are per-project preset fields (`TitleBlock.Control` / `TitleBlock.Supply`, lock / follow / Reset). An edited value lives in the project extension `titleBlock`, so other files are byte-identical.
+      - File-name sanitising: `\ / : * ? " < > |` and control characters become `_`, and trailing dots and spaces are trimmed per part. SW / SD are rounded to integer mm. A blank project name throws. Extensions: `.dwg`, `.pdf`, `.elevator.json`.
+    - **Sheet output:** no golden fixture changed. Every fixture has a blank company (or "  ") or the typed "Nile Lifts Engineering", and a blank revision or "A", which render exactly as before. Visible changes for users: a numeric revision prints as NN ("1" → "01") on the sheet and the Design Notes.
+    - **Fields that stay empty:** `DrawingTitle`, `Scale` (no source yet). Also empty when not entered or not available: company, project, client, prepared / checked / approved, revision (blank), date, speed, load, travel, stops / floors, P1-P7.
+    - **Open (for the Planner):** a blank project name still refuses the file name (only the company gets NONE). Say if the project name should also become NONE.
+    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (`20261012-101435`): core-net8.0 715 (641 + 74), reporting-net8.0 196 (193 + 3). No file under `tests/golden` changed. net48 and tiers 2-3 were not run (Linux cloud). The new Reporting test uses the WPF rasterizer on an STA thread on net48, as `ReportContentTests` does; it was not run here.
+    - **Next step:** local: merge `cloud/layouts-l2a`, run net48 tier 1 (+ `sheet-wpf`), then wire the UI:
+      - the company settings window through `CompanyReportSettings.ToCompanySettings()` / `Apply()`; the General page summary still says "no name";
+      - Control / Supply fields;
+      - `DrawingRevision.Validate` shown on the revision field;
+      - the A1 title block from `TitleBlockData.Build(project, library, settings, live, date)`;
+      - file names from `DrawingFileName.BaseName(project, settings)`.
   - **v05 release (2026-10-12), Planner-approved.** Commits on `main`: Planner edit "layouts and PDF agreement, cloud/local split" (`c9efa63`, DESIGN-FLOW.md and CLAUDE.md, committed on `feature/loads-kg`), merge `e06ad70` "Merge feature/loads-kg: loads also in kg" (--no-ff), CHANGELOG `[v05] — 2026-10-12` (automatic doors 2S / 2C, drawing quality, Doors Offset, loads in kg), then `tools/release.ps1 -Version v05`: build, the one full run of tiers 1-3 (core-net8.0 641, core-net48 797, reporting 193 x 2, golden 770, sheet-wpf 10763, tier 2 all 9 suites incl. doors-ui 52, integration 22, presets-native 6, doors-native 63, doors-step 31, sheet-word-render 10763), copy, RELEASE-NOTES.md and SHA256SUMS.txt, verification. Release hashes: ShaftMaster.exe v05 F04C0BBD. The Planner's layout files (`Layouts_Sec/`) came in with that commit; nothing in them was used or changed by me.
     - **Next step:** the layouts work as CLAUDE.md splits it between the cloud and local chats; the Planner writes the prompt. Do not push: the user pushes.
   - **Loads also in kg (DESIGN-FLOW principle 10), branch `feature/loads-kg` from `main` (D4 merged). Not merged into `main`, not pushed, not released. Awaiting Planner.**
@@ -1260,6 +1296,12 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 - **Next step:** The single next action
 
 ## Recent updates
+
+- 2026-10-12: Cloud Executor applied the user's answers (a) / (b) on `cloud/layouts-l2a` (pushed): the company name comes only from what the user enters (no default; left out everywhere when blank, NONE in the file name), and the sheet, Design Notes and title block share one revision text (as stored; NN for numbers). Tier 1 PASS, golden unchanged.
+
+- 2026-10-12: Cloud Executor applied the user's L2a answers on `cloud/layouts-l2a` (pushed): RCW mapping, one `DocumentData` source (Core) with `CompanyReportSettings` as the %AppData% adapter, numeric revision with validation, P6 / P7 per buffer, title block "P1 = 545 KG." and dd/MM/yyyy. Tier 1 PASS, golden unchanged. Stopped before changing the sheet / Design Notes company and revision output (46 sheet + 47 notes fixtures would change).
+
+- 2026-10-12: Cloud Executor completed L2a on `cloud/layouts-l2a` (pushed, not merged): company name and Control / Supply presets, `TitleBlockData`, the file-name builder, 67 xUnit tests. Tier 1 PASS, golden unchanged. Counterweight code not mapped (open question). See "Cloud L2a" under Current task.
 
 - 2026-10-09: Executor merged P4 into main (`da8335e`) and committed the Planner ARCHITECTURE-PLAN change (`426f306`). Not pushed. Next: P5 in a new Executor chat.
 - 2026-10-09: Executor completed P4 "Desktop structure" and the clean-up on branch `refactor/p4-desktop` (not merged, not pushed): Core.Application services (session, preset flow, live calculation) with 19 xUnit tests, MainWindow split into Shell / Pages / Common with view-models and a test facade, UI counts unchanged, 57 of 58 screenshots identical, unused code / obsolete scripts / superseded docs removed, disk proposal written (nothing deleted). Golden unchanged; tiers 1-3 PASS. Awaiting Planner.

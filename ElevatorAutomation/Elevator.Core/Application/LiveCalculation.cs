@@ -55,8 +55,8 @@ namespace Elevator.Core.Application
         /// <summary>Which results an input change makes outdated, by the editor path of the input.</summary>
         public static InputEffect EffectOf(string path)
         {
-            if (path.StartsWith("Report."))
-                return InputEffect.None; // sheet metadata: no calculation or drawing input
+            if (path.StartsWith("Report.") || path.StartsWith("TitleBlock."))
+                return InputEffect.None; // sheet / title-block metadata: no calculation or drawing input
             var effect = InputEffect.Design | InputEffect.Chassis | InputEffect.RopeTraction;
             // A door type or clearance changes the front zone, so the car depth: FF1 / FF2 follow it too.
             if (path == "Elevator.CapacityKg" || path == "Shaft.WidthMm" || path == "Shaft.DepthMm" || path.StartsWith("Doors."))

@@ -45,6 +45,15 @@ namespace Elevator.Core.Presets
         /// <summary>The door catalog (DESIGN-FLOW "Doors"); null in an older library: the shipped default catalog applies.</summary>
         public DoorCatalog Doors;
 
+        /// <summary>The title-block presets (control, supply); null in an older library: the shipped defaults apply.</summary>
+        public TitleBlockPreset TitleBlock;
+
+        /// <summary>The title-block presets of the library, or the shipped defaults.</summary>
+        public TitleBlockPreset TitleBlockOrDefault()
+        {
+            return TitleBlock ?? TitleBlockPreset.Default();
+        }
+
         /// <summary>The door catalog of the library, or the shipped default.</summary>
         public DoorCatalog DoorsOrDefault()
         {
@@ -132,6 +141,8 @@ namespace Elevator.Core.Presets
             ValidateProject(p);
             if (Doors != null)
                 p.AddRange(Doors.Validate());
+            if (TitleBlock != null && (TitleBlock.Control == null || TitleBlock.Supply == null))
+                p.Add("TitleBlock needs Control and Supply");
             return p;
         }
 
@@ -368,7 +379,7 @@ namespace Elevator.Core.Presets
             var value = hash;
             if (value == null)
             {
-                value = CalculationFingerprint.HashWithout(this, "Doors");
+                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock");
                 hash = value;
             }
             return value;

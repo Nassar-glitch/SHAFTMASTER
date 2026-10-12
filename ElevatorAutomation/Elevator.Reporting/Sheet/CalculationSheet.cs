@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Elevator.Core.Company;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
 using Elevator.Core.Doors;
@@ -510,10 +511,11 @@ namespace Elevator.Reporting.Sheet
             if (!HasContent)
                 throw new InvalidOperationException("No calculation is available to export.");
             var p = Project;
-            var report = p.Report ?? new ProjectReportDetails();
+            // Company and report data: the one set shared with the Design Notes, the title block and the file names.
+            var doc = DocumentData.Resolve(p, new CompanySettings { CompanyName = Inputs.CompanyName });
             string date = Inputs.GeneratedLocal.ToString("yyyy-MM-dd", Inv);
-            string name = Clean(p.Info.Name), company = Clean(Inputs.CompanyName), client =
-                Clean(report.ClientName), number = Clean(report.DocumentNumber), revision = Clean(report.Revision);
+            string name = Clean(p.Info.Name), company = Clean(doc.CompanyName), client =
+                Clean(doc.Client), number = Clean(doc.DocumentNumber), revision = Clean(doc.Revision);
             // Blank optional fields are left out entirely; no placeholder is ever printed.
             var d = new DocxDocument { Title = "Elevator Calculation Sheet" + (name == null ? "" : " · " + name) };
             // CAD-style title block on every page; blank rows are dropped inside their cells.
@@ -553,9 +555,9 @@ namespace Elevator.Reporting.Sheet
             d.Paragraph(DesignBasis, null, "<w:b/>");
             // Approval block: always present; names when given, signature and date cells left empty for hand signing.
             d.Table(new[] { "", "Name", "Signature", "Date" }, new List<string[]>{
-    new[]{"Prepared by",Clean(report.PreparedBy)??"","",""},
-        new[]{"Checked by",Clean(report.CheckedBy)??"","",""},
-        new[]{"Approved by",Clean(report.ApprovedBy)??"","",""}},
+    new[]{"Prepared by",doc.PreparedBy,"",""},
+        new[]{"Checked by",doc.CheckedBy,"",""},
+        new[]{"Approved by",doc.ApprovedBy,"",""}},
              new[] { 1900, 3538, 2600, 1600 }, new HashSet<int> { 0 }, null, 624);
             int n = 1;
             Summary(d, n++);
