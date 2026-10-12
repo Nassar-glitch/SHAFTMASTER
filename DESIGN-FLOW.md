@@ -94,6 +94,11 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - Counterweight: RCW rear, SCWL side left, SCWR side right.
   - The project name is kept exactly as the user typed it. Only the characters Windows forbids in file names are replaced.
   - NN is the two-digit drawing revision: 00 first, then 01, 02, … It is the same revision as the calculation sheet.
+- **Decisions of 2026-10-12 (L2a review):**
+  - Every current geared project is RCW; side counterweight positions come with that layout later.
+  - The company name and all report data (logo, client, prepared / checked / approved, revision) are ONE set of settings, used by the calculation sheet, Design Notes, the title block and the file names. The company name is used exactly as typed.
+  - The revision is a number only: 00, 01, 02 …, shown the same on the sheet, the title block and the file name.
+  - The title block shows P1–P7 in kg only, as calculated: "P1 = 545 KG.". P6 is the load of one car buffer and P7 of one counterweight buffer. The date is written as dd/MM/yyyy.
 - **Detailing (later stage):** detail views (rail size and bracket spacing, fixings, door elevation and so on) become generated from the project. Until then, the template's detail views stay as drawn.
 
 ## Build stages (order)
