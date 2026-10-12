@@ -157,6 +157,10 @@ namespace Elevator.Core.Tests
                         p.Add(r.Viewports[i].Name + " and " + r.Viewports[j].Name + " closer than the gap");
             Func<SheetViewKind, SheetViewport> k = kind => r.Viewports.FirstOrDefault(v => v.Kind == kind);
             SheetViewport plan = k(SheetViewKind.ShaftPlan), room = k(SheetViewKind.MachineRoomPlan), aa = k(SheetViewKind.SectionAA), bb = k(SheetViewKind.SectionBB);
+            // Hierarchy rule (L2b): the shaft plan leads, no other main view has a larger scale (smaller denominator) than it.
+            foreach (var other in new[] { room, aa, bb })
+                if (plan != null && other != null && other.ScaleDenominator < plan.ScaleDenominator)
+                    p.Add(other.Name + " 1:" + other.ScaleDenominator + " is larger than the shaft plan 1:" + plan.ScaleDenominator);
             if (plan != null && room != null)
             {
                 if (!(Footprint(room).Y >= plan.Paper.Top))
@@ -199,6 +203,9 @@ namespace Elevator.Core.Tests
                 int s = scale[k];
                 int i = Array.IndexOf(SheetArrangement.StandardScales, s);
                 if (s == 0 || i <= 0)
+                    continue;
+                // the hierarchy: another main view cannot take a larger scale than the shaft plan's
+                if (k != SheetViewKind.ShaftPlan && scale[SheetViewKind.ShaftPlan] != 0 && SheetArrangement.StandardScales[i - 1] < scale[SheetViewKind.ShaftPlan])
                     continue;
                 scale[k] = SheetArrangement.StandardScales[i - 1];
                 bool larger = fits();
@@ -244,6 +251,54 @@ namespace Elevator.Core.Tests
                 report.Count, sorted.First(), (sorted[(sorted.Count - 1) / 2] + sorted[sorted.Count / 2]) / 2, sorted.Last(), TargetFill, fills.Count(f => f < TargetFill), maxEmpty));
             File.WriteAllLines(Path.Combine(TestData.Folder("sheet-arrangement"), "grid.txt"), report);
             Assert.True(failures.Count == 0, string.Join("\n", failures.Take(20)));
+        }
+
+        // Real extents (L2b): the measured extents of the generated views, dimensions and labels included, of three projects
+        // (docs/design/layouts/view-extents.json, written by tests/integration/run-view-extents.ps1).
+        public static List<SheetViewRequest> Measured(System.Collections.IDictionary views)
+        {
+            Func<string, SheetViewKind, string, SheetViewRequest> one = (key, kind, name) =>
+            {
+                var e = (System.Collections.IDictionary)((System.Collections.IDictionary)views[key])["extentsWithDimensionsAndLabels"];
+                return new SheetViewRequest
+                {
+                    Kind = kind,
+                    Name = name,
+                    ModelExtents = new SheetRect(Convert.ToDouble(e["minX"], CultureInfo.InvariantCulture), Convert.ToDouble(e["minY"], CultureInfo.InvariantCulture),
+                        Convert.ToDouble(e["width"], CultureInfo.InvariantCulture), Convert.ToDouble(e["height"], CultureInfo.InvariantCulture))
+                };
+            };
+            var v = new List<SheetViewRequest>
+            {
+                one("plan", SheetViewKind.ShaftPlan, "Shaft plan"),
+                one("machineRoomPlan", SheetViewKind.MachineRoomPlan, "Machine-room plan"),
+                one("sectionAA", SheetViewKind.SectionAA, "Section A-A"),
+                one("sectionBB", SheetViewKind.SectionBB, "Section B-B")
+            };
+            for (int i = 0; i < Details.Length; i++)
+                v.Add(View(SheetViewKind.Detail, "Detail " + (i + 1), Details[i][0], Details[i][1], 1000000 + 5000 * i, 0));
+            return v;
+        }
+
+        [Fact]
+        public void The_measured_extents_of_the_generated_views_are_arranged_with_the_shaft_plan_leading()
+        {
+            string file = Path.Combine(TestData.Root, "docs", "design", "layouts", "view-extents.json");
+            Assert.True(File.Exists(file), file);
+            var root = (System.Collections.IDictionary)Elevator.Core.Serialization.CoreJson.Create().DeserializeObject(File.ReadAllText(file));
+            var cases = ((System.Collections.IEnumerable)root["cases"]).Cast<System.Collections.IDictionary>().ToList();
+            Assert.Equal(3, cases.Count);
+            foreach (var c in cases)
+            {
+                var req = Measured((System.Collections.IDictionary)c["views"]);
+                var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), req);
+                Assert.Empty(r.NotPlaced);
+                Assert.Equal(4 + Details.Length, r.Viewports.Count);
+                var problems = Problems(req, r);
+                Assert.True(problems.Count == 0, c["id"] + ": " + string.Join("; ", problems));
+                int plan = r.Viewports.Single(v => v.Kind == SheetViewKind.ShaftPlan).ScaleDenominator;
+                Assert.All(r.Viewports.Where(v => v.Kind != SheetViewKind.ShaftPlan), v => Assert.True(v.ScaleDenominator >= plan, v.Name));
+            }
         }
 
         [Fact]

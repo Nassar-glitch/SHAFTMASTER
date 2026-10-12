@@ -122,6 +122,10 @@ namespace Elevator.Core.Layouts
     /// machine-room plan above it, right of it the section A-A (full height when tall), top right the section B-B, and the detail views
     /// in the bands left free. Pure geometry: no AutoCAD.
     /// <para>
+    /// Hierarchy rule (L2b): the shaft plan is the leading view and no other main view (machine-room plan, A-A, B-B) gets a larger
+    /// scale than it; they use its scale or a smaller one. Without a shaft plan there is no such constraint. The details are free.
+    /// </para>
+    /// <para>
     /// The search is joint: every combination of the standard scales of the four main views gives the column widths and heights; the
     /// details are then packed into the free bands, each at the largest standard scale that still fits. The combination kept has the
     /// largest views together: the sum over the views of the square root of their area (their linear size; details count half), so one
@@ -221,6 +225,9 @@ namespace Elevator.Core.Layouts
                     foreach (int sa in aa != null ? StandardScales : none)
                         foreach (int sb in bb != null ? StandardScales : none)
                         {
+                            // Hierarchy: the shaft plan leads. No other main view takes a larger scale (a smaller denominator) than it.
+                            if (plan != null && (sm != 0 && sm < sp || sa != 0 && sa < sp || sb != 0 && sb < sp))
+                                continue;
                             var l = Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
                             if (l != null && (best == null || l.Better(best)))
                                 best = l;

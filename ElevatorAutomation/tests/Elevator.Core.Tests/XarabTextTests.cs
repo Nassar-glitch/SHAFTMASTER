@@ -67,7 +67,8 @@ namespace Elevator.Core.Tests
         [InlineData("التاريخ :", "Hgjhvd%%178 \\")]
         [InlineData("المرحلة :", "Hglvpgm \\")]
         [InlineData("اعمال مصاعد", "HulhG lwhu]")]
-        [InlineData("أعمال مصاعد", "HulhG lwhu]")] // hamza on alef is written as alef
+        [InlineData("أعمال مصاعد", "XulhG lwhu]")] // XARAB-CHECK: أ is X (the glyph with the hamza)
+        [InlineData("آلة", "Ngm")] // آ is N
         [InlineData("اسم الشركة", "HsL Hgav:m")]
         [InlineData("نوع الاعمال:", "k,U HBulhG\\")]
         [InlineData("نوع الأعمال:", "k,U HBulhG\\")] // lam-alef with hamza: the lam-alef ligature
@@ -131,6 +132,39 @@ namespace Elevator.Core.Tests
                     Assert.NotEqual(word, encoded);
                     Assert.Equal(XarabText.Normalize(word), XarabText.Decode(encoded));
                 }
+            }
+        }
+
+        [Fact]
+        public void Forms_that_rendered_wrong_use_the_glyphs_found_in_the_font()
+        {
+            // XARAB-CHECK (docs/design/layouts/XARAB-CHECK.md): ز is ">" (62), ى is "D" (68), ء is "x", أ is "X", آ is "N".
+            foreach (string w in new[] { "ز", "بز", "زب", "بزب" })
+                Assert.DoesNotContain(".", XarabText.Encode(w));
+            Assert.Equal(">", XarabText.Encode("ز"));
+            Assert.Equal("f>", XarabText.Encode("بز"));
+            Assert.Equal("D", XarabText.Encode("ى"));
+            Assert.Equal("fD", XarabText.Encode("بى"));
+            Assert.Equal("x", XarabText.Encode("ء"));
+            Assert.Equal("X", XarabText.Encode("أ"));
+            Assert.Equal("N", XarabText.Encode("آ"));
+            Assert.Equal("H", XarabText.Encode("إ")); // no alef with hamza below in the font
+            // ط and ظ: the font has only the isolated / final glyph (codes 34 and 63 draw nothing), so no form uses them, and the
+            // next letter starts again (initial form).
+            foreach (string w in new[] { "ط", "طب", "بطب", "ظ", "ظب", "بظب" })
+            {
+                string e = XarabText.Encode(w);
+                Assert.DoesNotContain("\"", e);
+                Assert.DoesNotContain("?", e);
+            }
+            Assert.Equal("f'f", XarabText.Encode("بطب").Replace("F", "f"));
+            Assert.Equal("f/f", XarabText.Encode("بظب").Replace("F", "f"));
+            // every code the encoder writes has a glyph in the font (the codes found defined in xarab-codes.png)
+            foreach (string w in new[] { "ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوىي", "بءب بأب بآب بؤب بئب بزب بىب بطب بظب" })
+            {
+                string e = XarabText.Encode(w);
+                Assert.DoesNotContain("\"", e);
+                Assert.DoesNotContain("?", e);
             }
         }
 

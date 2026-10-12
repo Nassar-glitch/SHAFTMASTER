@@ -23,7 +23,7 @@ namespace Elevator.Core.Layouts
     /// font's rule visible there: a dual-joining letter on a letter key uses the lowercase key joined to the next letter (initial /
     /// medial) and the uppercase key otherwise (final / isolated); on a punctuation key the shifted key is the joined form (ج "{" / "[",
     /// ك ":" / ";"). Letters not in the template follow the Arabic (101) keyboard key by that rule; check them once in AutoCAD with
-    /// xarab.shx. Hamza on alef (أ إ آ) has no decoded glyph and is written as alef; tashkeel is dropped; Arabic-Indic digits become
+    /// xarab.shx. أ is X and آ is N (XARAB-CHECK), hamza below (إ) is written as alef; ز is >, ى is D, ط and ظ do not join forward (the font has no joined glyph), ء is x (it draws أ); tashkeel is dropped; Arabic-Indic digits become
     /// ASCII digits.
     /// </summary>
     public static class XarabText
@@ -83,17 +83,17 @@ namespace Elevator.Core.Layouts
         {
             // Right-joining letters (join to the previous letter only).
             Right('ا', "h", "H");      // ا  seen: final h, isolated H
-            Right('أ', "h", "H");      // أ  written as ا
-            Right('إ', "h", "H");      // إ  written as ا
-            Right('آ', "h", "H");      // آ  written as ا
+            Right('أ', "X", "X");      // أ  XARAB-CHECK: X draws أ (the plain-alef codes lost the hamza)
+            Right('إ', "h", "H");      // إ  written as ا (the font has no alef with hamza below)
+            Right('آ', "N", "N");      // آ  XARAB-CHECK: N draws آ
             Right('د', "]", "]");      // د  seen
             Right('ذ', "`", "`");      // ذ
             Right('ر', "v", "v");      // ر  seen (also "V", decoded below)
-            Right('ز', ".", ".");      // ز
+            Right('ز', ">", ">");      // ز  XARAB-CHECK: "." drew a tiny mark, the glyph is ">" (62)
             Right('و', ",", ",");      // و  seen
             Right('ؤ', "c", "c");      // ؤ
             Right('ة', "m", "m");      // ة  seen final
-            Right('ء', "x", "x");      // ء  (joins neither side)
+            Right('ء', "x", "x");      // ء  (joins neither side). XARAB-CHECK: the font has no bare hamza, "x" draws أ
             // Dual-joining letters.
             Dual('ب', "f", "F");                                   // ب
             Dual('ت', "j", "J");                                   // ت  seen: initial / medial j, final J
@@ -105,8 +105,9 @@ namespace Elevator.Core.Layouts
             Dual('ش', "a", "A");                                   // ش  seen: joined a
             Dual('ص', "w", "W");                                   // ص  seen: joined w
             Dual('ض', "q", "Q");                                   // ض
-            Dual('ط', "\"", "'");                                  // ط
-            Dual('ظ', "?", "/");                                   // ظ
+            // XARAB-CHECK: the font has only the isolated / final ط ظ (codes 34 and 63 draw nothing), so they do not join forward.
+            Right('ط', "'", "'");                                  // ط
+            Right('ظ', "/", "/");                                  // ظ
             Dual('ع', "u", Code(150), Code(154), "U");             // ع  seen: all four forms
             Dual('غ', "y", "Y");                                   // غ
             Dual('ف', "t", "T");                                   // ف  seen: medial t (and %%156)
@@ -117,7 +118,8 @@ namespace Elevator.Core.Layouts
             Dual('ن', "k", "K");                                   // ن  seen: initial k
             Dual('ه', "i", "I");                                   // ه  seen: isolated I
             Dual('ي', "d", "D");                                   // ي  seen: joined d
-            Dual('ى', "n", "N");                                   // ى
+            // XARAB-CHECK: n / N draw آ; ى is the glyph D (68), which the font also uses for the final / isolated ي (dotless).
+            Right('ى', "D", "D");                                  // ى
             Dual('ئ', "z", "Z");                                   // ئ
             Dual(Tatweel, "_", "_");                                    // kashida  seen
             // Variants seen in the template (decoded, never written).
@@ -182,8 +184,10 @@ namespace Elevator.Core.Layouts
             {
                 if (c >= 'ً' && c <= 'ْ' || c == 'ٰ')
                     continue; // tashkeel
-                if (c == 'أ' || c == 'إ' || c == 'آ')
+                if (c == 'إ')
                     o.Append('ا');
+                else if (c == 'ى')
+                    o.Append('ي'); // the font draws ى and the final / isolated ي with the same glyph (D)
                 else if (c >= '٠' && c <= '٩')
                     o.Append((char)('0' + (c - '٠')));
                 else if (c >= '۰' && c <= '۹')
@@ -191,7 +195,8 @@ namespace Elevator.Core.Layouts
                 else
                     o.Append(c);
             }
-            return o.ToString();
+            // lam + alef with hamza or madda is written as the plain lam-alef ligature
+            return o.ToString().Replace("لأ", "لا").Replace("لإ", "لا").Replace("لآ", "لا");
         }
 
         static bool IsAlef(char c)
