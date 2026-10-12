@@ -73,7 +73,7 @@ namespace Elevator.AutoCAD.Sheet
             {
                 var measured = MeasureViews(db, addedTitles);
                 var detailBoxes = MeasureDetails(db, chosen, 0);
-                // a title is 8 mm on paper whatever the scale: the detail's extents differ per scale and are measured at each
+                // a title is 5 mm on paper whatever the scale: the detail's extents differ per scale and are measured at each
                 var detailBoxesAt = new Dictionary<int, Dictionary<string, SheetRect>>();
                 foreach (int s in SheetLayout.DetailScales)
                     detailBoxesAt[s] = MeasureDetails(db, chosen, s);
@@ -125,7 +125,7 @@ namespace Elevator.AutoCAD.Sheet
                 arrangement = SheetArrangement.Arrange(area, views);
                 if (arrangement.NotPlaced.Count > 0)
                     break;
-                // the titles state the sheet scale at 8 mm printed height: apply them, measure again until the scales are stable
+                // the titles state the sheet scale at 5 mm printed height: apply them, measure again until the scales are stable
                 titles = UpdateTitles(db, arrangement.Viewports, chosen, measured, addedTitles);
                 string key = String.Join(";", arrangement.Viewports.Select(v => v.Name + "=" + v.ScaleDenominator));
                 if (key == last)
@@ -389,7 +389,7 @@ namespace Elevator.AutoCAD.Sheet
 
         // The drawn extents of every reference detail: the union of the visible entities that start inside its template window (a title
         // that grew with the scale appended still starts inside it).
-        // scale > 0: the titles of the details are put at that sheet scale (text with the scale, 8 mm printed) for the measurement and
+        // scale > 0: the titles of the details are put at that sheet scale (text with the scale, 5 mm printed) for the measurement and
         // then discarded: the extents the detail would have at that scale.
         static Dictionary<string, SheetRect> MeasureDetails(Database db, Dictionary<string, SheetDetailSpec> details, int scale)
         {
@@ -399,6 +399,7 @@ namespace Elevator.AutoCAD.Sheet
                 var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
                 if (scale > 0)
                 {
+                    var perDetail = new Dictionary<string, List<MText>>();
                     foreach (ObjectId id in model)
                     {
                         var mt = tr.GetObject(id, OpenMode.ForRead) as MText;
@@ -416,10 +417,16 @@ namespace Elevator.AutoCAD.Sheet
                                 mt.UpgradeOpen();
                                 mt.Contents = WithScale(mt.Contents, scale);
                                 mt.TextHeight = SheetLayout.TitleModelHeight(scale);
+                                List<MText> list;
+                                if (!perDetail.TryGetValue(d.Key, out list))
+                                    perDetail[d.Key] = list = new List<MText>();
+                                list.Add(mt);
                                 break;
                             }
                         }
                     }
+                    foreach (var list in perDetail.Values)
+                        SpaceTitles(list);
                 }
                 foreach (ObjectId id in model)
                 {
@@ -456,6 +463,30 @@ namespace Elevator.AutoCAD.Sheet
             }
             return acc.ToDictionary(k => k.Key, k => new SheetRect(k.Value.MinPoint.X, k.Value.MinPoint.Y,
                 k.Value.MaxPoint.X - k.Value.MinPoint.X, k.Value.MaxPoint.Y - k.Value.MinPoint.Y));
+        }
+
+        // Titles of a detail that stand side by side on one row (the door's "VIEW at D-D" and "SEC. C-C", the guides): the next one moves
+        // right until it clears the one before by two text heights, so a title may be wider than its drawing and never touches its
+        // neighbour. One line each, no wrapping.
+        static void SpaceTitles(List<MText> titles)
+        {
+            var row = titles.Where(t => t.Attachment == AttachmentPoint.TopLeft).OrderBy(t => t.Location.X).ToList();
+            for (int i = 1; i < row.Count; i++)
+            {
+                var prev = row[i - 1];
+                var cur = row[i];
+                if (Math.Abs(prev.Location.Y - cur.Location.Y) > 2 * prev.TextHeight)
+                    continue;
+                // the measured width, or 1.2 text heights per character when the drawing has not regenerated it yet
+                double width = Math.Max(prev.ActualWidth, Plain(prev.Contents).Length * 1.2 * prev.TextHeight);
+                double need = prev.Location.X + width + 2 * prev.TextHeight;
+                if (cur.Location.X < need)
+                {
+                    if (!cur.IsWriteEnabled)
+                        cur.UpgradeOpen();
+                    cur.Location = new Point3d(need, cur.Location.Y, cur.Location.Z);
+                }
+            }
         }
 
         // The title contents with its scale text: "1:N" replaced, or appended before the closing brace.
@@ -592,6 +623,7 @@ namespace Elevator.AutoCAD.Sheet
                         mt.TextHeight = SheetLayout.TitleModelHeight(s);
                         AddTitle(result, d.Key, Plain(mt.Contents));
                     }
+                    SpaceTitles(detailTexts[d.Key]);
                 }
                 tr.Commit();
             }

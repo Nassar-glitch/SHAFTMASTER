@@ -37,11 +37,11 @@ read-back checks of `tests/integration/verify_layouts.py`) and plotted by `tests
 
 | Project | Sheet | Title block | Shaft plan / room plan / A-A / B-B | Fill | Largest empty |
 |---|---|---|---|---|---|
-| 2 stops, 1600 x 1800 | [sheet](2-stops-1600x1800-sheet.png) | [zoom](2-stops-1600x1800-title-block.png) | 1:10 / 1:10 / 1:50 / 1:10 | 0.65 | 0.107 |
-| 6 stops, Arabic names | [sheet](6-stops-1600x1800-arabic-sheet.png) | [zoom](6-stops-1600x1800-arabic-title-block.png) | 1:10 / 1:10 / 1:50 / 1:10 | 0.68 | 0.107 |
-| 15 stops, 1600 x 1800 | [sheet](15-stops-1600x1800-sheet.png) | [zoom](15-stops-1600x1800-title-block.png) | 1:10 / 1:10 / 1:100 / 1:10 | 0.67 | 0.058 |
-| Automatic 2S, 4 stops, 1720 x 2800 | [sheet](2S-800-4-stops-1720x2800-sheet.png) | [zoom](2S-800-4-stops-1720x2800-title-block.png) | 1:10 / 1:20 / 1:50 / 1:10 | 0.65 | 0.091 |
-| 20 stops, longest values | [sheet](20-stops-long-values-sheet.png) | [zoom](20-stops-long-values-title-block.png) | 1:10 / 1:10 / 1:150 / 1:10 | 0.63 | 0.071 |
+| 2 stops, 1600 x 1800 | [sheet](2-stops-1600x1800-sheet.png) | [zoom](2-stops-1600x1800-title-block.png) | 1:10 / 1:10 / 1:50 / 1:10 | 0.63 | 0.045 |
+| 6 stops, Arabic names | [sheet](6-stops-1600x1800-arabic-sheet.png) | [zoom](6-stops-1600x1800-arabic-title-block.png) | 1:10 / 1:10 / 1:50 / 1:10 | 0.69 | 0.070 |
+| 15 stops, 1600 x 1800 | [sheet](15-stops-1600x1800-sheet.png) | [zoom](15-stops-1600x1800-title-block.png) | 1:10 / 1:10 / 1:75 / 1:10 | 0.68 | 0.047 |
+| Automatic 2S, 4 stops, 1720 x 2800 | [sheet](2S-800-4-stops-1720x2800-sheet.png) | [zoom](2S-800-4-stops-1720x2800-title-block.png) | 1:10 / 1:20 / 1:50 / 1:10 | 0.61 | 0.066 |
+| 20 stops, longest values | [sheet](20-stops-long-values-sheet.png) | [zoom](20-stops-long-values-title-block.png) | 1:10 / 1:10 / 1:100 / 1:10 | 0.67 | 0.051 |
 
 ## What the check by eye found
 
@@ -87,14 +87,20 @@ View titles are at most 800 model mm (8 mm printed up to 1:100). The user's proj
 case `user-sheet`: plan 1:10, machine room 1:10, B-B 1:10, A-A 1:50, door 1:20, guides 1:10, brackets 1:5; centres within 5 % of the
 1189 mm sheet width). Fill and largest empty rectangle are measured by `tests/integration/sheet_fill.py`.
 
-### L2c, round 3: titles
+### L2c, final round: titles, tall A-A, no remarks
 
-Every title on the sheet, of the views and of the details, is a real text that states the sheet scale and is 8 mm high on paper (model
-height 8 mm x the scale denominator, recomputed when the scale changes); there is no separate "1:N" label anywhere. The titles that were
-flattened glyph geometry in the template (door "VIEW at D-D" / "SEC. C-C", "GUIDE RAIL / FISH PLATE", "SIDE - GUIDE RAIL") are removed from
-`Templates/Layout_Geared_A0.dxf` by `tools/layouts/build_template.py` and replaced by texts in the style of the other titles (cent font,
-underlined); the guides-and-brackets and bracket-elevation titles are texts of the same kind with a wrap width (8 mm texts are wide).
-The detail extents are measured at each candidate scale (the title is 8 mm at any scale, so its model size grows with the denominator).
-Limit: from 1:150 a title at 8 mm would be 1200 mm high and 28 m wide (wider than the section and than the gap to the neighbouring
-views), which the host rejects (views must not overlap): titles are 8 mm up to 1:100 and 800 model mm beyond (5.3 mm at 1:150; only
-projects of 20 or more stops get there).
+- **Titles:** every title of the sheet, views and details, is one line of real text that states the sheet scale and is 5 mm high on paper
+  (model height 5 mm x the scale denominator, recomputed when the scale changes); no wrapping and no separate "1:N" label. A title may be
+  wider than its detail: the detail's extents (measured at each candidate scale) include it, and titles that stand side by side on one
+  row (door, guides) are spaced so they never touch. The geometry titles of the template (door "VIEW at D-D" / "SEC. C-C", "GUIDE RAIL
+  FISH PLATE", "SIDE - GUIDE RAIL") are removed from `Templates/Layout_Geared_A0.dxf` and replaced by texts (`build_template.py retitle`).
+  The cap of 800 model mm is still in the code (`SheetLayout.TitleMaxModelMm`): at 5 mm it only acts at 1:200, where a title would be
+  1000 mm high and wider than its section, which the host rejects (views must not overlap).
+- **Main views first:** when A-A is tall (more than 62 % of the column height) the detail above it (fish plate, side guide rail) goes to
+  the details group under B-B and the whole group is packed again; the details give way to each other (the largest enlarged one goes one
+  scale step smaller until all fit), never the main views. 15 stops: A-A 1:75 (was 1:100); 20 stops: A-A 1:100 (was 1:150).
+  A detail is enlarged beyond its template scale only with 5 % of its column's width to spare; the fish plate keeps its template scale in its
+  cell.
+- **No remark texts in the views:** the B-B status block ("Beam PRELIMINARY", "Concrete NOT EVALUATED", "... REVIEW REQUIRED", "NOT YET
+  EVALUABLE" ...) is erased from the generated drawing and from the section manifest (`MachineRoomSectionUpdater`); it belongs in the Design
+  Notes only. The other generated views draw no status text (checked in a generated drawing: only real labels and dimensions).

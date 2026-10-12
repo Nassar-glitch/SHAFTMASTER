@@ -510,6 +510,21 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
+        public void A_tall_section_has_its_column_to_itself_the_fish_plate_joins_the_details_group()
+        {
+            var area = SheetArrangement.A0DrawingArea();
+            var req = Project(15, 1600, 1800, Rooms[1]);
+            var r = SheetArrangement.Arrange(area, req);
+            Assert.Empty(r.NotPlaced);
+            var aa = r.Viewports.Single(v => v.Kind == SheetViewKind.SectionAA);
+            Assert.True(aa.Paper.Height > SheetArrangement.TallSectionShare * (area.Height - 2 * SheetArrangement.Spacing));
+            var fish = r.Viewports.Single(v => v.Name == "Detail 1");
+            bool above = fish.Paper.X < aa.Paper.Right && fish.Paper.Right > aa.Paper.X && fish.Paper.Y >= aa.Paper.Top - 1e-6;
+            Assert.False(above, "the fish plate stands above the tall A-A: " + fish.Paper + " / " + aa.Paper);
+            // his project is not tall: the fish plate stays above A-A (the user-sheet case)
+        }
+
+        [Fact]
         public void The_two_plans_share_a_scale_when_it_costs_little()
         {
             // A small shaft: both plans fit at 1:10 together.

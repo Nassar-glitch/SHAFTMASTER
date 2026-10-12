@@ -480,32 +480,32 @@ def apply_user_edit(doc, manifest):
     return removed
 
 
-# L2c round 2: every detail title is a real text that states the sheet scale and prints at 8 mm. The titles that were flattened
+# L2c round 2: every detail title is a real text that states the sheet scale and prints at 5 mm, on one line. The titles that were flattened
 # glyph geometry (door "VIEW at D-D" / "SEC. C-C", the fish plate and side guide rail) are removed and replaced by text in the same
 # style (cent font, underlined, as the details' own text titles). Offsets are from the detail window's lower-left corner; "delete"
 # rectangles hold nothing but the title's glyphs and underline; a text is (contents, x, y, attachment 1 = top left / 2 = top
-# centre, wrap width or 0). The text height (8 mm x the template scale) is set again by the sheet when the scale changes.
+# centre, wrap width or 0). The text height (5 mm x the template scale) is set again by the sheet when the scale changes.
 TITLE_STYLE = r"{\Fcent|c0;\L%s}"
 DETAIL_TITLES = {
     "FISH_PLATE": {
         "delete": [(225, 960, 775, 1105), (265, 70, 930, 140)],
-        "texts": [(r"GUIDE RAIL\PFISH PLATE", 479, 1100, 2, 950), ("SIDE - GUIDE RAIL", 597, 140, 2, 950)],
+        "texts": [("GUIDE RAIL FISH PLATE", 479, 1100, 2, 0), ("SIDE - GUIDE RAIL", 597, 140, 2, 0)],
     },
     "RAILS_PLAN_CW5_CAR9": {
         "delete_text": ("GUIDES AND BRACKETS",),
-        "texts": [("CAR  GUIDES AND BRACKETS", 85, 106, 1, 950), ("C.W.  GUIDES AND BRACKETS", 1142, 106, 1, 950)],
+        "texts": [("CAR  GUIDES AND BRACKETS", 85, 106, 1, 0), ("C.W.  GUIDES AND BRACKETS", 1142, 106, 1, 0)],
     },
     "DOOR_SWING": {
         "delete": [(-10, 355, 3250, 500)],
-        "texts": [("VIEW at D-D", 2, 500, 1, 1500), ("SEC. C-C", 2014, 500, 1, 1230)],
+        "texts": [("VIEW at D-D", 2, 500, 1, 0), ("SEC. C-C", 2014, 500, 1, 0)],
     },
     "DOOR_AUTOMATIC": {
         "delete": [(-10, -5, 3700, 142)],
-        "texts": [("VIEW at D-D", 447, 142, 1, 1500), ("SEC. C-C", 2442, 142, 1, 1230)],
+        "texts": [("VIEW at D-D", 447, 142, 1, 0), ("SEC. C-C", 2442, 142, 1, 0)],
     },
     "RAIL_BRACKETS_CW5_CAR9": {
         "delete_text": ("Guide Rail Support Bracket", "And Anchor Details"),
-        "texts": [(r"Guide Rail Support Bracket\PAnd Anchor Details", 484, 130, 2, 1700)],
+        "texts": [("Guide Rail Support Bracket And Anchor Details", 484, 130, 2, 0)],
     },
 }
 
@@ -516,7 +516,7 @@ def retitle(doc, manifest):
     for d in manifest:
         spec = DETAIL_TITLES.get(d["Name"])
         wx, wy = d["Window"][0], d["Window"][1]
-        height = 8.0 * d["TemplateScale"]
+        height = 5.0 * d["TemplateScale"]
         if spec is None:
             continue
         for (x0, y0, x1, y1) in spec.get("delete", []):

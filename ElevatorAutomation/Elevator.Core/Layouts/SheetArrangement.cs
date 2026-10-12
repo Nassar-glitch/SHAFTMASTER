@@ -256,9 +256,20 @@ namespace Elevator.Core.Layouts
                                 // Hierarchy: the shaft plan leads. No other main view takes a larger scale (a smaller denominator) than it.
                                 if (plan != null && (sm != 0 && sm < sp || sa != 0 && sa < sp || sb != 0 && sb < sp))
                                     continue;
-                                var l = mode == 0
-                                    ? TryGrid(area, plan, room, aa, bb, details, sp, sm, sa, sb)
-                                    : Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
+                                Layout l;
+                                if (mode == 0)
+                                {
+                                    // A tall A-A takes the whole column: the detail above it (fish plate, side guide rail) goes down to
+                                    // the details group under B-B, which is packed again. The main view never pays for a detail.
+                                    l = null;
+                                    if (aa != null && H(aa, sa) > TallSectionShare * (area.Height - 2 * Spacing)
+                                        && details.Any(d => d.Role == FishRole))
+                                        l = TryGrid(area, plan, room, aa, bb, details, sp, sm, sa, sb, true);
+                                    if (l == null)
+                                        l = TryGrid(area, plan, room, aa, bb, details, sp, sm, sa, sb, false);
+                                }
+                                else
+                                    l = Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
                                 if (l != null && (best == null || l.Better(best)))
                                     best = l;
                             }
@@ -273,6 +284,12 @@ namespace Elevator.Core.Layouts
             return result;
         }
 
+
+        /// <summary>A detail shown larger than its template scale may take at most this share of the width of its column.</summary>
+        public const double EnlargedWidthShare = 0.95;
+
+        /// <summary>A-A is tall when its viewport takes more than this share of the column height.</summary>
+        public const double TallSectionShare = 0.62;
 
         static readonly string[] StackRoles = { "DoorElevationSection", "RailsPlan", "RailBrackets" };
         const string FishRole = "RailFixing";
@@ -295,7 +312,8 @@ namespace Elevator.Core.Layouts
             int sp,
             int sm,
             int sa,
-            int sb)
+            int sb,
+            bool fishToGroup)
         {
             const double eps = 1e-9;
             double g = Spacing;
@@ -327,6 +345,14 @@ namespace Elevator.Core.Layouts
             var stack = details.Where(d => Array.IndexOf(StackRoles, d.Role) >= 0)
                 .Select((d, i) => new { d, i }).OrderBy(o => Array.IndexOf(StackRoles, o.d.Role)).ThenBy(o => o.i).Select(o => o.d).ToList();
             var pool = details.Where(d => !fish.Contains(d) && !stack.Contains(d)).ToList();
+            if (fishToGroup)
+            {
+                // the whole details group is packed again under B-B (the stacked details give way to each other as well)
+                pool.AddRange(fish);
+                pool.AddRange(stack);
+                fish = new List<SheetViewRequest>();
+                stack = new List<SheetViewRequest>();
+            }
 
             // column 3: the stacked details take the largest scales that fit together under B-B; when they do not fit the last one
             // (and then the next) goes to the bands left free
@@ -376,6 +402,9 @@ namespace Elevator.Core.Layouts
                 foreach (int s in (d.AllowedScales ?? StandardScales).OrderByDescending(v => -v))
                 {
                     if (s < d.MinScaleDenominator || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
+                        continue;
+                    // the fish plate and side guide rail keep their template scale in their cell (the user's sheet did not enlarge them)
+                    if (d.MaxScaleDenominator > 0 && s != d.MaxScaleDenominator)
                         continue;
                     double w = W(d, s), h = H(d, s);
                     if (w > cellW + eps || h > cellH + eps)
@@ -479,14 +508,14 @@ namespace Elevator.Core.Layouts
                 double right3 = stack.Count > 0 ? stackRight : xr;
                 if (stackBottom - yb > 0 && right3 - left3 > 0)
                     free.Add(Shelf.Of(new SheetRect(left3, yb, right3 - left3, stackBottom - yb), 3));
-                if (aa != null && fishScale == 0)
+                if (aa != null && fishScale == 0 && !fishToGroup)
                 {
                     double right = Math.Min(xr, Math.Min(bb != null ? bbLeft - g : xr, stack.Count > 0 ? stackLeft - g : xr));
                     if (yt - fishCellBottom > 0 && right - x2 > 0)
                         free.Add(Shelf.Of(new SheetRect(x2, fishCellBottom, right - x2, yt - fishCellBottom), 2));
                 }
                 free = free.OrderByDescending(f => f.Box.Area).ThenBy(f => f.Box.X).ThenBy(f => f.Box.Y).ToList();
-                if (!Pack(pool, free, l.Viewports, column))
+                if (!PackShrinking(pool, free, l.Viewports, column, 0))
                     return null;
             }
             l.Filled = l.Viewports.Sum(v => v.Paper.Area);
@@ -533,7 +562,9 @@ namespace Elevator.Core.Layouts
                 for (int i = 0; i < stack.Count && ok; i++)
                 {
                     int s = options[i][pick[i]];
-                    if (W(stack[i], s) > availW + eps)
+                    // an enlarged detail (a larger scale than the template's) keeps a margin to the neighbouring column
+                    double limit = stack[i].MaxScaleDenominator > 0 && s < stack[i].MaxScaleDenominator ? EnlargedWidthShare * availW : availW;
+                    if (W(stack[i], s) > limit + eps)
                         ok = false;
                     sumH += H(stack[i], s);
                 }
@@ -680,7 +711,7 @@ namespace Elevator.Core.Layouts
             }
             // the details go to the largest free band first
             free = free.OrderByDescending(f => f.Box.Area).ThenBy(f => f.Box.X).ThenBy(f => f.Box.Y).ToList();
-            if (details.Count > 0 && !Pack(details, free, l.Viewports, column))
+            if (details.Count > 0 && !Pack(details, free, l.Viewports, column, label))
                 return null;
             l.Filled = l.Viewports.Sum(v => v.Paper.Area);
             l.Score = l.Viewports.Sum(v => (v.Kind == SheetViewKind.Detail ? DetailWeight : 1.0) * Math.Sqrt(v.Paper.Area))
@@ -690,17 +721,60 @@ namespace Elevator.Core.Layouts
 
         // Shelf packing: the details, the largest first, each at the largest standard scale that still fits, in rows from the top of
         // the free bands (the band under B-B first).
-        static bool Pack(List<SheetViewRequest> details, List<Shelf> shelves, List<SheetViewport> placed, List<int> column)
+        // Packs the details; when they do not fit, the largest enlarged one goes one scale step smaller and the packing starts again
+        // (the details give way to each other, never the main views).
+        static bool PackShrinking(List<SheetViewRequest> details, List<Shelf> shelves, List<SheetViewport> placed, List<int> column, double label)
         {
-            double g = Spacing, label = Spacing;
+            var floor = new Dictionary<SheetViewRequest, int>();
+            for (int attempt = 0; attempt < 60; attempt++)
+            {
+                var copy = shelves.Select(sh => Shelf.Of(sh.Box, sh.Column)).ToList();
+                var tryPlaced = new List<SheetViewport>();
+                var tryColumn = new List<int>();
+                if (Pack(details, copy, tryPlaced, tryColumn, label, floor))
+                {
+                    placed.AddRange(tryPlaced);
+                    column.AddRange(tryColumn);
+                    return true;
+                }
+                SheetViewRequest pick = null;
+                int next = 0;
+                double area = -1;
+                foreach (var v in tryPlaced)
+                {
+                    var d = details.FirstOrDefault(x => (x.Name ?? x.Kind.ToString()) == v.Name);
+                    if (d == null)
+                        continue;
+                    var larger = (d.AllowedScales ?? StandardScales).Where(x => x > v.ScaleDenominator && x >= d.MinScaleDenominator
+                        && (d.MaxScaleDenominator <= 0 || x <= d.MaxScaleDenominator)).OrderBy(x => x).ToList();
+                    if (larger.Count > 0 && v.Paper.Area > area)
+                    {
+                        area = v.Paper.Area;
+                        pick = d;
+                        next = larger[0];
+                    }
+                }
+                if (pick == null)
+                    return false;
+                floor[pick] = next;
+            }
+            return false;
+        }
+
+        static bool Pack(List<SheetViewRequest> details, List<Shelf> shelves, List<SheetViewport> placed, List<int> column, double label, Dictionary<SheetViewRequest, int> floor = null)
+        {
+            double g = Spacing;
             var order = details.Select((d, i) => new { d, i })
                 .OrderByDescending(o => W(o.d, 1) * H(o.d, 1)).ThenBy(o => o.i).Select(o => o.d).ToList();
             foreach (var d in order)
             {
                 bool done = false;
+                int minScale = d.MinScaleDenominator, raised;
+                if (floor != null && floor.TryGetValue(d, out raised))
+                    minScale = Math.Max(minScale, raised);
                 foreach (int s in (d.AllowedScales ?? StandardScales).OrderByDescending(x => -x))
                 {
-                    if (s < d.MinScaleDenominator || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
+                    if (s < minScale || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
                         continue;
                     double w = W(d, s), h = H(d, s) + label;
                     foreach (var sh in shelves)

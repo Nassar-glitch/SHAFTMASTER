@@ -42,16 +42,16 @@ namespace Elevator.Core.Layouts
 
         /// <summary>The margin (model mm) around the drawn extents of a reference detail: it has no dimensions outside them.</summary>
         public const double DetailMarginMm = 30;
-        /// <summary>The printed height of a view title on the sheet (paper mm): the user's edit set the titles to 8 mm at 1:10.</summary>
-        public const double TitlePaperHeightMm = 8;
+        /// <summary>The printed height of every title on the sheet (paper mm), views and details alike, one line each.</summary>
+        public const double TitlePaperHeightMm = 5;
         /// <summary>
-        /// The largest model height of a title: 8 mm on paper up to 1:100. A title at 8 mm on a 1:150 section would be 1200 mm high and
-        /// 28 m wide, wider than the section and than the gap to the neighbouring views of the drawing, which the host rejects (views
-        /// must not overlap); there it stays at 800 mm.
+        /// The largest model height of a title: 5 mm on paper up to 1:160 (800 mm). A title at 1:200 would be 1000 mm high and about 22 m
+        /// wide, wider than the section and than the gap to the neighbouring views of the drawing, which the host rejects (views must
+        /// not overlap); there it stays at 800 mm.
         /// </summary>
         public const double TitleMaxModelMm = 800;
 
-        /// <summary>The model height of a title at the sheet scale 1:<paramref name="scaleDenominator"/>: 8 mm on paper (at most 800 model mm).</summary>
+        /// <summary>The model height of a title at the sheet scale 1:<paramref name="scaleDenominator"/>: 5 mm on paper (at most 800 model mm).</summary>
         public static double TitleModelHeight(int scaleDenominator)
         {
             return System.Math.Min(TitlePaperHeightMm * scaleDenominator, TitleMaxModelMm);

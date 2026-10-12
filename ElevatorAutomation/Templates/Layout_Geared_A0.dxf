@@ -102231,13 +102231,11 @@ AcDbMText
  30
 0.0
  40
-80.0
- 41
-950.0
+50.0
  71
 2
   1
-{\Fcent|c0;\LGUIDE RAIL\PFISH PLATE}
+{\Fcent|c0;\LGUIDE RAIL FISH PLATE}
   7
 SM_STANDARD
   0
@@ -102259,9 +102257,7 @@ AcDbMText
  30
 0.0
  40
-80.0
- 41
-950.0
+50.0
  71
 2
   1
@@ -102287,9 +102283,7 @@ AcDbMText
  30
 0.0
  40
-80.0
- 41
-950.0
+50.0
  71
 1
   1
@@ -102315,9 +102309,7 @@ AcDbMText
  30
 0.0
  40
-80.0
- 41
-950.0
+50.0
  71
 1
   1
@@ -102343,13 +102335,11 @@ AcDbMText
  30
 0.0
  40
-80.0
- 41
-1700.0
+50.0
  71
 2
   1
-{\Fcent|c0;\LGuide Rail Support Bracket\PAnd Anchor Details}
+{\Fcent|c0;\LGuide Rail Support Bracket And Anchor Details}
   7
 SM_STANDARD
   0
@@ -102371,9 +102361,7 @@ AcDbMText
  30
 0.0
  40
-160.0
- 41
-1500.0
+100.0
  71
 1
   1
@@ -102399,9 +102387,7 @@ AcDbMText
  30
 0.0
  40
-160.0
- 41
-1230.0
+100.0
  71
 1
   1
@@ -102427,9 +102413,7 @@ AcDbMText
  30
 0.0
  40
-160.0
- 41
-1500.0
+100.0
  71
 1
   1
@@ -102455,9 +102439,7 @@ AcDbMText
  30
 0.0
  40
-160.0
- 41
-1230.0
+100.0
  71
 1
   1

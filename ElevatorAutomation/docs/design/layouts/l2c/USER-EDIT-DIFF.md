@@ -73,6 +73,8 @@ width. Result: `regenerated-sheet.png`, `side-by-side.png`.
 | 15 | Column grid as his sheet (above), column widths from the content, slack spread between columns and stacked details. | **new** |
 | 16 | A detail's viewport crops to what it draws (titles with the scale, rotated texts by their own size), margin 30 mm; the bracket elevation then takes 1:5. | **new** |
 | 17 | Titles at most 800 model mm (8 mm printed up to 1:100): a 1:150 section title at 8 mm was wider than the section and overlapped its neighbour in the drawing. | **new** |
-| 18 | All titles are texts that state the sheet scale at 8 mm printed (A-A too: 400 model mm at 1:50, not 350); the door, fish plate and side guide rail titles that were geometry are replaced by texts in the template; no separate scale label. | **new** (Planner, round 3) |
+| 18 | All titles are one-line texts that state the sheet scale at 5 mm printed (the user approved 5 mm, A-A too); the door, fish plate and side guide rail titles that were geometry are replaced by texts in the template; no separate scale label. | **new** (Planner, final round) |
 | 19 | The enlargement priority of his sheet: the rail-bracket elevation takes the larger scale first (1:5), then the guides plan, then the door; the door is no longer fixed at 1:20. | **new** |
 | 20 | The stack of details under B-B is right-aligned with B-B, or centred under it when B-B is much wider. | **new** |
+| 21 | A tall A-A (more than 62 % of the column) takes its column to itself: the fish plate / side guide rail join the details group. | **new** (final round) |
+| 22 | The B-B status / remark block is not drawn (Design Notes only). | **new** (final round) |
