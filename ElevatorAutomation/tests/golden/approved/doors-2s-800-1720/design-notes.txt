@@ -4,13 +4,15 @@ Warnings
 •  Car available area 3.01 m² exceeds the maximum 1.36 m² for 480 kg (EN 81-20 Table 6). Use a rated load of at least 1305 kg, or reduce the car to ≤ 1.36 m².
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Design Notes
 Project
 Golden D6 - 2S 800 on 1720
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

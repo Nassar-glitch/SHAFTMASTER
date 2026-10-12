@@ -3,11 +3,13 @@ Warnings
 •  Car available area 1.54 m² exceeds the maximum 0.95 m² for 320 kg (EN 81-20 Table 6). Use a rated load of at least 570 kg, or reduce the car to ≤ 0.95 m².
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Design Notes
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

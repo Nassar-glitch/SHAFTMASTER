@@ -6,11 +6,13 @@ Recommendations
 •  No 1:1 arrangement passes every rope and traction check; the limiting check is rope safety factor. 2:1 roping is recommended for this rated load; on 1:1, 7 ropes of 10 mm would need MBL ≥ 14.3 kN (1460 kg) each (EN 81-20 5.5; EN 81-50 5.11, 5.12).
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Design Notes
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

@@ -2,6 +2,8 @@
 Elevator Calculation Sheet
 Project
 Golden D10 - 2S offset 40 Left
+Revision
+00
 Date
 2026-10-09
 Elevator system
@@ -385,13 +387,15 @@ NTS
 
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Elevator Calculation Sheet
 Project
 Golden D10 - 2S offset 40 Left
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 

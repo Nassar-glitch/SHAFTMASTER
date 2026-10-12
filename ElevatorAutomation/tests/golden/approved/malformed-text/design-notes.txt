@@ -6,13 +6,15 @@ Recommendations
 •  Enter the car mass to check rope safety factor (EN 81-20 5.5.2.2; EN 81-50 5.12).
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09
-
+Rev 00
 
 === /word/header1.xml
 Design Notes
 Project
 Golden E - malformed text
 
+Rev.
+00
 Page
 {PAGE}1 of {NUMPAGES}1
 
