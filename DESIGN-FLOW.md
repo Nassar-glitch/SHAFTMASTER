@@ -81,7 +81,7 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 
 ## Layouts and PDF (agreed 2026-10-12)
 
-- **Sheets:** the generated DWG carries ready paper-space layouts built from the user's templates in `Layouts_Sec/`. The first is `01_Geared_MR_1-1_LAYOUT.dxf` (A1). The Gearless 2:1, Forklift and Hydraulic layouts wait for those systems.
+- **Sheets:** the generated DWG carries ready paper-space layouts built from the user's templates in `Layouts_Sec/`. The first is `01_Geared_MR_1-1_LAYOUT.dxf` (A0). The Gearless 2:1, Forklift and Hydraulic layouts wait for those systems.
 - **Everything is generated:**
   - viewports show the project's own views;
   - the title block is filled from the project and the calculations: company name and logo, project, client, speed, rated load and persons, travel, stops, supply, loads P1–P7 and the other values in the block, scale, date, prepared / checked / approved, and the revision.
@@ -99,6 +99,23 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - The company name and all report data (logo, client, prepared / checked / approved, revision) are ONE set of settings, used by the calculation sheet, Design Notes, the title block and the file names. The company name is used exactly as typed.
   - The revision is a number only: 00, 01, 02 …, shown the same on the sheet, the title block and the file name.
   - The title block shows P1–P7 in kg only, as calculated: "P1 = 545 KG.". P6 is the load of one car buffer and P7 of one counterweight buffer. The date is written as dd/MM/yyyy.
+- **Sheet arrangement (agreed 2026-10-12, geared A0):**
+  - **Paper:** A0 landscape (1189 × 841). The title block column is on the right.
+  - **Left column:** the main shaft plan at the bottom, and the machine-room plan above it.
+  - **Right of it:** the tall vertical section with the floors (A-A).
+  - **Top right:** the machine section with the beams and the traction angle (B-B).
+  - **Under those:** the auxiliary detail views.
+  - **Scales and positions are chosen automatically.** Standard scales are used; each view is shown at its scale under it, and the scale cell reads "AS SHOWN". The sheet must look composed: no overlap and no large empty areas. For example, a 15-stop section may take the full height, and a 2–3 stop section must not leave the space above it empty.
+- **Details become generated** from the detail library in the template's model space. For each kind (rail fixing and fish plate, car and CW rails with brackets, bracket spacing, door elevation and section), one representative view becomes parametric from the project: rail size, bracket spacing, door type and size.
+- **Fonts:** the template's SHX fonts stay. Arabic text uses xarab; the program converts normal Arabic typing to the xarab encoding. English text uses cent. The fonts ship with the application, so every PDF looks the same. The company name is written in whichever language the user types it.
+- **Revision table:** the first row is filled with the current revision number and date. The user may edit it in the DWG.
+- **Other fields:**
+  - logo from the settings, as an image;
+  - project number from the document number;
+  - type of work "أعمال مصاعد";
+  - phase optional;
+  - drawing number 1;
+  - entrances = number of stops (one entrance per floor).
 - **Detailing (later stage):** detail views (rail size and bracket spacing, fixings, door elevation and so on) become generated from the project. Until then, the template's detail views stay as drawn.
 
 ## Build stages (order)
