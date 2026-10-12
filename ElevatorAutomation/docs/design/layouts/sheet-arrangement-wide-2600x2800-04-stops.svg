@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1189 841" width="1189" height="841" font-family="Arial, sans-serif">
+<rect x="0" y="0" width="1189" height="841" fill="#ffffff" stroke="#000" stroke-width="1"/>
+<rect x="14.9" y="12.2" width="1001.9" height="816.4" fill="#f7f7f7" stroke="#555" stroke-width="1"/>
+<rect x="1017.8" y="12.2" width="157" height="816.4" fill="#e8e8e8" stroke="#555"/>
+<text x="1096" y="420" font-size="14" text-anchor="middle" fill="#666">title block</text>
+<rect x="24.9" y="358.6" width="430" height="450" fill="#9ecae1" stroke="#333" stroke-width="1"/>
+<text x="239.9" y="583.6" font-size="12" text-anchor="middle">Shaft plan</text>
+<text x="239.9" y="816.6" font-size="9" text-anchor="middle">1:10</text>
+<rect x="107.4" y="63.6" width="265" height="275" fill="#c6dbef" stroke="#333" stroke-width="1"/>
+<text x="239.9" y="201.1" font-size="12" text-anchor="middle">Machine-room plan</text>
+<text x="239.9" y="346.6" font-size="9" text-anchor="middle">1:20</text>
+<rect x="464.9" y="24.6" width="192" height="784" fill="#a1d99b" stroke="#333" stroke-width="1"/>
+<text x="560.9" y="416.6" font-size="12" text-anchor="middle">Section A-A</text>
+<text x="560.9" y="816.6" font-size="9" text-anchor="middle">1:25</text>
+<rect x="726.8" y="22.2" width="280" height="355" fill="#fdae6b" stroke="#333" stroke-width="1"/>
+<text x="866.8" y="199.7" font-size="12" text-anchor="middle">Section B-B</text>
+<text x="866.8" y="385.2" font-size="9" text-anchor="middle">1:20</text>
+<rect x="666.9" y="397.2" width="191.1" height="205.4" fill="#dadaeb" stroke="#333" stroke-width="1"/>
+<text x="762.5" y="499.9" font-size="12" text-anchor="middle">Detail 4</text>
+<text x="762.5" y="610.6" font-size="9" text-anchor="middle">1:20</text>
+<rect x="868" y="397.2" width="106.7" height="166.2" fill="#dadaeb" stroke="#333" stroke-width="1"/>
+<text x="921.4" y="480.3" font-size="12" text-anchor="middle">Detail 1</text>
+<text x="921.4" y="571.4" font-size="9" text-anchor="middle">1:10</text>
+<rect x="666.9" y="622.6" width="209.4" height="80.8" fill="#dadaeb" stroke="#333" stroke-width="1"/>
+<text x="771.6" y="663" font-size="12" text-anchor="middle">Detail 2</text>
+<text x="771.6" y="711.4" font-size="9" text-anchor="middle">1:10</text>
+<rect x="886.3" y="622.6" width="96.8" height="91.2" fill="#dadaeb" stroke="#333" stroke-width="1"/>
+<text x="934.7" y="668.2" font-size="12" text-anchor="middle">Detail 3</text>
+<text x="934.7" y="721.8" font-size="9" text-anchor="middle">1:10</text>
+<text x="20" y="834" font-size="12">4 stops, shaft 2600 x 2800 · fill 0.73</text>
+</svg>

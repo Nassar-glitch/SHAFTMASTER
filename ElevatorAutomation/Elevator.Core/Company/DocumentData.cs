@@ -21,7 +21,11 @@ namespace Elevator.Core.Company
         public string PreparedBy = "";
         public string CheckedBy = "";
         public string ApprovedBy = "";
-        /// <summary>The revision shown on every document (<see cref="DrawingRevision.Display(string)"/>): "" when blank, NN for a number, else the stored text.</summary>
+        /// <summary>
+        /// The revision on the calculation sheet and the Design Notes: <see cref="DrawingRevision.Display(string)"/>, except that a blank
+        /// revision is still left out ("") there, where "00" would change the approved sheets (open question, SESSION_HANDOFF "Cloud C2").
+        /// The title block and the file names show "00".
+        /// </summary>
         public string Revision = "";
         /// <summary>The revision number of the file names (blank: 0); null when the stored revision is not a number.</summary>
         public int? RevisionNumber;
@@ -57,7 +61,7 @@ namespace Elevator.Core.Company
                 d.ApprovedBy = Clean(report.ApprovedBy);
             }
             string stored = report == null ? null : report.Revision;
-            d.Revision = DrawingRevision.Display(stored);
+            d.Revision = String.IsNullOrWhiteSpace(stored) ? "" : DrawingRevision.Display(stored);
             d.RevisionNumber = DrawingRevision.Number(stored);
             d.RevisionIssue = DrawingRevision.Validate(stored);
             return d;

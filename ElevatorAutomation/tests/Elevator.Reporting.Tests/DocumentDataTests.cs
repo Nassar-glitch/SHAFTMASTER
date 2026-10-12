@@ -116,7 +116,8 @@ namespace Elevator.Reporting.Tests
                 Assert.DoesNotContain(d.TitleBlock.DocumentRows, r => r.Key == "Rev.");
                 Assert.Null(d.FooterRight);
             }
-            Assert.Equal("", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
+            // The title block shows the first issue as 00; the sheet and the Design Notes still leave it out (golden fixtures, open question).
+            Assert.Equal("00", TitleBlockData.Build(p, Lib, null, null, null, null).Revision);
         }
     }
 }

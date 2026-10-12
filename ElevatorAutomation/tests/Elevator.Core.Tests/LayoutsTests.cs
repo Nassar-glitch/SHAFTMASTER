@@ -194,7 +194,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.CheckedBy);
             Assert.Equal("", t.ApprovedBy);
             Assert.Equal("", t.CompanyName);
-            Assert.Equal("", t.Revision); // blank revision: left out of the documents (the file names write 00)
+            Assert.Equal("00", t.Revision); // blank revision: the first issue
             Assert.Equal("", t.RatedSpeed);
             Assert.Equal("", t.RatedLoad);
             foreach (var load in new[] { t.P1, t.P2, t.P3, t.P4, t.P5, t.P6, t.P7 })
@@ -206,7 +206,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("", t.ProjectName);
             Assert.Equal("", t.Client);
             Assert.Equal("", t.PreparedBy);
-            Assert.Equal("", t.Revision);
+            Assert.Equal("00", t.Revision);
             // No remark text anywhere.
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
             {
@@ -410,9 +410,9 @@ namespace Elevator.Core.Tests
 
         // ---------- revision ----------
         [Theory]
-        [InlineData(null, 0, "00", "")]
-        [InlineData("", 0, "00", "")]
-        [InlineData("  ", 0, "00", "")]
+        [InlineData(null, 0, "00", "00")]
+        [InlineData("", 0, "00", "00")]
+        [InlineData("  ", 0, "00", "00")]
         [InlineData("0", 0, "00", "00")]
         [InlineData("1", 1, "01", "01")]
         [InlineData(" 7 ", 7, "07", "07")]
@@ -522,11 +522,12 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void A_blank_company_is_NONE_a_blank_project_or_invalid_size_is_refused()
+        public void A_blank_company_is_left_out_a_blank_project_or_invalid_size_is_refused()
         {
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(null, ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(" ..", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(null, ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(" ..", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, null, 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, " . ", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 0, 1800, "P", 0));
@@ -554,9 +555,9 @@ namespace Elevator.Core.Tests
             p.Shaft.DepthMm = 1600;
             Assert.Equal(ElevatorSystemType.GB, DrawingFileName.SystemTypeOf(p));
             Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p));
-            // No company name entered: NONE in the file name only.
-            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, null));
-            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, new CompanySettings { CompanyName = "  " }));
+            // No company name entered: the company segment is left out.
+            Assert.Equal("GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, null));
+            Assert.Equal("GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, new CompanySettings { CompanyName = "  " }));
             p.Report = new ProjectReportDetails { Revision = "2" };
             var company = new CompanySettings { CompanyName = "ELEVATORS COMPANY" };
             Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, company));
@@ -763,11 +764,12 @@ namespace Elevator.Core.Tests
                 Assert.Equal("", x.DrawingText);
                 Assert.Equal("SM_EN", x.Style);
             }
-            // a blank revision leaves the whole first row empty
+            // a blank revision is the first issue: the first row reads 00 and the date
             p.Report.Revision = null;
             var blank = TitleBlockData.Build(p, Lib, null, null, null, Day).Attributes();
-            Assert.Equal("", blank.Single(x => x.Tag == "REV_ROW1_NO").Value);
-            Assert.Equal("", blank.Single(x => x.Tag == "REV_ROW1_DATE").Value);
+            Assert.Equal("00", blank.Single(x => x.Tag == "REV_ROW1_NO").Value);
+            Assert.Equal("12/10/2026", blank.Single(x => x.Tag == "REV_ROW1_DATE").Value);
+            Assert.Equal("", DocumentData.Resolve(p, null).Revision); // the calculation sheet still leaves it out (open question)
         }
 
         [Fact]

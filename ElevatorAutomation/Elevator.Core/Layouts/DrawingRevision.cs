@@ -8,8 +8,8 @@ namespace Elevator.Core.Layouts
     /// <summary>
     /// The revision (DESIGN-FLOW "Layouts and PDF"): one value, the project's Report.Revision, for the calculation sheet, the Design
     /// Notes, the title block and the file names. The revision is a number: a whole number 0, 1, 2 … is written with at least two digits
-    /// (00, 01, 02 …). Blank is the first issue: the documents leave it out, the file names write 00. Any other text (an older file's "A")
-    /// still loads, is kept and shown as stored, has no number, and is reported by <see cref="Validate(string)"/> for the application.
+    /// (00, 01, 02 …). Blank is the first issue, 00 (<see cref="Display(string)"/>, the title block, the file names). Any other text (an
+    /// older file's "A") still loads, is kept and shown as stored, has no number, and is reported by <see cref="Validate(string)"/>.
     /// </summary>
     public static class DrawingRevision
     {
@@ -65,11 +65,11 @@ namespace Elevator.Core.Layouts
             return number.ToString("00", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>The revision shown on the documents: "" when blank, NN for a number, otherwise the stored text (trimmed) as it is.</summary>
+        /// <summary>The revision shown: "00" when blank (the first issue), NN for a number, otherwise the stored text (trimmed) as it is.</summary>
         public static string Display(string revision)
         {
             if (String.IsNullOrWhiteSpace(revision))
-                return "";
+                return Text(0);
             int? n = Number(revision);
             return n.HasValue ? Text(n.Value) : revision.Trim();
         }

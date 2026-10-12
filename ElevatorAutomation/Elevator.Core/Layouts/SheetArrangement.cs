@@ -79,10 +79,10 @@ namespace Elevator.Core.Layouts
         public string Name;
         public SheetRect ModelExtents;
         /// <summary>
-        /// Details only: the scale denominator the detail is drawn at (the template's, Templates/Layout_Geared_A0.details.json); null:
-        /// 1:10. A detail that does not fit takes the next smaller standard scale.
+        /// The dimension margin around the extents, in model mm (0 when the extents already hold the dimensions): the viewport shows
+        /// the extents grown by it on every side.
         /// </summary>
-        public int? PreferredScale;
+        public double MarginMm;
     }
 
     /// <summary>A view placed on the sheet: the viewport rectangle (paper mm), its standard scale and the scale label under it.</summary>
@@ -119,25 +119,34 @@ namespace Elevator.Core.Layouts
 
     /// <summary>
     /// Arranges the views of the A0 geared sheet (DESIGN-FLOW "Sheet arrangement"): left column the shaft plan at the bottom and the
-    /// machine-room plan above it (one scale for both plans), right of it the tall section A-A, top right the section B-B, and the detail
-    /// views in the free space under and above those. Every view takes a standard scale; margins, gaps and the label band come from one
-    /// spacing constant. All scale combinations are tried; the one with the largest views together (the sum of ln(1 / scale), details
-    /// weighted less) is kept, and among equals the one that fills the sheet most. So a tall section takes the full height and a short one
-    /// gets a larger scale or leaves its space to the details. Pure geometry: no AutoCAD.
+    /// machine-room plan above it, right of it the section A-A (full height when tall), top right the section B-B, and the detail views
+    /// in the bands left free. Pure geometry: no AutoCAD.
+    /// <para>
+    /// The search is joint: every combination of the standard scales of the four main views gives the column widths and heights; the
+    /// details are then packed into the free bands, each at the largest standard scale that still fits. The combination kept has the
+    /// largest views together: the sum over the views of the square root of their area (their linear size; details count half), so one
+    /// view is not shrunk to win a step on another, with a penalty when the two plans differ in scale (the same scale is preferred, not
+    /// required), and the fuller sheet among equals. Views are spaced with one constant (sheet margin, gaps, label band) and each view
+    /// keeps its dimension margin. The plans and A-A sit from the left, B-B flush top right; the details fill the bands left free
+    /// (beside and under B-B, above A-A and above the machine-room plan), the largest band first.
+    /// </para>
     /// </summary>
     public static class SheetArrangement
     {
         /// <summary>The standard scales, largest first.</summary>
         public static readonly int[] StandardScales = { 10, 20, 25, 50, 75, 100, 150, 200 };
 
-        /// <summary>The scale of a detail without a preferred scale.</summary>
-        public const int DefaultDetailScale = 10;
-
-        /// <summary>The weight of each detail view in the choice of scales; a main view weighs 1.</summary>
-        public const double DetailWeight = 0.25;
+        /// <summary>The weight of a detail view against a main view (1).</summary>
+        public const double DetailWeight = 0.5;
 
         /// <summary>The spacing constant (mm): sheet margin, gap between views, and the scale-label band under each view.</summary>
         public const double Spacing = 10;
+
+        /// <summary>
+        /// The penalty (mm of linear view size) when the shaft plan and the machine-room plan take different scales: they differ only
+        /// when that wins more than this.
+        /// </summary>
+        public const double PlanScalePenalty = 60;
 
         /// <summary>
         /// The drawing area of the A0 geared template in its paper millimetres (Templates/Layout_Geared_A0.dxf): the inner frame
@@ -150,12 +159,12 @@ namespace Elevator.Core.Layouts
 
         static double W(SheetViewRequest v, int s)
         {
-            return v.ModelExtents.Width / s;
+            return (v.ModelExtents.Width + 2 * v.MarginMm) / s;
         }
 
         static double H(SheetViewRequest v, int s)
         {
-            return v.ModelExtents.Height / s;
+            return (v.ModelExtents.Height + 2 * v.MarginMm) / s;
         }
 
         static SheetViewport Place(SheetViewRequest v, int s, double x, double y)
@@ -182,11 +191,11 @@ namespace Elevator.Core.Layouts
                 throw new ArgumentNullException("views");
             foreach (var v in views)
             {
-                if (v != null && v.PreferredScale.HasValue && v.PreferredScale.Value <= 0)
-                    throw new ArgumentException("A preferred scale must be positive.");
                 if (v == null || v.ModelExtents == null || !(v.ModelExtents.Width > 0) || !(v.ModelExtents.Height > 0)
                     || Double.IsInfinity(v.ModelExtents.Width) || Double.IsInfinity(v.ModelExtents.Height))
                     throw new ArgumentException("Every view needs positive, finite model extents.");
+                if (Double.IsNaN(v.MarginMm) || Double.IsInfinity(v.MarginMm) || v.MarginMm < 0)
+                    throw new ArgumentException("A dimension margin must be zero or positive.");
             }
             foreach (var k in new[] { SheetViewKind.ShaftPlan, SheetViewKind.MachineRoomPlan, SheetViewKind.SectionAA, SheetViewKind.SectionBB })
             {
@@ -205,23 +214,17 @@ namespace Elevator.Core.Layouts
             var bb = views.FirstOrDefault(v => v.Kind == SheetViewKind.SectionBB);
             var details = views.Where(v => v.Kind == SheetViewKind.Detail).ToList();
 
-            // Optional views take a dummy scale index so the loops stay the same. B-B shows the machine room of the machine-room plan:
-            // it takes the plans' scale (its own only when there is no plan).
-            int[] none = { 0 };
-            bool plans = plan != null || room != null;
+            int[] none = { 0 }; // a missing view keeps the loops the same
             Layout best = null;
-            foreach (int s1 in plans ? StandardScales : none)
-            {
-                foreach (int s2 in aa != null ? StandardScales : none)
-                {
-                    foreach (int s3 in bb == null ? none : plans ? new[] { s1 } : StandardScales)
-                    {
-                        var l = Try(area, plan, room, aa, bb, details, s1, s2, s3);
-                        if (l != null && (best == null || l.Better(best)))
-                            best = l;
-                    }
-                }
-            }
+            foreach (int sp in plan != null ? StandardScales : none)
+                foreach (int sm in room != null ? StandardScales : none)
+                    foreach (int sa in aa != null ? StandardScales : none)
+                        foreach (int sb in bb != null ? StandardScales : none)
+                        {
+                            var l = Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
+                            if (l != null && (best == null || l.Better(best)))
+                                best = l;
+                        }
             var result = new SheetArrangementResult { Area = area };
             if (best == null)
             {
@@ -237,15 +240,13 @@ namespace Elevator.Core.Layouts
         {
             public List<SheetViewport> Viewports = new List<SheetViewport>();
             public double Filled;
-            // Sum over the views of weight x ln(1 / scale): the views as large as possible together. A log measure, so one view is
-            // never made much smaller to make another a little larger (plans at 1:150 to win one step on A-A).
-            public double Readability;
+            public double Score;
 
-            // The larger scales win; then the more filled sheet; equal layouts keep the first found (the larger scales come first).
+            // The larger score wins; then the fuller sheet; equal layouts keep the first found (the larger scales come first).
             public bool Better(Layout o)
             {
-                if (Math.Abs(Readability - o.Readability) > 1e-9)
-                    return Readability > o.Readability;
+                if (Math.Abs(Score - o.Score) > 1e-9)
+                    return Score > o.Score;
                 return Filled > o.Filled + 1e-6;
             }
         }
@@ -257,33 +258,27 @@ namespace Elevator.Core.Layouts
             SheetViewRequest aa,
             SheetViewRequest bb,
             List<SheetViewRequest> details,
-            int s1,
-            int s2,
-            int s3)
+            int sp,
+            int sm,
+            int sa,
+            int sb)
         {
             double g = Spacing, label = Spacing;
             double innerW = area.Width - 2 * g, innerH = area.Height - 2 * g;
-            // Column widths and heights (a view's footprint is the view plus its label band under it).
-            double w1 = Math.Max(plan != null ? W(plan, s1) : 0, room != null ? W(room, s1) : 0);
-            double h1 = (plan != null ? H(plan, s1) + label : 0) + (room != null ? H(room, s1) + label : 0) + (plan != null && room != null ? g : 0);
-            double w2 = aa != null ? W(aa, s2) : 0, h2 = aa != null ? H(aa, s2) + label : 0;
-            double w3 = bb != null ? W(bb, s3) : 0, h3 = bb != null ? H(bb, s3) + label : 0;
+            // Column sizes; a view's footprint is the view plus its label band under it.
+            double w1 = Math.Max(plan != null ? W(plan, sp) : 0, room != null ? W(room, sm) : 0);
+            double h1 = (plan != null ? H(plan, sp) + label : 0) + (room != null ? H(room, sm) + label : 0) + (plan != null && room != null ? g : 0);
+            double w2 = aa != null ? W(aa, sa) : 0, h2 = aa != null ? H(aa, sa) + label : 0;
+            double w3 = bb != null ? W(bb, sb) : 0, h3 = bb != null ? H(bb, sb) + label : 0;
             if (h1 > innerH + 1e-9 || h2 > innerH + 1e-9 || h3 > innerH + 1e-9)
                 return null;
-            var widths = new List<double>();
-            if (w1 > 0)
-                widths.Add(w1);
-            if (w2 > 0)
-                widths.Add(w2);
-            double used = widths.Sum() + g * Math.Max(0, widths.Count - 1);
-            double third = innerW - used - (widths.Count > 0 ? g : 0); // the right column takes what is left
-            if (bb != null && w3 > third + 1e-9)
-                return null;
-            if (third < 0)
+            int columns = (w1 > 0 ? 1 : 0) + (w2 > 0 ? 1 : 0);
+            double third = innerW - w1 - w2 - g * columns; // the right column takes what is left
+            if (third < -1e-9 || (bb != null && w3 > third + 1e-9))
                 return null;
 
             var l = new Layout();
-            var column = new List<int>(); // the column of each viewport: 1 plans, 2 A-A, 3 B-B and the details under it
+            var column = new List<int>(); // per viewport: 1 plans, 2 A-A, 3 B-B and the details under it
             double x = area.X + g, bottom = area.Y + g, top = area.Top - g;
             var free = new List<Shelf>();
             if (w1 > 0)
@@ -291,15 +286,15 @@ namespace Elevator.Core.Layouts
                 double y = bottom;
                 if (plan != null)
                 {
-                    l.Viewports.Add(Place(plan, s1, x + (w1 - W(plan, s1)) / 2, y + label));
+                    l.Viewports.Add(Place(plan, sp, x + (w1 - W(plan, sp)) / 2, y + label));
                     column.Add(1);
-                    y += H(plan, s1) + label + g;
+                    y += H(plan, sp) + label + g;
                 }
                 if (room != null)
                 {
-                    l.Viewports.Add(Place(room, s1, x + (w1 - W(room, s1)) / 2, y + label));
+                    l.Viewports.Add(Place(room, sm, x + (w1 - W(room, sm)) / 2, y + label));
                     column.Add(1);
-                    y += H(room, s1) + label + g;
+                    y += H(room, sm) + label + g;
                 }
                 if (top - y > 0)
                     free.Add(Shelf.Of(new SheetRect(x, y, w1, top - y), 1));
@@ -307,84 +302,58 @@ namespace Elevator.Core.Layouts
             }
             if (w2 > 0)
             {
-                l.Viewports.Add(Place(aa, s2, x, bottom + label));
+                l.Viewports.Add(Place(aa, sa, x, bottom + label));
                 column.Add(2);
-                double y = bottom + H(aa, s2) + label + g;
+                double y = bottom + h2 + g;
                 if (top - y > 0)
                     free.Add(Shelf.Of(new SheetRect(x, y, w2, top - y), 2));
                 x += w2 + g;
             }
-            if (third > 0)
+            if (third > 1e-9)
             {
-                double y = top;
+                // B-B flush top right; the rest of the right part is free: the band beside B-B (full height above the band under it)
+                // and the band under B-B across the whole right part.
+                double right = area.Right - g, under = top;
                 if (bb != null)
                 {
-                    l.Viewports.Add(Place(bb, s3, x, top - H(bb, s3)));
+                    l.Viewports.Add(Place(bb, sb, right - w3, top - H(bb, sb)));
                     column.Add(3);
-                    y = top - h3 - g;
+                    under = top - h3 - g;
+                    if (right - w3 - g - x > 0)
+                        free.Add(Shelf.Of(new SheetRect(x, under + g, right - w3 - g - x, top - under - g), 3));
                 }
-                if (y - bottom > 0)
-                    free.Insert(0, Shelf.Of(new SheetRect(x, bottom, third, y - bottom), 3)); // under B-B first
+                if (under - bottom > 0)
+                    free.Add(Shelf.Of(new SheetRect(x, bottom, right - x, under - bottom), 3));
             }
+            // the details go to the largest free band first
+            free = free.OrderByDescending(f => f.Box.Area).ThenBy(f => f.Box.X).ThenBy(f => f.Box.Y).ToList();
             if (details.Count > 0 && !Pack(details, free, l.Viewports, column))
                 return null;
-            // Spread the columns: the width the right column does not use goes equally into the two gaps between the columns.
-            if (third > 0)
-            {
-                double right = l.Viewports.Where((v, i) => column[i] == 3).Select(v => v.Paper.Right).DefaultIfEmpty(x).Max();
-                double slack = area.Right - g - right;
-                int gaps = (w1 > 0 ? 1 : 0) + (w2 > 0 ? 1 : 0);
-                if (slack > 1e-9 && gaps > 0)
-                {
-                    for (int i = 0; i < l.Viewports.Count; i++)
-                    {
-                        double shift = column[i] == 3 ? slack : column[i] == 2 && w1 > 0 ? slack / gaps : 0;
-                        Shift(l.Viewports[i], shift);
-                    }
-                }
-                // B-B stays flush top right, also when the details under it are wider.
-                var b = l.Viewports.FirstOrDefault(v => v.Kind == SheetViewKind.SectionBB);
-                if (b != null)
-                    Shift(b, area.Right - g - b.Paper.Right);
-            }
             l.Filled = l.Viewports.Sum(v => v.Paper.Area);
-            l.Readability = l.Viewports.Sum(v => (v.Kind == SheetViewKind.Detail ? DetailWeight : 1.0) * -Math.Log(v.ScaleDenominator));
+            l.Score = l.Viewports.Sum(v => (v.Kind == SheetViewKind.Detail ? DetailWeight : 1.0) * Math.Sqrt(v.Paper.Area))
+                - (plan != null && room != null && sp != sm ? PlanScalePenalty : 0);
             return l;
         }
 
-        static void Shift(SheetViewport v, double dx)
-        {
-            if (dx == 0)
-                return;
-            v.Paper.X += dx;
-            v.LabelX += dx;
-        }
-
-        // Shelf packing: the details, tallest first, in rows from the top of each free rectangle (the space under B-B first).
-        static int Preferred(SheetViewRequest d)
-        {
-            int s = d.PreferredScale ?? DefaultDetailScale;
-            return StandardScales.Contains(s) ? s : StandardScales.FirstOrDefault(x => x > s);
-        }
-
+        // Shelf packing: the details, the largest first, each at the largest standard scale that still fits, in rows from the top of
+        // the free bands (the band under B-B first).
         static bool Pack(List<SheetViewRequest> details, List<Shelf> shelves, List<SheetViewport> placed, List<int> column)
         {
             double g = Spacing, label = Spacing;
-            var order = details.Select((d, i) => new { d, i }).OrderByDescending(o => H(o.d, Preferred(o.d))).ThenBy(o => o.i).Select(o => o.d).ToList();
+            var order = details.Select((d, i) => new { d, i })
+                .OrderByDescending(o => W(o.d, 1) * H(o.d, 1)).ThenBy(o => o.i).Select(o => o.d).ToList();
             foreach (var d in order)
             {
                 bool done = false;
-                // The preferred detail scale, else the next smaller standard scales for this detail only: a detail never pulls the
-                // main views down a scale.
-                foreach (int ds in StandardScales.Where(x => x >= Preferred(d)))
+                foreach (int s in StandardScales)
                 {
-                    double w = W(d, ds), h = H(d, ds) + label;
+                    double w = W(d, s), h = H(d, s) + label;
                     foreach (var sh in shelves)
                     {
                         double x, y;
                         if (sh.Fit(w, h, g, out x, out y))
                         {
-                            placed.Add(Place(d, ds, x, y + label));
+                            placed.Add(Place(d, s, x, y + label));
                             column.Add(sh.Column);
                             done = true;
                             break;

@@ -45,9 +45,7 @@ namespace Elevator.Core.Tests
             {
                 for (int i = 0; i < Details.Length; i++)
                 {
-                    var d = View(SheetViewKind.Detail, "Detail " + (i + 1), Details[i][0], Details[i][1], 1000000 + 5000 * i, 0);
-                    d.PreferredScale = (int)Details[i][2];
-                    v.Add(d);
+                    v.Add(View(SheetViewKind.Detail, "Detail " + (i + 1), Details[i][0], Details[i][1], 1000000 + 5000 * i, 0));
                 }
             }
             return v;
@@ -63,15 +61,15 @@ namespace Elevator.Core.Tests
         }
 
         // ---------- checks ----------
-        // The minimum fill ratio (viewport area / drawing area). Each view keeps its aspect ratio and takes one of the eight standard
-        // scales, the plans and B-B share one scale, and the details keep the template's scales. The step 1:10 -> 1:20 halves a view
-        // (a quarter of its area), and on A0 the two stacked plans at 1:10 overflow the height for deep shafts by a few per cent, so
-        // a narrow deep shaft with many stops keeps its plans at 1:20: the lowest fill over this grid is 0.269 (18 stops, shaft
-        // 1100 x 2300). A bound of 0.25 catches a lost view or a scale chosen too small; it is not a quality target. The largest empty
-        // rectangle is checked separately.
-        public const double MinimumFill = 0.25;
+        // The target fill ratio (viewport area / drawing area) of the Planner. A project below it must be saturated: every main view
+        // is at the largest standard scale that fits with the others unchanged (Saturated below), so no view could take the space.
+        // Over this grid 6 of 480 projects are below 0.60 (min 0.574): a narrow (1100) deep (2300 / 2800) shaft without machine-room
+        // extensions and 6 to 20 stops. A-A is held by the height (1:75 / 1:100), B-B is at 1:10, the plans at 1:10 and 1:20 (both
+        // at 1:10 overflow the height), and the four details are placed at the largest scale that fits. The floor catches a real fault.
+        public const double TargetFill = 0.60;
+        public const double FloorFill = 0.55;
 
-        // The largest empty rectangle (no view, label or gap in it) may hold at most this share of the drawing area (grid maximum 0.271).
+        // The largest empty rectangle (no view, label or gap in it) may hold at most this share of the drawing area.
         public const double MaximumEmptyShare = 0.30;
 
         static SheetRect Footprint(SheetViewport v)
@@ -142,8 +140,8 @@ namespace Elevator.Core.Tests
                 var scales = SheetArrangement.StandardScales;
                 if (!scales.Contains(v.ScaleDenominator))
                     p.Add(v.Name + " scale 1:" + v.ScaleDenominator);
-                if (Math.Abs(v.Paper.Width - q.ModelExtents.Width / v.ScaleDenominator) > 1e-9
-                    || Math.Abs(v.Paper.Height - q.ModelExtents.Height / v.ScaleDenominator) > 1e-9)
+                if (Math.Abs(v.Paper.Width - (q.ModelExtents.Width + 2 * q.MarginMm) / v.ScaleDenominator) > 1e-9
+                    || Math.Abs(v.Paper.Height - (q.ModelExtents.Height + 2 * q.MarginMm) / v.ScaleDenominator) > 1e-9)
                     p.Add(v.Name + " viewport is not extents / scale");
                 if (Math.Abs(v.ModelCenterX - (q.ModelExtents.X + q.ModelExtents.Width / 2)) > 1e-9
                     || Math.Abs(v.ModelCenterY - (q.ModelExtents.Y + q.ModelExtents.Height / 2)) > 1e-9)
@@ -161,8 +159,6 @@ namespace Elevator.Core.Tests
             SheetViewport plan = k(SheetViewKind.ShaftPlan), room = k(SheetViewKind.MachineRoomPlan), aa = k(SheetViewKind.SectionAA), bb = k(SheetViewKind.SectionBB);
             if (plan != null && room != null)
             {
-                if (plan.ScaleDenominator != room.ScaleDenominator)
-                    p.Add("the plans have different scales");
                 if (!(Footprint(room).Y >= plan.Paper.Top))
                     p.Add("the machine-room plan is not above the shaft plan");
                 if (Math.Abs(Footprint(plan).Y - inner.Y) > 1e-6)
@@ -174,7 +170,7 @@ namespace Elevator.Core.Tests
                 p.Add("B-B is not right of A-A");
             if (bb != null && (Math.Abs(bb.Paper.Top - inner.Top) > 1e-6 || Math.Abs(bb.Paper.Right - inner.Right) > 1e-6))
                 p.Add("B-B is not top right");
-            if (r.FillRatio < MinimumFill)
+            if (r.FillRatio < FloorFill || (r.FillRatio < TargetFill && !Saturated(req, r)))
                 p.Add("fill " + r.FillRatio.ToString("0.000", CultureInfo.InvariantCulture));
             double empty = LargestEmpty(r);
             if (empty > MaximumEmptyShare)
@@ -183,6 +179,34 @@ namespace Elevator.Core.Tests
             if (Math.Abs(fill - r.FillRatio) > 1e-12)
                 p.Add("fill ratio is not viewport area / drawing area");
             return p;
+        }
+
+        // True when no main view can take the next larger standard scale with the other main views unchanged: the columns (plans
+        // stacked, A-A, B-B) would exceed the drawing area's height or width.
+        public static bool Saturated(List<SheetViewRequest> req, SheetArrangementResult r)
+        {
+            double g = SheetArrangement.Spacing, innerW = r.Area.Width - 2 * g, innerH = r.Area.Height - 2 * g;
+            var kinds = new[] { SheetViewKind.ShaftPlan, SheetViewKind.MachineRoomPlan, SheetViewKind.SectionAA, SheetViewKind.SectionBB };
+            var scale = kinds.ToDictionary(k => k, k => r.Viewports.Where(v => v.Kind == k).Select(v => v.ScaleDenominator).DefaultIfEmpty(0).First());
+            Func<SheetViewKind, double> w = k => scale[k] == 0 ? 0 : req.Single(v => v.Kind == k).ModelExtents.Width / scale[k];
+            Func<SheetViewKind, double> h = k => scale[k] == 0 ? 0 : req.Single(v => v.Kind == k).ModelExtents.Height / scale[k] + g;
+            Func<bool> fits = () =>
+                h(SheetViewKind.ShaftPlan) + h(SheetViewKind.MachineRoomPlan) + g <= innerH + 1e-9
+                && h(SheetViewKind.SectionAA) <= innerH + 1e-9 && h(SheetViewKind.SectionBB) <= innerH + 1e-9
+                && Math.Max(w(SheetViewKind.ShaftPlan), w(SheetViewKind.MachineRoomPlan)) + w(SheetViewKind.SectionAA) + w(SheetViewKind.SectionBB) + 2 * g <= innerW + 1e-9;
+            foreach (var k in kinds)
+            {
+                int s = scale[k];
+                int i = Array.IndexOf(SheetArrangement.StandardScales, s);
+                if (s == 0 || i <= 0)
+                    continue;
+                scale[k] = SheetArrangement.StandardScales[i - 1];
+                bool larger = fits();
+                scale[k] = s;
+                if (larger)
+                    return false;
+            }
+            return true;
         }
 
         static string Signature(SheetArrangementResult r)
@@ -196,7 +220,8 @@ namespace Elevator.Core.Tests
         {
             var failures = new List<string>();
             var report = new List<string>();
-            double minFill = 1, maxEmpty = 0;
+            double maxEmpty = 0;
+            var fills = new List<double>();
             foreach (var c in Grid())
             {
                 int stops = (int)c[0]; double sw = (double)c[1], sd = (double)c[2]; int room = (int)c[3];
@@ -208,12 +233,15 @@ namespace Elevator.Core.Tests
                 if (Signature(SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), Project(stops, sw, sd, Rooms[room]))) != Signature(r))
                     failures.Add(name + ": not deterministic");
                 double empty = LargestEmpty(r);
-                minFill = Math.Min(minFill, r.FillRatio);
+                fills.Add(r.FillRatio);
                 maxEmpty = Math.Max(maxEmpty, empty);
                 report.Add(string.Format(CultureInfo.InvariantCulture, "{0}; fill {1:0.000}; largest empty {2:0.000}; {3}", name, r.FillRatio, empty,
                     string.Join(", ", r.Viewports.Select(v => v.Name + " " + v.LabelText))));
             }
-            report.Insert(0, string.Format(CultureInfo.InvariantCulture, "{0} projects; lowest fill {1:0.000}; largest empty share {2:0.000}", report.Count, minFill, maxEmpty));
+            var sorted = fills.OrderBy(f => f).ToList();
+            Assert.True(sorted[(sorted.Count - 1) / 2] >= TargetFill, "median fill below the target");
+            report.Insert(0, string.Format(CultureInfo.InvariantCulture, "{0} projects; fill min {1:0.000} median {2:0.000} max {3:0.000}; below {4:0.00}: {5}; largest empty share {6:0.000}",
+                report.Count, sorted.First(), (sorted[(sorted.Count - 1) / 2] + sorted[sorted.Count / 2]) / 2, sorted.Last(), TargetFill, fills.Count(f => f < TargetFill), maxEmpty));
             File.WriteAllLines(Path.Combine(TestData.Folder("sheet-arrangement"), "grid.txt"), report);
             Assert.True(failures.Count == 0, string.Join("\n", failures.Take(20)));
         }
@@ -309,17 +337,52 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void Renders_of_2_6_and_15_stops()
+        public void Renders_of_2_6_and_15_stops_and_a_wide_shaft()
         {
             string dir = TestData.Folder("sheet-arrangement");
-            foreach (int stops in new[] { 2, 6, 15 })
+            var cases = new[]
             {
-                var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), Project(stops, 1600, 1800, Rooms[1]));
+                new { Stops = 2, Sw = 1600.0, Sd = 1800.0, File = "02-stops" },
+                new { Stops = 6, Sw = 1600.0, Sd = 1800.0, File = "06-stops" },
+                new { Stops = 15, Sw = 1600.0, Sd = 1800.0, File = "15-stops" },
+                new { Stops = 4, Sw = 2600.0, Sd = 2800.0, File = "wide-2600x2800-04-stops" }
+            };
+            foreach (var c in cases)
+            {
+                var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), Project(c.Stops, c.Sw, c.Sd, Rooms[1]));
                 Assert.Empty(r.NotPlaced);
-                string svg = Svg(r, stops + " stops, shaft 1600 x 1800");
-                File.WriteAllText(Path.Combine(dir, "sheet-arrangement-" + stops.ToString("00", CultureInfo.InvariantCulture) + "-stops.svg"), svg);
+                string svg = Svg(r, string.Format(CultureInfo.InvariantCulture, "{0} stops, shaft {1} x {2}", c.Stops, c.Sw, c.Sd));
+                File.WriteAllText(Path.Combine(dir, "sheet-arrangement-" + c.File + ".svg"), svg);
                 Assert.Contains("1:", svg);
             }
+        }
+
+        [Fact]
+        public void The_dimension_margin_grows_the_viewport_around_the_same_centre()
+        {
+            var area = SheetArrangement.A0DrawingArea();
+            var bare = SheetArrangement.Arrange(area, new List<SheetViewRequest> { View(SheetViewKind.ShaftPlan, "P", 3000, 3000, 100, 200) }).Viewports.Single();
+            var req = View(SheetViewKind.ShaftPlan, "P", 3000, 3000, 100, 200);
+            req.MarginMm = 500;
+            var grown = SheetArrangement.Arrange(area, new List<SheetViewRequest> { req }).Viewports.Single();
+            Assert.Equal(1600, bare.ModelCenterX);
+            Assert.Equal(grown.ModelCenterX, bare.ModelCenterX);
+            Assert.Equal(grown.ModelCenterY, bare.ModelCenterY);
+            Assert.Equal(4000.0 / grown.ScaleDenominator, grown.Paper.Width, 9);
+            Assert.Equal(3000.0 / bare.ScaleDenominator, bare.Paper.Width, 9);
+            req.MarginMm = -1;
+            Assert.Throws<ArgumentException>(() => SheetArrangement.Arrange(area, new List<SheetViewRequest> { req }));
+        }
+
+        [Fact]
+        public void The_two_plans_share_a_scale_when_it_costs_little()
+        {
+            // A small shaft: both plans fit at 1:10 together.
+            var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), Project(4, 1100, 1300, Rooms[0]));
+            var plan = r.Viewports.Single(v => v.Kind == SheetViewKind.ShaftPlan);
+            var room = r.Viewports.Single(v => v.Kind == SheetViewKind.MachineRoomPlan);
+            Assert.Equal(plan.ScaleDenominator, room.ScaleDenominator);
+            Assert.Equal(10, plan.ScaleDenominator);
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Elevator.Core.Layouts
         public string PreparedBy = "";
         public string CheckedBy = "";
         public string ApprovedBy = "";
-        /// <summary>The revision as on every document: "" when blank, NN for a number ("01"), otherwise the stored text.</summary>
+        /// <summary>The revision: "00" when blank, NN for a number ("01"), otherwise the stored text.</summary>
         public string Revision = "";
         /// <summary>"1.00 M/SEC."</summary>
         public string RatedSpeed = "";
@@ -186,7 +186,7 @@ namespace Elevator.Core.Layouts
             t.PreparedBy = doc.PreparedBy;
             t.CheckedBy = doc.CheckedBy;
             t.ApprovedBy = doc.ApprovedBy;
-            t.Revision = doc.Revision;
+            t.Revision = project.Report == null ? DrawingRevision.Display(null) : DrawingRevision.Display(project.Report.Revision);
             if (project.Elevator != null)
             {
                 t.RatedSpeed = Speed(project.Elevator.SpeedMetresPerSecond);

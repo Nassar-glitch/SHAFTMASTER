@@ -16,7 +16,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-12 (Claude Code, Executor role; L1 + cloud L2a merged into main, tier 1 PASS)
 - **Completed:**
-  - **Cloud C2: portable parts of the A0 geared sheet (2026-10-12), branch `cloud/layouts-c2` from `origin/main` (`2a6177c`). Pushed; not merged, no PR. No change to Elevator.Reporting/Sheet, Design Notes, Desktop or AutoCAD.**
+  - **Cloud C2: portable parts of the A0 geared sheet (2026-10-12), branch `cloud/layouts-c2` from `origin/main` (`2a6177c`). Planner-approved except the sheet arrangement; round 2 reworked it and applied the revision / file-name changes. Pushed; not merged, no PR. No change to Elevator.Reporting/Sheet, Design Notes, Desktop or AutoCAD.**
     - **Files:**
       - Template: `ElevatorAutomation/tools/layouts/build_template.py` + `README.md`; `ElevatorAutomation/Templates/Layout_Geared_A0.dxf` (1.92 MB) + `Layout_Geared_A0.details.json`.
       - Core, new: `Elevator.Core/Layouts/XarabText.cs`, `SheetArrangement.cs`.
@@ -50,31 +50,55 @@ This file is the shared status channel between the user's Planner chat and Execu
       - **Lossy on purpose:** hamza on alef (أ إ آ) is written as ا (no decoded glyph), tashkeel is dropped, Arabic-Indic digits become ASCII digits. `Normalize()` gives the round-trip form.
       - **Script detection:** any Arabic letter → `SM_AR`, otherwise `SM_EN`; `ForDrawing()` encodes Arabic only.
       - **Tests:** all 23 template xarab strings decode to their reading; 18 readings encode to exactly the template codes; company and project names (Arabic and English), every letter in 4 positions, joining forms and presentation forms round-trip.
-    - **3. `SheetArrangement`** (pure geometry):
-      - **Input:** the drawing area (`A0DrawingArea()` = (14.9, 12.4) 1001.9 x 816.4 mm, from the template) and per view its kind, model extents and, for details, a preferred scale.
-      - **Output:** per view the viewport rectangle, the scale (1:10 … 1:200), the model centre and the label point and text ("1:50") under the view, plus a fill ratio and the views that do not fit.
-      - **Arrangement:**
-        - left column: shaft plan at the bottom, machine-room plan above; the plans share one scale;
-        - then A-A, bottom-aligned;
-        - top right: B-B, which takes the plans' scale because it shows the same machine room;
-        - details shelf-packed under B-B first, then above A-A, then above the plans.
+    - **3. `SheetArrangement`** (pure geometry; reworked in round 2):
+      - **Input:** the drawing area (`A0DrawingArea()` = (14.9, 12.4) 1001.9 x 816.4 mm, from the template) and per view its kind, model extents and dimension margin (`MarginMm`, model mm, grows the viewport around the same centre). `PreferredScale` is gone.
+      - **Output:** per view the viewport rectangle, the scale (1:10 … 1:200), the model centre and the label point and text ("1:50") under the view, plus the fill ratio and the views that do not fit.
+      - **Joint search:** every combination of the standard scales of the four main views is tried (shaft plan, machine-room plan, A-A and B-B, each independently). The scales give the column widths and heights.
+      - **Layout rules:**
+        - left column: shaft plan at the bottom, machine-room plan above;
+        - A-A right of them, bottom-aligned, full height when tall;
+        - B-B flush top right;
+        - one spacing constant (10 mm) for the margin, the gaps and the label band.
+      - **Details:** packed into the free bands, the largest band first: beside B-B, under B-B across the right part, above A-A, above the machine-room plan. Each detail takes the largest standard scale that still fits (1:10 allowed when there is room).
+      - **Score:**
+        - the sum of sqrt(viewport area) over the views (details × 0.5), so a view is not shrunk to win a step on another;
+        - minus 60 when the two plans differ in scale (same scale preferred, not required);
+        - ties broken by fill.
+      - **Round 1 → round 2 (dropped):** the B-B tie to the plans' scale, the fixed detail scales and the column spreading (it made empty vertical bands).
+      - **Grid** (480 projects: 2–20 stops, shafts 1100–2600 x 1300–2800, 3 machine rooms):
+        - **fill:** min 0.574, median 0.724, max 0.839; 6 projects below 0.60;
+        - **largest empty rectangle:** at most 18.8 %;
+        - **every project:** all views placed, inside the margin, gaps kept, standard scales, layout order, deterministic.
+      - **Below 0.60 (6 cases):** shaft 1100 x 2300 with 6 / 12 / 15 / 18 / 20 stops, and 1100 x 2800 with 18 stops, all with machine room 0 (no extensions); fill 0.574–0.599. Every main view there is at its largest scale:
+        - A-A is held by the height (1:50 / 1:75 / 1:100);
+        - B-B is at 1:10, the largest scale;
+        - the plans are at 1:10 and 1:20 (both at 1:10 overflow the height by about 3 %);
+        - the four details are placed at the largest scale that fits.
         
-        One spacing constant (10 mm) sets the margin, the gaps and the label band. Leftover width is shared equally between the column gaps.
-      - **Choice:** all scale combinations; maximise the sum of ln(1 / scale), details weighted 0.25, then fill. A log measure stops one view being shrunk to win a step on another. Details keep their template scale (1:10 rails / fish plate, 1:20 doors), falling back to the next smaller scale for that detail only.
-      - **Rejected variants:** pure fill maximisation gave plans at 1:150 and B-B at 1:10; free details gave a 1:10 door larger than the main views. Both were rejected after viewing renders.
-      - **Grid test:** 480 projects (2–20 stops, shafts 1100–2600 x 1300–2800, 3 machine rooms). Every view placed, inside the margin, gaps kept, standard scales, order as DESIGN-FLOW, deterministic.
-      - **Thresholds:** fill ≥ 0.25 (grid minimum 0.269) and largest empty rectangle ≤ 30 % (grid maximum 0.271). The fill is limited by the scale steps: 1:10 → 1:20 halves a view, and on A0 the two stacked plans at 1:10 overflow the height of deep shafts by a few per cent.
-      - **Extra tests:** a 15-stop A-A takes > 80 % of the height; a 2–3 stop A-A is at 1:20 or larger with no band above it over 25 %; missing optional views; refused inputs.
-      - **Model extents in the tests are assumed** (walls 250, dimension bands 600 / 750, machine-room height 3000). The local generator gives the real extents.
+        The test checks exactly that: a project below 0.60 must be saturated (no main view fits one step larger with the others unchanged), with a floor of 0.55. The median must be ≥ 0.60.
+      - **Renders** (`docs/design/layouts/`):
+        - `sheet-arrangement-02-stops.svg` (fill 0.77: A-A 1:25 full height, plans 1:10 / 1:20, B-B 1:10);
+        - `-06-stops.svg` (0.71);
+        - `-15-stops.svg` (0.71: A-A 1:75 full height);
+        - `-wide-2600x2800-04-stops.svg` (0.73: plan 1:10, A-A 1:25, B-B 1:20).
+        
+        All four were viewed.
+      - **Model extents in the tests are assumed** (walls 250, dimension bands 600 / 750, machine-room height 3000). The local generator gives the real extents and margins.
+    - **Round 2 also:**
+      - **Revision:** `DrawingRevision.Display("")` is now "00", and the title block (`TitleBlockData.Revision`, the `REV_ROW1` row with its date) shows 00 for a blank revision.
+        - **Not changed (golden):** `DocumentData.Revision`, read by the calculation sheet and the Design Notes, still leaves a blank revision out. Making it "00" adds a "Revision 00" info row, a "Rev." title-block row and a "Rev 00" footer to **46 `sheet.txt` and 47 `design-notes.txt`** golden fixtures.
+        - That code is the local session's now, and the prompt keeps the golden files unchanged. The Planner's note that `DocumentData` already gives 00 was not the state of the code (it gave "" since the user's answer of round 3 of L2a).
+        - Approve the golden change and switch it there (one line in `DocumentData.Resolve`).
+      - **File name:** a blank company name now leaves the company segment out (`GB-RCW-W1500D1600-VILLA bx12-MODEL00`); `NONE` is gone.
     - **4. `TitleBlockData`:**
       - New fields: `TypeOfWork` (preset "أعمال مصاعد", lock / follow / reset per project, key `TitleBlock.TypeOfWork`); `Phase` (optional, no preset, key `TitleBlock.Phase`); `SheetNo` "1"; `Entrances` = `Stops` and `EntranceNames` = `Floors` (one entrance per served floor); `ProjectNumber` from `Report.DocumentNumber`; `Scale` "AS SHOWN".
       - `Attributes()` gives one `TitleBlockAttribute` per tag: value, script, style, and `DrawingText` (xarab-encoded when Arabic). The company name fills `COMPANY_AR` when typed in Arabic, else `COMPANY`. `REV_ROW1_DATE` is filled only when there is a revision (a blank revision leaves the row empty).
       - A test checks that `TitleBlockData.Tags` equals the ATTDEF tags of the DXF and that each style is `SM_AR` / `SM_EN`.
-    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (`20261012-112644`): core-net8.0 815 (715 + 100), reporting-net8.0 196. No file under `tests/golden` changed. net48, tiers 2-3 and AutoCAD were not run (Linux cloud).
+    - **Checks:** `pwsh ElevatorAutomation/tools/test.ps1 -Tier 1` PASS (round 2 `20261012-120527`): core-net8.0 817, reporting-net8.0 196. No file under `tests/golden` changed. net48, tiers 2-3 and AutoCAD were not run (Linux cloud).
     - **Open questions (Planner / user):**
       1. **Drawing name:** the template's drawing-name box held "أعمال مصاعد". DESIGN-FLOW makes that the type of work, so it now goes into the small type-of-work box and `DRAWING_NAME` stays empty (no source). Should the drawing name be, for example, "LAYOUT AND BUILDERS WORKS DRAWING" or the project name?
-      2. **Scale list:** with only the 8 standard scales, some sheets stay fairly empty (fill 0.27–0.6). Would company practice allow 1:15 / 1:30 / 1:40 for a fuller sheet?
-      3. **B-B scale:** B-B takes the plans' scale (my decision, since they show the same room). Confirm, or allow B-B larger.
+      2. **Revision 00 on the calculation sheet / Design Notes:** approve the golden change (46 + 47 fixtures), see "Round 2 also".
+      3. **B-B at 1:10:** with independent scales B-B often takes 1:10 (the largest that fits). Fine, or cap it (for example at the plans' scale)?
       4. **xarab letters not seen in the template:** they need one test print in AutoCAD with xarab.shx (local). Also: does `\` really draw a colon, and do digits draw as Arabic-Indic (the "م." prefix is written `L0`)?
       5. **Paper units:** the source's 9.969 mm per unit was kept as the exact scale (border = 841 mm high), so the frame is 1183.4 mm wide, centred on 1189. Alternatively scale by exactly 10 (cm → mm), but then the border would be 843.6 mm high, over A0.
     - **Next step (local):**
@@ -1372,6 +1396,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-12: Cloud Executor reworked the C2 sheet arrangement (joint scale search, free bands, fill min 0.574 / median 0.724 over 480 projects; the 6 below 0.60 are saturated), title-block revision 00, no company segment when blank. Tier 1 PASS, golden unchanged; sheet revision 00 awaits approval.
 - 2026-10-12: Cloud Executor completed C2 on `cloud/layouts-c2` (pushed, not merged): reduced A0 template (1.92 MB, deterministic) with `SM_TITLEBLOCK` attributes and 7 reference details, `XarabText`, `SheetArrangement` (480-project grid), `TitleBlockData` additions. Tier 1 PASS, golden unchanged. See "Cloud C2".
 
 - 2026-10-12: Cloud Executor applied the user's answers (a) / (b) on `cloud/layouts-l2a` (pushed): the company name comes only from what the user enters (no default; left out everywhere when blank, NONE in the file name), and the sheet, Design Notes and title block share one revision text (as stored; NN for numbers). Tier 1 PASS, golden unchanged.
