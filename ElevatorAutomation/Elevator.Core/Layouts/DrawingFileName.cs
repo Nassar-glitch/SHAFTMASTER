@@ -22,9 +22,6 @@ namespace Elevator.Core.Layouts
         /// <summary>The project file extension.</summary>
         public const string ProjectExtension = ".elevator.json";
 
-        /// <summary>The company part of the file names when no company name is entered.</summary>
-        public const string NoCompany = "NONE";
-
         const string Forbidden = "\\/:*?\"<>|";
 
         /// <summary>A name part as typed, with the forbidden characters replaced by "_" and trailing dots and spaces trimmed.</summary>
@@ -62,7 +59,7 @@ namespace Elevator.Core.Layouts
             return Math.Round(mm, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
         }
 
-        /// <summary>The base name (no extension).</summary>
+        /// <summary>The base name (no extension). A blank company name leaves the company segment out: TYPE-CW-W{SW}D{SD}-PROJECT-MODEL{NN}.</summary>
         public static string BaseName(
             string company,
             ElevatorSystemType type,
@@ -73,12 +70,10 @@ namespace Elevator.Core.Layouts
             int revision)
         {
             string c = Clean(company), p = Clean(projectName);
-            if (c.Trim().Length == 0)
-                c = NoCompany;
             if (p.Trim().Length == 0)
                 throw new ArgumentException("The project name is needed for the file name.");
-            return c
-                + "-" + type.ToString()
+            return (c.Trim().Length == 0 ? "" : c + "-")
+                + type.ToString()
                 + "-" + counterweight.ToString()
                 + "-W" + Millimetres(shaftWidthMm, "SW") + "D" + Millimetres(shaftDepthMm, "SD")
                 + "-" + p
@@ -86,7 +81,7 @@ namespace Elevator.Core.Layouts
         }
 
         /// <summary>
-        /// The base name of a project: the company (<see cref="DocumentData"/>: the company settings; NONE when none is entered), the
+        /// The base name of a project: the company (<see cref="DocumentData"/>: the company settings; left out when none is entered), the
         /// system type, the counterweight code, SW and SD from the shaft, the project name and the revision NN (blank: 00).
         /// </summary>
         public static string BaseName(ElevatorProject project, CompanySettings company)

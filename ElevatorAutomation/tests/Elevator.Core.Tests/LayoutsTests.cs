@@ -51,7 +51,7 @@ namespace Elevator.Core.Tests
         [Fact]
         public void An_older_library_without_the_new_members_takes_the_shipped_defaults()
         {
-            var old = Variant(s => s.Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\" },", ""));
+            var old = Variant(s => s.Replace("\"TitleBlock\": { \"Control\": \"SIMPLEX COLLECTIVE DOWN.\", \"Supply\": \"3 PHASE 380 V. 50 Hz.\", \"TypeOfWork\": \"أعمال مصاعد\" },", ""));
             Assert.Null(old.TitleBlock);
             Assert.Equal(TitleBlockPreset.DefaultControl, old.TitleBlockOrDefault().Control);
             Assert.Equal(TitleBlockPreset.DefaultSupply, old.TitleBlockOrDefault().Supply);
@@ -183,7 +183,10 @@ namespace Elevator.Core.Tests
             foreach (var f in typeof(TitleBlockData).GetFields().Where(f => f.FieldType == typeof(string)))
                 Assert.NotNull(f.GetValue(t));
             Assert.Equal("", t.DrawingTitle);
-            Assert.Equal("", t.Scale);
+            Assert.Equal("AS SHOWN", t.Scale); // every view carries its own scale
+            Assert.Equal("1", t.SheetNo);
+            Assert.Equal("", t.ProjectNumber);
+            Assert.Equal("", t.Phase);
             Assert.Equal("", t.ProjectName);
             Assert.Equal("", t.Client);
             Assert.Equal("", t.Date);
@@ -407,9 +410,9 @@ namespace Elevator.Core.Tests
 
         // ---------- revision ----------
         [Theory]
-        [InlineData(null, 0, "00", "")]
-        [InlineData("", 0, "00", "")]
-        [InlineData("  ", 0, "00", "")]
+        [InlineData(null, 0, "00", "00")]
+        [InlineData("", 0, "00", "00")]
+        [InlineData("  ", 0, "00", "00")]
         [InlineData("0", 0, "00", "00")]
         [InlineData("1", 1, "01", "01")]
         [InlineData(" 7 ", 7, "07", "07")]
@@ -521,11 +524,12 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void A_blank_company_is_NONE_a_blank_project_or_invalid_size_is_refused()
+        public void A_blank_company_is_left_out_a_blank_project_or_invalid_size_is_refused()
         {
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(null, ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
-            Assert.Equal("NONE-GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(" ..", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("  ", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(null, ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName(" ..", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
+            Assert.Equal("GB-RCW-W1500D1800-P-MODEL00", DrawingFileName.BaseName("", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, "P", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, null, 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 1500, 1800, " . ", 0));
             Assert.Throws<ArgumentException>(() => DrawingFileName.BaseName("C", ElevatorSystemType.GB, CounterweightPositionCode.RCW, 0, 1800, "P", 0));
@@ -553,9 +557,9 @@ namespace Elevator.Core.Tests
             p.Shaft.DepthMm = 1600;
             Assert.Equal(ElevatorSystemType.GB, DrawingFileName.SystemTypeOf(p));
             Assert.Equal(CounterweightPositionCode.RCW, DrawingFileName.CounterweightOf(p));
-            // No company name entered: NONE in the file name only.
-            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, null));
-            Assert.Equal("NONE-GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, new CompanySettings { CompanyName = "  " }));
+            // No company name entered: the company segment is left out.
+            Assert.Equal("GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, null));
+            Assert.Equal("GB-RCW-W1500D1600-VILLA bx12-MODEL00", DrawingFileName.BaseName(p, new CompanySettings { CompanyName = "  " }));
             p.Report = new ProjectReportDetails { Revision = "2" };
             var company = new CompanySettings { CompanyName = "ELEVATORS COMPANY" };
             Assert.Equal("ELEVATORS COMPANY-GB-RCW-W1500D1600-VILLA bx12-MODEL02", DrawingFileName.BaseName(p, company));
@@ -708,6 +712,132 @@ namespace Elevator.Core.Tests
             {
                 CompanyReportSettings.SettingsDirectory = saved;
             }
+        }
+
+        // ---------- C2: the A0 sheet fields ----------
+        [Fact]
+        public void Type_of_work_phase_sheet_number_entrances_and_project_number()
+        {
+            var p = New();
+            p.Report = new ProjectReportDetails { DocumentNumber = " NL-2026-014 " };
+            Floors(p, "G", 3100.0, "1", 3060.0, "2", 3120.0, "3", null);
+            var t = TitleBlockData.Build(p, Lib, null, null, null, Day);
+            Assert.Equal("أعمال مصاعد", t.TypeOfWork);
+            Assert.Equal("", t.Phase);
+            Assert.Equal("1", t.SheetNo);
+            Assert.Equal("AS SHOWN", t.Scale);
+            Assert.Equal("4", t.Entrances);
+            Assert.Equal("(G-1-2-3)", t.EntranceNames);
+            Assert.Equal(t.Stops, t.Entrances);
+            Assert.Equal("NL-2026-014", t.ProjectNumber);
+            // an older library without the type of work takes the shipped default
+            var old = Variant(x => x.Replace(", \"TypeOfWork\": \"أعمال مصاعد\"", ""));
+            Assert.Null(old.TitleBlock.TypeOfWork);
+            Assert.Equal("أعمال مصاعد", TitleBlockData.Build(p, old, null, null, null, null).TypeOfWork);
+        }
+
+        [Fact]
+        public void Type_of_work_and_phase_lock_when_edited()
+        {
+            var p = New();
+            var other = Variant(x => x.Replace("\"TypeOfWork\": \"أعمال مصاعد\"", "\"TypeOfWork\": \"أعمال تركيبات\""));
+            Assert.Equal("أعمال تركيبات", TitleBlockFields.Effective(TitleBlockFields.TypeOfWork, p, other)); // follows the library
+            TitleBlockFields.TypeOfWork.Edit(p, "أعمال صيانة");
+            TitleBlockFields.Phase.Edit(p, "تنفيذ");
+            Assert.Equal("أعمال صيانة", TitleBlockFields.Effective(TitleBlockFields.TypeOfWork, p, other));
+            var back = ProjectJson.Deserialize(ProjectJson.Serialize(p));
+            var t = TitleBlockData.Build(back, Lib, null, null, null, null);
+            Assert.Equal("أعمال صيانة", t.TypeOfWork);
+            Assert.Equal("تنفيذ", t.Phase);
+            Assert.Same(TitleBlockFields.Phase, ProjectPresets.Find("TitleBlock.Phase"));
+            Assert.Equal(InputEffect.None, LiveCalculation.EffectOf("TitleBlock.TypeOfWork"));
+            TitleBlockFields.TypeOfWork.Reset(back);
+            TitleBlockFields.Phase.Reset(back);
+            Assert.Equal("أعمال مصاعد", TitleBlockData.Build(back, Lib, null, null, null, null).TypeOfWork);
+            Assert.Equal("", TitleBlockData.Build(back, Lib, null, null, null, null).Phase);
+        }
+
+        [Fact]
+        public void Every_attribute_has_its_value_script_and_style()
+        {
+            var p = New();
+            p.Info.Name = "فيلا التجمع";
+            p.Report = new ProjectReportDetails { ClientName = "Mr. Client", Revision = "2", DocumentNumber = "P-14" };
+            var live = new LiveCalculation(Ctx, PresetFlow.Load(PresetsPath, Ctx));
+            live.Recalculate(p);
+            var t = TitleBlockData.Build(p, Lib, new CompanySettings { CompanyName = "شركة النيل للمصاعد" }, live, Day);
+            var a = t.Attributes();
+            Assert.Equal(TitleBlockData.Tags, a.Select(x => x.Tag).ToArray());
+            Func<string, TitleBlockAttribute> at = tag => a.Single(x => x.Tag == tag);
+            // Arabic values: the xarab style and the encoded text; Latin values: the cent style and the text as it is.
+            Assert.Equal(TextScript.Arabic, at("PROJECT").Script);
+            Assert.Equal("SM_AR", at("PROJECT").Style);
+            Assert.Equal(XarabText.Encode("فيلا التجمع"), at("PROJECT").DrawingText);
+            Assert.Equal("فيلا التجمع", XarabText.Decode(at("PROJECT").DrawingText));
+            Assert.Equal("SM_EN", at("CLIENT").Style);
+            Assert.Equal("Mr. Client", at("CLIENT").DrawingText);
+            Assert.Equal("SM_AR", at("TYPE_OF_WORK").Style);
+            Assert.Equal("HulhG lwhu]", at("TYPE_OF_WORK").DrawingText);
+            // the company goes to the line of its language
+            Assert.Equal("شركة النيل للمصاعد", at("COMPANY_AR").Value);
+            Assert.Equal("", at("COMPANY").Value);
+            var latin = TitleBlockData.Build(p, Lib, new CompanySettings { CompanyName = "Nile Lifts" }, null, null, Day).Attributes();
+            Assert.Equal("Nile Lifts", latin.Single(x => x.Tag == "COMPANY").DrawingText);
+            Assert.Equal("", latin.Single(x => x.Tag == "COMPANY_AR").Value);
+            // values
+            Assert.Equal(t.P1, at("P1").Value);
+            Assert.StartsWith("P7 = ", at("P7").Value);
+            Assert.Equal("02", at("REV_ROW1_NO").Value);
+            Assert.Equal("12/10/2026", at("REV_ROW1_DATE").Value);
+            Assert.Equal("12/10/2026", at("DATE").Value);
+            Assert.Equal("P-14", at("DOC_NO").Value);
+            Assert.Equal("AS SHOWN", at("SCALE").Value);
+            Assert.Equal("1", at("SHEET_NO").Value);
+            Assert.Equal("", at("DRAWING_NAME").Value);
+            Assert.Equal(t.Stops, at("ENTRANCES").Value);
+            foreach (var x in a.Where(x => x.Value.Length == 0))
+            {
+                Assert.Equal("", x.DrawingText);
+                Assert.Equal("SM_EN", x.Style);
+            }
+            // a blank revision is the first issue: the first row reads 00 and the date
+            p.Report.Revision = null;
+            var blank = TitleBlockData.Build(p, Lib, null, null, null, Day).Attributes();
+            Assert.Equal("00", blank.Single(x => x.Tag == "REV_ROW1_NO").Value);
+            Assert.Equal("12/10/2026", blank.Single(x => x.Tag == "REV_ROW1_DATE").Value);
+            Assert.Equal("", DocumentData.Resolve(p, null).Revision); // the calculation sheet still leaves it out (open question)
+        }
+
+        [Fact]
+        public void The_template_block_has_exactly_these_attribute_tags()
+        {
+            // Templates/Layout_Geared_A0.dxf (tools/layouts/build_template.py): every ATTDEF of SM_TITLEBLOCK has a value here.
+            var lines = File.ReadAllLines(Path.Combine(TestData.Root, "Templates", "Layout_Geared_A0.dxf"));
+            var tags = new List<string>();
+            var styles = new Dictionary<string, string>();
+            for (int i = 0; i + 1 < lines.Length; i += 2)
+            {
+                if (lines[i].Trim() != "0" || lines[i + 1] != "ATTDEF")
+                    continue;
+                string tag = null, style = null;
+                for (int j = i + 2; j + 1 < lines.Length && lines[j].Trim() != "0"; j += 2)
+                {
+                    string code = lines[j].Trim();
+                    if (code == "2")
+                        tag = lines[j + 1];
+                    if (code == "7")
+                        style = lines[j + 1];
+                }
+                tags.Add(tag);
+                styles[tag] = style;
+            }
+            Assert.Equal(TitleBlockData.Tags.OrderBy(x => x, StringComparer.Ordinal), tags.OrderBy(x => x, StringComparer.Ordinal));
+            Assert.All(styles.Values, v => Assert.Contains(v, new[] { XarabText.ArabicStyle, XarabText.LatinStyle }));
+            var text = File.ReadAllText(Path.Combine(TestData.Root, "Templates", "Layout_Geared_A0.dxf"));
+            Assert.Contains("xarab.shx", text);
+            Assert.Contains("cent.shx", text);
+            Assert.DoesNotContain("PDFCreator", text);
+            Assert.True(new FileInfo(Path.Combine(TestData.Root, "Templates", "Layout_Geared_A0.dxf")).Length < 2000000);
         }
     }
 }
