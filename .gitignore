@@ -61,3 +61,6 @@ legacy/ElevatorPlanGenerator/tests/generated-preview.*
 
 # Zipped superseded candidate builds (disk clean-up 2026-10-10)
 ElevatorAutomation/archive/
+
+# Layout templates supplied by the user (about 40 MB each). They were already committed once in 23b12df (see docs/design/layouts/LAYOUTS.md); this keeps any further copy out.
+Layouts_Sec/*.dxf
