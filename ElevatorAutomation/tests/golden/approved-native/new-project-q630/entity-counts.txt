@@ -2,4 +2,4 @@ Views generated: Plan, MachineRoomPlan, SectionBB, SectionAA
 MachineRoomPlan: generated 1354, reopened 1354
 Plan: generated 521, reopened 521
 SectionAA: generated 3043, reopened 3043
-SectionBB: generated 709, reopened 709
+SectionBB: generated 708, reopened 708

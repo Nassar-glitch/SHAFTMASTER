@@ -24,5 +24,7 @@ namespace Elevator.Solution.Bridge
         public string DesignJson;
         public DesignContext Context;
         public List<ViewBounds> Bounds = new List<ViewBounds>();
+        /// <summary>The sheet the host added (null when none was requested).</summary>
+        public Elevator.Core.Layouts.SheetResult Sheet;
     }
 }

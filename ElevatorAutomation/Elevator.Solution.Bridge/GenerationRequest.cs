@@ -13,5 +13,7 @@ namespace Elevator.Solution.Bridge
         public string RequestId = Guid.NewGuid().ToString("N");
         public string ProjectJson;
         public GenerationOptions Options = new GenerationOptions { ArrangeViews = true };
+        /// <summary>Optional: the A0 sheet (layout, viewports, title block) added to the generated drawing. Null: the four views only.</summary>
+        public Elevator.Core.Layouts.SheetRequest Sheet;
     }
 }

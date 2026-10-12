@@ -62,6 +62,14 @@ namespace Elevator.Solution.Desktop
    catch(Exception e){shell.SetStatus(e.Message);MessageBox.Show(shell,e.Message,"STEP export failed",MessageBoxButton.OK,MessageBoxImage.Warning);}
    finally{shell.SetBusy(false);}
   }
+  // The A0 sheet of the drawing (L2b): the title block from the project, the company settings and the live results, and the logo.
+  Elevator.Core.Layouts.SheetRequest Sheet()
+  {
+   var company=Elevator.Reporting.Sheet.CompanyReportSettings.Load();var title=Elevator.Core.Layouts.TitleBlockData.Build(Session.Project,shell.Presets.Library,company.ToCompanySettings(),shell.Live,Elevator.Reporting.Docx.ReportClock.Now());
+   var logo=company.Logo();
+   return new Elevator.Core.Layouts.SheetRequest{Attributes=title.Attributes(),DoorType=Session.Project.Doors==null?null:Session.Project.Doors.Type,
+    LogoFile=logo==null?null:company.LogoPath,LogoWidthPx=logo==null?0:logo.PixelWidth,LogoHeightPx=logo==null?0:logo.PixelHeight};
+  }
   public async Task Generate()
   {
    if(shell.Busy)return;shell.Commit();Calculate();if(!shell.Live.Design.CanGenerate){shell.ShowPage("VALIDATION");throw new ArgumentException("Correct blocking validation issues before generation.");}
@@ -70,7 +78,7 @@ namespace Elevator.Solution.Desktop
    var consent=OutputConsent.Capture(path,confirmed);shell.SetBusy(true);
    try{
     var client=new GenerationClient(shell.Root,shell.Bin,@"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe");
-    Last=await client.GenerateAsync(Session.Project,new GenerationOptions{Views=Session.Views,ArrangeViews=Session.Arrange},consent,message=>shell.Dispatcher.BeginInvoke(new Action(()=>shell.SetStatus(message))));
+    Last=await client.GenerateAsync(Session.Project,new GenerationOptions{Views=Session.Views,ArrangeViews=Session.Arrange},consent,message=>shell.Dispatcher.BeginInvoke(new Action(()=>shell.SetStatus(message))),Sheet());
     if(!Last.Success)throw new InvalidOperationException(Last.Error??"Host generation failed.");shell.SetOutputLocation(Last.OutputPath);
     var design=shell.Live.Design;
     design.Validation=Last.Validation;design.LayoutStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.LayoutStatus);design.WrapAngleStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.WrapAngleStatus);design.CodeDiameterRatioStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.CodeDiameterRatioStatus);shell.SetStatus("DRAWING GENERATED SUCCESSFULLY · "+Last.ElapsedSeconds.ToString("0.0")+" s");shell.ShowPage("DRAWINGS");

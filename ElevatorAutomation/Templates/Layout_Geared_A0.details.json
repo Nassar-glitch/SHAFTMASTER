@@ -1,0 +1,116 @@
+{
+  "Origin": [
+    1000000.0,
+    0.0
+  ],
+  "PaperScaleFromSourceUnits": 9.96918,
+  "Details": [
+    {
+      "Name": "FISH_PLATE",
+      "Kind": "RailFixing",
+      "Attributes": {},
+      "TemplateScale": 10,
+      "Entities": 421,
+      "Window": [
+        1000000.0,
+        0.0,
+        1001067.0,
+        1662.0
+      ]
+    },
+    {
+      "Name": "RAILS_PLAN_CW5_CAR9",
+      "Kind": "RailsPlan",
+      "Attributes": {
+        "CwRailMm": 5,
+        "CarRailMm": 9
+      },
+      "TemplateScale": 10,
+      "Entities": 290,
+      "Window": [
+        1003067.0,
+        0.0,
+        1005161.0,
+        808.0
+      ]
+    },
+    {
+      "Name": "RAIL_BRACKETS_CW5_CAR9",
+      "Kind": "RailBrackets",
+      "Attributes": {
+        "CwRailMm": 5,
+        "CarRailMm": 9
+      },
+      "TemplateScale": 10,
+      "Entities": 32,
+      "Window": [
+        1007161.0,
+        0.0,
+        1008129.0,
+        912.0
+      ]
+    },
+    {
+      "Name": "RAIL_BRACKETS_CW5_CAR16",
+      "Kind": "RailBrackets",
+      "Attributes": {
+        "CwRailMm": 5,
+        "CarRailMm": 16
+      },
+      "TemplateScale": 10,
+      "Entities": 4,
+      "Window": [
+        1010129.0,
+        0.0,
+        1011097.0,
+        912.0
+      ]
+    },
+    {
+      "Name": "RAIL_BRACKETS_CW9_CAR16",
+      "Kind": "RailBrackets",
+      "Attributes": {
+        "CwRailMm": 9,
+        "CarRailMm": 16
+      },
+      "TemplateScale": 10,
+      "Entities": 4,
+      "Window": [
+        1013097.0,
+        0.0,
+        1014065.0,
+        912.0
+      ]
+    },
+    {
+      "Name": "DOOR_AUTOMATIC",
+      "Kind": "DoorElevationSection",
+      "Attributes": {
+        "Door": "Automatic"
+      },
+      "TemplateScale": 20,
+      "Entities": 668,
+      "Window": [
+        1016065.0,
+        0.0,
+        1019887.0,
+        4108.0
+      ]
+    },
+    {
+      "Name": "DOOR_SWING",
+      "Kind": "DoorElevationSection",
+      "Attributes": {
+        "Door": "Swing"
+      },
+      "TemplateScale": 20,
+      "Entities": 591,
+      "Window": [
+        1021887.0,
+        0.0,
+        1025687.0,
+        4400.0
+      ]
+    }
+  ]
+}

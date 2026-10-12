@@ -36,20 +36,24 @@ namespace Elevator.AutoCAD.SectionBB
             var g = new MachineRoomSectionGeometry(design);
             if (p == null)
                 throw new InvalidOperationException("Shared section calculation missing.");
+            var removed = new List<string>();
             foreach (var b in s.Manifest.Entities)
             {
                 var e = s.Entities[b.Key];
                 e.UpgradeOpen();
                 if (b.Role == "frame")
                     continue;
+                if (b.Role == "status")
+                {
+                    // No status / remark text is drawn (DESIGN-FLOW: remarks go to the Design Notes file only): the master's note is
+                    // erased and leaves the manifest, so the drawing stays consistent.
+                    e.Erase();
+                    removed.Add(b.Key);
+                    continue;
+                }
                 if (b.Role == "dimension")
                 {
                     UpdateDimension((Dimension)e, b.Key, s, design);
-                    continue;
-                }
-                if (b.Role == "status")
-                {
-                    UpdateStatusNote(design, s, p, e);
                     continue;
                 }
                 if (b.Role == "rope")
@@ -64,6 +68,11 @@ namespace Elevator.AutoCAD.SectionBB
                 }
                 UpdateNativeEntity(s, p, g, b, e);
             }
+            if (removed.Count > 0)
+            {
+                s.Manifest.Entities.RemoveAll(v => removed.Contains(v.Key));
+                ProjectDataStorage.Write(db, tr, MachineRoomSectionDrawing.Record, s.Manifest);
+            }
             var audit =
                 MachineRoomSectionGeometryAudit.Run(MachineRoomSectionDrawing.Read(db, tr), design, MachineRoomDrawing.Read(db, tr));
             ProjectDataStorage.Write(db, tr, "MachineRoomSectionDesign", p);
@@ -74,34 +83,6 @@ namespace Elevator.AutoCAD.SectionBB
                 Annotations = new Dictionary<string, string>(),
                 Clearances = new Dictionary<string, double>()
             };
-        }
-
-        private void UpdateStatusNote(ElevatorParameters design, SectionSnapshot s, MachineRoomSectionParameters p, Entity e)
-        {
-            var note = (MText)e;
-            note.Location = World(s, new LocalPoint(400, p.TractionZ + 260, 0));
-            note.Contents = "SECTION B-B\\P"
-                + p.Beam.SectionDesignation
-                + " - nominal depth envelope\\PBeam: "
-                + p.Beam.StructuralStatus
-                + "\\PConcrete: NOT EVALUATED\\PLayout: "
-                + p.LayoutStatus
-                + "\\PReeving: "
-                + p.ReevingGeometryStatus
-                + "\\PWrap: "
-                + (p.HasCalculatedPath
-                    ? p.Arrangement.Reeving.CalculatedWrapAngleDeg.Value.ToString("0.###") + " deg / target >=152"
-                    : "NOT YET EVALUABLE")
-                + "\\PD/d: "
-                + design.MachineRoom.CodeDiameterRatioStatus
-                + "\\PSlab clearance: "
-                + (p.Arrangement.DeflectorToSlabClearanceMm.HasValue
-                    ? p.Arrangement.DeflectorToSlabClearanceMm.Value.ToString("0.###") + " mm"
-                    : "unknown")
-                + " - "
-                + p.Arrangement.DeflectorSlabClearanceStatus
-                + "\\PHanger: MECHANICAL REVIEW REQUIRED\\PRope/structure clearance: NOT YET EVALUABLE\\P"
-                + p.OpeningStatus;
         }
 
         private void UpdateRope(SectionSnapshot s, MachineRoomSectionParameters p, SectionBinding b, Entity e)

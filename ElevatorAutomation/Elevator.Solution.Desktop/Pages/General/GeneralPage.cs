@@ -51,7 +51,7 @@ namespace Elevator.Solution.Desktop.Pages
    if(Session.Project.Report==null)Session.Project.Report=new ProjectReportDetails();
    Heading("Calculation sheet details");
    Form.Fields(GeneralViewModel.ReportFields);
-   RevisionMessage();Phase();
+   RevisionMessage();Phase();TitleBlockFields();
    Note(GeneralViewModel.ReportNote);
    Note(GeneralViewModel.CompanySummary(CompanyReportSettings.Load()));
    Content.Children.Add(Form.Button("Company / report settings…",ShowCompanySettings));
@@ -73,6 +73,28 @@ namespace Elevator.Solution.Desktop.Pages
    box.TextChanged+=(s,e)=>{Session.Dirty=true;Shell.RefreshProjectStatus();};
    Form.Committers.Add(()=>DocumentData.SetPhase(Session.Project,box.Text));
    Content.Children.Add(row);
+  }
+  // The title-block texts of the drawing sheet that follow the preset library until edited (control, supply, type of work, drawing name):
+  // an edited value locks, a value equal to the preset (or blank) follows the library again. Arabic is typed as normal Arabic.
+  void TitleBlockFields()
+  {
+   var library=Shell.Presets.Library;if(library==null)return;
+   Heading("Drawing title block");
+   foreach(var field in new[]{Elevator.Core.Layouts.TitleBlockFields.Control,Elevator.Core.Layouts.TitleBlockFields.Supply,Elevator.Core.Layouts.TitleBlockFields.TypeOfWork,Elevator.Core.Layouts.TitleBlockFields.DrawingName})
+   {
+    var f=field;var panel=new StackPanel();var row=Form.FormRow(f.Label,panel);
+    Func<string> effective=()=>Elevator.Core.Layouts.TitleBlockFields.Effective(f,Session.Project,library);
+    Func<string> preset=()=>Convert.ToString(f.PresetValue(new Elevator.Core.Presets.PresetContext{Project=Session.Project,Library=library}))??"";
+    var box=new TextBox{Text=effective()};System.Windows.Automation.AutomationProperties.SetName(box,f.Label);panel.Children.Add(box);
+    box.TextChanged+=(s,e)=>{Session.Dirty=true;Shell.RefreshProjectStatus();};
+    Form.Committers.Add(()=>
+    {
+     string typed=(box.Text??"").Trim();
+     if(typed==effective())return;
+     if(typed.Length==0||typed==preset())f.Reset(Session.Project);else f.Edit(Session.Project,typed);
+    });
+    Content.Children.Add(row);
+   }
   }
   void ShowCompanySettings()
   {

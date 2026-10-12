@@ -1,0 +1,182 @@
+[
+ {
+  "Tag": "P1",
+  "Style": "SM_EN",
+  "DrawingText": "P1 = 780 KG."
+ },
+ {
+  "Tag": "P2",
+  "Style": "SM_EN",
+  "DrawingText": "P2 = 500 KG."
+ },
+ {
+  "Tag": "P3",
+  "Style": "SM_EN",
+  "DrawingText": "P3 = 865 KG."
+ },
+ {
+  "Tag": "P4",
+  "Style": "SM_EN",
+  "DrawingText": "P4 = 555 KG."
+ },
+ {
+  "Tag": "P5",
+  "Style": "SM_EN",
+  "DrawingText": "P5 = 1360 KG."
+ },
+ {
+  "Tag": "P6",
+  "Style": "SM_EN",
+  "DrawingText": "P6 = 5425 KG."
+ },
+ {
+  "Tag": "P7",
+  "Style": "SM_EN",
+  "DrawingText": "P7 = 4140 KG."
+ },
+ {
+  "Tag": "LOAD",
+  "Style": "SM_EN",
+  "DrawingText": "630 KG. - 8 PASSENGERS."
+ },
+ {
+  "Tag": "SPEED",
+  "Style": "SM_EN",
+  "DrawingText": "1.00 M/SEC."
+ },
+ {
+  "Tag": "TRAVEL",
+  "Style": "SM_EN",
+  "DrawingText": "12.00 METRES."
+ },
+ {
+  "Tag": "STOPS",
+  "Style": "SM_EN",
+  "DrawingText": "5"
+ },
+ {
+  "Tag": "FLOORS",
+  "Style": "SM_EN",
+  "DrawingText": "(G-1-2-3-4)"
+ },
+ {
+  "Tag": "ENTRANCES",
+  "Style": "SM_EN",
+  "DrawingText": "5"
+ },
+ {
+  "Tag": "ENTRANCE_NAMES",
+  "Style": "SM_EN",
+  "DrawingText": "(G-1-2-3-4)"
+ },
+ {
+  "Tag": "CONTROL",
+  "Style": "SM_EN",
+  "DrawingText": "SIMPLEX COLLECTIVE DOWN."
+ },
+ {
+  "Tag": "SUPPLY",
+  "Style": "SM_EN",
+  "DrawingText": "3 PHASE 380 V. 50 Hz."
+ },
+ {
+  "Tag": "COMPANY_AR",
+  "Style": "SM_EN",
+  "DrawingText": ""
+ },
+ {
+  "Tag": "COMPANY",
+  "Style": "SM_EN",
+  "DrawingText": "THE A7A DEVELOPMENT"
+ },
+ {
+  "Tag": "REV_ROW1_NO",
+  "Style": "SM_EN",
+  "DrawingText": "01"
+ },
+ {
+  "Tag": "REV_ROW1_DATE",
+  "Style": "SM_EN",
+  "DrawingText": "12/10/2026"
+ },
+ {
+  "Tag": "CLIENT",
+  "Style": "SM_EN",
+  "DrawingText": "zxcxcx"
+ },
+ {
+  "Tag": "PROJECT",
+  "Style": "SM_EN",
+  "DrawingText": "xcvcvcv"
+ },
+ {
+  "Tag": "DOC_NO",
+  "Style": "SM_EN",
+  "DrawingText": "zxcxczcx"
+ },
+ {
+  "Tag": "DRAWING_NAME",
+  "Style": "SM_AR",
+  "DrawingText": "g,pm HBulhG Hgjktd`dm gglw%%150]"
+ },
+ {
+  "Tag": "TYPE_OF_WORK",
+  "Style": "SM_AR",
+  "DrawingText": "XulhG lwhu]"
+ },
+ {
+  "Tag": "SCALE",
+  "Style": "SM_EN",
+  "DrawingText": "AS SHOWN"
+ },
+ {
+  "Tag": "PREPARED",
+  "Style": "SM_EN",
+  "DrawingText": "nassar"
+ },
+ {
+  "Tag": "CHECKED",
+  "Style": "SM_EN",
+  "DrawingText": "anassar"
+ },
+ {
+  "Tag": "APPROVED",
+  "Style": "SM_EN",
+  "DrawingText": "asdsd"
+ },
+ {
+  "Tag": "DATE",
+  "Style": "SM_EN",
+  "DrawingText": "12/10/2026"
+ },
+ {
+  "Tag": "PHASE",
+  "Style": "SM_EN",
+  "DrawingText": "a1"
+ },
+ {
+  "Tag": "SHEET_NO",
+  "Style": "SM_EN",
+  "DrawingText": "1"
+ },
+ {
+  "Tag": "COMPANY_AR_2",
+  "Style": "SM_EN",
+  "DrawingText": ""
+ },
+ {
+  "Tag": "COMPANY_2",
+  "Style": "SM_EN",
+  "DrawingText": ""
+ },
+ {
+  "Tag": "CLIENT_2",
+  "Style": "SM_EN",
+  "DrawingText": ""
+ },
+ {
+  "Tag": "PROJECT_2",
+  "Style": "SM_EN",
+  "DrawingText": ""
+ }
+]

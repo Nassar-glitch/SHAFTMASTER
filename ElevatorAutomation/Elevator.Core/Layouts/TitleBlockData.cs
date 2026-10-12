@@ -24,16 +24,28 @@ namespace Elevator.Core.Layouts
         public string CompanyName = "";
         public string ProjectName = "";
         public string Client = "";
-        /// <summary>No source yet: always "".</summary>
+        /// <summary>The drawing name: the title-block preset "لوحة الأعمال التنفيذية للمصعد", editable per project.</summary>
         public string DrawingTitle = "";
-        /// <summary>No source yet: always "".</summary>
+        /// <summary>"AS SHOWN": every view carries its own scale under it (DESIGN-FLOW "Sheet arrangement").</summary>
         public string Scale = "";
+        /// <summary>The project number: Report.DocumentNumber.</summary>
+        public string ProjectNumber = "";
+        /// <summary>The type of work: the title-block preset "أعمال مصاعد", editable per project.</summary>
+        public string TypeOfWork = "";
+        /// <summary>The phase: optional, typed per project.</summary>
+        public string Phase = "";
+        /// <summary>The drawing number on the sheet: "1".</summary>
+        public string SheetNo = "";
+        /// <summary>The number of entrances: one per served floor, so the number of stops.</summary>
+        public string Entrances = "";
+        /// <summary>The floors with an entrance: "(G-1-2-3)".</summary>
+        public string EntranceNames = "";
         /// <summary>The issue date, dd/MM/yyyy ("12/10/2026").</summary>
         public string Date = "";
         public string PreparedBy = "";
         public string CheckedBy = "";
         public string ApprovedBy = "";
-        /// <summary>The revision as on every document: "" when blank, NN for a number ("01"), otherwise the stored text.</summary>
+        /// <summary>The revision: "00" when blank, NN for a number ("01"), otherwise the stored text.</summary>
         public string Revision = "";
         /// <summary>"1.00 M/SEC."</summary>
         public string RatedSpeed = "";
@@ -132,6 +144,12 @@ namespace Elevator.Core.Layouts
             return names.Count == 0 || names.Any(n => n.Length == 0) ? "" : "(" + String.Join("-", names) + ")";
         }
 
+        /// <summary>The scale cell text.</summary>
+        public const string AsShown = "AS SHOWN";
+
+        /// <summary>The drawing number of the single geared sheet.</summary>
+        public const string FirstSheet = "1";
+
         // The calculated load of ONE component of a P5–P7 result (one car guide rail for P5, one buffer for P6 / P7); null when the
         // result is not available.
         static double? OneComponentLoadN(SafetyPitLoad load)
@@ -156,16 +174,19 @@ namespace Elevator.Core.Layouts
             var t = new TitleBlockData();
             var doc = DocumentData.Resolve(project, company);
             t.CompanyName = Clean(doc.CompanyName);
+            t.Scale = AsShown;
+            t.SheetNo = FirstSheet;
             if (date.HasValue)
                 t.Date = date.Value.ToString("dd/MM/yyyy", Inv);
             if (project == null)
                 return t;
+            t.ProjectNumber = doc.DocumentNumber;
             t.ProjectName = Clean(project.Info == null ? null : project.Info.Name);
             t.Client = doc.Client;
             t.PreparedBy = doc.PreparedBy;
             t.CheckedBy = doc.CheckedBy;
             t.ApprovedBy = doc.ApprovedBy;
-            t.Revision = doc.Revision;
+            t.Revision = project.Report == null ? DrawingRevision.Display(null) : DrawingRevision.Display(project.Report.Revision);
             if (project.Elevator != null)
             {
                 t.RatedSpeed = Speed(project.Elevator.SpeedMetresPerSecond);
@@ -174,10 +195,20 @@ namespace Elevator.Core.Layouts
             t.Travel = TravelText(project);
             t.Stops = StopsText(project);
             t.Floors = FloorsText(project);
+            // One entrance per served floor (geared, one-sided): the entrances are the stops.
+            t.Entrances = t.Stops;
+            t.EntranceNames = t.Floors;
             if (library != null)
             {
                 t.Control = Clean(TitleBlockFields.Effective(TitleBlockFields.Control, project, library));
                 t.Supply = Clean(TitleBlockFields.Effective(TitleBlockFields.Supply, project, library));
+                t.TypeOfWork = Clean(TitleBlockFields.Effective(TitleBlockFields.TypeOfWork, project, library));
+                t.DrawingTitle = Clean(TitleBlockFields.Effective(TitleBlockFields.DrawingName, project, library));
+            }
+            if (project != null)
+            {
+                // The phase typed on the General page (DocumentData, project extension "report.phase") wins; the title-block field is the fallback.
+                t.Phase = doc.Phase.Length > 0 ? doc.Phase : Clean(TitleBlockFields.Effective(TitleBlockFields.Phase, project, library));
             }
             if (reactions != null)
             {
@@ -220,6 +251,79 @@ namespace Elevator.Core.Layouts
                     pit = live.SafetyPit;
             }
             return Build(project, library, company, reactions, pit, date);
+        }
+
+        /// <summary>The attribute tags of the block SM_TITLEBLOCK in Templates/Layout_Geared_A0.dxf, in the order of <see cref="Attributes"/>.</summary>
+        public static readonly string[] Tags =
+        {
+            "P1", "P2", "P3", "P4", "P5", "P6", "P7", "LOAD", "SPEED", "TRAVEL", "STOPS", "FLOORS", "ENTRANCES", "ENTRANCE_NAMES", "CONTROL",
+            "SUPPLY", "COMPANY_AR", "COMPANY", "REV_ROW1_NO", "REV_ROW1_DATE", "CLIENT", "PROJECT", "DOC_NO", "DRAWING_NAME", "TYPE_OF_WORK",
+            "SCALE", "PREPARED", "CHECKED", "APPROVED", "DATE", "PHASE", "SHEET_NO",
+            // second lines of the values that sit in a big frame: empty unless the first line does not fit (see SecondLine)
+            "COMPANY_AR_2", "COMPANY_2", "CLIENT_2", "PROJECT_2"
+        };
+
+        /// <summary>The tag of the second line of a value that may take two lines, or null.</summary>
+        public static string SecondLine(string tag)
+        {
+            switch (tag)
+            {
+                case "COMPANY_AR":
+                case "COMPANY":
+                case "CLIENT":
+                case "PROJECT":
+                    return tag + "_2";
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// The value of every attribute of the title block, with its script and text style: Arabic values go to the xarab style
+        /// encoded (<see cref="XarabText"/>), other values to the cent style as they are. The company name fills COMPANY_AR when it is
+        /// typed in Arabic and COMPANY otherwise; the first revision row holds the revision and its date.
+        /// </summary>
+        public List<TitleBlockAttribute> Attributes()
+        {
+            bool arabicCompany = XarabText.Detect(CompanyName) == TextScript.Arabic;
+            var values = new[]
+            {
+                P1, P2, P3, P4, P5, P6, P7, RatedLoad, RatedSpeed, Travel, Stops, Floors, Entrances, EntranceNames, Control, Supply,
+                arabicCompany ? CompanyName : "", arabicCompany ? "" : CompanyName, Revision, Revision.Length > 0 ? Date : "", Client,
+                ProjectName, ProjectNumber, DrawingTitle, TypeOfWork, Scale, PreparedBy, CheckedBy, ApprovedBy, Date, Phase, SheetNo,
+                "", "", "", ""
+            };
+            var list = new List<TitleBlockAttribute>(Tags.Length);
+            for (int i = 0; i < Tags.Length; i++)
+                list.Add(TitleBlockAttribute.Of(Tags[i], values[i] ?? ""));
+            return list;
+        }
+    }
+
+    /// <summary>One attribute of the title block: the display value, its script, the template style and the text written into the drawing.</summary>
+    public sealed class TitleBlockAttribute
+    {
+        public string Tag;
+        /// <summary>The value as the user reads it (Unicode).</summary>
+        public string Value;
+        public TextScript Script;
+        /// <summary>The template text style: <see cref="XarabText.ArabicStyle"/> or <see cref="XarabText.LatinStyle"/>.</summary>
+        public string Style;
+        /// <summary>The text written into the attribute: the xarab codes for Arabic, the value itself otherwise.</summary>
+        public string DrawingText;
+
+        /// <summary>The attribute of a tag and a value.</summary>
+        public static TitleBlockAttribute Of(string tag, string value)
+        {
+            var script = XarabText.Detect(value);
+            return new TitleBlockAttribute
+            {
+                Tag = tag,
+                Value = value,
+                Script = script,
+                Style = script == TextScript.Arabic ? XarabText.ArabicStyle : XarabText.LatinStyle,
+                DrawingText = XarabText.ForDrawing(value)
+            };
         }
     }
 }

@@ -12,3 +12,5 @@ How the design flow is implemented: [`presets/PRESETS.md`](../presets/PRESETS.md
 [`architecture/OVERVIEW.md`](../architecture/OVERVIEW.md).
 
 Layout templates (the user's `Layouts_Sec/` DXFs, title block, viewports, L2b / L3 proposal): [`layouts/LAYOUTS.md`](layouts/LAYOUTS.md).
+
+A0 geared sheet in the generated drawing (L2b: layout, viewports, title block; evidence and findings): [`layouts/l2b/README.md`](layouts/l2b/README.md).

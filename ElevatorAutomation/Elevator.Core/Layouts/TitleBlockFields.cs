@@ -77,8 +77,17 @@ namespace Elevator.Core.Layouts
         /// <summary>The supply text, for example "3 PHASE 380 V. 50 Hz.".</summary>
         public static readonly PresetField Supply = Text("Supply", "Supply", t => t.Supply);
 
+        /// <summary>The type of work, for example "أعمال مصاعد".</summary>
+        public static readonly PresetField TypeOfWork = Text("TypeOfWork", "Type of work", t => t.TypeOfWorkOrDefault());
+
+        /// <summary>The drawing name, for example "لوحة الأعمال التنفيذية للمصعد".</summary>
+        public static readonly PresetField DrawingName = Text("DrawingName", "Drawing name", t => t.DrawingNameOrDefault());
+
+        /// <summary>The phase: optional, no preset (blank until the user types one).</summary>
+        public static readonly PresetField Phase = Text("Phase", "Phase", t => null);
+
         /// <summary>Every title-block field.</summary>
-        public static readonly PresetField[] All = { Control, Supply };
+        public static readonly PresetField[] All = { Control, Supply, TypeOfWork, DrawingName, Phase };
 
         /// <summary>The field with a key, or null.</summary>
         public static PresetField Find(string key)
