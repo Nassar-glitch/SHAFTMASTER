@@ -206,7 +206,8 @@ namespace Elevator.Core.Layouts
             }
             if (project != null)
             {
-                t.Phase = Clean(TitleBlockFields.Effective(TitleBlockFields.Phase, project, library));
+                // The phase typed on the General page (DocumentData, project extension "report.phase") wins; the title-block field is the fallback.
+                t.Phase = doc.Phase.Length > 0 ? doc.Phase : Clean(TitleBlockFields.Effective(TitleBlockFields.Phase, project, library));
             }
             if (reactions != null)
             {

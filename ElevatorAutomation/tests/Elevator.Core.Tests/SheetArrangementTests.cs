@@ -302,6 +302,19 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
+        public void A_detail_is_never_shown_at_a_larger_scale_than_the_one_its_texts_state()
+        {
+            var req = Project(4, 1720, 2800, Rooms[1]);
+            // the door detail states 1:20 in its drawn texts; the rail details 1:10
+            foreach (var v in req.Where(x => x.Kind == SheetViewKind.Detail))
+                v.MinScaleDenominator = v.Name == "Detail 4" ? 20 : 10;
+            var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), req);
+            Assert.Empty(r.NotPlaced);
+            Assert.True(r.Viewports.Single(v => v.Name == "Detail 4").ScaleDenominator >= 20);
+            Assert.All(r.Viewports.Where(v => v.Kind == SheetViewKind.Detail && v.Name != "Detail 4"), v => Assert.True(v.ScaleDenominator >= 10));
+        }
+
+        [Fact]
         public void A_tall_section_takes_the_height_and_a_short_one_does_not_leave_the_space_above_it_empty()
         {
             var area = SheetArrangement.A0DrawingArea();

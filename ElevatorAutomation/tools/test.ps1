@@ -101,6 +101,7 @@ if($onWindows){
  AddSuite 3 'integration' 'AutoCAD 2023, Python (PyMuPDF), local evidence folder' 'Affected regressions, FF native / STEP, STEP input, native golden' {param($o) Run 'tests/integration/run-tier3.ps1' @('-Bin',$Bin,'-OutDir',$o)}
  AddSuite 3 'presets-native' 'AutoCAD 2023' 'Presets through the native drawings' {param($o) Run 'tests/integration/run-native-test.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o,'-Test','PresetsNativeTests')}
  AddSuite 3 'doors-native' 'AutoCAD 2023, Python (ezdxf)' 'Automatic doors in the four native views: DWG read back against the door layout, plan PNGs' {param($o) Run 'tests/integration/run-doors-native.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
+ AddSuite 3 'layouts-native' 'AutoCAD 2023, Python (ezdxf)' 'The A0 geared sheet in generated drawings: layout, viewports (inside, standard scale, locked, no overlap), title-block attributes, views unchanged' {param($o) Run 'tests/integration/run-layouts-native.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o)}
  AddSuite 3 'doors-step' 'SOLIDWORKS' 'Automatic doors in the STEP model (real export of the 1720 mm cases)' {param($o) Run 'tests/integration/run-native-test.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o,'-Test','DoorsStepTests','-TestArguments','--export')}
  AddSuite 3 'sheet-word-render' 'Microsoft Word, Python (PyMuPDF, python-docx)' 'Every calculation sheet rendered through Word to PDF' {param($o) Run 'tests/solution/run-calculation-sheet.ps1' @('-CandidateBin',$Bin,'-EvidenceDirectory',$o,'-WordRender')}
 }

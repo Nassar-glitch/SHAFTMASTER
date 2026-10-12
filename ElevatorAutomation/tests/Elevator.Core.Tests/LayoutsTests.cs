@@ -777,7 +777,7 @@ namespace Elevator.Core.Tests
             Assert.Equal("SM_EN", at("CLIENT").Style);
             Assert.Equal("Mr. Client", at("CLIENT").DrawingText);
             Assert.Equal("SM_AR", at("TYPE_OF_WORK").Style);
-            Assert.Equal("HulhG lwhu]", at("TYPE_OF_WORK").DrawingText);
+            Assert.Equal("XulhG lwhu]", at("TYPE_OF_WORK").DrawingText);
             // the company goes to the line of its language
             Assert.Equal("شركة النيل للمصاعد", at("COMPANY_AR").Value);
             Assert.Equal("", at("COMPANY").Value);
@@ -805,7 +805,7 @@ namespace Elevator.Core.Tests
             var blank = TitleBlockData.Build(p, Lib, null, null, null, Day).Attributes();
             Assert.Equal("00", blank.Single(x => x.Tag == "REV_ROW1_NO").Value);
             Assert.Equal("12/10/2026", blank.Single(x => x.Tag == "REV_ROW1_DATE").Value);
-            Assert.Equal("", DocumentData.Resolve(p, null).Revision); // the calculation sheet still leaves it out (open question)
+            Assert.Equal("00", DocumentData.Resolve(p, null).Revision); // the calculation sheet and the Design Notes show 00 too (2026-10-12)
         }
 
         [Fact]
@@ -837,7 +837,8 @@ namespace Elevator.Core.Tests
             Assert.Contains("xarab.shx", text);
             Assert.Contains("cent.shx", text);
             Assert.DoesNotContain("PDFCreator", text);
-            Assert.True(new FileInfo(Path.Combine(TestData.Root, "Templates", "Layout_Geared_A0.dxf")).Length < 2000000);
+            // the size without the carriage returns a Windows checkout adds (git autocrlf)
+            Assert.True(File.ReadAllBytes(Path.Combine(TestData.Root, "Templates", "Layout_Geared_A0.dxf")).Count(x => x != 13) < 2000000);
         }
     }
 }

@@ -10,6 +10,8 @@ using Elevator.AutoCAD.MachineRoom;
 using Elevator.AutoCAD.Plan;
 using Elevator.AutoCAD.SectionAA;
 using Elevator.AutoCAD.SectionBB;
+using Elevator.AutoCAD.Sheet;
+using Elevator.Core.Layouts;
 using Elevator.Core.Geometry;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
@@ -108,6 +110,14 @@ namespace Elevator.Solution.Host
             }
             doc.Editor.Regen();
             Inspect(db, request, response);
+            // L2b: the A0 sheet is only added on request, after the views are final; it adds a layout and untagged reference details.
+            if (request.Sheet != null)
+            {
+                string template = String.IsNullOrWhiteSpace(request.Sheet.TemplateFile)
+                    ? Path.Combine(Configuration.Root, "Templates", SheetLayout.TemplateFileName)
+                    : request.Sheet.TemplateFile;
+                response.Sheet = SheetAssembler.Assemble(db, request.Sheet, response.Bounds, template);
+            }
             response.OutputPath = Path.Combine(job, "generated.dwg");
             db.SaveAs(response.OutputPath, DwgVersion.AC1032);
         }

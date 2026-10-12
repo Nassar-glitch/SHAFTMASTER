@@ -83,6 +83,11 @@ namespace Elevator.Core.Layouts
         /// the extents grown by it on every side.
         /// </summary>
         public double MarginMm;
+        /// <summary>
+        /// The smallest scale denominator the view may take (0: none). A reference detail keeps the scale its drawn texts state
+        /// ("VIEW at D-D 1:20"), so it is never shown at a larger scale than the template's.
+        /// </summary>
+        public int MinScaleDenominator;
     }
 
     /// <summary>A view placed on the sheet: the viewport rectangle (paper mm), its standard scale and the scale label under it.</summary>
@@ -354,6 +359,8 @@ namespace Elevator.Core.Layouts
                 bool done = false;
                 foreach (int s in StandardScales)
                 {
+                    if (s < d.MinScaleDenominator)
+                        continue;
                     double w = W(d, s), h = H(d, s) + label;
                     foreach (var sh in shelves)
                     {

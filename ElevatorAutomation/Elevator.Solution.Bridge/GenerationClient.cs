@@ -29,11 +29,23 @@ namespace Elevator.Solution.Bridge
             OutputConsent consent,
             Action<string> progress)
         {
+            return GenerateAsync(project, options, consent, progress, null);
+        }
+
+        /// <summary>Generates the drawing of a project in the background and adds the sheet (layout, viewports, title block) when given.</summary>
+        public Task<GenerationResponse> GenerateAsync(
+            ElevatorProject project,
+            GenerationOptions options,
+            OutputConsent consent,
+            Action<string> progress,
+            Elevator.Core.Layouts.SheetRequest sheet)
+        {
             // Snapshot synchronously before background work; further UI changes cannot modify an in-flight request.
             var request = new GenerationRequest
             {
                 ProjectJson = ProjectJson.Serialize(project),
-                Options = new GenerationOptions { Views = options.Views, ArrangeViews = options.ArrangeViews }
+                Options = new GenerationOptions { Views = options.Views, ArrangeViews = options.ArrangeViews },
+                Sheet = sheet
             };
             return Task.Run(() => Run(request, consent, progress));
         }
