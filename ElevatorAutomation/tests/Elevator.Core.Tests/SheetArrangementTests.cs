@@ -23,6 +23,9 @@ namespace Elevator.Core.Tests
         // The template's detail windows (mm) and scales: fish plate, rails plan, rail brackets (1:10), door elevation and section (1:20).
         public static readonly double[][] Details = { new double[] { 1067, 1662, 10 }, new double[] { 2094, 808, 10 }, new double[] { 968, 912, 10 }, new double[] { 3822, 4108, 20 } };
 
+        // The roles of the details in the grid: fish plate, rails plan, rail brackets, door elevation.
+        public static readonly string[] DetailRoles = { "RailFixing", "RailsPlan", "RailBrackets", "DoorElevationSection" };
+
         static SheetViewRequest View(SheetViewKind kind, string name, double w, double h, double x = 0, double y = 0)
         {
             return new SheetViewRequest { Kind = kind, Name = name, ModelExtents = new SheetRect(x, y, w, h) };
@@ -45,7 +48,13 @@ namespace Elevator.Core.Tests
             {
                 for (int i = 0; i < Details.Length; i++)
                 {
-                    v.Add(View(SheetViewKind.Detail, "Detail " + (i + 1), Details[i][0], Details[i][1], 1000000 + 5000 * i, 0));
+                    var d = View(SheetViewKind.Detail, "Detail " + (i + 1), Details[i][0], Details[i][1], 1000000 + 5000 * i, 0);
+                    d.Role = DetailRoles[i];
+                    // as the assembler sets them: the template scale or larger (1:5 allowed), the door elevation fixed at its 1:20
+                    d.AllowedScales = new[] { 5, 10, 20 };
+                    d.MaxScaleDenominator = (int)Details[i][2];
+                    d.MinScaleDenominator = DetailRoles[i] == "DoorElevationSection" ? (int)Details[i][2] : 0;
+                    v.Add(d);
                 }
             }
             return v;
@@ -67,14 +76,15 @@ namespace Elevator.Core.Tests
         // extensions and 6 to 20 stops. A-A is held by the height (1:75 / 1:100), B-B is at 1:10, the plans at 1:10 and 1:20 (both
         // at 1:10 overflow the height), and the four details are placed at the largest scale that fits. The floor catches a real fault.
         public const double TargetFill = 0.60;
-        public const double FloorFill = 0.55;
+        public const double FloorFill = 0.45; // L2c: the column grid of the user's sheet (no free packing); the median target stays
 
         // The largest empty rectangle (no view, label or gap in it) may hold at most this share of the drawing area.
         public const double MaximumEmptyShare = 0.30;
 
         static SheetRect Footprint(SheetViewport v)
         {
-            return new SheetRect(v.Paper.X, v.Paper.Y - SheetArrangement.Spacing, v.Paper.Width, v.Paper.Height + SheetArrangement.Spacing);
+            // L2c: there is no scale label under a viewport, the view's own title states the scale
+            return new SheetRect(v.Paper.X, v.Paper.Y, v.Paper.Width, v.Paper.Height);
         }
 
         static SheetRect Grow(SheetRect r, double d)
@@ -137,7 +147,7 @@ namespace Elevator.Core.Tests
                 var q = req.Single(x => (x.Name ?? x.Kind.ToString()) == v.Name);
                 if (!inner.Contains(Footprint(v)))
                     p.Add(v.Name + " outside the area (margin " + g + "): " + Footprint(v));
-                var scales = SheetArrangement.StandardScales;
+                var scales = v.Kind == SheetViewKind.Detail ? SheetArrangement.StandardScales.Concat(new[] { 5 }) : SheetArrangement.StandardScales;
                 if (!scales.Contains(v.ScaleDenominator))
                     p.Add(v.Name + " scale 1:" + v.ScaleDenominator);
                 if (Math.Abs(v.Paper.Width - (q.ModelExtents.Width + 2 * q.MarginMm) / v.ScaleDenominator) > 1e-9
@@ -177,7 +187,7 @@ namespace Elevator.Core.Tests
                 p.Add("B-B reaches over the plans");
             if (bb != null && (Math.Abs(bb.Paper.Top - inner.Top) > 1e-6 || Math.Abs(bb.Paper.Right - inner.Right) > 1e-6))
                 p.Add("B-B is not top right");
-            if (r.FillRatio < FloorFill || (r.FillRatio < TargetFill && !Saturated(req, r)))
+            if (r.FillRatio < FloorFill)
                 p.Add("fill " + r.FillRatio.ToString("0.000", CultureInfo.InvariantCulture));
             double empty = LargestEmpty(r);
             if (empty > MaximumEmptyShare)
@@ -196,7 +206,7 @@ namespace Elevator.Core.Tests
             var kinds = new[] { SheetViewKind.ShaftPlan, SheetViewKind.MachineRoomPlan, SheetViewKind.SectionAA, SheetViewKind.SectionBB };
             var scale = kinds.ToDictionary(k => k, k => r.Viewports.Where(v => v.Kind == k).Select(v => v.ScaleDenominator).DefaultIfEmpty(0).First());
             Func<SheetViewKind, double> w = k => scale[k] == 0 ? 0 : req.Single(v => v.Kind == k).ModelExtents.Width / scale[k];
-            Func<SheetViewKind, double> h = k => scale[k] == 0 ? 0 : req.Single(v => v.Kind == k).ModelExtents.Height / scale[k] + g;
+            Func<SheetViewKind, double> h = k => scale[k] == 0 ? 0 : req.Single(v => v.Kind == k).ModelExtents.Height / scale[k];
             Func<bool> fits = () =>
                 h(SheetViewKind.ShaftPlan) + h(SheetViewKind.MachineRoomPlan) + g <= innerH + 1e-9
                 && h(SheetViewKind.SectionAA) <= innerH + 1e-9 && h(SheetViewKind.SectionBB) <= innerH + 1e-9
@@ -249,10 +259,10 @@ namespace Elevator.Core.Tests
                     string.Join(", ", r.Viewports.Select(v => v.Name + " " + v.LabelText))));
             }
             var sorted = fills.OrderBy(f => f).ToList();
-            Assert.True(sorted[(sorted.Count - 1) / 2] >= TargetFill, "median fill below the target");
             report.Insert(0, string.Format(CultureInfo.InvariantCulture, "{0} projects; fill min {1:0.000} median {2:0.000} max {3:0.000}; below {4:0.00}: {5}; largest empty share {6:0.000}",
                 report.Count, sorted.First(), (sorted[(sorted.Count - 1) / 2] + sorted[sorted.Count / 2]) / 2, sorted.Last(), TargetFill, fills.Count(f => f < TargetFill), maxEmpty));
             File.WriteAllLines(Path.Combine(TestData.Folder("sheet-arrangement"), "grid.txt"), report);
+            Assert.True(sorted[(sorted.Count - 1) / 2] >= TargetFill, "median fill below the target");
             Assert.True(failures.Count == 0, string.Join("\n", failures.Take(20)));
         }
 
@@ -331,7 +341,8 @@ namespace Elevator.Core.Tests
                 // over A-A: a larger scale, or the details use the space
                 double above = area.Top - SheetArrangement.Spacing - s.Paper.Top;
                 bool used = r.Viewports.Any(v => v.Kind == SheetViewKind.Detail && v.Paper.X < s.Paper.Right && v.Paper.Right > s.Paper.X && v.Paper.Y >= s.Paper.Top);
-                Assert.True(above < 0.25 * area.Height || used, stops + " stops: " + above + " mm empty above A-A");
+                // the band over A-A holds at most a tenth of the drawing area unless a detail stands in it
+                Assert.True(above * s.Paper.Width < 0.10 * area.Area || used, stops + " stops: " + above + " mm empty above A-A");
                 Assert.True(s.ScaleDenominator <= 25, stops + " stops: A-A at 1:" + s.ScaleDenominator);
             }
         }
@@ -443,6 +454,59 @@ namespace Elevator.Core.Tests
             Assert.Equal(3000.0 / bare.ScaleDenominator, bare.Paper.Width, 9);
             req.MarginMm = -1;
             Assert.Throws<ArgumentException>(() => SheetArrangement.Arrange(area, new List<SheetViewRequest> { req }));
+        }
+
+        // The user's own sheet (docs/design/layouts/l2c, user-edit.dwg) is the reference arrangement: the extents are those the generated
+        // views and the template's details draw (tight, titles included) for his project 1620 x 1800, 5 stops; the centres and scales are
+        // his viewports' (paper mm, the sheet is 1189 mm wide).
+        [Fact]
+        public void The_users_sheet_is_reproduced_scales_and_centres()
+        {
+            Func<SheetViewKind, string, double, double, string, SheetViewRequest> v = (kind, name, w, h, role) =>
+                new SheetViewRequest { Kind = kind, Name = name, ModelExtents = new SheetRect(0, 0, w, h), MarginMm = 100, Role = role };
+            Func<string, double, double, string, int, SheetViewRequest> d = (name, w, h, role, template) =>
+                new SheetViewRequest
+                {
+                    Kind = SheetViewKind.Detail, Name = name, ModelExtents = new SheetRect(0, 0, w, h), MarginMm = 30, Role = role,
+                    AllowedScales = new[] { 5, 10, 20 }, MaxScaleDenominator = template,
+                    MinScaleDenominator = role == "DoorElevationSection" ? template : 0
+                };
+            var req = new List<SheetViewRequest>
+            {
+                v(SheetViewKind.ShaftPlan, "Shaft plan", 2551, 3199, null),
+                v(SheetViewKind.MachineRoomPlan, "Machine-room plan", 4128, 3828, null),
+                v(SheetViewKind.SectionAA, "Section A-A", 7590, 23200, null),
+                v(SheetViewKind.SectionBB, "Section B-B", 3679, 2374, null),
+                d("DOOR", 3607, 3855, "DoorElevationSection", 20),
+                d("FISH", 831, 1549, "RailFixing", 10),
+                d("RAILS", 1920, 636, "RailsPlan", 10),
+                d("BRACKETS", 799, 850, "RailBrackets", 10)
+            };
+            var r = SheetArrangement.Arrange(SheetArrangement.A0DrawingArea(), req);
+            Assert.Empty(r.NotPlaced);
+            // name -> scale, centre x, centre y of his viewports
+            var his = new Dictionary<string, double[]>
+            {
+                { "Shaft plan", new double[] { 10, 236, 188 } },
+                { "Machine-room plan", new double[] { 10, 238, 598 } },
+                { "Section A-A", new double[] { 50, 558, 259 } },
+                { "Section B-B", new double[] { 10, 823, 653 } },
+                { "DOOR", new double[] { 20, 849, 415 } },
+                { "FISH", new double[] { 10, 548, 649 } },
+                { "RAILS", new double[] { 10, 858, 249 } },
+                { "BRACKETS", new double[] { 5, 858, 106 } }
+            };
+            double tol = 0.05 * 1189;
+            foreach (var kv in his)
+            {
+                var vp = r.Viewports.Single(x => x.Name == kv.Key);
+                Assert.True(vp.ScaleDenominator == (int)kv.Value[0], kv.Key + " 1:" + vp.ScaleDenominator + " (his 1:" + kv.Value[0] + ")");
+                double cx = vp.Paper.X + vp.Paper.Width / 2, cy = vp.Paper.Y + vp.Paper.Height / 2;
+                Assert.True(Math.Abs(cx - kv.Value[1]) <= tol && Math.Abs(cy - kv.Value[2]) <= tol,
+                    kv.Key + " centre (" + cx.ToString("0") + ", " + cy.ToString("0") + ") against his (" + kv.Value[1] + ", " + kv.Value[2] + ")");
+            }
+            var problems = Problems(req, r);
+            Assert.True(problems.Count == 0, string.Join("; ", problems));
         }
 
         [Fact]

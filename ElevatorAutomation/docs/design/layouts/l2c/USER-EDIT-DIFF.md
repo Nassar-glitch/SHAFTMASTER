@@ -59,3 +59,20 @@ with ezdxf (`tests/integration/dwg_to_dxf.py`); sheets plotted with `tests/integ
 
 The details are not parametric: the rail size, bracket spacing and door width in the details do not follow the project (a later stage: rail
 library, then generated details).
+
+## Round 2: the arrangement is the user's grid
+
+The first round took the rules; the free packing still did not give his composition (A-A 1:75, bracket detail 1:10, empty bands).
+Round 2 makes his sheet the reference arrangement: a column grid (machine room above the shaft plan | A-A with the fish plate above it |
+B-B on top, then door, guides and brackets, rail-bracket elevation), see [../l2b/README.md](../l2b/README.md). Acceptance on his project
+(`layouts-native`, case `user-sheet`): scales 1:10 / 1:10 / 1:10 / 1:50 / 1:20 / 1:10 / 1:10 / 1:5 as his, centres within 5 % of the sheet
+width. Result: `regenerated-sheet.png`, `side-by-side.png`.
+
+| # | Rule | Status |
+|---|---|---|
+| 15 | Column grid as his sheet (above), column widths from the content, slack spread between columns and stacked details. | **new** |
+| 16 | A detail's viewport crops to what it draws (titles with the scale, rotated texts by their own size), margin 30 mm; the bracket elevation then takes 1:5. | **new** |
+| 17 | Titles at most 800 model mm (8 mm printed up to 1:100): a 1:150 section title at 8 mm was wider than the section and overlapped its neighbour in the drawing. | **new** |
+| 18 | All titles are texts that state the sheet scale at 8 mm printed (A-A too: 400 model mm at 1:50, not 350); the door, fish plate and side guide rail titles that were geometry are replaced by texts in the template; no separate scale label. | **new** (Planner, round 3) |
+| 19 | The enlargement priority of his sheet: the rail-bracket elevation takes the larger scale first (1:5), then the guides plan, then the door; the door is no longer fixed at 1:20. | **new** |
+| 20 | The stack of details under B-B is right-aligned with B-B, or centred under it when B-B is much wider. | **new** |

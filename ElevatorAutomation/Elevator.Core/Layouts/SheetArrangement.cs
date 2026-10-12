@@ -79,6 +79,11 @@ namespace Elevator.Core.Layouts
         public string Name;
         public SheetRect ModelExtents;
         /// <summary>
+        /// The model extents the view has when shown at a scale (null: <see cref="ModelExtents"/> at every scale): a reference detail's
+        /// title is 8 mm on paper at any scale, so it takes more model space the larger the denominator.
+        /// </summary>
+        public Dictionary<int, SheetRect> ExtentsByScale;
+        /// <summary>
         /// The dimension margin around the extents, in model mm (0 when the extents already hold the dimensions): the viewport shows
         /// the extents grown by it on every side.
         /// </summary>
@@ -92,6 +97,12 @@ namespace Elevator.Core.Layouts
         public int MaxScaleDenominator;
         /// <summary>The scales a view may take (null: <see cref="SheetArrangement.StandardScales"/>): reference details may be enlarged to 1:5.</summary>
         public int[] AllowedScales;
+        /// <summary>
+        /// The role of a reference detail in the grid (the template's detail kind): "RailFixing" above the section A-A, and
+        /// "DoorElevationSection", "RailsPlan", "RailBrackets" stacked in that order under the section B-B. Other details (null)
+        /// go to the bands left free.
+        /// </summary>
+        public string Role;
     }
 
     /// <summary>A view placed on the sheet: the viewport rectangle (paper mm), its standard scale and the scale label under it.</summary>
@@ -170,14 +181,20 @@ namespace Elevator.Core.Layouts
             return new SheetRect(14.9, 12.4, 1001.9, 816.4);
         }
 
+        static SheetRect Extents(SheetViewRequest v, int s)
+        {
+            SheetRect r;
+            return v.ExtentsByScale != null && v.ExtentsByScale.TryGetValue(s, out r) && r != null ? r : v.ModelExtents;
+        }
+
         static double W(SheetViewRequest v, int s)
         {
-            return (v.ModelExtents.Width + 2 * v.MarginMm) / s;
+            return (Extents(v, s).Width + 2 * v.MarginMm) / s;
         }
 
         static double H(SheetViewRequest v, int s)
         {
-            return (v.ModelExtents.Height + 2 * v.MarginMm) / s;
+            return (Extents(v, s).Height + 2 * v.MarginMm) / s;
         }
 
         static SheetViewport Place(SheetViewRequest v, int s, double x, double y)
@@ -189,8 +206,8 @@ namespace Elevator.Core.Layouts
                 Name = v.Name ?? v.Kind.ToString(),
                 Paper = r,
                 ScaleDenominator = s,
-                ModelCenterX = v.ModelExtents.X + v.ModelExtents.Width / 2,
-                ModelCenterY = v.ModelExtents.Y + v.ModelExtents.Height / 2,
+                ModelCenterX = Extents(v, s).X + Extents(v, s).Width / 2,
+                ModelCenterY = Extents(v, s).Y + Extents(v, s).Height / 2,
                 LabelX = r.X + r.Width / 2,
                 LabelY = r.Y - Spacing / 2
             };
@@ -229,18 +246,22 @@ namespace Elevator.Core.Layouts
 
             int[] none = { 0 }; // a missing view keeps the loops the same
             Layout best = null;
-            foreach (int sp in plan != null ? StandardScales : none)
-                foreach (int sm in room != null ? StandardScales : none)
-                    foreach (int sa in aa != null ? StandardScales : none)
-                        foreach (int sb in bb != null ? StandardScales : none)
-                        {
-                            // Hierarchy: the shaft plan leads. No other main view takes a larger scale (a smaller denominator) than it.
-                            if (plan != null && (sm != 0 && sm < sp || sa != 0 && sa < sp || sb != 0 && sb < sp))
-                                continue;
-                            var l = Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
-                            if (l != null && (best == null || l.Better(best)))
-                                best = l;
-                        }
+            // The column grid of the user's own sheet first; the free packing only when the grid holds no combination at all.
+            for (int mode = 0; mode < 2 && best == null; mode++)
+                foreach (int sp in plan != null ? StandardScales : none)
+                    foreach (int sm in room != null ? StandardScales : none)
+                        foreach (int sa in aa != null ? StandardScales : none)
+                            foreach (int sb in bb != null ? StandardScales : none)
+                            {
+                                // Hierarchy: the shaft plan leads. No other main view takes a larger scale (a smaller denominator) than it.
+                                if (plan != null && (sm != 0 && sm < sp || sa != 0 && sa < sp || sb != 0 && sb < sp))
+                                    continue;
+                                var l = mode == 0
+                                    ? TryGrid(area, plan, room, aa, bb, details, sp, sm, sa, sb)
+                                    : Try(area, plan, room, aa, bb, details, sp, sm, sa, sb);
+                                if (l != null && (best == null || l.Better(best)))
+                                    best = l;
+                            }
             var result = new SheetArrangementResult { Area = area };
             if (best == null)
             {
@@ -251,6 +272,310 @@ namespace Elevator.Core.Layouts
             result.FillRatio = best.Viewports.Sum(v => v.Paper.Area) / area.Area;
             return result;
         }
+
+
+        static readonly string[] StackRoles = { "DoorElevationSection", "RailsPlan", "RailBrackets" };
+        const string FishRole = "RailFixing";
+
+        // The column grid of the user's own sheet (L2c), as proportions of the drawing area:
+        //   column 1  the machine-room plan above the shaft plan (space between);
+        //   column 2  the section A-A at the bottom, the fish plate detail above it;
+        //   column 3  the section B-B flush top right (reaching left over column 2 when it is wider than column 3), under it the door
+        //             detail, the guides and brackets plan and the rail-bracket elevation, top to bottom.
+        // Every view takes the largest standard scale that fits its cell; the column widths follow the content (a tall A-A widens
+        // column 2, a wide shaft widens column 1); the slack of the sheet is spread between the columns and the stacked details.
+        // There are no scale labels under the viewports: a view's own title states its scale.
+        static Layout TryGrid(
+            SheetRect area,
+            SheetViewRequest plan,
+            SheetViewRequest room,
+            SheetViewRequest aa,
+            SheetViewRequest bb,
+            List<SheetViewRequest> details,
+            int sp,
+            int sm,
+            int sa,
+            int sb)
+        {
+            const double eps = 1e-9;
+            double g = Spacing;
+            double x0 = area.X + g, xr = area.Right - g, yb = area.Y + g, yt = area.Top - g;
+            double innerH = yt - yb;
+            double wPlan = plan != null ? W(plan, sp) : 0, hPlan = plan != null ? H(plan, sp) : 0;
+            double wRoom = room != null ? W(room, sm) : 0, hRoom = room != null ? H(room, sm) : 0;
+            double w1 = Math.Max(wPlan, wRoom);
+            double h1 = hPlan + hRoom + (plan != null && room != null ? g : 0);
+            double w2 = aa != null ? W(aa, sa) : 0, h2 = aa != null ? H(aa, sa) : 0;
+            double w3 = bb != null ? W(bb, sb) : 0, h3 = bb != null ? H(bb, sb) : 0;
+            if (h1 > innerH + eps || h2 > innerH + eps || h3 > innerH + eps)
+                return null;
+
+            double x2 = x0 + w1 + (w1 > 0 ? g : 0);          // column 2, tight to column 1
+            double x3 = x2 + w2 + (w2 > 0 ? g : 0);          // column 3
+            bool stacked = false;
+            if (bb != null && w3 > xr - x3 + eps)
+            {
+                // B-B above A-A, reaching left over its column (never over the plans)
+                if (aa == null || xr - w3 < x2 - eps || h2 + h3 + g > innerH + eps)
+                    return null;
+                stacked = true;
+            }
+            if (x3 > xr + eps)
+                return null;
+
+            var fish = aa != null ? details.Where(d => d.Role == FishRole).ToList() : new List<SheetViewRequest>();
+            var stack = details.Where(d => Array.IndexOf(StackRoles, d.Role) >= 0)
+                .Select((d, i) => new { d, i }).OrderBy(o => Array.IndexOf(StackRoles, o.d.Role)).ThenBy(o => o.i).Select(o => o.d).ToList();
+            var pool = details.Where(d => !fish.Contains(d) && !stack.Contains(d)).ToList();
+
+            // column 3: the stacked details take the largest scales that fit together under B-B; when they do not fit the last one
+            // (and then the next) goes to the bands left free
+            double stackTop = bb != null ? yt - h3 - g : yt;
+            double stackHeight = stackTop - yb;
+            double availW = xr - x3;
+            int[] stackScales = null;
+            double ws = 0, hs = 0;
+            int keep = stack.Count;
+            for (; keep >= 0; keep--)
+            {
+                stackScales = ChooseStack(stack.Take(keep).ToList(), availW, stackHeight, g, out ws, out hs);
+                if (stackScales != null)
+                    break;
+            }
+            if (stackScales == null)
+                return null;
+            // The cells hold only when every detail fits its own: the stacked ones under B-B and the fish plate above A-A. Otherwise
+            // all of them are packed together, in rows, into the band under B-B and the other bands left free.
+            bool cells = keep == stack.Count;
+            double aaTop = yb + h2;
+            double bbLeft = xr - w3;
+            if (!cells)
+            {
+                pool.AddRange(stack);
+                pool.AddRange(fish);
+                stack = new List<SheetViewRequest>();
+                fish = new List<SheetViewRequest>();
+                stackScales = new int[0];
+                ws = hs = 0;
+            }
+
+            // the fish plate: centred in the free cell above A-A, left of B-B and of the stacked details
+            int fishScale = 0;
+            double fishX = 0, fishY = 0;
+            // the stacked details stand under B-B: right-aligned with it, or centred under it when B-B is much wider
+            double stackRight = xr;
+            if (!stacked && bb != null && stack.Count > 0 && w3 > ws + 2 * g)
+                stackRight = Math.Max(x3 + ws, bbLeft + w3 / 2 + ws / 2);
+            double stackLeft = stackRight - ws;
+            double fishRight = Math.Min(xr, Math.Min(bb != null ? bbLeft - g : xr, stack.Count > 0 ? stackLeft - g : xr));
+            double fishCellBottom = aaTop + g;
+            if (fish.Count > 0)
+            {
+                var d = fish[0];
+                double cellW = fishRight - x2, cellH = yt - fishCellBottom;
+                foreach (int s in (d.AllowedScales ?? StandardScales).OrderByDescending(v => -v))
+                {
+                    if (s < d.MinScaleDenominator || (d.MaxScaleDenominator > 0 && s > d.MaxScaleDenominator))
+                        continue;
+                    double w = W(d, s), h = H(d, s);
+                    if (w > cellW + eps || h > cellH + eps)
+                        continue;
+                    fishScale = s;
+                    fishX = Math.Min(Math.Max(x2 + w2 / 2 - w / 2, x2), fishRight - w);
+                    fishY = fishCellBottom + (cellH - h) / 2;
+                    break;
+                }
+                if (fishScale == 0)
+                {
+                    // above A-A there is no room for it: the stacked details join the pool, the band under B-B takes them all
+                    pool.Add(d);
+                    pool.AddRange(stack);
+                    fish = new List<SheetViewRequest>();
+                    stack = new List<SheetViewRequest>();
+                    stackScales = new int[0];
+                    ws = hs = 0;
+                }
+            }
+
+            // column 2 moves right by half of the slack between the columns (not when B-B reaches over it, nor when details wait)
+            if (!stacked && w2 > 0 && pool.Count == 0)
+            {
+                double col3Left = xr - Math.Max(ws, bb == null ? 0 : w3);
+                double slack = col3Left - g - (x2 + w2);
+                if (slack > 0)
+                {
+                    double base2 = x2;
+                    x2 += slack / 2;
+                    if (fishScale != 0)
+                    {
+                        // the fish plate stays centred over A-A as far as the band beside B-B allows
+                        double fw = W(fish[0], fishScale);
+                        fishX = Math.Min(Math.Max(x2 + w2 / 2 - fw / 2, base2), fishRight - fw);
+                    }
+                }
+            }
+
+            var l = new Layout();
+            var column = new List<int>();
+            var free = new List<Shelf>();
+            // column 1: the shaft plan at the bottom, the machine-room plan at the top (directly above it when details wait for space)
+            if (plan != null)
+            {
+                l.Viewports.Add(Place(plan, sp, x0 + (w1 - wPlan) / 2, yb));
+                column.Add(1);
+            }
+            if (room != null)
+            {
+                double ry = plan != null ? yb + hPlan + g : yb;
+                if (pool.Count == 0 && plan != null)
+                    ry = yt - hRoom;
+                l.Viewports.Add(Place(room, sm, x0 + (w1 - wRoom) / 2, ry));
+                column.Add(1);
+                if (pool.Count > 0 && yt - (ry + hRoom + g) > 0)
+                    free.Add(Shelf.Of(new SheetRect(x0, ry + hRoom + g, w1, yt - (ry + hRoom + g)), 1));
+            }
+            else if (plan != null && pool.Count > 0 && yt - (yb + hPlan + g) > 0)
+                free.Add(Shelf.Of(new SheetRect(x0, yb + hPlan + g, w1, yt - (yb + hPlan + g)), 1));
+            // column 2
+            if (aa != null)
+            {
+                l.Viewports.Add(Place(aa, sa, x2, yb));
+                column.Add(2);
+            }
+            // B-B
+            if (bb != null)
+            {
+                l.Viewports.Add(Place(bb, sb, bbLeft, yt - h3));
+                column.Add(3);
+            }
+            if (fishScale != 0)
+            {
+                l.Viewports.Add(Place(fish[0], fishScale, fishX, fishY));
+                column.Add(2);
+            }
+            // column 3: the stacked details, right-aligned as one column, top to bottom under B-B (space between when nothing waits)
+            double stackBottom = stackTop;
+            if (stack.Count > 0)
+            {
+                double cx = stackRight - ws / 2;
+                double gap = g;
+                if (pool.Count == 0 && stack.Count > 1)
+                    gap = g + Math.Max(0, stackHeight - hs) / (stack.Count - 1);
+                double y = stackTop;
+                for (int i = 0; i < stack.Count; i++)
+                {
+                    double w = W(stack[i], stackScales[i]), h = H(stack[i], stackScales[i]);
+                    y -= h;
+                    l.Viewports.Add(Place(stack[i], stackScales[i], cx - w / 2, y));
+                    column.Add(3);
+                    y -= gap;
+                }
+                stackBottom = y + gap - g;
+            }
+            if (pool.Count > 0)
+            {
+                // the bands left free: under the stacked details, and above A-A beside B-B
+                double left3 = stack.Count > 0 ? stackLeft : x3;
+                double right3 = stack.Count > 0 ? stackRight : xr;
+                if (stackBottom - yb > 0 && right3 - left3 > 0)
+                    free.Add(Shelf.Of(new SheetRect(left3, yb, right3 - left3, stackBottom - yb), 3));
+                if (aa != null && fishScale == 0)
+                {
+                    double right = Math.Min(xr, Math.Min(bb != null ? bbLeft - g : xr, stack.Count > 0 ? stackLeft - g : xr));
+                    if (yt - fishCellBottom > 0 && right - x2 > 0)
+                        free.Add(Shelf.Of(new SheetRect(x2, fishCellBottom, right - x2, yt - fishCellBottom), 2));
+                }
+                free = free.OrderByDescending(f => f.Box.Area).ThenBy(f => f.Box.X).ThenBy(f => f.Box.Y).ToList();
+                if (!Pack(pool, free, l.Viewports, column))
+                    return null;
+            }
+            l.Filled = l.Viewports.Sum(v => v.Paper.Area);
+            // The main views decide first (the user's sheet keeps A-A at 1:50 although a narrower A-A would let a detail grow); the
+            // details only break ties between equal main views.
+            l.Score = l.Viewports.Sum(v => (v.Kind == SheetViewKind.Detail ? GridDetailWeight : 1.0) * Math.Sqrt(v.Paper.Area))
+                - (plan != null && room != null && sp != sm ? PlanScalePenalty : 0);
+            return l;
+        }
+
+        static int PriorityOf(string role)
+        {
+            switch (role)
+            {
+                case "RailBrackets": return 0;
+                case "RailsPlan": return 1;
+                default: return 2;
+            }
+        }
+
+        // The scales of the stacked details: the largest that fit the width and the height together, enlarging in the priority above.
+        // Null when even the smallest allowed scales do not fit.
+        static int[] ChooseStack(List<SheetViewRequest> stack, double availW, double stackHeight, double g, out double ws, out double hs)
+        {
+            ws = 0;
+            hs = 0;
+            const double eps = 1e-9;
+            if (stack.Count == 0)
+                return new int[0];
+            var options = stack.Select(d => (d.AllowedScales ?? StandardScales).OrderByDescending(v => -v)
+                .Where(v => v >= d.MinScaleDenominator && (d.MaxScaleDenominator <= 0 || v <= d.MaxScaleDenominator)).ToArray()).ToList();
+            if (options.Any(o => o.Length == 0))
+                return null;
+            // The enlargement priority of the user's own sheet: the rail-bracket elevation first (he enlarged it to 1:5), then the guides
+            // and brackets plan, then the door; a detail gets the larger scale only when the ones before it have theirs.
+            var order = Enumerable.Range(0, stack.Count).OrderBy(i => PriorityOf(stack[i].Role)).ThenBy(i => i).ToArray();
+            int[] pick = new int[stack.Count];
+            int[] bestKey = null;
+            int[] bestPick = null;
+            while (true)
+            {
+                double sumH = (stack.Count - 1) * g;
+                bool ok = true;
+                for (int i = 0; i < stack.Count && ok; i++)
+                {
+                    int s = options[i][pick[i]];
+                    if (W(stack[i], s) > availW + eps)
+                        ok = false;
+                    sumH += H(stack[i], s);
+                }
+                if (ok && sumH <= stackHeight + eps)
+                {
+                    var key = order.Select(i => options[i][pick[i]]).ToArray();
+                    bool better = bestKey == null;
+                    for (int k2 = 0; !better && k2 < key.Length; k2++)
+                    {
+                        if (key[k2] != bestKey[k2])
+                        {
+                            better = key[k2] < bestKey[k2];
+                            break;
+                        }
+                    }
+                    if (better)
+                    {
+                        bestKey = key;
+                        bestPick = (int[])pick.Clone();
+                    }
+                }
+                int k = 0;
+                while (k < pick.Length && ++pick[k] >= options[k].Length)
+                    pick[k++] = 0;
+                if (k >= pick.Length)
+                    break;
+            }
+            if (bestPick == null)
+                return null;
+            var scales = new int[stack.Count];
+            for (int i = 0; i < stack.Count; i++)
+            {
+                scales[i] = options[i][bestPick[i]];
+                ws = Math.Max(ws, W(stack[i], scales[i]));
+                hs += H(stack[i], scales[i]);
+            }
+            hs += (stack.Count - 1) * g;
+            return scales;
+        }
+
+        /// <summary>The weight of a detail against a main view in the grid search (the main views decide first).</summary>
+        public const double GridDetailWeight = 0.001;
 
         sealed class Layout
         {

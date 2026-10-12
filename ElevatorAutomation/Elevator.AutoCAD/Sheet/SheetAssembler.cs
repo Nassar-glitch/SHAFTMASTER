@@ -72,6 +72,11 @@ namespace Elevator.AutoCAD.Sheet
             for (int pass = 0; pass < 4; pass++)
             {
                 var measured = MeasureViews(db, addedTitles);
+                var detailBoxes = MeasureDetails(db, chosen, 0);
+                // a title is 8 mm on paper whatever the scale: the detail's extents differ per scale and are measured at each
+                var detailBoxesAt = new Dictionary<int, Dictionary<string, SheetRect>>();
+                foreach (int s in SheetLayout.DetailScales)
+                    detailBoxesAt[s] = MeasureDetails(db, chosen, s);
                 var views = new List<SheetViewRequest>();
                 Action<DrawingViews, SheetViewKind, string> add = (v, kind, name) =>
                 {
@@ -100,15 +105,20 @@ namespace Elevator.AutoCAD.Sheet
                     var d = kv.Value;
                     // A reference detail is shown at its template scale or larger, never smaller; the door elevation, whose title in the
                     // drawing says 1:20, is fixed to it. The scale appended to a title may run past the template window: +150 mm.
-                    bool fixedScale = d.Kind == "DoorElevationSection";
+                    SheetRect drawn;
                     views.Add(new SheetViewRequest
                     {
                         Kind = SheetViewKind.Detail,
                         Name = kv.Key,
-                        ModelExtents = new SheetRect(d.Window[0], d.Window[1], d.Window[2] - d.Window[0], d.Window[3] - d.Window[1]),
-                        MarginMm = 150,
+                        Role = d.Kind,
+                        // the viewport crops to what the detail draws (its title with the scale included), as the user's own edit did
+                        ModelExtents = detailBoxes.TryGetValue(kv.Key, out drawn)
+                            ? drawn
+                            : new SheetRect(d.Window[0], d.Window[1], d.Window[2] - d.Window[0], d.Window[3] - d.Window[1]),
+                        ExtentsByScale = detailBoxesAt.Where(x => x.Value.ContainsKey(kv.Key)).ToDictionary(x => x.Key, x => x.Value[kv.Key]),
+                        MarginMm = SheetLayout.DetailMarginMm,
                         AllowedScales = SheetLayout.DetailScales,
-                        MinScaleDenominator = fixedScale ? d.TemplateScale : 0,
+                        MinScaleDenominator = 0,
                         MaxScaleDenominator = d.TemplateScale
                     });
                 }
@@ -265,7 +275,7 @@ namespace Elevator.AutoCAD.Sheet
             try
             {
                 var mt = e as MText;
-                if (mt != null && Math.Abs(mt.Rotation) < 1e-9)
+                if (mt != null)
                 {
                     double w = mt.ActualWidth, h = mt.ActualHeight;
                     var p = mt.Location;
@@ -296,7 +306,19 @@ namespace Elevator.AutoCAD.Sheet
                             y1 = p.Y + h;
                             break;
                     }
-                    box = new Extents3d(new Point3d(x0, y1 - h, p.Z), new Point3d(x0 + w, y1, p.Z));
+                    // the text's own rectangle (not its reference box), turned about the insertion point
+                    double cos = Math.Cos(mt.Rotation), sin = Math.Sin(mt.Rotation);
+                    double minX = Double.MaxValue, minY = Double.MaxValue, maxX = Double.MinValue, maxY = Double.MinValue;
+                    foreach (var c in new[] { new[] { x0, y1 - h }, new[] { x0 + w, y1 - h }, new[] { x0 + w, y1 }, new[] { x0, y1 } })
+                    {
+                        double dx = c[0] - p.X, dy = c[1] - p.Y;
+                        double rx = p.X + dx * cos - dy * sin, ry = p.Y + dx * sin + dy * cos;
+                        minX = Math.Min(minX, rx);
+                        maxX = Math.Max(maxX, rx);
+                        minY = Math.Min(minY, ry);
+                        maxY = Math.Max(maxY, ry);
+                    }
+                    box = new Extents3d(new Point3d(minX, minY, p.Z), new Point3d(maxX, maxY, p.Z));
                     return true;
                 }
                 box = e.GeometricExtents;
@@ -365,6 +387,84 @@ namespace Elevator.AutoCAD.Sheet
                 k.Value.MaxPoint.X - k.Value.MinPoint.X, k.Value.MaxPoint.Y - k.Value.MinPoint.Y));
         }
 
+        // The drawn extents of every reference detail: the union of the visible entities that start inside its template window (a title
+        // that grew with the scale appended still starts inside it).
+        // scale > 0: the titles of the details are put at that sheet scale (text with the scale, 8 mm printed) for the measurement and
+        // then discarded: the extents the detail would have at that scale.
+        static Dictionary<string, SheetRect> MeasureDetails(Database db, Dictionary<string, SheetDetailSpec> details, int scale)
+        {
+            var acc = new Dictionary<string, Extents3d>();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+                if (scale > 0)
+                {
+                    foreach (ObjectId id in model)
+                    {
+                        var mt = tr.GetObject(id, OpenMode.ForRead) as MText;
+                        if (mt == null || !mt.Visible || !mt.Contents.Contains("\\L"))
+                            continue;
+                        var tg = SectionAADrawing.Tag(mt);
+                        if (tg != null && tg.Length > 0)
+                            continue;
+                        foreach (var d in details)
+                        {
+                            var w = d.Value.Window;
+                            var p = mt.Location;
+                            if (w != null && w.Length == 4 && p.X >= w[0] && p.X <= w[2] && p.Y >= w[1] && p.Y <= w[3])
+                            {
+                                mt.UpgradeOpen();
+                                mt.Contents = WithScale(mt.Contents, scale);
+                                mt.TextHeight = SheetLayout.TitleModelHeight(scale);
+                                break;
+                            }
+                        }
+                    }
+                }
+                foreach (ObjectId id in model)
+                {
+                    var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (e == null || !e.Visible)
+                        continue;
+                    Extents3d box;
+                    if (!DrawnExtents(e, out box) || box.MinPoint.X < 900000)
+                        continue; // the generated views are far from the details' strip
+                    // a text belongs to the detail its anchor is in (a title grows beyond the window: wider than the drawing, or below it)
+                    var mtext = e as MText;
+                    double ax = mtext != null ? mtext.Location.X : box.MinPoint.X, ay = mtext != null ? mtext.Location.Y : box.MaxPoint.Y;
+                    foreach (var d in details)
+                    {
+                        var w = d.Value.Window;
+                        if (w == null || w.Length != 4)
+                            continue;
+                        if (ax < w[0] - 1 || ax > w[2] + 1 || ay < w[1] - 1 || ay > w[3] + 1)
+                            continue;
+                        Extents3d cur;
+                        if (acc.TryGetValue(d.Key, out cur))
+                        {
+                            cur.AddExtents(box);
+                            acc[d.Key] = cur;
+                        }
+                        else
+                            acc[d.Key] = box;
+                    }
+                }
+                if (scale > 0)
+                    tr.Abort();
+                else
+                    tr.Commit();
+            }
+            return acc.ToDictionary(k => k.Key, k => new SheetRect(k.Value.MinPoint.X, k.Value.MinPoint.Y,
+                k.Value.MaxPoint.X - k.Value.MinPoint.X, k.Value.MaxPoint.Y - k.Value.MinPoint.Y));
+        }
+
+        // The title contents with its scale text: "1:N" replaced, or appended before the closing brace.
+        static string WithScale(string c, int s)
+        {
+            string updated = ScaleText.IsMatch(c) ? ScaleText.Replace(c, "1:" + s, 1) : Regex.Replace(c, @"\s*\}\s*$", " 1:" + s + "}");
+            return ScaleText.IsMatch(updated) ? updated : c + " 1:" + s;
+        }
+
         // ---------- one title per view, with the sheet scale ----------
 
         static string ViewOf(string key)
@@ -428,7 +528,7 @@ namespace Elevator.AutoCAD.Sheet
                             // the section audit reads the centre of these texts: the title keeps its centre when its height changes
                             var before = mt.GeometricExtents;
                             mt.Contents = ScaleText.Replace(mt.Contents, "1:" + scaleOf[view], 1);
-                            mt.TextHeight = SheetLayout.TitlePaperHeightMm * scaleOf[view];
+                            mt.TextHeight = SheetLayout.TitleModelHeight(scaleOf[view]);
                             mt.Width = 0;
                             var after = mt.GeometricExtents;
                             mt.Location = mt.Location + new Vector3d(
@@ -471,7 +571,7 @@ namespace Elevator.AutoCAD.Sheet
                         addedTitles[DrawingViews.Plan] = title.ObjectId;
                     }
                     title.Contents = "{\\Fcent|c0;\\L\\C6;" + PlanTitleText(db, tr) + " 1:" + planScale + "}";
-                    title.TextHeight = SheetLayout.TitlePaperHeightMm * planScale;
+                    title.TextHeight = SheetLayout.TitleModelHeight(planScale);
                     title.Width = 0;
                     title.Attachment = AttachmentPoint.TopCenter;
                     // under the plan content (measured before the title existed): its top stays where it was put
@@ -484,26 +584,12 @@ namespace Elevator.AutoCAD.Sheet
                     int s;
                     if (!scaleOf.TryGetValue(d.Key, out s))
                         continue;
-                    var texts = detailTexts[d.Key];
-                    if (d.Value.Kind == "DoorElevationSection")
-                    {
-                        // geometry titles "VIEW at D-D 1:20" / "SEC. C-C 1:20": fixed to the template scale, so they state it
-                        if (s == d.Value.TemplateScale)
-                            AddTitle(result, d.Key, "VIEW at D-D 1:" + s + " / SEC. C-C 1:" + s);
-                        continue;
-                    }
-                    if (texts.Count == 0)
-                        continue; // no editable title (fish plate): the label under the viewport stays
-                    double lowest = texts.Min(t => t.Location.Y);
-                    foreach (var mt in texts.Where(t => t.Location.Y - lowest < 5))
+                    // every title of a detail is a text of its own and states the sheet scale, at the same printed height as the views'
+                    foreach (var mt in detailTexts[d.Key])
                     {
                         mt.UpgradeOpen();
-                        string c = mt.Contents;
-                        string updated = ScaleText.IsMatch(c) ? ScaleText.Replace(c, "1:" + s, 1) : Regex.Replace(c, @"\s*\}\s*$", " 1:" + s + "}");
-                        if (!ScaleText.IsMatch(updated))
-                            updated = c + " 1:" + s;
-                        mt.Contents = updated;
-                        mt.Width = 0; // no wrapping: the longer text must not lose its tail behind the old reference width
+                        mt.Contents = WithScale(mt.Contents, s);
+                        mt.TextHeight = SheetLayout.TitleModelHeight(s);
                         AddTitle(result, d.Key, Plain(mt.Contents));
                     }
                 }

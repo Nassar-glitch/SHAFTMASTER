@@ -115,7 +115,7 @@ def run_case(folder, case_id):
         if t is not None:
             # printed height 8 mm: the model height is 8 x the scale denominator
             den = int(scale_of[view].split(":")[1])
-            check(abs(t.dxf.char_height - 8 * den) < 0.5, case_id + ": the title of %s prints at 8 mm (height %.1f at 1:%d)" % (view, t.dxf.char_height, den))
+            check(abs(t.dxf.char_height - min(8 * den, 800)) < 0.5, case_id + ": the title of %s prints at 8 mm, at most 800 model mm (height %.1f at 1:%d)" % (view, t.dxf.char_height, den))
         for old in ("1:8", "1:35"):
             check(t is None or (old + "}") not in t.text, case_id + ": no old scale %s in the title of %s" % (old, view))
     # the fit report: every attribute inside its box

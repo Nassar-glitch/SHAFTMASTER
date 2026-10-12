@@ -480,11 +480,81 @@ def apply_user_edit(doc, manifest):
     return removed
 
 
+# L2c round 2: every detail title is a real text that states the sheet scale and prints at 8 mm. The titles that were flattened
+# glyph geometry (door "VIEW at D-D" / "SEC. C-C", the fish plate and side guide rail) are removed and replaced by text in the same
+# style (cent font, underlined, as the details' own text titles). Offsets are from the detail window's lower-left corner; "delete"
+# rectangles hold nothing but the title's glyphs and underline; a text is (contents, x, y, attachment 1 = top left / 2 = top
+# centre, wrap width or 0). The text height (8 mm x the template scale) is set again by the sheet when the scale changes.
+TITLE_STYLE = r"{\Fcent|c0;\L%s}"
+DETAIL_TITLES = {
+    "FISH_PLATE": {
+        "delete": [(225, 960, 775, 1105), (265, 70, 930, 140)],
+        "texts": [(r"GUIDE RAIL\PFISH PLATE", 479, 1100, 2, 950), ("SIDE - GUIDE RAIL", 597, 140, 2, 950)],
+    },
+    "RAILS_PLAN_CW5_CAR9": {
+        "delete_text": ("GUIDES AND BRACKETS",),
+        "texts": [("CAR  GUIDES AND BRACKETS", 85, 106, 1, 950), ("C.W.  GUIDES AND BRACKETS", 1142, 106, 1, 950)],
+    },
+    "DOOR_SWING": {
+        "delete": [(-10, 355, 3250, 500)],
+        "texts": [("VIEW at D-D", 2, 500, 1, 1500), ("SEC. C-C", 2014, 500, 1, 1230)],
+    },
+    "DOOR_AUTOMATIC": {
+        "delete": [(-10, -5, 3700, 142)],
+        "texts": [("VIEW at D-D", 447, 142, 1, 1500), ("SEC. C-C", 2442, 142, 1, 1230)],
+    },
+    "RAIL_BRACKETS_CW5_CAR9": {
+        "delete_text": ("Guide Rail Support Bracket", "And Anchor Details"),
+        "texts": [(r"Guide Rail Support Bracket\PAnd Anchor Details", 484, 130, 2, 1700)],
+    },
+}
+
+
+def retitle(doc, manifest):
+    msp = doc.modelspace()
+    cache = bbox.Cache()
+    for d in manifest:
+        spec = DETAIL_TITLES.get(d["Name"])
+        wx, wy = d["Window"][0], d["Window"][1]
+        height = 8.0 * d["TemplateScale"]
+        if spec is None:
+            continue
+        for (x0, y0, x1, y1) in spec.get("delete", []):
+            for e in list(msp):
+                try:
+                    b = bbox.extents([e], cache=cache)
+                except Exception:
+                    continue
+                if b.has_data and b.extmin.x >= wx + x0 and b.extmax.x <= wx + x1 and b.extmin.y >= wy + y0 and b.extmax.y <= wy + y1:
+                    msp.delete_entity(e)
+        for words in spec.get("delete_text", ()):
+            for e in list(msp):
+                if e.dxftype() == "MTEXT" and words in e.text and wx - 1 <= e.dxf.insert.x <= d["Window"][2] + 1:
+                    msp.delete_entity(e)
+        for (text, x, y, attachment, width) in spec["texts"]:
+            attribs = {"insert": (wx + x, wy + y, 0), "char_height": height, "attachment_point": attachment, "layer": "0", "style": "Standard"}
+            if width:
+                attribs["width"] = width
+            msp.add_mtext(TITLE_STYLE % text, dxfattribs=attribs)
+
+
 def main(source=SOURCE, target=TARGET):
     ezdxf.options.write_fixed_meta_data_for_testing = True
     doc, auditor = recover.readfile(source)
     manifest = model_details(doc)
     removed = apply_user_edit(doc, manifest)
+    retitle(doc, manifest)
+    for d in manifest:  # entity counts after the titles changed
+        x0, y0, x1, y1 = d["Window"]
+        n = 0
+        for e in doc.modelspace():
+            try:
+                bb = bbox.extents([e])
+            except Exception:
+                continue
+            if bb.has_data and inside(bb, (x0, y0, x1, y1)):
+                n += 1
+        d["Entities"] = n
     s, fields = paper(doc)
     styles(doc)
     purge_blocks(doc)

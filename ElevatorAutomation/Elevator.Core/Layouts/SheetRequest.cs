@@ -39,8 +39,23 @@ namespace Elevator.Core.Layouts
         public const double LabelHeight = 3.5;
         /// <summary>The margin around a generated view's extents, model mm (the dimensions are already inside the extents).</summary>
         public const double ViewMarginMm = 100;
+
+        /// <summary>The margin (model mm) around the drawn extents of a reference detail: it has no dimensions outside them.</summary>
+        public const double DetailMarginMm = 30;
         /// <summary>The printed height of a view title on the sheet (paper mm): the user's edit set the titles to 8 mm at 1:10.</summary>
         public const double TitlePaperHeightMm = 8;
+        /// <summary>
+        /// The largest model height of a title: 8 mm on paper up to 1:100. A title at 8 mm on a 1:150 section would be 1200 mm high and
+        /// 28 m wide, wider than the section and than the gap to the neighbouring views of the drawing, which the host rejects (views
+        /// must not overlap); there it stays at 800 mm.
+        /// </summary>
+        public const double TitleMaxModelMm = 800;
+
+        /// <summary>The model height of a title at the sheet scale 1:<paramref name="scaleDenominator"/>: 8 mm on paper (at most 800 model mm).</summary>
+        public static double TitleModelHeight(int scaleDenominator)
+        {
+            return System.Math.Min(TitlePaperHeightMm * scaleDenominator, TitleMaxModelMm);
+        }
         /// <summary>The scales a reference detail may take: its template scale or larger (the bracket detail was enlarged to 1:5).</summary>
         public static readonly int[] DetailScales = { 5, 10, 20 };
         public const string TemplateFileName = "Layout_Geared_A0.dxf";

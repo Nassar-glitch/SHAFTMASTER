@@ -65,6 +65,52 @@ public static class LayoutsNativeTests
         return path;
     }
 
+    // L2c acceptance: the user's own project (docs/design/layouts/l2c/user-project.elevator.json) must come out as his edit of the sheet
+    // (user-edit.dwg, layout SM_Geared_A0): the same scales, and every viewport centre within 5 % of the sheet width (1189 mm) of his.
+    static void UserSheet(GenerationClient client, string logo)
+    {
+        string folder = Path.Combine(root, "docs", "design", "layouts", "l2c");
+        var project = ProjectJson.Deserialize(File.ReadAllText(Path.Combine(folder, "user-project.elevator.json")));
+        var attributes = Wire.Read<List<TitleBlockAttribute>>(Path.Combine(folder, "user-title-block.json"));
+        foreach (var a in attributes)
+        {
+            a.Value = a.Style == XarabText.ArabicStyle ? XarabText.Decode(a.DrawingText ?? "") : (a.DrawingText ?? "");
+            a.Script = a.Style == XarabText.ArabicStyle ? TextScript.Arabic : TextScript.Latin;
+        }
+        var request = new GenerationRequest
+        {
+            ProjectJson = ProjectJson.Serialize(project),
+            Options = new GenerationOptions { Views = DrawingViews.All, ArrangeViews = true },
+            Sheet = new SheetRequest { Attributes = attributes, DoorType = project.Doors == null ? null : project.Doors.Type, LogoFile = logo, LogoWidthPx = 300, LogoHeightPx = 150 }
+        };
+        var target = Path.Combine(output, "user-sheet.dwg");
+        var response = client.Run(request, OutputConsent.Capture(target, false), Console.WriteLine);
+        Wire.Write(Path.Combine(output, "user-sheet-generation.json"), response);
+        Check(response.Success && response.Sheet != null, "user-sheet: generated" + (response.Success ? "" : " (" + response.Error + ")"));
+        // his viewports (user-edit.dwg): scale denominator, centre x, centre y in paper mm
+        var his = new Dictionary<string, double[]>
+        {
+            { "Shaft plan", new double[] { 10, 236, 188 } },
+            { "Machine-room plan", new double[] { 10, 238, 598 } },
+            { "Section A-A", new double[] { 50, 558, 259 } },
+            { "Section B-B", new double[] { 10, 823, 653 } },
+            { "DOOR", new double[] { 20, 849, 415 } },
+            { "FISH_PLATE", new double[] { 10, 548, 649 } },
+            { "RAILS_PLAN", new double[] { 10, 858, 249 } },
+            { "RAIL_BRACKETS", new double[] { 5, 858, 106 } }
+        };
+        double tolerance = 0.05 * 1189;
+        foreach (var kv in his)
+        {
+            var v = response.Sheet.Viewports.FirstOrDefault(x => x.Name == kv.Key || x.Name.StartsWith(kv.Key + "_", StringComparison.Ordinal));
+            Check(v != null, "user-sheet: the sheet has " + kv.Key);
+            Check(v.ScaleDenominator == (int)kv.Value[0], "user-sheet: " + kv.Key + " 1:" + v.ScaleDenominator + " as his 1:" + kv.Value[0]);
+            double cx = v.PaperX + v.PaperWidth / 2, cy = v.PaperY + v.PaperHeight / 2;
+            Check(Math.Abs(cx - kv.Value[1]) <= tolerance && Math.Abs(cy - kv.Value[2]) <= tolerance,
+                "user-sheet: " + kv.Key + " centre (" + cx.ToString("0") + ", " + cy.ToString("0") + ") within 5 % of his (" + kv.Value[1] + ", " + kv.Value[2] + ")");
+        }
+    }
+
     public static int Main(string[] args)
     {
         root = Path.GetFullPath(args[0]); bin = Path.GetFullPath(args[1]); output = Path.GetFullPath(args[2]);
@@ -133,8 +179,7 @@ public static class LayoutsNativeTests
                 foreach (var v in response.Sheet.Viewports)
                 {
                     Check(!v.HasLabel, c.Id + ": " + v.Name + " has no label under it");
-                    if (v.Name != "FISH_PLATE")
-                        Check(v.Titles.Count > 0, c.Id + ": " + v.Name + " has its title with the scale");
+                    Check(v.Titles.Count > 0 && v.Titles.All(t => t.Contains(v.Label)), c.Id + ": " + v.Name + " states " + v.Label + " in every title (" + String.Join(" / ", v.Titles) + ")");
                 }
                 foreach (var v in response.Sheet.Viewports.Where(x => x.Kind != "Detail"))
                     Check(v.Titles.Count > 0 && v.Titles.All(t => t.Contains(v.Label)), c.Id + ": the title of " + v.Name + " states " + v.Label + " (" + String.Join(" / ", v.Titles) + ")");
@@ -168,6 +213,8 @@ public static class LayoutsNativeTests
                         c.Id + ": the sheet does not move the views");
                 }
             }
+            if (String.IsNullOrEmpty(only) || only.Split(',').Any(o => "user-sheet".Contains(o)))
+                UserSheet(client, logo);
             exit = 0;
             Console.WriteLine("PASS: " + count + " layouts native assertions.");
         }
