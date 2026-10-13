@@ -91,6 +91,18 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 - **Material:** Rm 370 N/mm² for every profile, as a catalog value.
 - **A choice that fails is kept.** The calculation sheet shows the true values and OK / NOT OK only. The application, the sheet and the drawings say nothing else. Design Notes gives the reason and the needed profile or spacing.
 - **The catalog** (dimensions, section properties, mass per metre) is editable data in the presets library.
+- **Answers of 2026-10-13 to GUIDE-RAILS.md section 12:**
+  - Q1: A5 > 12 % (St 2.25 / 1.8), editable per profile.
+  - Q2: E 210 000.
+  - Q3: the Savera values; T50 flange bending uses 5 mm.
+  - Q4: EN 81-50 for running and loading; the safety-gear case keeps the approved FF1 / FF2 convention.
+  - Q5: k1 from the project's safety gear.
+  - Q9: δstr presets 0.
+  - Q10: λ > 250 is NOT OK; the spacing floor is 500 mm.
+  - Q11 as proposed; Q13 strict; Q14 two rails each.
+  - Q8: with "machine on the guide rails = Yes", the machine load is shared by the car and CW rails together. How it is shared and checked is researched from published practice, and presented as simply as the rest of the sheet.
+  - Q6, Q7 and Q12: presets from typical catalogues (CW shoe spacing, shoe type and lining, clip push-through force), all editable. Keep it simple.
+  - The research and implementation run in the cloud as far as possible.
 
 ## Layouts and PDF (agreed 2026-10-12)
 
