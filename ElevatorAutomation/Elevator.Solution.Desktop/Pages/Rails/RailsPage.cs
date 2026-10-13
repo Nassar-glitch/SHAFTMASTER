@@ -27,15 +27,26 @@ namespace Elevator.Solution.Desktop.Pages
    Form.Field(Label(ProjectPresets.CwSpacingKey),ProjectPresets.CwSpacingKey);
    Form.CalculationGroup("Advanced",()=>{
     Form.Field(Label("Rails.MachineRailCount"),"Rails.MachineRailCount");
+    ShownWhen(()=>GuideRailFieldRules.MachineValuesShown(Presets.Context(Session.Project)));
     Form.Field(Label("Rails.ClipPushThroughN"),"Rails.ClipPushThroughN");
+    ShownWhen(()=>GuideRailFieldRules.PushThroughShown(Presets.Context(Session.Project)));
     Form.Field(Label("Rails.CwShoeSpacingMm"),"Rails.CwShoeSpacingMm");
     Form.Field(Label("Rails.StructureDeflectionMm"),"Rails.StructureDeflectionMm");
     Choice("Rails.CarShoeType",new[]{RailProfile.Sliding,RailProfile.Roller},v=>v as string,id=>id);
     Form.Field(Label("Rails.CarShoeLiningMm"),"Rails.CarShoeLiningMm");
+    ShownWhen(()=>GuideRailFieldRules.LiningShown(Presets.Context(Session.Project),true));
     Choice("Rails.CwShoeType",new[]{RailProfile.Sliding,RailProfile.Roller},v=>v as string,id=>id);
     Form.Field(Label("Rails.CwShoeLiningMm"),"Rails.CwShoeLiningMm");
+    ShownWhen(()=>GuideRailFieldRules.LiningShown(Presets.Context(Session.Project),false));
     Choice("Rails.A5Band",new[]{RailProfile.Over12,RailProfile.Between8And12},v=>v as string,id=>id);
    },false);
+  }
+  // The row just added is shown only while it affects the result; it follows the other inputs as the editors refresh.
+  void ShownWhen(Func<bool> visible)
+  {
+   var row=Form.FormRows[Form.FormRows.Count-1];
+   Action update=()=>row.Visibility=visible()?Visibility.Visible:Visibility.Collapsed;
+   Form.PresetRefreshers.Add(update);update();
   }
   static string Label(string key){var f=ProjectPresets.Find(key);return f==null?key:f.Label;}
   string[] Profiles()
@@ -59,7 +70,7 @@ namespace Elevator.Solution.Desktop.Pages
    Action show=()=>{programmatic=true;combo.SelectedValue=toId(field.Effective(Presets.Context(Session.Project)));programmatic=false;};
    combo.SelectionChanged+=(s,e)=>{
     if(programmatic)return;var choice=combo.SelectedItem as Common.Choice;if(choice==null)return;
-    field.Store(Session.Project,fromId(choice.Id));Shell.PresetEditing.Edited(field);
+    field.Store(Session.Project,fromId(choice.Id));Shell.PresetEditing.Edited(field);Shell.PresetEditing.RefreshPresetEditors();
     Shell.Live.Design=null;Shell.Updates.InvalidateCalculation();Shell.Updates.InvalidateRopeTraction();Shell.RefreshProjectStatus();
    };
    combo.ContextMenu=Shell.PresetEditing.ResetMenu(field);

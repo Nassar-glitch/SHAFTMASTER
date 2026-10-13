@@ -21,7 +21,7 @@ using Elevator.Solution.Bridge;
 // result, the calculation sheet and the Summary table.
 public static class RailsUiTests
 {
-    static MainWindow window; static string output; static int checks; static readonly List<string> names = new List<string>();
+    static MainWindow window; static string output; static int checks; static readonly List<string> names = new List<string>(); static readonly List<string> numbers = new List<string>();
     static readonly string[] Pages = { "GENERAL", "SHAFT", "FLOORS", "CAR & DOORS", "MACHINE", "SUSPENSION", "RAILS", "CALCULATIONS", "DRAWINGS", "VALIDATION", "ABOUT" };
     static object Get(string name) { return window.Automation.Get(name); }
     static void Set(string name, object value) { window.Automation.Set(name, value); }
@@ -135,6 +135,47 @@ public static class RailsUiTests
                 Reset(Choices()["Rails.CarShoeType"]); await Ready();
                 Check(!Edited("Rails.CarShoeType") && Check_().Car.Profile.ShoeType == shoe, "The shoe type resets to the catalog value");
                 await Shot("03-rails-advanced");
+                // ---------- values shown only while they matter ----------
+                Check(Choices()[ProjectPresets.MachineOnRailsKey].SelectedValue as string == "No" && !Editors()["Rails.MachineRailCount"].IsVisible, "Machine on the rails = No hides the number of rails carrying the machine");
+                Choices()[ProjectPresets.MachineOnRailsKey].SelectedValue = "Yes"; await Ready();
+                Check(Editors()["Rails.MachineRailCount"].IsVisible && Editors()["Rails.MachineRailCount"].Text == "4", "Machine on the rails = Yes shows the number of rails with its preset 4");
+                Reset(Choices()[ProjectPresets.MachineOnRailsKey]); await Ready();
+                Check(!Editors()["Rails.MachineRailCount"].IsVisible, "Back to No: hidden again");
+                Check(!Editors()["Rails.ClipPushThroughN"].IsVisible, "The clip push-through force is hidden while the travel is within 40 m");
+                Check(Editors()["Rails.CarShoeLiningMm"].IsVisible, "The car lining length is shown for sliding shoes");
+                Choices()["Rails.CarShoeType"].SelectedValue = RailProfile.Roller; await Ready();
+                Check(!Editors()["Rails.CarShoeLiningMm"].IsVisible, "The car lining length is hidden for roller shoes");
+                Reset(Choices()["Rails.CarShoeType"]); await Ready();
+                // ---------- the counterweight spacing follows the car spacing ----------
+                Type(ProjectPresets.CarSpacingKey, "1250"); await Ready();
+                Check(!Edited(ProjectPresets.CwSpacingKey) && Spacing(ProjectPresets.CwSpacingKey) == "1250" && Project().Rails.CwSpacingMm == 1250, "An unlocked counterweight spacing follows a typed car spacing");
+                Type(ProjectPresets.CwSpacingKey, "1500"); await Ready();
+                Check(Edited(ProjectPresets.CwSpacingKey) && Project().Rails.CwSpacingMm == 1500, "Typing the counterweight spacing locks it");
+                Type(ProjectPresets.CarSpacingKey, "1000"); await Ready();
+                Check(Project().Rails.CwSpacingMm == 1500 && Spacing(ProjectPresets.CwSpacingKey) == "1500", "A locked counterweight spacing no longer follows");
+                Reset(Editors()[ProjectPresets.CwSpacingKey]); await Ready();
+                Check(!Edited(ProjectPresets.CwSpacingKey) && Spacing(ProjectPresets.CwSpacingKey) == "1000", "Reset brings the follow back");
+                Reset(Editors()[ProjectPresets.CarSpacingKey]); await Ready();
+                // ---------- one bracket per slab: T70/65/9, Q 480, 3000 mm (no clamp, no rejection) ----------
+                ProjectPresets.Lock(Project(), "Elevator.CapacityKg"); Project().Elevator.CapacityKg = 480;
+                Call("ApplyProjectPresets"); await Ready();
+                Choices()[ProjectPresets.CarProfileKey].SelectedValue = "T70/65/9"; await Ready();
+                Type(ProjectPresets.CarSpacingKey, "3000"); await Ready();
+                Check(Project().Rails.CarSpacingMm == 3000 && Project().Rails.CwSpacingMm == 3000 && Project().Rails.BracketMaximumSpacingMm == 3000, "3000 mm is kept as the car spacing, the counterweight spacing and the bracket maximum");
+                var big = Check_();
+                Check(big.Available && big.Car.SpacingMm == 3000 && big.Car.Profile.Name == "T70/65/9", "The check runs with T70/65/9 at 3000 mm, Q 480");
+                foreach (var cs in big.Car.Cases)
+                    foreach (var it in cs.Items.Where(i => i.Id == "sm" || i.Id == "scomp" || i.Id == "sbuck" || i.Id == "sf" || i.Id == "dx" || i.Id == "dy" || i.Id == "lambda"))
+                        numbers.Add("Car, " + cs.Title + ", " + it.Title + " = " + it.Value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + (it.Permissible.HasValue ? " (permissible " + it.Permissible.Value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + ") " + (it.Ok == true ? "OK" : "NOT OK") : ""));
+                numbers.Add("Car line: " + (big.Car.Ok ? "OK" : "NOT OK") + "; counterweight line T50/50/5-type check at 3000: " + (big.Counterweight.Ok ? "OK" : "NOT OK") + " (" + big.Counterweight.Profile.Name + ")");
+                var aa3 = LegacyProjectAdapter.ToSectionAA(Project());
+                Check(aa3.BracketMaximum == 3000, "Section A-A takes 3000 mm");
+                var d3 = new ElevatorDesignEngine().Calculate(Project(), Context(), DrawingViews.All);
+                Check(d3.CanGenerate && d3.SectionAA != null, "The design with 3000 mm generates (no validation block)");
+                Check(d3.SectionAA.Brackets.ConsecutiveSpacings.Count > 0 && d3.SectionAA.Brackets.ConsecutiveSpacings.All(s => s <= 3000 + 1e-7), "The A-A bracket layout is built at 3000 mm");
+                sheet = CalculationSheet.Build(Project(), Context(), new CalculationSheetInputs { Presets = Library() });
+                Check(sheet.GuideRailsAvailable && sheet.GuideRails.Car.SpacingMm == 3000, "The calculation sheet carries 3000 mm");
+                Reset(Editors()[ProjectPresets.CarSpacingKey]); Reset(Choices()[ProjectPresets.CarProfileKey]); await Ready();
                 // ---------- the chosen values everywhere ----------
                 Choices()[ProjectPresets.CwProfileKey].SelectedValue = profiles.Last(); await Ready();
                 var design = new ElevatorDesignEngine().Calculate(Project(), Context(), DrawingViews.Plan);
@@ -151,10 +192,10 @@ public static class RailsUiTests
                 Check(true, "All 11 pages still build");
                 exit = 0;
             }
-            catch (Exception ex) { Wire.Write(Path.Combine(output, "ui-error.json"), new { Error = ex.ToString(), Checks = names }); }
+            catch (Exception ex) { Wire.Write(Path.Combine(output, "ui-error.json"), new { Error = ex.ToString(), Numbers = numbers, Checks = names }); }
             finally
             {
-                Wire.Write(Path.Combine(output, "rails-ui-tests.json"), new { Status = exit == 0 ? "PASS" : "FAIL", Assertions = checks, Checks = names, Method = "Real WPF controls driven by programmatic events. Not mouse/keyboard testing." });
+                Wire.Write(Path.Combine(output, "rails-ui-tests.json"), new { Status = exit == 0 ? "PASS" : "FAIL", Assertions = checks, Numbers = numbers, Checks = names, Method = "Real WPF controls driven by programmatic events. Not mouse/keyboard testing." });
                 window.Closing += (s, ce) => { };
                 window.Close();
             }

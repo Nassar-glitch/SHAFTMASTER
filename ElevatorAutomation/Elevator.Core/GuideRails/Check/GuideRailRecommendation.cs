@@ -63,6 +63,18 @@ namespace Elevator.Core.GuideRails
             if (g == null)
                 return null;
             bool car = key.StartsWith("Rails.Car", StringComparison.Ordinal);
+            if (key == ProjectPresets.CwSpacingKey)
+                return ProjectPresets.Find(ProjectPresets.CarSpacingKey).Effective(c);
+            if (key == ProjectPresets.CwProfileKey)
+            {
+                // The counterweight spacing follows the car spacing, so the profile is the smallest that passes at that spacing.
+                var followed = ProjectPresets.Find(ProjectPresets.CarSpacingKey).Effective(c);
+                if (followed != null)
+                {
+                    var smallest = SmallestPassing(g, false, Convert.ToDouble(followed, System.Globalization.CultureInfo.InvariantCulture));
+                    return smallest != null ? smallest.Name : g.Preset.Profiles[g.Preset.Profiles.Count - 1].Name;
+                }
+            }
             if (key.EndsWith("Profile", StringComparison.Ordinal))
                 return Profile(g, car);
             string name = ProjectPresets.Find(car ? "Rails.CarProfile" : "Rails.CwProfile").Effective(c) as string;

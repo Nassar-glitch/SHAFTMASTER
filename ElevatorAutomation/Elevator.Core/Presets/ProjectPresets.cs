@@ -424,7 +424,7 @@ return m==null?(double?)null:m.MachineMassKg;
                 "RAILS",
                 CwSpacingKey,
                 "Counterweight rail bracket spacing (mm)",
-                c=>RailRecommendation(c,CwSpacingKey),
+                c=>Fields.First(f=>f.Key==CarSpacingKey).Effective(c), // the counterweight spacing follows the car spacing until typed
                 p=>p.Rails.CwSpacingMm,
                 (p,v)=>p.Rails.CwSpacingMm=D(v)),
             // Advanced guide-rail values: the library value, or the catalog value of the chosen profile, until edited.
