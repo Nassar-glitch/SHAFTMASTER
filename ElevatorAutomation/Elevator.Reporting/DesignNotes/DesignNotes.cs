@@ -8,6 +8,7 @@ using Elevator.Core.Calculations;
 using Elevator.Core.Car;
 using Elevator.Core.Doors;
 using Elevator.Core.GuideRails;
+using Elevator.Core.Steel;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.Suspension;
@@ -103,6 +104,8 @@ namespace Elevator.Reporting.DesignNotes
             AddDoorNote(project, context, n, presets);
             // Guide rails (DESIGN-FLOW "Guide rails"): one line per failed item with the needed profile or bracket spacing.
             AddGuideRailNotes(project, context, n, presets);
+            // Steel shaft: a beam rule that the floors and doors cannot meet (nothing for a concrete shaft or a rule that is met).
+            AddSteelNotes(project, n, presets);
             // Rope / groove / balance / sheave selection (project presets): nothing passes on 1:1. One recommendation: the limiting check,
             // 2:1 roping, and the minimum rope MBL that would satisfy the safety factor at 7 ropes (same engine, 7 ropes of this diameter).
             AddRopeSelectionRecommendation(project, context, n, presets, engine);
@@ -307,6 +310,15 @@ namespace Elevator.Reporting.DesignNotes
                         + remedy);
                 }
             }
+        }
+
+        private static void AddSteelNotes(ElevatorProject project, DesignNotes n, PresetLibrary presets)
+        {
+            if (presets == null || !SteelFields.IsSteel(project, presets))
+                return;
+            var steel = SteelStructure.Build(project, presets);
+            if (steel.Valid)
+                n.Recommendations.AddRange(steel.Issues);
         }
 
         private static string GuideRailText(RailItem i, double v)

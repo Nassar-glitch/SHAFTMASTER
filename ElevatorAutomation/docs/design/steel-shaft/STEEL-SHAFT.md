@@ -243,9 +243,9 @@ Channel UPN (parallel-flange-less, inclined flange 8 %), dimensions in mm, A in 
 | UPN 200 | 200 | 75 | 8.5 | 11.5 | 11.5 | 32.2 | 25.3 | 1910 | 191 |
 
 Equal angle: **L 50 x 50 x 5**: A 4.80 cm², mass 3.77 kg/m, r1 7 mm, r2 3.5 mm, Ix = Iy 11.0 cm4, centroid 14.0 mm from the back.
-Source: DIN 1026-1:2000 and EN 10279:2000 (hot-rolled steel channels), EN 10056-1 (equal angles); the values above are the standard
-catalogue values from memory of the common producer tables (not fetched here: no web access in this analysis); cloud
-session to confirm and cite the producer table. The drawing itself only draws the section outline and does not state any of these.
+Source: DIN 1026-1:2000 and EN 10279:2000 (hot-rolled steel channels), EN 10056-1 (equal angles). The table above was written from memory in
+stage S1; stage S2 checked it against the producer tables, see section 9.1. The drawing itself only draws the section outline and does not
+state any of these.
 
 ## 7. Questions for the user (only what the drawing does not settle)
 
@@ -274,3 +274,93 @@ reference side elevation.
 - The sections are called `C-C` twice in the file (strip D and sheet E) with different bracing.
 - Some texts are in `S-TEXT` / `STRUCADTXT` layers with a style that has a missing font in this file: shown as boxes in the
   renderings (title block cells).
+
+## 9. Stage S2: the portable model (cloud, 2026-10-13)
+
+Code: `Elevator.Core/Steel/` (catalogue, presets, fields, beam-level rule, structure and geometry), `Elevator.Reporting/Sheet/CalculationSheetSteel.cs`
+and the Design Notes line; tests `tests/Elevator.Core.Tests/SteelShaftTests.cs` and `tests/Elevator.Reporting.Tests/SteelShaftReportTests.cs`.
+No AutoCAD, no UI. A concrete project does not change at all: the steel inputs live in the project extension `steel` (the same pattern as the
+title-block fields), which a concrete project never has, and the library group `SteelShaft` is outside the library hash.
+
+### 9.1 Catalogue and what was verified
+
+`config/presets.json`, group `SteelShaft` (editable): channels UPN 80 to 200 (h, b, tw, tf, r1, A, mass, Ix, Wx, Iy, Wy, e) and equal angles
+L40x40x4, L50x50x5, L60x60x6 (A, mass, Ix, e, r1, r2). Checked on the web on 2026-10-13 (the producer pages could be searched, not fetched;
+ArcelorMittal's table was not reachable, so the producer tables below stand in for it):
+
+| Values | Source |
+|---|---|
+| UPN 80 to 200: h, b, tw, tf, A, mass, Ix, Wx, Iy, Wy | Kocaer Steel, UPN datasheet: [channels-upn.pdf](https://kocaersteel.com/uploads/2025/02/channels-upn.pdf) (based on DIN 1026-1 and EN 10279); cross-checked with the STAD technical data sheet [stad-technical-data-of-sections-upn.pdf](https://www.stad.fr/downloads/pdf/stad-technical-data-of-sections-upn.pdf) (UPN 140: Ix 605, Iy 62.7, Wx 86.4, Wy 14.8) |
+| UPN 80: 8.64 kg/m, 11.0 cm² | [Project Materials UPN table](https://blog.projectmaterials.com/quick-answers/steel/upn-channel-dimensions-weight/) (EN 10279) |
+| UPN 140: r1 10, r2 5, e 17.5 mm | Kocaer Steel UPN 140 page and [beamdimensions.com UPN 140](https://beamdimensions.com/database/European/Steel/Standard_UPN_U_channels/UPN_140/) |
+| L50x50x5: 3.77 kg/m, 4.80 cm², Ix 11.0, e 14.0 mm | [Roymech equal angles (EN 10056-1)](https://roymech.org/Useful_Tables/Sections/AngleA_dim_prop.html), [Engineering Toolbox, steel angles](https://mail.engineeringtoolbox.com/steel-angles-d_1324.html) |
+| L40x40x4: 2.42 kg/m, 3.08 cm², Ix 4.47 | Engineering Toolbox |
+| L60x60x6: 5.42 kg/m, 6.91 cm², Ix 22.8, e 16.9 mm | [Murray Steel Products, BS EN 10056-1](https://murraysteelproducts.com/offers/structural/equal-angles) |
+
+**Still to verify against a producer table** (each row carries a `Check` text in the file so it is not lost; the text is never printed):
+the centroid distance e of UPN 80, 100, 120, 160, 180, 200 (values are the usual table values from memory; only UPN 140 was confirmed), and the
+radii r1 / r2 of L40x40x4 and L60x60x6 (and e of L40x40x4). The consistency tests (mass = 7850 · A, Wx = Ix / (h/2), Wy = Iy / (b - e)) pass
+for every row.
+
+### 9.2 Inputs (all preset-first, lock and follow)
+
+Keys `Steel.*` (page SHAFT): `Construction` (Concrete default | Steel), `System` (UPN), `ColumnProfile` (UPN 140), `BeamProfile` (UPN 100),
+`BracingProfile` (L50x50x5), `Bracing` (DoubleCross), `BeamSpacingMm` (1500), `BasePlateWidthMm / DepthMm / ThicknessMm` (200 / 200 / 15),
+`BoltCount` (4; 6 and 8 are drawn too) and `BoltDiameterMm` (20), `GussetLengthMm / WidthMm / ThicknessMm` (400 / 250 / 6), `SteelGrade` ("St 37"),
+and the concrete base `Base.MarginMm` (200), `Base.ThicknessMm` (250), `Base.BarDiameterMm` (8), `Base.BarCountAlongX / AlongY` (the preset follows the
+block size at no more than 120 mm bar spacing with 50 mm cover, so the counts follow the shaft size until typed). Library-only values: the bolt
+pitch (120) and the bar spacing and cover. An edited value lives in the project extension `steel` and locks (key in `UserEditedFields`); Reset
+removes it. The fields are not in `ProjectPresets.Fields` (so "Fill blanks" and `Apply` never touch a concrete project) but `ProjectPresets.Find`
+returns them, like the title-block fields.
+
+### 9.3 Beam levels (DESIGN-FLOW answer 1)
+
+`SteelBeamLevels.Rule(floors, doorHeight, s, base, top)`, pure. Elevations are from the lowest floor (pit negative). Fixed: every served floor and
+every door head (floor + 2160, the shared door construction height). From each door head up in steps of s; the rest to the next fixed beam <= s
+means that fixed beam is next (a rest of exactly s goes to the fixed beam; 10 mm more adds a beam). The pit steps from the base up to the lowest
+floor (the base itself is the datum, not a beam); the top steps from the top-floor door head to the tower top, which carries the last beam
+(the machine platform). Tags: floor, door head, intermediate, pit, top. Tower top = top floor + overhead; base = lowest floor - pit.
+Examples (tested): 3000 -> 0, 2160, 3000; 6000 -> 0, 2160, 3660, 5160, 6000; 3250 -> 0, 2160, 3250.
+
+Edits: `SteelFields.EditLevel / RemoveLevel / ResetLevel / ResetLevels` keep the edits by level key (F:name, D:name, I:floor:k, P:k, T:k, T:top,
+C:n for an added level); an edited level is locked, a floor level and the tower top are never moved, an edit of a key the rule no longer has is
+ignored until the rule has it again.
+
+### 9.4 Derived rail bracket spacing
+
+For a steel shaft the car spacing preset is the largest gap between consecutive beam levels from the lowest to the highest served floor
+(`SteelStructure.DerivedBracketSpacingMm`), the counterweight spacing follows it, `Rails.BracketMaximumSpacingMm` follows the car spacing, and
+`GuideRailCheckEngine` uses the derived value for both lines whatever a typed spacing says. With the preset s = 1500 and the 2160 door height
+the largest gap is always the door gap, 2160 mm (floors of 3000 and of 6000 alike); a larger s or a removed beam makes it larger. A concrete
+project keeps the recommendation (2000 in the example) unchanged.
+
+### 9.5 Geometry as data
+
+`SteelStructure` (built from the project and the library, `Valid` false with `Inputs.Problems` when something is missing): `Plan`, `Faces`, `Base`,
+`TowerTop`, `Members`. Plan axes as the project: X along W, Y along D, origin at the front-left corner of the clear rectangle, entrance face at
+Y = 0 (the front). **The steel lies outside the clear rectangle:**
+
+- columns: the channel box is b (flange width, 60) along X and h (depth, 140) along Y, outside each corner; the web is on the outer side and the
+  flange tips are on the clear line (left columns X -60 to 0, right columns W to W + 60, front Y -140 to 0, back D to D + 140), so W is the
+  distance between flange tips; the outline is the parallel-flange channel (8 % slope and radii not drawn);
+- base plates: P x P centred on the column box (as in the reference), so a plate reaches (200 - 60) / 2 = 70 mm inside the clear rectangle along
+  the width at the pit floor (`Plan.PlateIntrusionMm`; the reference plates intrude 75 mm per side too); bolts on the 120 square about the plate centre;
+- beam ring: four beams between the columns, flange width across the face (UPN 100: 50), outside the clear faces and touching the columns' edges;
+- elevation per face (u along the face, z from the lowest floor): two columns base to tower top, a plate each, a beam band (beam depth, centred on
+  the level) at every level, and on every face except the entrance face the double cross in every panel between consecutive levels (the panels start
+  at the base), plus gusset points at the panel corners; the concrete block under the base (top at the base elevation, its thickness below);
+- block: the plate footprint plus the margin on every side; bars along X (spread over Y) and along Y as plan lines; volume;
+- tower top: the last beam ring at the tower top, the machine envelope = the clear rectangle (no outriggers).
+
+### 9.6 Member list
+
+Columns (4, base to tower top), beams (2 per level along each direction), braces grouped by length (two diagonals per panel, three braced faces),
+base plates, gusset plates (two per panel corner level on each braced face), anchor bolts (bolts per plate x 4); profile, length, count, mass of one
+and in total (plates at 7850 kg/m3). The brace length is the work-point length across the clear face.
+
+### 9.7 Reports
+
+The calculation sheet has a "Shaft structure" table under the input data, only for a steel shaft: construction, column / beam / bracing profile,
+beam spacing, the beam levels, the derived bracket spacing, base plate, steel grade. No structural check. Design Notes: a recommendation line when a
+gap larger than s cannot be split because of a door (the floor-to-door-head gap is the door height, 2160 > 1500: this is the case with the
+presets, see the handoff), and when a floor is not higher than the door height (no door-head beam fits). Nothing for a concrete shaft.

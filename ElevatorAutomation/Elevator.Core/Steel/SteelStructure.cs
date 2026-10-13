@@ -1,0 +1,540 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using Elevator.Core.Presets;
+using Elevator.Core.Project;
+
+namespace Elevator.Core.Steel
+{
+    /// <summary>The effective steel-shaft inputs of a project (the project value when edited, otherwise the preset) and the shaft quantities they need.</summary>
+    public sealed class SteelInputs
+    {
+        public SteelShaftPreset Preset;
+        public string Construction;
+        public ChannelProfile Column;
+        public ChannelProfile Beam;
+        public AngleProfile Brace;
+        public double SpacingMm;
+        public double PlateWidthMm;
+        public double PlateDepthMm;
+        public double PlateThicknessMm;
+        public int BoltCount;
+        public double BoltDiameterMm;
+        public double BoltPitchMm;
+        public double GussetLengthMm;
+        public double GussetWidthMm;
+        public double GussetThicknessMm;
+        public string SteelGrade;
+        public double BaseMarginMm;
+        public double BaseThicknessMm;
+        public double BarDiameterMm;
+        public int BarCountAlongX;
+        public int BarCountAlongY;
+        /// <summary>Clear shaft width W and depth D: between the inner faces of the steel.</summary>
+        public double WidthMm;
+        public double DepthMm;
+        public double PitMm;
+        public double OverheadMm;
+        /// <summary>Door construction height above the floor (the door-head beam), from the shared design result.</summary>
+        public double DoorHeightMm;
+        /// <summary>The floors with their elevations (all of them; the rule uses the served ones).</summary>
+        public List<FloorElevation> Floors = new List<FloorElevation>();
+        public List<SteelLevelEdit> LevelEdits = new List<SteelLevelEdit>();
+        /// <summary>What is missing or invalid; empty when the structure can be built.</summary>
+        public List<string> Problems = new List<string>();
+
+        public bool Valid
+        {
+            get { return Problems.Count == 0; }
+        }
+
+        static double D(PresetField f, PresetContext c)
+        {
+            var v = f.Effective(c);
+            return v == null ? Double.NaN : Convert.ToDouble(v, CultureInfo.InvariantCulture);
+        }
+
+        static string S(PresetField f, PresetContext c)
+        {
+            return f.Effective(c) as string;
+        }
+
+        static double? Field(PresetContext c, string key)
+        {
+            var f = ProjectPresets.Find(key);
+            var v = f == null ? null : f.Effective(c);
+            return v == null ? (double?)null : Convert.ToDouble(v, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>Everything except the base bar counts (which follow the footprint these values give).</summary>
+        public static SteelInputs ResolveBasic(PresetContext c)
+        {
+            var i = new SteelInputs { Preset = c.Library.SteelShaftOrDefault() };
+            i.Construction = S(SteelFields.Construction, c);
+            i.Column = i.Preset.Channel(S(SteelFields.ColumnProfile, c));
+            i.Beam = i.Preset.Channel(S(SteelFields.BeamProfile, c));
+            i.Brace = i.Preset.Angle(S(SteelFields.BracingProfile, c));
+            if (i.Column == null)
+                i.Problems.Add("The column profile is not in the channel catalogue.");
+            if (i.Beam == null)
+                i.Problems.Add("The beam profile is not in the channel catalogue.");
+            if (i.Brace == null)
+                i.Problems.Add("The bracing profile is not in the angle catalogue.");
+            i.SpacingMm = D(SteelFields.BeamSpacing, c);
+            i.PlateWidthMm = D(SteelFields.PlateWidth, c);
+            i.PlateDepthMm = D(SteelFields.PlateDepth, c);
+            i.PlateThicknessMm = D(SteelFields.PlateThickness, c);
+            double bolts = D(SteelFields.BoltCount, c);
+            i.BoltCount = Double.IsNaN(bolts) ? 0 : (int)Math.Round(bolts);
+            i.BoltDiameterMm = D(SteelFields.BoltDiameter, c);
+            i.BoltPitchMm = i.Preset.BoltPitchMm;
+            i.GussetLengthMm = D(SteelFields.GussetLength, c);
+            i.GussetWidthMm = D(SteelFields.GussetWidth, c);
+            i.GussetThicknessMm = D(SteelFields.GussetThickness, c);
+            i.SteelGrade = S(SteelFields.SteelGrade, c);
+            i.BaseMarginMm = D(SteelFields.BaseMargin, c);
+            i.BaseThicknessMm = D(SteelFields.BaseThickness, c);
+            i.BarDiameterMm = D(SteelFields.BarDiameter, c);
+            foreach (var pair in new[]
+            {
+                new KeyValuePair<string, double>("The beam spacing", i.SpacingMm),
+                new KeyValuePair<string, double>("The base plate width", i.PlateWidthMm),
+                new KeyValuePair<string, double>("The base plate depth", i.PlateDepthMm),
+                new KeyValuePair<string, double>("The base plate thickness", i.PlateThicknessMm),
+                new KeyValuePair<string, double>("The bolt diameter", i.BoltDiameterMm),
+                new KeyValuePair<string, double>("The gusset plate length", i.GussetLengthMm),
+                new KeyValuePair<string, double>("The gusset plate width", i.GussetWidthMm),
+                new KeyValuePair<string, double>("The gusset plate thickness", i.GussetThicknessMm),
+                new KeyValuePair<string, double>("The concrete base margin", i.BaseMarginMm),
+                new KeyValuePair<string, double>("The concrete base thickness", i.BaseThicknessMm),
+                new KeyValuePair<string, double>("The base bar diameter", i.BarDiameterMm)
+            })
+            {
+                if (!ProjectFloors.FinitePositive(pair.Value))
+                    i.Problems.Add(pair.Key + " must be positive.");
+            }
+            if (i.BoltCount != 4 && i.BoltCount != 6 && i.BoltCount != 8)
+                i.Problems.Add("The bolts per base plate must be 4, 6 or 8.");
+            var shaft = c.Project.Shaft;
+            i.WidthMm = shaft == null ? 0 : shaft.WidthMm;
+            i.DepthMm = shaft == null ? 0 : shaft.DepthMm;
+            if (!ProjectFloors.FinitePositive(i.WidthMm) || !ProjectFloors.FinitePositive(i.DepthMm))
+                i.Problems.Add("The shaft width and depth are required.");
+            double? pit = Field(c, "Shaft.PitDepthMm"), overhead = Field(c, "Shaft.OverheadMm");
+            if (!pit.HasValue || !(pit.Value > 0))
+                i.Problems.Add("The pit depth is required.");
+            else
+                i.PitMm = pit.Value;
+            if (!overhead.HasValue || !(overhead.Value > 0))
+                i.Problems.Add("The overhead is required.");
+            else
+                i.OverheadMm = overhead.Value;
+            i.DoorHeightMm = new ElevatorDesignResult().DoorConstructionHeightMm;
+            try
+            {
+                i.Floors = ProjectFloors.Elevations(c.Project.Building);
+            }
+            catch (ArgumentException e)
+            {
+                i.Problems.Add(e.Message);
+            }
+            if (i.Floors.Count(f => f.IsServed) < 1)
+                i.Problems.Add("At least one served floor is required.");
+            i.LevelEdits = SteelFields.LevelEdits(c.Project);
+            return i;
+        }
+
+        /// <summary>The effective inputs, including the base bar counts.</summary>
+        public static SteelInputs Resolve(PresetContext c)
+        {
+            var i = ResolveBasic(c);
+            i.BarCountAlongX = (int)Math.Round(D(SteelFields.BarCountAlongX, c));
+            i.BarCountAlongY = (int)Math.Round(D(SteelFields.BarCountAlongY, c));
+            if (i.BarCountAlongX < 1 || i.BarCountAlongY < 1)
+                i.Problems.Add("The base bar counts must be at least 1.");
+            return i;
+        }
+    }
+
+    /// <summary>
+    /// The steel shaft of a project as data: the beam levels, the derived rail bracket spacing, the plan, the face elevations, the base
+    /// block, the tower top and the member list (DESIGN-FLOW "Steel shaft structure"). Pure: no drawing, no structural check.
+    /// </summary>
+    public sealed class SteelStructure
+    {
+        const double SteelDensityKgPerM3 = 7850;
+
+        public SteelInputs Inputs;
+        public bool Valid;
+        /// <summary>Elevation of the column feet (the pit floor): lowest floor minus the pit depth.</summary>
+        public double BaseMm;
+        /// <summary>Elevation of the tower top (the machine platform): top floor plus the overhead.</summary>
+        public double TopMm;
+        public double LowestFloorMm;
+        public double HighestFloorMm;
+        /// <summary>The levels the rule gives, before the user's edits.</summary>
+        public List<SteelLevel> RuleLevels = new List<SteelLevel>();
+        /// <summary>The levels in force: the rule with the edits applied, ordered by elevation.</summary>
+        public List<SteelLevel> Levels = new List<SteelLevel>();
+        /// <summary>The largest gap between consecutive levels from the lowest to the highest floor; null with fewer than two served floors.</summary>
+        public double? DerivedBracketSpacingMm;
+        /// <summary>Rules the levels cannot meet (for the Design Notes).</summary>
+        public List<string> Issues = new List<string>();
+        public SteelPlan Plan;
+        public List<SteelFace> Faces = new List<SteelFace>();
+        public SteelBaseBlock Base;
+        public SteelTowerTop TowerTop;
+        public List<SteelMember> Members = new List<SteelMember>();
+
+        public double TotalMassKg
+        {
+            get { return Members.Sum(m => m.TotalMassKg); }
+        }
+
+        public double ColumnLengthMm
+        {
+            get { return TopMm - BaseMm; }
+        }
+
+        // ---------- entry points ----------
+        /// <summary>True when the project is a steel structure.</summary>
+        public static bool IsSteel(ElevatorProject p, PresetLibrary lib)
+        {
+            return SteelFields.IsSteel(p, lib);
+        }
+
+        /// <summary>Builds the steel shaft of a project (whatever its construction field says).</summary>
+        public static SteelStructure Build(ElevatorProject p, PresetLibrary lib)
+        {
+            return Build(new PresetContext { Project = p, Library = lib });
+        }
+
+        public static SteelStructure Build(PresetContext c)
+        {
+            var s = new SteelStructure { Inputs = SteelInputs.Resolve(c) };
+            if (!s.Inputs.Valid)
+                return s;
+            s.Valid = true;
+            s.BuildLevels();
+            s.BuildPlan();
+            s.BuildBase();
+            s.BuildFaces();
+            s.BuildTowerTop();
+            s.BuildMembers();
+            return s;
+        }
+
+        /// <summary>The derived rail bracket spacing of a steel project; null when the project is not steel or the levels cannot be built.</summary>
+        public static double? DerivedSpacing(PresetContext c)
+        {
+            if (c == null || c.Library == null || c.Project == null || !SteelFields.IsSteel(c.Project, c.Library))
+                return null;
+            var s = Build(new PresetContext { Project = c.Project, Library = c.Library });
+            return s.Valid ? s.DerivedBracketSpacingMm : null;
+        }
+
+        /// <summary>The preset of a base bar count: bars at no more than the preset spacing across the block, from the cover to the cover.</summary>
+        public static object PresetBarCount(PresetContext c, bool alongX)
+        {
+            var i = SteelInputs.ResolveBasic(c);
+            if (i.Column == null || !ProjectFloors.FinitePositive(i.WidthMm) || !ProjectFloors.FinitePositive(i.DepthMm)
+                || !ProjectFloors.FinitePositive(i.PlateWidthMm) || !ProjectFloors.FinitePositive(i.PlateDepthMm)
+                || !ProjectFloors.FinitePositive(i.BaseMarginMm))
+                return null;
+            var block = BlockRectangle(i);
+            var b = i.Preset.Base;
+            double across = alongX ? block.Height : block.Width;
+            return (double)Math.Max(2, (int)Math.Ceiling((across - 2 * b.CoverMm - 1e-9) / b.BarSpacingMm) + 1);
+        }
+
+        // ---------- levels ----------
+        void BuildLevels()
+        {
+            var i = Inputs;
+            var served = i.Floors.Where(f => f.IsServed).OrderBy(f => f.ElevationMm).ToList();
+            LowestFloorMm = served[0].ElevationMm;
+            HighestFloorMm = served[served.Count - 1].ElevationMm;
+            BaseMm = LowestFloorMm - i.PitMm;
+            TopMm = HighestFloorMm + i.OverheadMm;
+            RuleLevels = SteelBeamLevels.Rule(served, i.DoorHeightMm, i.SpacingMm, BaseMm, TopMm);
+            Levels = SteelBeamLevels.Apply(RuleLevels, i.LevelEdits, BaseMm, TopMm);
+            Issues = SteelBeamLevels.Issues(served, i.DoorHeightMm, i.SpacingMm, BaseMm, TopMm);
+            if (served.Count >= 2)
+                DerivedBracketSpacingMm = SteelBeamLevels.LargestGap(Levels, LowestFloorMm, HighestFloorMm);
+        }
+
+        // ---------- plan ----------
+        static SteelRect FootprintOf(SteelInputs i, ChannelProfile col)
+        {
+            double b = col.WidthMm, h = col.HeightMm;
+            // The column box centres: x = -b/2 (left) and W + b/2 (right); y = -h/2 (front) and D + h/2 (back).
+            double x0 = -b / 2 - i.PlateWidthMm / 2, x1 = i.WidthMm + b / 2 + i.PlateWidthMm / 2;
+            double y0 = -h / 2 - i.PlateDepthMm / 2, y1 = i.DepthMm + h / 2 + i.PlateDepthMm / 2;
+            return new SteelRect(x0, y0, x1, y1);
+        }
+
+        static SteelRect BlockRectangle(SteelInputs i)
+        {
+            return FootprintOf(i, i.Column).Grow(i.BaseMarginMm);
+        }
+
+        SteelColumnPlan MakeColumn(string corner, bool left, bool front)
+        {
+            var i = Inputs;
+            var col = i.Column;
+            double b = col.WidthMm, h = col.HeightMm, tw = col.WebMm, tf = col.FlangeMm;
+            double xa = left ? -b : i.WidthMm, xb = left ? 0 : i.WidthMm + b;
+            double ya = front ? -h : i.DepthMm, yb = front ? 0 : i.DepthMm + h;
+            var c = new SteelColumnPlan { Corner = corner, Profile = col.Name, WebSide = left ? "Left" : "Right", Box = new SteelRect(xa, ya, xb, yb) };
+            // Left outline: web at x = -b, flanges to x = 0. The right column is its mirror image about the column's own box.
+            var pts = new List<SteelPoint>
+            {
+                new SteelPoint(-b, ya), new SteelPoint(0, ya), new SteelPoint(0, ya + tf), new SteelPoint(-b + tw, ya + tf),
+                new SteelPoint(-b + tw, yb - tf), new SteelPoint(0, yb - tf), new SteelPoint(0, yb), new SteelPoint(-b, yb)
+            };
+            if (left)
+                c.Outline = pts;
+            else
+            {
+                c.Outline = pts.Select(p => new SteelPoint(i.WidthMm - p.X, p.Y)).Reverse().ToList();
+            }
+            double cx = c.Box.CenterX, cy = c.Box.CenterY;
+            c.Plate = new SteelRect(cx - i.PlateWidthMm / 2, cy - i.PlateDepthMm / 2, cx + i.PlateWidthMm / 2, cy + i.PlateDepthMm / 2);
+            double k = i.BoltPitchMm / 2;
+            var offsets = new List<double[]> { new[] { -k, -k }, new[] { k, -k }, new[] { -k, k }, new[] { k, k } };
+            if (i.BoltCount >= 6)
+            {
+                offsets.Add(new[] { -k, 0.0 });
+                offsets.Add(new[] { k, 0.0 });
+            }
+            if (i.BoltCount == 8)
+            {
+                offsets.Add(new[] { 0.0, -k });
+                offsets.Add(new[] { 0.0, k });
+            }
+            foreach (var o in offsets)
+                c.Bolts.Add(new SteelCircle { X = cx + o[0], Y = cy + o[1], DiameterMm = i.BoltDiameterMm });
+            return c;
+        }
+
+        List<SteelBeamPlan> MakeRing()
+        {
+            var i = Inputs;
+            double bb = i.Beam.WidthMm, w = i.WidthMm, d = i.DepthMm;
+            var ring = new List<SteelBeamPlan>();
+            ring.Add(new SteelBeamPlan { Face = "Front", Profile = i.Beam.Name, Box = new SteelRect(0, -bb, w, 0), CenterLine = new SteelSegment(0, -bb / 2, w, -bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Back", Profile = i.Beam.Name, Box = new SteelRect(0, d, w, d + bb), CenterLine = new SteelSegment(0, d + bb / 2, w, d + bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Left", Profile = i.Beam.Name, Box = new SteelRect(-bb, 0, 0, d), CenterLine = new SteelSegment(-bb / 2, 0, -bb / 2, d) });
+            ring.Add(new SteelBeamPlan { Face = "Right", Profile = i.Beam.Name, Box = new SteelRect(w, 0, w + bb, d), CenterLine = new SteelSegment(w + bb / 2, 0, w + bb / 2, d) });
+            return ring;
+        }
+
+        List<SteelColumnPlan> MakeColumns()
+        {
+            return new List<SteelColumnPlan>
+            {
+                MakeColumn("FrontLeft", true, true),
+                MakeColumn("FrontRight", false, true),
+                MakeColumn("BackLeft", true, false),
+                MakeColumn("BackRight", false, false)
+            };
+        }
+
+        void BuildPlan()
+        {
+            var i = Inputs;
+            var plan = new SteelPlan { Clear = new SteelRect(0, 0, i.WidthMm, i.DepthMm), Columns = MakeColumns(), Beams = MakeRing() };
+            plan.PlateFootprint = new SteelRect(
+                plan.Columns.Min(c => c.Plate.X0), plan.Columns.Min(c => c.Plate.Y0), plan.Columns.Max(c => c.Plate.X1), plan.Columns.Max(c => c.Plate.Y1));
+            double intrusion = 0;
+            foreach (var c in plan.Columns)
+            {
+                if (c.Plate.Overlaps(plan.Clear))
+                {
+                    double ox = Math.Min(c.Plate.X1, plan.Clear.X1) - Math.Max(c.Plate.X0, plan.Clear.X0);
+                    double oy = Math.Min(c.Plate.Y1, plan.Clear.Y1) - Math.Max(c.Plate.Y0, plan.Clear.Y0);
+                    intrusion = Math.Max(intrusion, Math.Max(ox, oy));
+                }
+            }
+            plan.PlateIntrusionMm = intrusion;
+            Plan = plan;
+        }
+
+        // ---------- concrete base ----------
+        void BuildBase()
+        {
+            var i = Inputs;
+            var block = BlockRectangle(i);
+            var b = new SteelBaseBlock
+            {
+                Plan = block,
+                TopMm = BaseMm,
+                BottomMm = BaseMm - i.BaseThicknessMm,
+                ThicknessMm = i.BaseThicknessMm,
+                BarDiameterMm = i.BarDiameterMm,
+                CoverMm = i.Preset.Base.CoverMm,
+                VolumeM3 = block.Width * block.Height * i.BaseThicknessMm * 1e-9
+            };
+            double cover = b.CoverMm;
+            foreach (double y in Spread(block.Y0 + cover, block.Y1 - cover, i.BarCountAlongX))
+                b.BarsAlongX.Add(new SteelSegment(block.X0 + cover, y, block.X1 - cover, y));
+            foreach (double x in Spread(block.X0 + cover, block.X1 - cover, i.BarCountAlongY))
+                b.BarsAlongY.Add(new SteelSegment(x, block.Y0 + cover, x, block.Y1 - cover));
+            Base = b;
+        }
+
+        static IEnumerable<double> Spread(double from, double to, int count)
+        {
+            if (count <= 1)
+            {
+                yield return (from + to) / 2;
+                yield break;
+            }
+            for (int k = 0; k < count; k++)
+                yield return from + (to - from) * k / (count - 1);
+        }
+
+        // ---------- faces ----------
+        void BuildFaces()
+        {
+            var i = Inputs;
+            double halfBand = i.Beam.HeightMm / 2;
+            var panels = new List<double> { BaseMm };
+            panels.AddRange(Levels.Select(l => l.ElevationMm));
+            foreach (string name in new[] { "Front", "Back", "Left", "Right" })
+            {
+                bool alongX = name == "Front" || name == "Back";
+                var face = new SteelFace { Name = name, IsEntrance = name == Plan.EntranceFace, LengthMm = alongX ? i.WidthMm : i.DepthMm };
+                foreach (var c in Plan.Columns.Where(c => FaceHasColumn(name, c)))
+                {
+                    face.Columns.Add(alongX ? new SteelRect(c.Box.X0, BaseMm, c.Box.X1, TopMm) : new SteelRect(c.Box.Y0, BaseMm, c.Box.Y1, TopMm));
+                    face.Plates.Add(alongX
+                        ? new SteelRect(c.Plate.X0, BaseMm, c.Plate.X1, BaseMm + i.PlateThicknessMm)
+                        : new SteelRect(c.Plate.Y0, BaseMm, c.Plate.Y1, BaseMm + i.PlateThicknessMm));
+                }
+                foreach (var l in Levels)
+                {
+                    face.Beams.Add(new SteelBeamLine
+                    {
+                        Key = l.Key,
+                        Kind = l.Kind,
+                        ElevationMm = l.ElevationMm,
+                        U0 = 0,
+                        U1 = face.LengthMm,
+                        Z0 = l.ElevationMm - halfBand,
+                        Z1 = l.ElevationMm + halfBand
+                    });
+                }
+                face.BaseBlock = alongX
+                    ? new SteelRect(Base.Plan.X0, Base.BottomMm, Base.Plan.X1, Base.TopMm)
+                    : new SteelRect(Base.Plan.Y0, Base.BottomMm, Base.Plan.Y1, Base.TopMm);
+                if (!face.IsEntrance)
+                {
+                    for (int p = 0; p + 1 < panels.Count; p++)
+                    {
+                        double z0 = panels[p], z1 = panels[p + 1];
+                        var brace = new SteelBrace
+                        {
+                            Panel = p,
+                            Z0 = z0,
+                            Z1 = z1,
+                            U0 = 0,
+                            U1 = face.LengthMm,
+                            DiagonalUp = new SteelSegment(0, z0, face.LengthMm, z1),
+                            DiagonalDown = new SteelSegment(0, z1, face.LengthMm, z0)
+                        };
+                        brace.LengthMm = brace.DiagonalUp.Length;
+                        face.Braces.Add(brace);
+                    }
+                    foreach (double z in panels)
+                    {
+                        face.Gussets.Add(new SteelPoint(0, z));
+                        face.Gussets.Add(new SteelPoint(face.LengthMm, z));
+                    }
+                }
+                Faces.Add(face);
+            }
+        }
+
+        static bool FaceHasColumn(string face, SteelColumnPlan c)
+        {
+            switch (face)
+            {
+                case "Front": return c.Corner.StartsWith("Front", StringComparison.Ordinal);
+                case "Back": return c.Corner.StartsWith("Back", StringComparison.Ordinal);
+                case "Left": return c.Corner.EndsWith("Left", StringComparison.Ordinal);
+                default: return c.Corner.EndsWith("Right", StringComparison.Ordinal);
+            }
+        }
+
+        // ---------- tower top ----------
+        void BuildTowerTop()
+        {
+            var top = new SteelTowerTop
+            {
+                ElevationMm = TopMm,
+                Clear = Plan.Clear,
+                MachineEnvelope = Plan.Clear,
+                Outriggers = false,
+                Columns = MakeColumns(),
+                Beams = MakeRing()
+            };
+            double x0 = top.Columns.Min(c => c.Box.X0), y0 = top.Columns.Min(c => c.Box.Y0);
+            double x1 = top.Columns.Max(c => c.Box.X1), y1 = top.Columns.Max(c => c.Box.Y1);
+            top.Outline = new SteelRect(x0, y0, x1, y1);
+            TowerTop = top;
+        }
+
+        // ---------- member list ----------
+        static double PlateKg(double a, double b, double t)
+        {
+            return a * b * t * 1e-9 * SteelDensityKgPerM3;
+        }
+
+        void BuildMembers()
+        {
+            var i = Inputs;
+            int n = Levels.Count;
+            Members.Add(new SteelMember { Item = "Column", Profile = i.Column.Name, LengthMm = ColumnLengthMm, Count = 4, MassPerPieceKg = i.Column.MassKgPerM * ColumnLengthMm / 1000.0 });
+            Members.Add(new SteelMember { Item = "Beam along the width", Profile = i.Beam.Name, LengthMm = i.WidthMm, Count = 2 * n, MassPerPieceKg = i.Beam.MassKgPerM * i.WidthMm / 1000.0 });
+            Members.Add(new SteelMember { Item = "Beam along the depth", Profile = i.Beam.Name, LengthMm = i.DepthMm, Count = 2 * n, MassPerPieceKg = i.Beam.MassKgPerM * i.DepthMm / 1000.0 });
+            var braces = Faces.Where(f => !f.IsEntrance).SelectMany(f => f.Braces).Select(b => b.LengthMm).ToList();
+            foreach (var group in braces.GroupBy(l => Math.Round(l, 1)).OrderBy(g => g.Key))
+            {
+                // two diagonals in every panel
+                Members.Add(new SteelMember
+                {
+                    Item = "Brace",
+                    Profile = i.Brace.Name,
+                    LengthMm = group.Key,
+                    Count = 2 * group.Count(),
+                    MassPerPieceKg = i.Brace.MassKgPerM * group.Key / 1000.0
+                });
+            }
+            Members.Add(new SteelMember
+            {
+                Item = "Base plate",
+                Profile = "PL " + N(i.PlateWidthMm) + "x" + N(i.PlateDepthMm) + "x" + N(i.PlateThicknessMm),
+                LengthMm = i.PlateWidthMm,
+                Count = 4,
+                MassPerPieceKg = PlateKg(i.PlateWidthMm, i.PlateDepthMm, i.PlateThicknessMm)
+            });
+            int gussets = Faces.Where(f => !f.IsEntrance).Sum(f => f.Gussets.Count);
+            Members.Add(new SteelMember
+            {
+                Item = "Gusset plate",
+                Profile = "PL " + N(i.GussetLengthMm) + "x" + N(i.GussetWidthMm) + "x" + N(i.GussetThicknessMm),
+                LengthMm = i.GussetLengthMm,
+                Count = gussets,
+                MassPerPieceKg = PlateKg(i.GussetLengthMm, i.GussetWidthMm, i.GussetThicknessMm)
+            });
+            Members.Add(new SteelMember { Item = "Anchor bolt", Profile = "M" + N(i.BoltDiameterMm), LengthMm = 0, Count = 4 * i.BoltCount, MassPerPieceKg = 0 });
+        }
+
+        static string N(double v)
+        {
+            return v.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+    }
+}
