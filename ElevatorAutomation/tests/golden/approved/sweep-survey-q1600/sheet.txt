@@ -44,6 +44,8 @@ P7 counterweight-buffer reaction
 98 kN (9990 kg) per buffer; 98 kN (9990 kg) total
 FF1 / FF2 car guide-rail forces
 FF1 3.143 kN (325 kg); FF2 2 kN (205 kg) (design, per guide rail)
+Guide rails
+Car rails T89/62/16 at 2000 mm: OK; counterweight rails T50/50/5 at 2000 mm: OK
 
 2  Input data
 Input
@@ -504,7 +506,7 @@ Dimensions in mm
 NTS
 
 
-Figure 10 — Car guide rail T70/65/9 — section
+Figure 10 — Car guide rail T89/62/16 — section
 Dimensions in mm
 NTS
 
