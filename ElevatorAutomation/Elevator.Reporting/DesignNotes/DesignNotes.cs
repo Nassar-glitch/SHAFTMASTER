@@ -7,6 +7,7 @@ using Elevator.Core.Company;
 using Elevator.Core.Calculations;
 using Elevator.Core.Car;
 using Elevator.Core.Doors;
+using Elevator.Core.GuideRails;
 using Elevator.Core.Presets;
 using Elevator.Core.Project;
 using Elevator.Core.Suspension;
@@ -100,6 +101,8 @@ namespace Elevator.Reporting.DesignNotes
             AddCarAreaNote(project, n, r);
             // Automatic door (DESIGN-FLOW "Doors"): a user size or a type that does not fit; one line with the needed car or shaft width.
             AddDoorNote(project, context, n, presets);
+            // Guide rails (DESIGN-FLOW "Guide rails"): one line per failed item with the needed profile or bracket spacing.
+            AddGuideRailNotes(project, context, n, presets);
             // Rope / groove / balance / sheave selection (project presets): nothing passes on 1:1. One recommendation: the limiting check,
             // 2:1 roping, and the minimum rope MBL that would satisfy the safety factor at 7 ropes (same engine, 7 ropes of this diameter).
             AddRopeSelectionRecommendation(project, context, n, presets, engine);
@@ -272,6 +275,60 @@ namespace Elevator.Reporting.DesignNotes
             {
                 // The shaft gives no plan: the layout checks of the Design Notes already name the cause.
             }
+        }
+
+        private static void AddGuideRailNotes(ElevatorProject project, DesignContext context, DesignNotes n, PresetLibrary presets)
+        {
+            if (presets == null || context == null || project.Rails == null || String.IsNullOrWhiteSpace(project.Rails.CarProfile))
+                return;
+            var r = GuideRailCheckEngine.Calculate(project, context, presets);
+            if (!r.Available || r.Ok)
+                return;
+            foreach (var line in new[] { r.Car, r.Counterweight })
+            {
+                if (line.Ok)
+                    continue;
+                bool car = line.Name == "Car";
+                string remedy = GuideRailRemedy(r.Inputs, car, line);
+                foreach (var f in line.Failures())
+                {
+                    n.Warnings.Add((car ? "Car" : "Counterweight")
+                        + " rails, "
+                        + Lower1(f.Key.Title)
+                        + ": "
+                        + Lower1(f.Value.Title)
+                        + " "
+                        + GuideRailText(f.Value, f.Value.Value)
+                        + " exceeds "
+                        + GuideRailText(f.Value, f.Value.Permissible.Value)
+                        + " ("
+                        + f.Value.Clause
+                        + "). "
+                        + remedy);
+                }
+            }
+        }
+
+        private static string GuideRailText(RailItem i, double v)
+        {
+            if (i.Id == "lambda")
+                return L1(v);
+            return L(v) + (i.Unit == "" ? "" : " " + i.Unit);
+        }
+
+        // The profile that passes at the chosen spacing, and the largest spacing that passes with the chosen profile (the same search as the recommendation).
+        private static string GuideRailRemedy(GuideRailInputs g, bool car, RailLineResult line)
+        {
+            var profile = GuideRailRecommendation.SmallestPassing(g, car, line.SpacingMm);
+            double? spacing = GuideRailRecommendation.LargestPassing(g, car, line.Profile, line.SpacingMm);
+            string who = car ? "car" : "counterweight";
+            if (profile != null && spacing.HasValue)
+                return "Use a " + who + " bracket spacing of at most " + L(spacing.Value) + " mm with " + line.Profile.Name + ", or " + profile.Name + " at " + L(line.SpacingMm) + " mm.";
+            if (profile != null)
+                return "Use " + profile.Name + " at " + L(line.SpacingMm) + " mm.";
+            if (spacing.HasValue)
+                return "Use a " + who + " bracket spacing of at most " + L(spacing.Value) + " mm with " + line.Profile.Name + ".";
+            return "No profile of the catalog passes at this spacing, and " + line.Profile.Name + " fails down to " + L(g.Preset.MinSpacingMm) + " mm; reduce the loads or add a larger profile to the catalog.";
         }
 
         private static void AddRopeSelectionRecommendation(
