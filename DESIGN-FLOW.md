@@ -112,13 +112,20 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - UPN 140 columns at the corners;
   - UPN 100 beams every 1500 mm, at the same levels as the guide-rail brackets;
   - double-cross (X) bracing L50×50×5.
-- **Beam levels:** there is always a beam at every floor level, because the doors are fixed to the structure: automatic doors always, manual doors by default. Between floors the levels are divided equally. The preset is 2 spaces per floor (for example 3250 → 1625), and the levels are editable.
+- **Beam levels:** there is always a beam at every floor level, because the doors are fixed to the structure: automatic doors always, manual doors by default. The levels between floors follow the rule in "Answers of 2026-10-13" item 1 below; this replaces the earlier "2 spaces per floor" idea. The levels are editable.
 - **One model:** the steel structure is generated from the same project as everything else (plan, A-A, the sheet, and later STEP and the calculations). The rail brackets sit on the beams, so the rail bracket spacing follows the beam levels.
 - **Goal:** the same four main views (shaft plan, machine-room plan, A-A and B-B) and the same A0 sheet as for a concrete shaft, drawn with the steel tower. The reference DXF is only a source of the steel look and rules.
 - **Settled (user, 2026-10-13):**
   - When the door is fixed to the structure, there is also a beam at the door head (the header beam).
   - The current product is an external lift: the machine room sits on top of the steel structure. A steel tower inside a stairwell comes later.
   - The bracing (which faces, single or double cross) is drawn as in the reference side elevation for now. The face-by-face questions belong to the later STEEL module.
+- **Answers of 2026-10-13 (STEEL-SHAFT.md section 7):**
+  1. **Beam levels:** the fixed beams are the floor beam and the door-head beam (at the door construction height above the floor). Going up from the door-head beam, a beam is placed every s mm (the beam-spacing preset, 1500 mm, editable). When the rest up to the next floor beam is not more than s, the next beam is the floor beam. A tall floor therefore gets more beams automatically. The floor-to-door-head gap is the door height. The pit and the top follow the same spacing. The rail bracket spacing is the largest gap.
+  2. **No outriggers.** The machine sits on top of the tower, within the shaft footprint. The controller and the switches go inside the top floor, for example to the right of the door as seen standing in front of the lift. The machine-room plan becomes the tower-top plan with the machine.
+  3. W × D is the clear size between the inner steel faces; the steel is outside it.
+  4. The shaft plan is cut just above the floor beam (the Planner's decision).
+  5. **The concrete base** is drawn from editable presets (size, thickness, bars: count and diameter), sized from the steel footprint plus a margin. Its structural design belongs to the later STEEL STRUCTURE module.
+- **Bracing:** double cross (X) of L50×50×5 in every panel; the faces wait for the STEEL module.
 - **Not now:** structural calculations (a later STEEL STRUCTURE module), and the generated details stage G (postponed).
 - **Profile catalogue:** UPN sizes (dimensions and mass) and L angles, as editable data.
 
