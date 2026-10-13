@@ -80,25 +80,25 @@ namespace Elevator.Core.GuideRails
             line.LineMassKg = profile.MassKgPerM * g.WellHeightMm / 1000.0;
             if (g.TravelMm / 1000.0 > pr.PushThroughMaxTravelM + 1e-9)
             {
+                // Fp = nb·Fr for rails standing in the pit (car); nb·Fr / 3 for rails not secured at any point (counterweight).
                 line.BracketCount = (int)Math.Ceiling(g.WellHeightMm / spacingMm - 1e-9) + 1;
-                line.PushThroughN = line.BracketCount * pr.ClipPushThroughN;
+                line.PushThroughN = line.BracketCount * pr.ClipPushThroughN / (car ? 1.0 : 3.0);
             }
             double mgN = line.LineMassKg * GuideRailMath.Gn;
             string mgText = "Mg·gn + Fp = " + F(line.LineMassKg) + " × 9.81 + " + F(line.PushThroughN);
             double fvRail = mgN + line.PushThroughN;
-            double aux = pr.AuxiliaryImpactFactor * g.AuxPerRailN;
             if (car)
             {
-                line.Cases.Add(Evaluate(RunningCase(g, profile, spacingMm, fvRail, mgText, aux), pr));
-                line.Cases.Add(Evaluate(LoadingCase(g, profile, spacingMm, fvRail, mgText, aux), pr));
-                line.Cases.Add(Evaluate(SafetyCase(g, profile, spacingMm, fvRail, mgText, aux), pr));
+                line.Cases.Add(Evaluate(RunningCase(g, profile, spacingMm, fvRail, mgText), pr));
+                line.Cases.Add(Evaluate(LoadingCase(g, profile, spacingMm, fvRail, mgText), pr));
+                line.Cases.Add(Evaluate(SafetyCase(g, profile, spacingMm, fvRail, mgText), pr));
             }
             else
-                line.Cases.Add(Evaluate(CounterweightCase(g, profile, spacingMm, fvRail, mgText, aux), pr));
+                line.Cases.Add(Evaluate(CounterweightCase(g, profile, spacingMm, fvRail, mgText), pr));
             return line;
         }
 
-        static RailCaseInput Base(string id, string title, string clause, RailProfile profile, double l, bool safety, double dperm, double fv, string fvEquation, double aux)
+        static RailCaseInput Base(string id, string title, string clause, RailProfile profile, double l, bool safety, double dperm, double fv, string fvEquation)
         {
             double? st = profile.SafetyFactor(safety);
             return new RailCaseInput
@@ -112,17 +112,16 @@ namespace Elevator.Core.GuideRails
                 DeflectionPermMm = dperm,
                 SafetyFactor = st ?? Double.NaN,
                 FvN = fv,
-                FvEquation = fvEquation,
-                AuxN = aux
+                FvEquation = fvEquation
             };
         }
 
         // Car, normal operation, running (EN 81-50 C.2.2.1, P and S at the rail cross): Dim/8 eccentricity, kr = 1.2.
-        static RailCaseInput RunningCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText, double aux)
+        static RailCaseInput RunningCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText)
         {
             var pr = g.Preset;
             var input = Base(Running, "Normal operation, running", "EN 81-20 5.7.2.2 Table 13; EN 81-50 C.2.2", profile, l, false,
-                pr.CarDeflectionLimitMm, fvRail, "Fv = " + mgText, aux);
+                pr.CarDeflectionLimitMm, fvRail, "Fv = " + mgText);
             double kr = pr.RunningImpactFactor, n = pr.RailCount, h = g.ShoeSpacingMm;
             double fx = kr * GuideRailMath.Gn * g.CapacityKg * (g.CarDepthMm / 8.0) / (n * h);
             double fy = kr * GuideRailMath.Gn * g.CapacityKg * (g.CarWidthMm / 8.0) / ((n / 2.0) * h);
@@ -142,15 +141,16 @@ namespace Elevator.Core.GuideRails
                 FxEquation = "Fx = 0",
                 FyEquation = "Fy = kr·gn·Q·(Dy/8) / ((n/2)·h) = " + F(kr) + " × 9.81 × " + F(g.CapacityKg) + " × (" + F(g.CarWidthMm) + " / 8) / (" + F(n / 2.0) + " × " + F(h) + ")"
             });
+            SetAux(input, g, "kr", pr.RunningImpactFactor);
             return input;
         }
 
         // Car, loading and unloading (EN 81-50 C.2.3.1): the car is empty, Fs = 0.4·gn·Q at the centred front entrance, xi = Dx/2.
-        static RailCaseInput LoadingCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText, double aux)
+        static RailCaseInput LoadingCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText)
         {
             var pr = g.Preset;
             var input = Base(Loading, "Normal operation, loading", "EN 81-20 5.7.2.2 Table 13, 5.7.2.3.6; EN 81-50 C.2.3", profile, l, false,
-                pr.CarDeflectionLimitMm, fvRail, "Fv = " + mgText, aux);
+                pr.CarDeflectionLimitMm, fvRail, "Fv = " + mgText);
             double fs = pr.SillForceFactor * GuideRailMath.Gn * g.CapacityKg, n = pr.RailCount, h = g.ShoeSpacingMm;
             double fx = fs * (g.CarDepthMm / 2.0) / (n * h);
             input.Forces.Add(new RailForce
@@ -161,18 +161,19 @@ namespace Elevator.Core.GuideRails
                 FxEquation = "Fx = Fs·(Dx/2) / (n·h) = " + F(fs) + " × (" + F(g.CarDepthMm) + " / 2) / (" + F(n) + " × " + F(h) + "), Fs = " + F(pr.SillForceFactor) + " × 9.81 × " + F(g.CapacityKg),
                 FyEquation = "Fy = 0"
             });
+            SetAux(input, g, "kr", pr.RunningImpactFactor);
             return input;
         }
 
         // Car, safety device operation: the FF1 / FF2 design values of the application (FF1 = Fy, FF2 = Fx).
-        static RailCaseInput SafetyCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText, double aux)
+        static RailCaseInput SafetyCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText)
         {
             var pr = g.Preset;
             double n = pr.RailCount;
             double fvSafety = g.K1 * GuideRailMath.Gn * (g.CarMassKg + g.CapacityKg) / n + fvRail;
             var input = Base(SafetyDevice, "Safety device operation", "EN 81-20 5.7.2.2 Table 13, 5.7.2.3.5; EN 81-50 C.2.1", profile, l, true,
                 pr.CarDeflectionLimitMm, fvSafety,
-                "Fv = k1·gn·(P + Q) / n + " + mgText + " = " + F(g.K1) + " × 9.81 × (" + F(g.CarMassKg) + " + " + F(g.CapacityKg) + ") / " + F(n) + " + " + F(fvRail), aux);
+                "Fv = k1·gn·(P + Q) / n + " + mgText + " = " + F(g.K1) + " × 9.81 × (" + F(g.CarMassKg) + " + " + F(g.CapacityKg) + ") / " + F(n) + " + " + F(fvRail));
             input.Forces.Add(new RailForce
             {
                 Name = "FF1 / FF2",
@@ -181,15 +182,16 @@ namespace Elevator.Core.GuideRails
                 FxEquation = "Fx = FF2 = " + F(g.Ff2DesignN) + " N",
                 FyEquation = "Fy = FF1 = " + F(g.Ff1DesignN) + " N"
             });
+            SetAux(input, g, "k1", g.K1);
             return input;
         }
 
         // Counterweight rails, normal operation (EN 81-20 5.7.2.3.3 eccentricities 10 % of the depth and 5 % of the width, GUIDE-RAILS.md 13.5).
-        static RailCaseInput CounterweightCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText, double aux)
+        static RailCaseInput CounterweightCase(GuideRailInputs g, RailProfile profile, double l, double fvRail, string mgText)
         {
             var pr = g.Preset;
             var input = Base(Running, "Normal operation, counterweight", "EN 81-20 5.7.2.3.3; EN 81-50 5.10", profile, l, false,
-                pr.CwDeflectionLimitMm, fvRail, "Fv = " + mgText, aux);
+                pr.CwDeflectionLimitMm, fvRail, "Fv = " + mgText);
             double kr = pr.RunningImpactFactor, n = pr.RailCount, h = g.CwShoeSpacingMm;
             double ex = g.CwDepthMm * pr.CwEccentricityDepthPercent / 100.0, ey = g.CwWidthMm * pr.CwEccentricityWidthPercent / 100.0;
             double fx = kr * GuideRailMath.Gn * g.CounterweightMassKg * ex / (n * h);
@@ -202,7 +204,20 @@ namespace Elevator.Core.GuideRails
                 FxEquation = "Fx = kr·gn·Mcwt·ex / (n·hcw) = " + F(kr) + " × 9.81 × " + F(g.CounterweightMassKg) + " × " + F(ex) + " / (" + F(n) + " × " + F(h) + "), ex = " + F(pr.CwEccentricityDepthPercent) + " % × " + F(g.CwDepthMm),
                 FyEquation = "Fy = kr·gn·Mcwt·ey / ((n/2)·hcw) = " + F(kr) + " × 9.81 × " + F(g.CounterweightMassKg) + " × " + F(ey) + " / (" + F(n / 2.0) + " × " + F(h) + "), ey = " + F(pr.CwEccentricityWidthPercent) + " % × " + F(g.CwWidthMm)
             });
+            SetAux(input, g, "kr", pr.RunningImpactFactor);
             return input;
+        }
+
+        // k3·Maux = k·gn·(P + Q + Mmachine + Mrope) / n_m: k = k1 in the safety-device case; the running factor kr (an adopted choice)
+        // in running, loading and the counterweight rails. Added to the vertical force of every rail that carries the machine frame.
+        static void SetAux(RailCaseInput input, GuideRailInputs g, string symbol, double factor)
+        {
+            if (g.MachineLoadMassKg <= 0)
+                return;
+            int nm = g.Preset.MachineRailCount;
+            input.AuxN = factor * GuideRailMath.Gn * g.MachineLoadMassKg / nm;
+            input.AuxEquation = "k3·Maux = " + symbol + "·gn·(P + Q + Mmachine + Mrope) / nm = " + F(factor) + " × 9.81 × (" + F(g.CarMassKg) + " + " + F(g.CapacityKg)
+                + " + " + F(g.MachineMassKg) + " + " + F(g.RopeMassKg) + ") / " + F(nm) + " = " + N(input.AuxN);
         }
 
         sealed class Sub
@@ -225,7 +240,8 @@ namespace Elevator.Core.GuideRails
                 SafetyFactor = c.SafetyFactor,
                 SigmaPermNmm2 = sigmaPerm,
                 FvN = c.FvN,
-                AuxN = c.AuxN
+                AuxN = c.AuxN,
+                AuxEquation = c.AuxEquation
             };
             var subs = new List<Sub>();
             foreach (var f in c.Forces)

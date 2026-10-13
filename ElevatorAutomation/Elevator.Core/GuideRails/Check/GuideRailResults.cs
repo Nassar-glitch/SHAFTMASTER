@@ -56,6 +56,8 @@ namespace Elevator.Core.GuideRails
         public string FvEquation;
         /// <summary>k3 · Maux, the vertical force of the auxiliary equipment on one rail.</summary>
         public double AuxN;
+        /// <summary>The line of k3·Maux with its values; null when the machine is not on the rails.</summary>
+        public string AuxEquation;
         public bool SafetyDevice;
         public double DeflectionPermMm;
         /// <summary>The St used: Table 15.</summary>
@@ -72,6 +74,7 @@ namespace Elevator.Core.GuideRails
         public double SigmaPermNmm2;
         public double FvN;
         public double AuxN;
+        public string AuxEquation;
         public List<RailItem> Items = new List<RailItem>();
 
         public bool Ok

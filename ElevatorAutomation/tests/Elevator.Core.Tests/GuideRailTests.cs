@@ -305,7 +305,7 @@ namespace Elevator.Core.Tests
                 g.Ff2DesignN = ff[3];
                 g.TravelMm = 3000 + rnd.Next(0, 37000);
                 g.WellHeightMm = 1300 + g.TravelMm + 4200;
-                g.AuxPerRailN = rnd.Next(0, 2) == 0 ? 0 : rnd.Next(1000, 12000);
+                g.MachineLoadMassKg = rnd.Next(0, 2) == 0 ? 0 : rnd.Next(1500, 5000);
                 yield return g;
             }
         }
@@ -382,7 +382,7 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
-        public void Machine_on_the_rails_adds_a_quarter_of_the_machine_and_rope_force_to_every_rail()
+        public void Machine_on_the_rails_adds_k_gn_P_Q_Mmachine_Mrope_over_nm_to_every_rail()
         {
             var p = NewProject(1000);
             var off = Check(p);
@@ -391,20 +391,41 @@ namespace Elevator.Core.Tests
             Assert.True(on.Available);
             var g = on.Inputs;
             Assert.True(g.MachineOnRails);
-            double expected = (g.MachineMassKg + g.CarMassKg + g.CapacityKg + g.CounterweightMassKg + g.RopeMassKg) * 9.81;
-            Near(expected, g.MachineForceN, 1e-6, "Fm");
-            Near(expected / 4, g.AuxPerRailN, 1e-6, "Maux per rail");
-            Assert.Equal(0, off.Inputs.AuxPerRailN);
-            // the car and CW rails carry it with k3 in the buckling and compression terms of the same profile and spacing
-            var sameCar = GuideRailCheckEngine.Line(off.Inputs, true, on.Car.Profile, on.Car.SpacingMm);
-            foreach (var c in on.Car.Cases)
+            Assert.Equal(4, g.Preset.MachineRailCount);
+            // hand check of the load: P + Q + Mmachine + Mrope with the rope mass n·w·(travel + overhead)
+            double w = Lib.Value.Rope(p.Suspension.RopeDiameterMm).MassKgPerM;
+            double rope = p.Suspension.RopeCount.Value * w * (g.TravelMm + p.Shaft.OverheadMm.Value) / 1000.0;
+            double mass = p.Calculations.CarMassKg.Value + 1000 + p.Calculations.MachineMassKg.Value + rope;
+            Near(mass, g.MachineLoadMassKg, 1e-9, "P + Q + Mmachine + Mrope");
+            Assert.Equal(0, off.Inputs.MachineLoadMassKg);
+            Assert.All(off.Car.Cases.Concat(off.Counterweight.Cases), c => { Assert.Equal(0, c.AuxN); Assert.Null(c.AuxEquation); });
+            // k3·Maux: k1 in the safety-device case, kr = 1.2 in running, loading and on the counterweight rails; nm = 4
+            Assert.Equal(2, g.K1);
+            Near(2 * 9.81 * mass / 4, on.Car.Case("safety").AuxN, 1e-6, "k1 gn (..) / nm");
+            Near(1.2 * 9.81 * mass / 4, on.Car.Case("running").AuxN, 1e-6, "kr gn (..) / nm");
+            Near(1.2 * 9.81 * mass / 4, on.Car.Case("loading").AuxN, 1e-6, "kr gn (..) / nm");
+            Near(1.2 * 9.81 * mass / 4, on.Counterweight.Case("running").AuxN, 1e-6, "kr gn (..) / nm, counterweight rails");
+            Assert.Contains("k1·gn·(P + Q + Mmachine + Mrope) / nm", on.Car.Case("safety").AuxEquation);
+            Assert.Contains("(" + LoadUnitsKg(on.Car.Case("safety").AuxN) + " kg)", on.Car.Case("safety").AuxEquation);
+            // it enters the buckling and compression terms only: same profile and spacing, bending unchanged
+            foreach (bool car in new[] { true, false })
             {
-                var o = sameCar.Case(c.Id);
-                Near(1.2 * g.AuxPerRailN, c.AuxN, 1e-6, "k3 Maux");
-                Near(1.2 * g.AuxPerRailN * c.Item("omega").Value / on.Car.Profile.AreaMm2, c.Item("sk").Value - o.Item("sk").Value, 1e-6, "sigma k grows by k3 Maux omega / A");
-                Near(1.2 * g.AuxPerRailN / on.Car.Profile.AreaMm2, c.Item("scomp").Value - o.Item("scomp").Value, 1e-6, "compression grows by k3 Maux / A");
-                Near(o.Item("sm").Value, c.Item("sm").Value, 1e-12, "bending is unchanged");
+                var line = car ? on.Car : on.Counterweight;
+                var same = GuideRailCheckEngine.Line(off.Inputs, car, line.Profile, line.SpacingMm);
+                foreach (var c in line.Cases)
+                {
+                    var o = same.Case(c.Id);
+                    Near(c.AuxN * c.Item("omega").Value / line.Profile.AreaMm2, c.Item("sk").Value - o.Item("sk").Value, 1e-6, "sigma k grows by k3 Maux omega / A");
+                    Near(c.AuxN / line.Profile.AreaMm2, c.Item("scomp").Value - o.Item("scomp").Value, 1e-6, "compression grows by k3 Maux / A");
+                    Near(o.Item("sm").Value, c.Item("sm").Value, 1e-12, "bending is unchanged (no horizontal force or torque)");
+                    Near(o.Item("Fx").Value, c.Item("Fx").Value, 1e-12, "Fx unchanged");
+                }
             }
+        }
+
+        static string LoadUnitsKg(double n)
+        {
+            return Elevator.Core.Calculations.LoadUnits.KgText(n);
         }
 
         [Fact]
@@ -422,6 +443,13 @@ namespace Elevator.Core.Tests
             Assert.Equal(nb, over.BracketCount);
             Near(nb * g.Preset.ClipPushThroughN, over.PushThroughN, 1e-9, "Fp = nb Fr");
             Near(over.PushThroughN, over.Case("running").FvN - (t89.MassKgPerM * g.WellHeightMm / 1000.0 * 9.81), 1e-6, "Fv = Mg gn + Fp");
+            // counterweight rails (not secured at any point): Fp = nb·Fr / 3
+            var cw = GuideRailCheckEngine.Line(g, false, t89, 1500);
+            Assert.Equal(nb, cw.BracketCount);
+            Near(nb * g.Preset.ClipPushThroughN / 3.0, cw.PushThroughN, 1e-9, "Fp = nb Fr / 3");
+            Near(cw.PushThroughN, cw.Case("running").FvN - (t89.MassKgPerM * g.WellHeightMm / 1000.0 * 9.81), 1e-6, "CW Fv = Mg gn + Fp");
+            g.TravelMm = 40000;
+            Assert.Equal(0, GuideRailCheckEngine.Line(g, false, t89, 1500).PushThroughN);
         }
 
         [Fact]

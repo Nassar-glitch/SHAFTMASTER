@@ -24,8 +24,8 @@ namespace Elevator.Core.GuideRails
         public double StructureDeflectionYMm;
         /// <summary>Running impact factor (Table 14 k2).</summary>
         public double RunningImpactFactor;
-        /// <summary>k3 of the auxiliary equipment force (GUIDE-RAILS.md 13.4).</summary>
-        public double AuxiliaryImpactFactor;
+        /// <summary>n_m: number of rails that carry the machine frame (two car + two counterweight rails; GUIDE-RAILS.md 13.4).</summary>
+        public int MachineRailCount;
         public double ProgressiveK1;
         public double InstantaneousK1;
         /// <summary>Fs = factor · gn · Q (EN 81-20 5.7.2.3.6; 0.4 passenger lifts).</summary>
@@ -84,7 +84,8 @@ namespace Elevator.Core.GuideRails
             nonNeg("StructureDeflectionXMm", StructureDeflectionXMm);
             nonNeg("StructureDeflectionYMm", StructureDeflectionYMm);
             pos("RunningImpactFactor", RunningImpactFactor);
-            pos("AuxiliaryImpactFactor", AuxiliaryImpactFactor);
+            if (MachineRailCount < 1)
+                p.Add("GuideRails.MachineRailCount must be at least 1");
             pos("ProgressiveK1", ProgressiveK1);
             pos("InstantaneousK1", InstantaneousK1);
             pos("SillForceFactor", SillForceFactor);

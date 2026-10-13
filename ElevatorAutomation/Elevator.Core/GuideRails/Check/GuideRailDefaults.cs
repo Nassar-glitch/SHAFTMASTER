@@ -14,7 +14,7 @@ namespace Elevator.Core.GuideRails
     ""MaxSpacingMm"": 2000, ""SpacingStepMm"": 50, ""MinSpacingMm"": 500,
     ""MachineOnRails"": false,
     ""StructureDeflectionXMm"": 0, ""StructureDeflectionYMm"": 0,
-    ""RunningImpactFactor"": 1.2, ""AuxiliaryImpactFactor"": 1.2,
+    ""RunningImpactFactor"": 1.2, ""MachineRailCount"": 4,
     ""ProgressiveK1"": 2, ""InstantaneousK1"": 5,
     ""SillForceFactor"": 0.4,
     ""CwShoeSpacingMm"": 2000, ""CwEccentricityWidthPercent"": 5, ""CwEccentricityDepthPercent"": 10,

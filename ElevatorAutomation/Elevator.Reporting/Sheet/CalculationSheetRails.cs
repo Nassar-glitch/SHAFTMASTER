@@ -113,7 +113,7 @@ namespace Elevator.Reporting.Sheet
             {
                 rows.Add(new[] { "Machine mass", L(g.MachineMassKg) + " kg" });
                 rows.Add(new[] { "Suspended rope mass", L(g.RopeMassKg) + " kg" });
-                rows.Add(new[] { "Impact factor of the machine force k3", L(p.AuxiliaryImpactFactor) });
+                rows.Add(new[] { "Number of rails carrying the machine frame nm", p.MachineRailCount.ToString(Inv) });
             }
             rows.Add(new[] { "Modulus of elasticity E", L(p.ElasticModulusNmm2) + " N/mm²" });
             rows.Add(new[] { "Structure deflection δstr-x / δstr-y", L(p.StructureDeflectionXMm) + " mm / " + L(p.StructureDeflectionYMm) + " mm" });
@@ -149,8 +149,11 @@ namespace Elevator.Reporting.Sheet
         void GuideRailCase(DocxDocument d, RailLineResult line, RailLoadCaseResult c)
         {
             d.Paragraph((line.Name == "Car" ? "Car rails" : "Counterweight rails") + " — " + c.Title + " (" + c.Clause + ")", "Heading2");
-            d.Equations(true, new[] { "σperm = Rm / St = " + L(line.Profile.RmNmm2) + " / " + L(c.SafetyFactor) + " = " + L(c.SigmaPermNmm2) + " N/mm²" }
-                .Concat(c.Items.Select(i => i.Equation)));
+            var equations = new List<string> { "σperm = Rm / St = " + L(line.Profile.RmNmm2) + " / " + L(c.SafetyFactor) + " = " + L(c.SigmaPermNmm2) + " N/mm²" };
+            if (c.AuxEquation != null)
+                equations.Add(c.AuxEquation);
+            equations.AddRange(c.Items.Select(i => i.Equation));
+            d.Equations(true, equations);
             var rows = c.Items.Select(i => new[]
             {
                 i.Title,

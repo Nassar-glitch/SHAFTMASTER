@@ -39,10 +39,8 @@ namespace Elevator.Core.GuideRails
         public double Ff2DesignN;
         public double TravelMm;
         public double WellHeightMm;
-        /// <summary>Fm: machine weight and rope tension on the machine (only when the machine is on the rails).</summary>
-        public double MachineForceN;
-        /// <summary>Maux per rail (N); 0 when the machine is not on the rails.</summary>
-        public double AuxPerRailN;
+        /// <summary>P + Q + Mmachine + Mrope in kg (GUIDE-RAILS.md 13.4); 0 when the machine is not on the rails.</summary>
+        public double MachineLoadMassKg;
         public double MachineMassKg;
         public double RopeMassKg;
 
@@ -165,7 +163,7 @@ namespace Elevator.Core.GuideRails
             }
         }
 
-        // GUIDE-RAILS.md 13.4: Fm = (Mmach + P + Q + Mcwt + Mrope) · gn, shared by the four rails.
+        // GUIDE-RAILS.md 13.4: k3·Maux = k·gn·(P + Q + Mmachine + Mrope) / n_m (Tavaslioglu, section D).
         static bool Machine(
             ElevatorProject p,
             PresetContext c,
@@ -187,8 +185,7 @@ namespace Elevator.Core.GuideRails
                 : 0;
             g.MachineMassKg = machine.Value + chassis;
             g.RopeMassKg = ropes.Value * w.Value * (travelMm + overheadMm) / 1000.0;
-            g.MachineForceN = (g.MachineMassKg + g.CarMassKg + g.CapacityKg + g.CounterweightMassKg + g.RopeMassKg) * GuideRailMath.Gn;
-            g.AuxPerRailN = g.MachineForceN / (2.0 * g.Preset.RailCount);
+            g.MachineLoadMassKg = g.CarMassKg + g.CapacityKg + g.MachineMassKg + g.RopeMassKg;
             return true;
         }
     }
