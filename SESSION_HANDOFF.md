@@ -12,7 +12,7 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 ## Current task
 
-- **Status:** **v05 released** (2026-10-12): `ElevatorAutomation/bin-shaftmaster-v05/ShaftMaster.exe` (SHA-256 starts F04C0BBD), tiers 1-3 PASS, 20 suites (`20261012-013518`), 46 files verified against SHA256SUMS.txt; v02-v04 checksums unchanged. `main` has D1-D4 doors, drawing quality, Doors Offset, loads in kg, the Planner's layouts / PDF agreement. Not pushed (the user pushes). Next: the layouts work, split between cloud and local as CLAUDE.md says. Awaiting Planner.
+- **Status:** **v06 released** (2026-10-13): `ElevatorAutomation/bin-shaftmaster-v06/ShaftMaster.exe` (SHA-256 starts 9BF91B70), tiers 1-3 PASS, 23 suites (`20261013-105231`, incl. layouts-native, layouts-pdf, output-set-ui), 50 files verified against SHA256SUMS.txt; v02-v05 checksums unchanged (v01 has none). PdfSharp.dll (MIT licence, mentioned in RELEASE-NOTES.md) is in the folder; PdfSharp.Charting.dll is not shipped (removed in `tools/build.ps1`). `main` has the A0 geared sheet (generated arrangement, titles with the sheet scale, title block, Arabic in xarab), one company / report settings screen, revision NN, the output set (DWG, PDF, project file; overwrite / next-revision prompt), the PDF with the logo and no remark texts in B-B. Not pushed (the user pushes). Next stage: R (guide rails): Part A (engineering basis, `docs/calculations/GUIDE-RAILS.md`) done by the Executor on `main`; Part B by a cloud session. Awaiting Planner.
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-13 (Claude Code, Executor role; L3 PDF and file names on feature/layouts-l3)
 - **Completed:**
@@ -1479,6 +1479,7 @@ Replace the current-task fields and add a short entry to Recent updates whenever
 
 ## Recent updates
 
+- 2026-10-13: Executor merged `feature/layouts-l3` into main (output set, PDF plot, logo), added the CHANGELOG v06 section and released **v06** (`bin-shaftmaster-v06`, tiers 1-3 PASS, 23 suites; PdfSharp.dll MIT, Charting not shipped; v02-v05 checksums unchanged). Committed the Planner's DESIGN-FLOW guide-rails section. Not pushed.
 - 2026-10-12: Cloud Executor reworked the C2 sheet arrangement (joint scale search, free bands, fill min 0.574 / median 0.724 over 480 projects; the 6 below 0.60 are saturated), title-block revision 00, no company segment when blank. Tier 1 PASS, golden unchanged; sheet revision 00 awaits approval.
 - 2026-10-12: Cloud Executor completed C2 on `cloud/layouts-c2` (pushed, not merged): reduced A0 template (1.92 MB, deterministic) with `SM_TITLEBLOCK` attributes and 7 reference details, `XarabText`, `SheetArrangement` (480-project grid), `TitleBlockData` additions. Tier 1 PASS, golden unchanged. See "Cloud C2".
 
