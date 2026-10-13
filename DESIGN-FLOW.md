@@ -79,6 +79,19 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - the existing running clearances.
 - **Effects:** the door type changes the front zone, and so the car depth. Every dependent value (car area, Table 6, masses, calculations) follows automatically.
 
+## Guide rails (agreed 2026-10-13)
+
+- **Order on the rails page,** each step recommended from everything entered before it, and every choice the user's:
+  1. **Machine supported on the guide rails:** Yes / No. This is the first choice, because it changes the loads on the rails.
+  2. **Car rail profile:** a list (T50/50/5, T70/65/9, T89/62/16, T90/75/16). The recommendation is the smallest profile that passes the checks with the recommended bracket spacing.
+  3. **Car rail bracket spacing:** a number in mm, not a list. The recommendation is the largest spacing that passes with the chosen profile, never above the 2000 mm preset.
+  4. **The same for the counterweight rails:** profile, then bracket spacing. The CW rails are checked for normal operation (no safety gear).
+- **Generative:** while unlocked, every value follows when an upstream value changes (lock and follow). A typed or chosen value is kept.
+- **Checks:** EN 81-50 5.10 for bending, combined stress, buckling, flange bending and deflection, using FF1 / FF2, P5 and the machine loads when the machine sits on the rails. The equations come from the user's calculation note or EN 81-50, and are never guessed.
+- **Material:** Rm 370 N/mm² for every profile, as a catalog value.
+- **A choice that fails is kept.** The calculation sheet shows the true values and OK / NOT OK only. The application, the sheet and the drawings say nothing else. Design Notes gives the reason and the needed profile or spacing.
+- **The catalog** (dimensions, section properties, mass per metre) is editable data in the presets library.
+
 ## Layouts and PDF (agreed 2026-10-12)
 
 - **Sheets:** the generated DWG carries ready paper-space layouts built from the user's templates in `Layouts_Sec/`. The first is `01_Geared_MR_1-1_LAYOUT.dxf` (A0). The Gearless 2:1, Forklift and Hydraulic layouts wait for those systems.
