@@ -23,7 +23,6 @@ namespace Elevator.Core.Steel
         public string BeamProfile;
         public string BracingProfile;
         public string Bracing;
-        public double BeamSpacingMm;
         public double BasePlateWidthMm;
         public double BasePlateDepthMm;
         public double BasePlateThicknessMm;
@@ -68,7 +67,6 @@ namespace Elevator.Core.Steel
                 if (!ChannelProfile.P(v))
                     p.Add("SteelShaft." + name + " must be positive");
             };
-            pos("BeamSpacingMm", BeamSpacingMm);
             pos("BasePlateWidthMm", BasePlateWidthMm);
             pos("BasePlateDepthMm", BasePlateDepthMm);
             pos("BasePlateThicknessMm", BasePlateThicknessMm);

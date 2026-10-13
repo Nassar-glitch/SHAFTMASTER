@@ -98,12 +98,11 @@ namespace Elevator.Core.Tests
             Assert.Empty(Library.Validate());
             string before = Library.Hash();
             var copy = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
-            copy.SteelShaft.BeamSpacingMm = 1234;
             copy.SteelShaft.Channels[0].MassKgPerM = 99;
             Assert.Equal(before, copy.Hash());
             // an older library without the group falls back to the shipped defaults
             copy.SteelShaft = null;
-            Assert.Equal(1500, copy.SteelShaftOrDefault().BeamSpacingMm);
+            Assert.Equal("UPN 140", copy.SteelShaftOrDefault().ColumnProfile);
         }
 
         [Fact]
@@ -120,26 +119,116 @@ namespace Elevator.Core.Tests
             Assert.Contains(copy.Validate(), m => m.Contains("BoltCount"));
         }
 
-        // ---------- the beam-level rule ----------
-        [Fact]
-        public void Rule_examples_of_the_design_flow()
+        // ---------- the beam-level rule, per face ----------
+        static double[] Side(double[] floors, double s, double baseMm, double topMm)
         {
-            Assert.Equal(new[] { 0.0, 2160, 3000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 7200), 0, 3000));
-            Assert.Equal(new[] { 0.0, 2160, 3660, 5160, 6000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 1500, -1000, 10000), 0, 6000));
-            Assert.Equal(new[] { 0.0, 2160, 3250 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3250 }, 2160, 1500, -1000, 7200), 0, 3250));
+            return SteelBeamLevels.Rule(floors, 2160, s, baseMm, topMm, false).Select(l => l.ElevationMm).ToArray();
+        }
+
+        static double[] Entrance(double[] floors, double s, double baseMm, double topMm)
+        {
+            return SteelBeamLevels.Rule(floors, 2160, s, baseMm, topMm, true).Select(l => l.ElevationMm).ToArray();
         }
 
         [Fact]
-        public void The_rest_equal_to_s_goes_to_the_floor_beam_and_a_little_more_adds_a_beam()
+        public void Side_face_has_a_beam_at_every_floor_and_each_gap_is_divided_equally_into_the_fewest_parts_not_larger_than_s()
         {
-            Assert.Equal(new[] { 0.0, 2160, 3660 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3660 }, 2160, 1500, -1000, 8000), 0, 3660));
-            Assert.Equal(new[] { 0.0, 2160, 3660, 3670 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3670 }, 2160, 1500, -1000, 8000), 0, 3670));
+            // floors 3000, s 1500: two parts of 1500; s 2000: two parts of 1500 (the fewest parts not larger than 2000)
+            Assert.Equal(new[] { 0.0, 1500, 3000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000 + 1000, false), 0, 3000));
+            Assert.Equal(new[] { 0.0, 1500, 3000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 2000, -1000, 3000 + 1000, false), 0, 3000));
+            // floors 3250: s 1500 gives 3 parts (1083.33), s 2000 gives 2 parts (1625)
+            AssertLevels(new[] { 0.0, 3250.0 / 3, 6500.0 / 3, 3250 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3250 }, 2160, 1500, -1000, 4250, false), 0, 3250));
+            AssertLevels(new[] { 0.0, 1625, 3250 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3250 }, 2160, 2000, -1000, 4250, false), 0, 3250));
+            // floors 3670: s 1500 gives 3 parts (1223.33), s 2000 gives 2 parts (1835)
+            AssertLevels(new[] { 0.0, 3670.0 / 3, 7340.0 / 3, 3670 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3670 }, 2160, 1500, -1000, 4670, false), 0, 3670));
+            AssertLevels(new[] { 0.0, 1835, 3670 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3670 }, 2160, 2000, -1000, 4670, false), 0, 3670));
+            // floors 6000: s 1500 gives 4 parts, s 2000 gives 3 parts
+            AssertLevels(new[] { 0.0, 1500, 3000, 4500, 6000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 1500, -1000, 7000, false), 0, 6000));
+            AssertLevels(new[] { 0.0, 2000, 4000, 6000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 2000, -1000, 7000, false), 0, 6000));
+            // a gap equal to s is one part, a hair above s is two parts
+            Assert.Equal(new[] { 0.0, 1500 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 1500 }, 2160, 1500, -1000, 2500, false), 0, 1500));
+            Assert.Equal(3, Between(SteelBeamLevels.Rule(new[] { 0.0, 1500.5 }, 2160, 1500, -1000, 2500, false), 0, 1501).Length);
+        }
+
+        static void AssertLevels(double[] expected, double[] actual)
+        {
+            Assert.Equal(expected.Length, actual.Length);
+            for (int i = 0; i < expected.Length; i++)
+                Assert.Equal(expected[i], actual[i], 6);
         }
 
         [Fact]
-        public void Levels_are_tagged_and_ordered_floors_door_heads_intermediates_pit_and_top()
+        public void Entrance_face_has_floor_and_door_head_beams_the_opening_is_not_split_and_the_rest_is_divided_equally()
         {
-            var levels = SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 1500, -3100, 6000 + 4200);
+            // floor 3000: opening 0..2160 whole; 2160..3000 is 840 <= s: no beam
+            Assert.Equal(new[] { 0.0, 2160, 3000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 4000, true), 0, 3000));
+            // floor 3250: 2160..3250 is 1090 <= 1500: no beam
+            Assert.Equal(new[] { 0.0, 2160, 3250 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3250 }, 2160, 1500, -1000, 4250, true), 0, 3250));
+            // floor 3670: 2160..3670 is 1510 > 1500: two equal parts of 755; with s 2000 one part
+            AssertLevels(new[] { 0.0, 2160, 2915, 3670 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3670 }, 2160, 1500, -1000, 4670, true), 0, 3670));
+            AssertLevels(new[] { 0.0, 2160, 3670 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3670 }, 2160, 2000, -1000, 4670, true), 0, 3670));
+            // floor 6000: 2160..6000 is 3840: three parts of 1280 at s 1500, two parts of 1920 at s 2000
+            AssertLevels(new[] { 0.0, 2160, 3440, 4720, 6000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 1500, -1000, 7000, true), 0, 6000));
+            AssertLevels(new[] { 0.0, 2160, 4080, 6000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 2000, -1000, 7000, true), 0, 6000));
+            // the opening is larger than s: it still is not split
+            Assert.Equal(new[] { 0.0, 2160, 3000 }, Between(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1000, -1000, 4000, true).Where(l => l.ElevationMm < 2200 || l.ElevationMm >= 2900).ToList(), 0, 3000));
+            Assert.DoesNotContain(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1000, -1000, 4000, true), l => l.ElevationMm > 0 && l.ElevationMm < 2160);
+        }
+
+        [Fact]
+        public void Pit_and_top_use_the_same_equal_division_on_every_face()
+        {
+            // pit 1150 at s 1500: no beam; pit 3100 at s 1500: three parts of 1033.33 (two beams)
+            Assert.Empty(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1150, 7200, false).Where(l => l.Kind == SteelLevelKind.Pit));
+            AssertLevels(new[] { -3100.0 * 2 / 3, -3100.0 / 3 }, SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -3100, 7200, false).Where(l => l.Kind == SteelLevelKind.Pit).Select(l => l.ElevationMm).ToArray());
+            AssertLevels(new[] { -3100.0 * 2 / 3, -3100.0 / 3 }, SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -3100, 7200, true).Where(l => l.Kind == SteelLevelKind.Pit).Select(l => l.ElevationMm).ToArray());
+            // top (side face): from the top floor to the tower top, 4100 at s 1500 is three parts, the last beam is the tower top
+            var top = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000 + 4100, false).Where(l => l.ElevationMm >= 3000).Select(l => l.ElevationMm).ToArray();
+            AssertLevels(new[] { 3000.0, 3000 + 4100.0 / 3, 3000 + 8200.0 / 3, 7100 }, top);
+            // top (entrance face): the door head of the top floor, then the equal division up to the tower top
+            var etop = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000 + 4100, true).Where(l => l.ElevationMm >= 3000).Select(l => l.ElevationMm).ToArray();
+            AssertLevels(new[] { 3000.0, 5160, 5160 + 1940.0 / 2, 7100 }, etop);
+            Assert.Equal(7100, SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 7100, false).Last().ElevationMm);
+        }
+
+        [Fact]
+        public void No_gap_is_smaller_than_a_millimetre_and_none_above_a_door_head_or_between_side_floors_exceeds_s()
+        {
+            foreach (double s in new[] { 1500.0, 2000 })
+            {
+                foreach (double h in new[] { 3000.0, 3250, 3670, 6000, 2400, 5555.5 })
+                {
+                    var floors = new[] { 0.0, h, 2 * h };
+                    foreach (bool entrance in new[] { false, true })
+                    {
+                        var levels = SteelBeamLevels.Rule(floors, 2160, s, -1100, 2 * h + 4200, entrance);
+                        for (int i = 1; i < levels.Count; i++)
+                        {
+                            double gap = levels[i].ElevationMm - levels[i - 1].ElevationMm;
+                            Assert.True(gap >= 1, "gap " + gap + " at " + levels[i].Key + " h " + h + " s " + s);
+                            bool opening = entrance && levels[i - 1].Kind == SteelLevelKind.Floor && levels[i].Kind == SteelLevelKind.DoorHead;
+                            if (!opening)
+                                Assert.True(gap <= s + 1e-6, "gap " + gap + " above " + levels[i - 1].Key + " h " + h + " s " + s + (entrance ? " entrance" : " side"));
+                        }
+                        // equal division: the gaps of one segment between fixed beams are all the same
+                        var fixedKeys = levels.Where(l => l.Kind == SteelLevelKind.Floor || l.Kind == SteelLevelKind.DoorHead || l.Key == "T:top").ToList();
+                        for (int i = 1; i < fixedKeys.Count; i++)
+                        {
+                            var inside = levels.Where(l => l.ElevationMm >= fixedKeys[i - 1].ElevationMm - 1e-9 && l.ElevationMm <= fixedKeys[i].ElevationMm + 1e-9).Select(l => l.ElevationMm).ToList();
+                            var gaps = inside.Zip(inside.Skip(1), (a, b) => b - a).ToList();
+                            Assert.True(gaps.Max() - gaps.Min() < 1e-6, "unequal gaps in a segment");
+                        }
+                        Assert.Equal(3, levels.Count(l => l.Kind == SteelLevelKind.Floor));
+                        Assert.Equal(entrance ? 3 : 0, levels.Count(l => l.Kind == SteelLevelKind.DoorHead));
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void Levels_are_tagged_and_ordered()
+        {
+            var levels = SteelBeamLevels.Rule(new[] { 0.0, 6000 }, 2160, 1500, -3100, 6000 + 4200, true);
             Assert.Equal(levels.Select(l => l.ElevationMm).OrderBy(x => x).ToArray(), levels.Select(l => l.ElevationMm).ToArray());
             var tags = levels.ToDictionary(l => l.Key, l => l.Tag);
             Assert.Equal("floor", tags["F:0"]);
@@ -147,112 +236,89 @@ namespace Elevator.Core.Tests
             Assert.Equal("door head", tags["D:0"]);
             Assert.Equal("door head", tags["D:1"]);
             Assert.Equal("intermediate", tags["I:0:1"]);
-            Assert.Equal("intermediate", tags["I:0:2"]);
             Assert.Equal("pit", tags["P:1"]);
             Assert.Equal("top", tags["T:top"]);
             Assert.Equal(10200, levels.Last().ElevationMm);
         }
 
         [Fact]
-        public void Pit_steps_up_from_the_base_in_steps_of_s()
+        public void The_rule_rejects_what_it_cannot_place_and_reports_a_door_head_that_does_not_fit()
         {
-            // pit 1000: no beam; 1700: base+1500; 3100: base+1500, base+3000 is within 1500 of... rest 100 -> floor
-            Assert.Empty(SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 7200).Where(l => l.Kind == SteelLevelKind.Pit));
-            var pit = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1700, 7200).Where(l => l.Kind == SteelLevelKind.Pit).ToList();
-            Assert.Equal(new[] { -200.0 }, pit.Select(l => l.ElevationMm).ToArray());
-            var deep = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -3100, 7200).Where(l => l.Kind == SteelLevelKind.Pit).ToList();
-            Assert.Equal(new[] { -1600.0, -100.0 }, deep.Select(l => l.ElevationMm).ToArray());
-        }
-
-        [Fact]
-        public void Top_steps_up_from_the_top_door_head_to_the_tower_top_which_carries_the_last_beam()
-        {
-            var levels = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000 + 4200);
-            Assert.Equal(new[] { 3000.0, 5160, 6660, 7200 }, Between(levels, 3000, 99999));
-            Assert.Equal(new[] { SteelLevelKind.Floor, SteelLevelKind.DoorHead, SteelLevelKind.Top, SteelLevelKind.Top },
-                levels.Where(l => l.ElevationMm >= 3000).Select(l => l.Kind).ToArray());
-            // a low overhead: the tower top is the first beam above the door head
-            var low = SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000 + 3000);
-            Assert.Equal(new[] { 3000.0, 5160, 6000 }, Between(low, 3000, 99999));
-        }
-
-        [Fact]
-        public void Tall_floors_get_more_beams_and_no_gap_above_a_door_head_exceeds_s()
-        {
-            for (double h = 2200; h <= 12000; h += 37)
-            {
-                var levels = SteelBeamLevels.Rule(new[] { 0.0, h, 2 * h }, 2160, 1500, -1100, 2 * h + 4200);
-                for (int i = 1; i < levels.Count; i++)
-                {
-                    double gap = levels[i].ElevationMm - levels[i - 1].ElevationMm;
-                    Assert.True(gap > 0);
-                    if (levels[i - 1].Kind != SteelLevelKind.Floor)
-                        Assert.True(gap <= 1500 + 1e-6, "gap " + gap + " above " + levels[i - 1].Key + " at floor height " + h);
-                }
-                Assert.True(levels.Any(l => l.Key == "F:0") && levels.Any(l => l.Key == "F:1") && levels.Any(l => l.Key == "F:2"));
-                Assert.Equal(3, levels.Count(l => l.Kind == SteelLevelKind.DoorHead));
-            }
-        }
-
-        [Fact]
-        public void The_rule_rejects_what_it_cannot_place_and_reports_what_the_doors_cannot_meet()
-        {
-            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 0, -1000, 7200));
-            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 0, 1500, -1000, 7200));
-            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, 0, 7200));
-            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000));
-            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000, 3000 }, 2160, 1500, -1000, 7200));
-            // a floor not above the door height: no door-head beam there, and a note
-            var low = SteelBeamLevels.Rule(new[] { 0.0, 2000, 5000 }, 2160, 1500, -1000, 9000);
+            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 0, -1000, 7200, false));
+            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 0, 1500, -1000, 7200, true));
+            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, 0, 7200, false));
+            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000 }, 2160, 1500, -1000, 3000, false));
+            Assert.Throws<ArgumentException>(() => SteelBeamLevels.Rule(new[] { 0.0, 3000, 3000 }, 2160, 1500, -1000, 7200, false));
+            // a floor not above the door height: no door-head beam there on the entrance face, and a note
+            var low = SteelBeamLevels.Rule(new[] { 0.0, 2000, 5000 }, 2160, 1500, -1000, 9000, true);
             Assert.DoesNotContain(low, l => l.Key == "D:0");
             var floors = new[] { 0.0, 2000, 5000 }.Select((e, i) => new FloorElevation { Name = i.ToString(), ElevationMm = e, IsServed = true }).ToList();
             var issues = SteelBeamLevels.Issues(floors, 2160, 1500, -1000, 9000);
-            Assert.Contains(issues, m => m.Contains("cannot be split"));
             Assert.Contains(issues, m => m.StartsWith("At floor 0"));
-            // door height within s: nothing to report
-            Assert.Empty(SteelBeamLevels.Issues(floors.Skip(1).ToList(), 2160, 2200, -1000, 9000));
+            // a gap at a door is by design: no note about it
+            Assert.DoesNotContain(issues, m => m.Contains("cannot be split"));
+            Assert.Empty(SteelBeamLevels.Issues(floors.Skip(1).ToList(), 2160, 1000, -1000, 9000));
         }
 
         [Fact]
-        public void Edited_levels_lock_and_Reset_restores_the_rule()
+        public void Edited_levels_lock_per_face_and_Reset_restores_the_rule()
         {
             var p = SteelProject(6000);
-            var rule = Build(p).RuleLevels;
-            Assert.Equal(new[] { 0.0, 2160, 3660, 5160, 6000 }, Between(rule, 0, 6000));
-            SteelFields.EditLevel(p, "I:G:1", 3700);
-            SteelFields.RemoveLevel(p, "I:G:2");
-            SteelFields.EditLevel(p, "F:G", 123);      // a floor level is fixed by the building: ignored
-            SteelFields.EditLevel(p, "C:1", 4400);     // an added level
-            var s = Build(p);
-            Assert.Equal(new[] { 0.0, 2160, 3700, 4400, 6000 }, Between(s.Levels, 0, 6000));
-            Assert.True(s.Levels.Single(l => l.Key == "I:G:1").Edited);
-            Assert.True(s.Levels.Single(l => l.Key == "C:1").Edited);
-            Assert.False(s.Levels.Single(l => l.Key == "D:G").Edited);
-            Assert.Equal(rule.Select(l => l.ElevationMm), s.RuleLevels.Select(l => l.ElevationMm));   // the rule itself is untouched
+            ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, 1500.0);
+            var s0 = Build(p);
+            var rule = s0.RuleLevels["Left"];
+            AssertLevels(new[] { 0.0, 1500, 3000, 4500, 6000 }, Between(rule, 0, 6000));
+            string first = rule.First(l => l.Kind == SteelLevelKind.Intermediate).Key;
+            SteelFields.EditLevel(p, "Left", first, 1000);
+            SteelFields.RemoveLevel(p, "Left", rule.Where(l => l.Kind == SteelLevelKind.Intermediate).ElementAt(1).Key);
+            SteelFields.EditLevel(p, "Left", "F:G", 123);      // a floor level is fixed by the building: ignored
+            SteelFields.EditLevel(p, "Left", "C:1", 4400);     // an added level
+            var t = Build(p);
+            Assert.True(t.Levels["Left"].Single(l => l.Key == first).Edited);
+            Assert.Equal(1000, t.Levels["Left"].Single(l => l.Key == first).ElevationMm);
+            Assert.True(t.Levels["Left"].Single(l => l.Key == "C:1").Edited);
+            Assert.Contains(t.Levels["Left"], l => l.Key == "F:G" && l.ElevationMm == 0);
+            // the other faces keep the rule
+            Assert.Equal(t.RuleLevels["Right"].Select(l => l.ElevationMm), t.Levels["Right"].Select(l => l.ElevationMm));
+            Assert.Equal(rule.Select(l => l.ElevationMm), t.RuleLevels["Left"].Select(l => l.ElevationMm));   // the rule itself is untouched
             // the edits survive the project file
             var again = ProjectJson.Deserialize(ProjectJson.Serialize(p));
-            Assert.Equal(Between(s.Levels, 0, 6000), Between(Build(again).Levels, 0, 6000));
-            Assert.Equal(4, SteelFields.LevelEdits(again).Count);
+            Assert.Equal(t.Levels["Left"].Select(l => l.ElevationMm), Build(again).Levels["Left"].Select(l => l.ElevationMm));
+            Assert.Equal(4, SteelFields.LevelEdits(again, "Left").Count);
+            Assert.Empty(SteelFields.LevelEdits(again, "Right"));
             // one level back to the rule, then all
-            SteelFields.ResetLevel(p, "I:G:1");
-            Assert.Equal(new[] { 0.0, 2160, 3660, 4400, 6000 }, Between(Build(p).Levels, 0, 6000));
-            SteelFields.ResetLevels(p);
+            SteelFields.ResetLevel(p, "Left", first);
+            Assert.Equal(rule.Single(l => l.Key == first).ElevationMm, Build(p).Levels["Left"].Single(l => l.Key == first).ElevationMm);
+            SteelFields.ResetLevels(p, "Left");
             Assert.False(SteelFields.LevelsEdited(p));
-            Assert.Equal(Between(rule, 0, 6000), Between(Build(p).Levels, 0, 6000));
+            Assert.Equal(rule.Select(l => l.ElevationMm), Build(p).Levels["Left"].Select(l => l.ElevationMm));
             Assert.False(p.Extensions.ContainsKey("steel") && ((IDictionary<string, object>)p.Extensions["steel"]).ContainsKey("levelEdits"));
         }
 
         [Fact]
-        public void An_edit_of_a_level_the_rule_no_longer_has_is_ignored_and_follows_back_when_it_returns()
+        public void An_edit_of_a_level_the_rule_no_longer_has_is_ignored()
         {
             var p = SteelProject(6000);
-            SteelFields.EditLevel(p, "I:G:2", 4000);
-            Assert.Contains(Build(p).Levels, l => l.Key == "I:G:2" && l.ElevationMm == 4000);
-            // a shorter first floor has no second intermediate beam any more
-            p.Building.Floors[0].HeightToNextMm = 3500;
+            ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, 1500.0);
+            SteelFields.EditLevel(p, "Back", "I:G:3", 4000);
+            Assert.Contains(Build(p).Levels["Back"], l => l.Key == "I:G:3" && l.ElevationMm == 4000);
+            // a shorter first floor has no third intermediate beam any more
+            p.Building.Floors[0].HeightToNextMm = 2000;
             var s = Build(p);
-            Assert.DoesNotContain(s.Levels, l => l.Key == "I:G:2");
-            Assert.Equal(new[] { 0.0, 2160, 3500 }, Between(s.Levels, 0, 3500));
+            Assert.DoesNotContain(s.Levels["Back"], l => l.Key == "I:G:3");
+        }
+
+        [Fact]
+        public void The_beam_spacing_is_the_car_rail_spacing_of_the_rails_page()
+        {
+            var p = SteelProject(6000);
+            Assert.Equal(Convert.ToDouble(p.Rails.CarSpacingMm), Build(p).Inputs.SpacingMm);
+            // typing the car spacing on RAILS changes the beams
+            ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, 3000.0);
+            var s = Build(p);
+            Assert.Equal(3000.0, s.Inputs.SpacingMm);
+            AssertLevels(new[] { 0.0, 3000, 6000 }, Between(s.Levels["Left"], 0, 6000));
+            AssertLevels(new[] { 0.0, 2160, 4080, 6000 }, Between(s.Levels["Front"], 0, 6000).Where(x => x <= 6000).ToArray());
         }
 
         // ---------- the project: construction, lock and follow ----------
@@ -281,7 +347,6 @@ namespace Elevator.Core.Tests
             Assert.Equal("UPN 100", SteelFields.BeamProfile.Effective(c));
             Assert.Equal("L50x50x5", SteelFields.BracingProfile.Effective(c));
             Assert.Equal("DoubleCross", SteelFields.Bracing.Effective(c));
-            Assert.Equal(1500.0, SteelFields.BeamSpacing.Effective(c));
             Assert.Equal(200.0, SteelFields.PlateWidth.Effective(c)); Assert.Equal(200.0, SteelFields.PlateDepth.Effective(c)); Assert.Equal(15.0, SteelFields.PlateThickness.Effective(c));
             Assert.Equal(4.0, SteelFields.BoltCount.Effective(c)); Assert.Equal(20.0, SteelFields.BoltDiameter.Effective(c));
             Assert.Equal(400.0, SteelFields.GussetLength.Effective(c)); Assert.Equal(250.0, SteelFields.GussetWidth.Effective(c)); Assert.Equal(6.0, SteelFields.GussetThickness.Effective(c));
@@ -290,10 +355,8 @@ namespace Elevator.Core.Tests
             Assert.False(SteelFields.All.Any(f => f.IsEdited(p) && f != SteelFields.Construction));
             // a unlocked value follows the library
             var other = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
-            other.SteelShaft.BeamSpacingMm = 1200;
             other.SteelShaft.ColumnProfile = "UPN 160";
             var c2 = new PresetContext { Project = p, Library = other };
-            Assert.Equal(1200.0, SteelFields.BeamSpacing.Effective(c2));
             Assert.Equal("UPN 160", SteelFields.ColumnProfile.Effective(c2));
         }
 
@@ -301,27 +364,27 @@ namespace Elevator.Core.Tests
         public void An_edited_value_locks_follows_nothing_and_Reset_returns_to_the_preset()
         {
             var p = SteelProject();
-            SteelFields.BeamSpacing.Edit(p, 1800.0);
+            SteelFields.PlateWidth.Edit(p, 250.0);
             SteelFields.ColumnProfile.Edit(p, "UPN 160");
-            Assert.True(SteelFields.BeamSpacing.IsEdited(p));
+            Assert.True(SteelFields.PlateWidth.IsEdited(p));
             var other = PresetLibrary.Load(Path.Combine(TestData.Bin, "presets.json"));
-            other.SteelShaft.BeamSpacingMm = 1200;
+            other.SteelShaft.BasePlateWidthMm = 180;
             var c = new PresetContext { Project = p, Library = other };
-            Assert.Equal(1800.0, SteelFields.BeamSpacing.Effective(c));       // locked
+            Assert.Equal(250.0, SteelFields.PlateWidth.Effective(c));       // locked
             Assert.Equal("UPN 160", SteelFields.ColumnProfile.Effective(c));
             Assert.Equal("UPN 100", SteelFields.BeamProfile.Effective(c));    // not edited: still the preset
             var again = ProjectJson.Deserialize(ProjectJson.Serialize(p));
-            Assert.Equal(1800.0, SteelFields.BeamSpacing.Effective(new PresetContext { Project = again, Library = other }));
-            Assert.True(SteelFields.BeamSpacing.IsEdited(again));
-            SteelFields.BeamSpacing.Reset(p);
-            Assert.False(SteelFields.BeamSpacing.IsEdited(p));
-            Assert.Equal(1200.0, SteelFields.BeamSpacing.Effective(new PresetContext { Project = p, Library = other }));
+            Assert.Equal(250.0, SteelFields.PlateWidth.Effective(new PresetContext { Project = again, Library = other }));
+            Assert.True(SteelFields.PlateWidth.IsEdited(again));
+            SteelFields.PlateWidth.Reset(p);
+            Assert.False(SteelFields.PlateWidth.IsEdited(p));
+            Assert.Equal(180.0, SteelFields.PlateWidth.Effective(new PresetContext { Project = p, Library = other }));
             Assert.Equal("UPN 160", SteelFields.ColumnProfile.Effective(c));
             SteelFields.ColumnProfile.Reset(p);
             SteelFields.Construction.Reset(p);
             Assert.False(SteelFields.IsSteel(p, Library));
             Assert.False(ProjectJson.Serialize(p).ToLowerInvariant().Contains("steel"));
-            Assert.Same(SteelFields.BeamSpacing, ProjectPresets.Find("Steel.BeamSpacingMm"));
+            Assert.Same(SteelFields.PlateWidth, ProjectPresets.Find("Steel.BasePlateWidthMm"));
         }
 
         [Fact]
@@ -342,43 +405,32 @@ namespace Elevator.Core.Tests
             Assert.Equal((int)Convert.ToDouble(SteelFields.BarCountAlongY.Effective(c)), s.Base.BarsAlongY.Count);
         }
 
-        // ---------- derived rail bracket spacing ----------
+        // ---------- the rails drive the beams; the check uses the largest gap of the side and back faces ----------
         [Fact]
-        public void The_bracket_spacing_of_a_steel_shaft_is_the_largest_gap_between_beam_levels_in_the_travel_zone()
-        {
-            Assert.Equal(2160.0, Build(SteelProject(3000)).DerivedBracketSpacingMm);               // 0, 2160, 3000 -> 2160 (the door)
-            Assert.Equal(2160.0, Build(SteelProject(6000)).DerivedBracketSpacingMm);               // 2160, 1500, 1500, 840
-            var p = SteelProject(6000);
-            SteelFields.BeamSpacing.Edit(p, 3000.0);
-            var s = Build(p);
-            Assert.Equal(new[] { 0.0, 2160, 5160, 6000 }, Between(s.Levels, 0, 6000));
-            Assert.Equal(3000.0, s.DerivedBracketSpacingMm);
-            // an edited level changes the gap
-            var q = SteelProject(6000);
-            SteelFields.RemoveLevel(q, "I:G:1");
-            Assert.Equal(3000.0, Build(q).DerivedBracketSpacingMm);   // 3660 removed: 2160 -> 5160 is now a 3000 gap
-        }
-
-        [Fact]
-        public void The_rails_follow_the_derived_spacing_and_the_guide_rail_check_uses_it()
+        public void The_largest_gap_of_the_side_and_back_faces_is_not_more_than_s_and_the_rail_check_uses_it()
         {
             var ctx = TestData.Context();
             var p = SteelProject(3200, 3200);
             var s = Build(p);
-            double derived = s.DerivedBracketSpacingMm.Value;
-            Assert.Equal(derived, p.Rails.CarSpacingMm);                      // the preset: derived, no recommendation
-            Assert.Equal(derived, p.Rails.CwSpacingMm);
-            Assert.Equal(derived, p.Rails.BracketMaximumSpacingMm);
+            double spacing = Convert.ToDouble(p.Rails.CarSpacingMm);
+            Assert.Equal(spacing, s.Inputs.SpacingMm);
+            Assert.True(s.LargestGapMm.Value <= spacing + 1e-6);
+            Assert.Equal(spacing, p.Rails.CwSpacingMm);                       // the rails keep their own values: nothing is derived from the beams
+            Assert.Equal(spacing, p.Rails.BracketMaximumSpacingMm);
             var check = GuideRailCheckEngine.Calculate(p, ctx, Library);
             Assert.True(check.Available);
-            Assert.Equal(derived, check.Car.SpacingMm);
-            Assert.Equal(derived, check.Counterweight.SpacingMm);
-            // a typed spacing on a steel project does not override the beams
+            Assert.Equal(s.LargestGapMm.Value, check.Car.SpacingMm, 6);
+            Assert.Equal(s.LargestGapMm.Value, check.Counterweight.SpacingMm, 6);
+            // a typed spacing changes the beams
             ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, 1000.0);
-            Assert.Equal(derived, GuideRailCheckEngine.Calculate(p, ctx, Library).Car.SpacingMm);
-            // the same project as concrete: the recommendation, unchanged
-            var concrete = NewProject();
-            Assert.Equal(2000.0, concrete.Rails.CarSpacingMm);
+            Assert.Equal(1000.0, Build(p).Inputs.SpacingMm);
+            Assert.True(Build(p).LargestGapMm.Value <= 1000 + 1e-6);
+            // an edited level on a bracket face changes the gap
+            var q = SteelProject(6000);
+            ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(q, 1500.0);
+            var rule = Build(q).RuleLevels["Left"];
+            SteelFields.RemoveLevel(q, "Left", rule.First(l => l.Kind == SteelLevelKind.Intermediate).Key);
+            Assert.Equal(3000.0, Build(q).LargestGapMm.Value, 6);
         }
 
         [Fact]
@@ -390,7 +442,7 @@ namespace Elevator.Core.Tests
             ProjectPresets.Apply(a, Library, TestData.Context());
             Assert.Equal(json, ProjectJson.Serialize(a));
             Assert.Equal(json, ProjectJson.Serialize(ProjectJson.Deserialize(json)));
-            Assert.Null(SteelStructure.DerivedSpacing(new PresetContext { Project = a, Library = Library }));
+            Assert.Null(SteelStructure.CheckSpacing(new PresetContext { Project = a, Library = Library }));
         }
 
         // ---------- geometry ----------
@@ -463,13 +515,13 @@ namespace Elevator.Core.Tests
         {
             var s = Build(SteelProject(3000, 3000));
             Assert.Equal(new[] { "Back", "Front", "Left", "Right" }, s.Faces.Select(f => f.Name).OrderBy(x => x).ToArray());
-            var panels = new[] { s.BaseMm }.Concat(s.Levels.Select(l => l.ElevationMm)).ToArray();
             foreach (var f in s.Faces)
             {
+                var panels = new[] { s.BaseMm }.Concat(s.Levels[f.Name].Select(l => l.ElevationMm)).ToArray();
                 Assert.Equal(2, f.Columns.Count);
                 Assert.All(f.Columns, c => { Assert.Equal(s.BaseMm, c.Y0); Assert.Equal(s.TopMm, c.Y1); });
-                Assert.Equal(s.Levels.Count, f.Beams.Count);
-                Assert.Equal(s.Levels.Select(l => l.ElevationMm), f.Beams.Select(b => b.ElevationMm));
+                Assert.Equal(s.Levels[f.Name].Count, f.Beams.Count);
+                Assert.Equal(s.Levels[f.Name].Select(l => l.ElevationMm), f.Beams.Select(b => b.ElevationMm));
                 Assert.All(f.Beams, b => { Assert.Equal(0, b.U0); Assert.Equal(f.LengthMm, b.U1); Assert.Equal(100, b.Z1 - b.Z0); });
                 Assert.Equal(s.Base.BottomMm, f.BaseBlock.Y0);
                 Assert.Equal(s.Base.TopMm, f.BaseBlock.Y1);
@@ -532,7 +584,7 @@ namespace Elevator.Core.Tests
             var s = Build(SteelProject(3000, 3000));
             var top = s.TowerTop;
             Assert.Equal(s.TopMm, top.ElevationMm);
-            Assert.Equal(s.Levels.Last().ElevationMm, top.ElevationMm);
+            Assert.Equal(s.Levels["Back"].Last().ElevationMm, top.ElevationMm);
             Assert.Equal(s.HighestFloorMm + s.Inputs.OverheadMm, top.ElevationMm);
             Assert.False(top.Outriggers);
             Assert.Equal(4, top.Columns.Count);
@@ -550,26 +602,26 @@ namespace Elevator.Core.Tests
         {
             var p = SteelProject(3000);
             var s = Build(p);
-            int n = s.Levels.Count;
+            int nWidth = s.Levels["Front"].Count + s.Levels["Back"].Count, nDepth = s.Levels["Left"].Count + s.Levels["Right"].Count;
             var col = s.Members.Single(m => m.Item == "Column");
             Assert.Equal("UPN 140", col.Profile); Assert.Equal(4, col.Count);
             Assert.Equal(s.TopMm - s.BaseMm, col.LengthMm);
             Assert.Equal(16.0 * col.LengthMm / 1000, col.MassPerPieceKg, 9);
             var bw = s.Members.Single(m => m.Item == "Beam along the width");
             var bd = s.Members.Single(m => m.Item == "Beam along the depth");
-            Assert.Equal(2 * n, bw.Count); Assert.Equal(2 * n, bd.Count);
+            Assert.Equal(nWidth, bw.Count); Assert.Equal(nDepth, bd.Count);
             Assert.Equal(p.Shaft.WidthMm, bw.LengthMm); Assert.Equal(p.Shaft.DepthMm, bd.LengthMm);
             Assert.Equal("UPN 100", bw.Profile);
             Assert.Equal(10.6 * bw.LengthMm / 1000, bw.MassPerPieceKg, 9);
             var braces = s.Members.Where(m => m.Item == "Brace").ToList();
             Assert.All(braces, m => { Assert.Equal("L50x50x5", m.Profile); Assert.Equal(0, m.Count % 2); });
-            Assert.Equal(2 * 3 * n, braces.Sum(m => m.Count));       // 3 braced faces, n panels (base + levels), two diagonals each
+            Assert.Equal(2 * (s.Levels["Back"].Count + s.Levels["Left"].Count + s.Levels["Right"].Count), braces.Sum(m => m.Count));   // 3 braced faces, a panel per level, two diagonals each
             var plate = s.Members.Single(m => m.Item == "Base plate");
             Assert.Equal(4, plate.Count); Assert.Equal("PL 200x200x15", plate.Profile);
             Assert.Equal(200 * 200 * 15 * 1e-9 * 7850, plate.MassPerPieceKg, 9);
             var gusset = s.Members.Single(m => m.Item == "Gusset plate");
             Assert.Equal("PL 400x250x6", gusset.Profile);
-            Assert.Equal(3 * 2 * (n + 1), gusset.Count);
+            Assert.Equal(2 * (s.Levels["Back"].Count + s.Levels["Left"].Count + s.Levels["Right"].Count + 3), gusset.Count);
             Assert.Equal(16, s.Members.Single(m => m.Item == "Anchor bolt").Count);
             Assert.Equal(s.Members.Sum(m => m.MassPerPieceKg * m.Count), s.TotalMassKg, 9);
             Assert.True(s.TotalMassKg > col.MassPerPieceKg * 4);
@@ -588,7 +640,7 @@ namespace Elevator.Core.Tests
             Assert.False(s.Valid);
             Assert.Contains(s.Inputs.Problems, m => m.Contains("column profile"));
             Assert.Empty(s.Levels);
-            Assert.Null(SteelStructure.DerivedSpacing(new PresetContext { Project = p, Library = Library }));
+            Assert.Null(SteelStructure.CheckSpacing(new PresetContext { Project = p, Library = Library }));
             // a plain catalogue lookup of a derived field on a bad project does not throw either
             Assert.NotNull(SteelFields.BarCountAlongX.Effective(new PresetContext { Project = SteelProject(3000), Library = Library }));
         }

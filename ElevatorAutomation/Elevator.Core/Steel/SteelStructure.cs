@@ -15,6 +15,7 @@ namespace Elevator.Core.Steel
         public ChannelProfile Column;
         public ChannelProfile Beam;
         public AngleProfile Brace;
+        /// <summary>s: the effective car rail bracket spacing of the project (the rails drive the beam levels).</summary>
         public double SpacingMm;
         public double PlateWidthMm;
         public double PlateDepthMm;
@@ -40,7 +41,8 @@ namespace Elevator.Core.Steel
         public double DoorHeightMm;
         /// <summary>The floors with their elevations (all of them; the rule uses the served ones).</summary>
         public List<FloorElevation> Floors = new List<FloorElevation>();
-        public List<SteelLevelEdit> LevelEdits = new List<SteelLevelEdit>();
+        /// <summary>The level edits of the user per face (Front, Back, Left, Right).</summary>
+        public Dictionary<string, List<SteelLevelEdit>> LevelEdits = new Dictionary<string, List<SteelLevelEdit>>();
         /// <summary>What is missing or invalid; empty when the structure can be built.</summary>
         public List<string> Problems = new List<string>();
 
@@ -81,7 +83,8 @@ namespace Elevator.Core.Steel
                 i.Problems.Add("The beam profile is not in the channel catalogue.");
             if (i.Brace == null)
                 i.Problems.Add("The bracing profile is not in the angle catalogue.");
-            i.SpacingMm = D(SteelFields.BeamSpacing, c);
+            var car = Field(c, ProjectPresets.CarSpacingKey);
+            i.SpacingMm = car.HasValue ? car.Value : Double.NaN;
             i.PlateWidthMm = D(SteelFields.PlateWidth, c);
             i.PlateDepthMm = D(SteelFields.PlateDepth, c);
             i.PlateThicknessMm = D(SteelFields.PlateThickness, c);
@@ -98,7 +101,7 @@ namespace Elevator.Core.Steel
             i.BarDiameterMm = D(SteelFields.BarDiameter, c);
             foreach (var pair in new[]
             {
-                new KeyValuePair<string, double>("The beam spacing", i.SpacingMm),
+                new KeyValuePair<string, double>("The car rail bracket spacing", i.SpacingMm),
                 new KeyValuePair<string, double>("The base plate width", i.PlateWidthMm),
                 new KeyValuePair<string, double>("The base plate depth", i.PlateDepthMm),
                 new KeyValuePair<string, double>("The base plate thickness", i.PlateThicknessMm),
@@ -141,7 +144,8 @@ namespace Elevator.Core.Steel
             }
             if (i.Floors.Count(f => f.IsServed) < 1)
                 i.Problems.Add("At least one served floor is required.");
-            i.LevelEdits = SteelFields.LevelEdits(c.Project);
+            foreach (string face in SteelFields.Faces)
+                i.LevelEdits[face] = SteelFields.LevelEdits(c.Project, face);
             return i;
         }
 
@@ -173,12 +177,13 @@ namespace Elevator.Core.Steel
         public double TopMm;
         public double LowestFloorMm;
         public double HighestFloorMm;
-        /// <summary>The levels the rule gives, before the user's edits.</summary>
-        public List<SteelLevel> RuleLevels = new List<SteelLevel>();
-        /// <summary>The levels in force: the rule with the edits applied, ordered by elevation.</summary>
-        public List<SteelLevel> Levels = new List<SteelLevel>();
-        /// <summary>The largest gap between consecutive levels from the lowest to the highest floor; null with fewer than two served floors.</summary>
-        public double? DerivedBracketSpacingMm;
+        /// <summary>The levels the rule gives per face (Front, Back, Left, Right), before the edits of the user.</summary>
+        public Dictionary<string, List<SteelLevel>> RuleLevels = new Dictionary<string, List<SteelLevel>>();
+        /// <summary>The levels in force per face: the rule with the edits applied, ordered by elevation.</summary>
+        public Dictionary<string, List<SteelLevel>> Levels = new Dictionary<string, List<SteelLevel>>();
+        /// <summary>The largest gap between consecutive levels from the lowest to the highest floor over the side and back faces: the
+        /// spacing the rail check uses (not more than s by construction); null with fewer than two served floors.</summary>
+        public double? LargestGapMm;
         /// <summary>Rules the levels cannot meet (for the Design Notes).</summary>
         public List<string> Issues = new List<string>();
         public SteelPlan Plan;
@@ -225,14 +230,17 @@ namespace Elevator.Core.Steel
             return s;
         }
 
-        /// <summary>The derived rail bracket spacing of a steel project; null when the project is not steel or the levels cannot be built.</summary>
-        public static double? DerivedSpacing(PresetContext c)
+        /// <summary>The spacing the rail check uses on a steel project: the largest gap of the side and back faces; null when the project is not steel or the levels cannot be built.</summary>
+        public static double? CheckSpacing(PresetContext c)
         {
             if (c == null || c.Library == null || c.Project == null || !SteelFields.IsSteel(c.Project, c.Library))
                 return null;
-            var s = Build(new PresetContext { Project = c.Project, Library = c.Library });
-            return s.Valid ? s.DerivedBracketSpacingMm : null;
+            var s = Build(new PresetContext { Project = c.Project, Library = c.Library, Design = c.Design });
+            return s.Valid ? s.LargestGapMm : null;
         }
+
+        /// <summary>The faces whose beams carry the rail brackets (side and back).</summary>
+        public static readonly string[] BracketFaces = { "Back", "Left", "Right" };
 
         /// <summary>The preset of a base bar count: bars at no more than the preset spacing across the block, from the cover to the cover.</summary>
         public static object PresetBarCount(PresetContext c, bool alongX)
@@ -257,11 +265,15 @@ namespace Elevator.Core.Steel
             HighestFloorMm = served[served.Count - 1].ElevationMm;
             BaseMm = LowestFloorMm - i.PitMm;
             TopMm = HighestFloorMm + i.OverheadMm;
-            RuleLevels = SteelBeamLevels.Rule(served, i.DoorHeightMm, i.SpacingMm, BaseMm, TopMm);
-            Levels = SteelBeamLevels.Apply(RuleLevels, i.LevelEdits, BaseMm, TopMm);
+            foreach (string face in SteelFields.Faces)
+            {
+                var rule = SteelBeamLevels.Rule(served, i.DoorHeightMm, i.SpacingMm, BaseMm, TopMm, face == "Front");
+                RuleLevels[face] = rule;
+                Levels[face] = SteelBeamLevels.Apply(rule, i.LevelEdits[face], BaseMm, TopMm);
+            }
             Issues = SteelBeamLevels.Issues(served, i.DoorHeightMm, i.SpacingMm, BaseMm, TopMm);
             if (served.Count >= 2)
-                DerivedBracketSpacingMm = SteelBeamLevels.LargestGap(Levels, LowestFloorMm, HighestFloorMm);
+                LargestGapMm = BracketFaces.Max(f => SteelBeamLevels.LargestGap(Levels[f], LowestFloorMm, HighestFloorMm));
         }
 
         // ---------- plan ----------
@@ -400,10 +412,10 @@ namespace Elevator.Core.Steel
         {
             var i = Inputs;
             double halfBand = i.Beam.HeightMm / 2;
-            var panels = new List<double> { BaseMm };
-            panels.AddRange(Levels.Select(l => l.ElevationMm));
-            foreach (string name in new[] { "Front", "Back", "Left", "Right" })
+            foreach (string name in SteelFields.Faces)
             {
+                var panels = new List<double> { BaseMm };
+                panels.AddRange(Levels[name].Select(l => l.ElevationMm));
                 bool alongX = name == "Front" || name == "Back";
                 var face = new SteelFace { Name = name, IsEntrance = name == Plan.EntranceFace, LengthMm = alongX ? i.WidthMm : i.DepthMm };
                 foreach (var c in Plan.Columns.Where(c => FaceHasColumn(name, c)))
@@ -413,7 +425,7 @@ namespace Elevator.Core.Steel
                         ? new SteelRect(c.Plate.X0, BaseMm, c.Plate.X1, BaseMm + i.PlateThicknessMm)
                         : new SteelRect(c.Plate.Y0, BaseMm, c.Plate.Y1, BaseMm + i.PlateThicknessMm));
                 }
-                foreach (var l in Levels)
+                foreach (var l in Levels[name])
                 {
                     face.Beams.Add(new SteelBeamLine
                     {
@@ -495,10 +507,10 @@ namespace Elevator.Core.Steel
         void BuildMembers()
         {
             var i = Inputs;
-            int n = Levels.Count;
+            int alongWidth = Levels["Front"].Count + Levels["Back"].Count, alongDepth = Levels["Left"].Count + Levels["Right"].Count;
             Members.Add(new SteelMember { Item = "Column", Profile = i.Column.Name, LengthMm = ColumnLengthMm, Count = 4, MassPerPieceKg = i.Column.MassKgPerM * ColumnLengthMm / 1000.0 });
-            Members.Add(new SteelMember { Item = "Beam along the width", Profile = i.Beam.Name, LengthMm = i.WidthMm, Count = 2 * n, MassPerPieceKg = i.Beam.MassKgPerM * i.WidthMm / 1000.0 });
-            Members.Add(new SteelMember { Item = "Beam along the depth", Profile = i.Beam.Name, LengthMm = i.DepthMm, Count = 2 * n, MassPerPieceKg = i.Beam.MassKgPerM * i.DepthMm / 1000.0 });
+            Members.Add(new SteelMember { Item = "Beam along the width", Profile = i.Beam.Name, LengthMm = i.WidthMm, Count = alongWidth, MassPerPieceKg = i.Beam.MassKgPerM * i.WidthMm / 1000.0 });
+            Members.Add(new SteelMember { Item = "Beam along the depth", Profile = i.Beam.Name, LengthMm = i.DepthMm, Count = alongDepth, MassPerPieceKg = i.Beam.MassKgPerM * i.DepthMm / 1000.0 });
             var braces = Faces.Where(f => !f.IsEntrance).SelectMany(f => f.Braces).Select(b => b.LengthMm).ToList();
             foreach (var group in braces.GroupBy(l => Math.Round(l, 1)).OrderBy(g => g.Key))
             {

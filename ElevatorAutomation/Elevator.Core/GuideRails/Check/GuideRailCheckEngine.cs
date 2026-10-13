@@ -61,8 +61,9 @@ namespace Elevator.Core.GuideRails
 
         static double? Spacing(PresetContext c, string key, List<CalculationIssue> issues)
         {
-            // A steel shaft: both rail lines are bracketed on the beams, so the spacing is the derived largest gap between beam levels.
-            var derived = Steel.SteelStructure.DerivedSpacing(c);
+            // A steel shaft: the rails are bracketed on the beams of the side and back faces, so the check uses their largest gap
+            // (not more than the typed or recommended spacing by construction of the beam levels).
+            var derived = Steel.SteelStructure.CheckSpacing(c);
             if (derived.HasValue && derived.Value > 0)
                 return derived.Value;
             var v = ProjectPresets.Find(key).Effective(c);

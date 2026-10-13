@@ -37,7 +37,7 @@ namespace Elevator.Reporting.Tests
             if (steel)
                 SteelFields.Construction.Edit(p, SteelShaftPreset.SteelStructure);
             if (beamSpacing.HasValue)
-                SteelFields.BeamSpacing.Edit(p, beamSpacing.Value);
+                ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, beamSpacing.Value);
             ProjectPresets.Apply(p, lib, ctx);
             return p;
         }
@@ -131,16 +131,17 @@ namespace Elevator.Reporting.Tests
             Assert.Equal("UPN 140", rows["Column profile"]);
             Assert.Equal("UPN 100", rows["Beam profile"]);
             Assert.StartsWith("L50x50x5", rows["Bracing profile"]);
-            Assert.Equal("1500 mm", rows["Beam spacing s"]);
+            Assert.Equal("2000 mm", rows["Car rail bracket spacing s"]);
             Assert.Equal("St 37", rows["Steel grade"]);
             Assert.StartsWith("PL 200x200x15, 4 bolts", rows["Base plate"]);
-            string levels = rows["Beam levels"];
-            Assert.StartsWith("0, 2160, 3000", levels);
-            Assert.Contains(sheet.Steel.DerivedBracketSpacingMm.Value.ToString("0"), rows["Guide-rail bracket spacing (largest gap between beams)"]);
+            Assert.StartsWith("0, 2160, 3000", rows["Beam levels, entrance face"]);
+            Assert.StartsWith("0, 1500, 3000", rows["Beam levels, back face"]);
+            Assert.Equal(rows["Beam levels, left face"], rows["Beam levels, right face"]);
+            Assert.Contains(sheet.Steel.LargestGapMm.Value.ToString("0"), rows["Guide-rail bracket spacing (largest gap between beams, side and back faces)"]);
             string text = SheetText(sheet);
             Assert.Contains("Shaft structure", text);
             Assert.Contains("UPN 140", text);
-            Assert.Contains("Beam levels", text);
+            Assert.Contains("Beam levels, entrance face", text);
             // principle 6 and no structural check
             string lower = text.ToLowerInvariant();
             foreach (var bad in new[] { "preset", "assumed", "not from catalog", "review required", "preliminary", "to verify" })
@@ -150,18 +151,14 @@ namespace Elevator.Reporting.Tests
         }
 
         [Fact]
-        public void The_design_notes_say_nothing_new_unless_a_door_gap_cannot_be_split()
+        public void The_design_notes_have_no_line_about_a_gap_at_a_door_it_is_by_design()
         {
-            // door height 2160 > s = 1500: the floor-to-door-head gap cannot be split
-            var steel = Project(true);
-            var notes = DesignNotes.DesignNotes.Build(steel, TestData.Context(), Inputs());
-            var line = notes.Recommendations.Single(r => r.Contains("door-head beam"));
-            Assert.Contains("2160", line);
-            Assert.Contains("1500", line);
-            Assert.DoesNotContain("preset", line.ToLowerInvariant());
-            // s of 2200 holds the door gap: no line
-            var wide = Project(true, 2200);
-            Assert.DoesNotContain(DesignNotes.DesignNotes.Build(wide, TestData.Context(), Inputs()).Recommendations, r => r.Contains("door-head"));
+            foreach (var spacing in new double?[] { null, 1500, 1000 })
+            {
+                var steel = Project(true, spacing);
+                var notes = DesignNotes.DesignNotes.Build(steel, TestData.Context(), Inputs());
+                Assert.DoesNotContain(notes.Recommendations, r => r.Contains("door-head") || r.Contains("cannot be split"));
+            }
             // a concrete project: nothing
             Assert.DoesNotContain(DesignNotes.DesignNotes.Build(Project(false), TestData.Context(), Inputs()).Recommendations, r => r.Contains("door-head"));
         }
@@ -169,7 +166,7 @@ namespace Elevator.Reporting.Tests
         [Fact]
         public void A_floor_not_higher_than_the_door_is_reported()
         {
-            var p = Project(true, 2200, 2100);
+            var p = Project(true, 2000, 2100);
             var notes = DesignNotes.DesignNotes.Build(p, TestData.Context(), Inputs());
             Assert.Contains(notes.Recommendations, r => r.Contains("does not fit under"));
         }

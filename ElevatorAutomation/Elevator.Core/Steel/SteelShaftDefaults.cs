@@ -12,7 +12,6 @@ namespace Elevator.Core.Steel
     ""Source"": ""UPN: DIN 1026-1:2000 / EN 10279:2000, Kocaer Steel UPN datasheet (kocaersteel.com/uploads/2025/02/channels-upn.pdf) and STAD technical data of sections UPN (stad.fr); angles: EN 10056-1, Engineering Toolbox / Murray Steel equal-angle tables. Rows with a Check text still need the producer value of that column."",
     ""Construction"": ""Concrete"", ""System"": ""UPN"",
     ""ColumnProfile"": ""UPN 140"", ""BeamProfile"": ""UPN 100"", ""BracingProfile"": ""L50x50x5"", ""Bracing"": ""DoubleCross"",
-    ""BeamSpacingMm"": 1500,
     ""BasePlateWidthMm"": 200, ""BasePlateDepthMm"": 200, ""BasePlateThicknessMm"": 15,
     ""BoltCount"": 4, ""BoltDiameterMm"": 20, ""BoltPitchMm"": 120,
     ""GussetLengthMm"": 400, ""GussetWidthMm"": 250, ""GussetThicknessMm"": 6,

@@ -35,15 +35,17 @@ namespace Elevator.Reporting.Sheet
             rows.Add(new[] { "Column profile", i.Column.Name });
             rows.Add(new[] { "Beam profile", i.Beam.Name });
             rows.Add(new[] { "Bracing profile", i.Brace.Name + ", double cross (X) in every panel" });
-            rows.Add(new[] { "Beam spacing s", L(i.SpacingMm) + " mm" });
-            rows.Add(new[]
+            rows.Add(new[] { "Car rail bracket spacing s", L(i.SpacingMm) + " mm" });
+            foreach (string face in new[] { "Front", "Back", "Left", "Right" })
             {
-                "Beam levels",
-                String.Join(", ", Steel.Levels.Select(l => L(l.ElevationMm))) + " mm (from the lowest floor level)"
-            });
-            if (Steel.DerivedBracketSpacingMm.HasValue)
-                rows.Add(new[] { "Guide-rail bracket spacing (largest gap between beams)", L(Steel.DerivedBracketSpacingMm.Value) + " mm" });
-            rows.Add(new[]
+                rows.Add(new[]
+                {
+                    "Beam levels, " + (face == "Front" ? "entrance face" : face == "Back" ? "back face" : face == "Left" ? "left face" : "right face"),
+                    String.Join(", ", Steel.Levels[face].Select(l => L(l.ElevationMm))) + " mm (from the lowest floor level)"
+                });
+            }
+            if (Steel.LargestGapMm.HasValue)
+                rows.Add(new[] { "Guide-rail bracket spacing (largest gap between beams, side and back faces)", L(Steel.LargestGapMm.Value) + " mm" });            rows.Add(new[]
             {
                 "Base plate",
                 "PL " + L(i.PlateWidthMm) + "x" + L(i.PlateDepthMm) + "x" + L(i.PlateThicknessMm) + ", " + i.BoltCount + " bolts Ø" + L(i.BoltDiameterMm)

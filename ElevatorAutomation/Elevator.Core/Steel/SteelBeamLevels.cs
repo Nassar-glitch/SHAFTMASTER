@@ -63,10 +63,12 @@ namespace Elevator.Core.Steel
     }
 
     /// <summary>
-    /// The beam-level rule of the steel shaft (DESIGN-FLOW answer 1). Fixed beams: every floor level and every door head (the door
-    /// construction height above the floor). From each door head, and from the base for the pit, going up in steps of the beam spacing s;
-    /// when the rest up to the next fixed beam is not more than s, the next beam is that fixed beam. Above the top-floor door head the
-    /// same stepping runs up to the tower top, which carries the last beam (the machine platform).
+    /// The beam-level rule of the steel shaft, per face (DESIGN-FLOW "Steel shaft structure", answer 1). s is the effective car rail
+    /// bracket spacing of the project (the rails drive the beams). Side and back faces: a beam at every floor level; each gap between
+    /// floor beams, the pit (base to the lowest floor) and the top (top floor to the tower top) is divided equally into the fewest parts
+    /// none larger than s. Entrance face: a floor beam and a door-head beam at every floor; the floor-to-door-head gap is the opening and
+    /// is not split; from the door head to the next floor beam (or the tower top) the gap is divided equally into the fewest parts none
+    /// larger than s; the pit as on the other faces. The tower top carries the last beam (the machine platform).
     /// </summary>
     public static class SteelBeamLevels
     {
@@ -78,7 +80,7 @@ namespace Elevator.Core.Steel
         }
 
         /// <summary>The rule for floors at given elevations (served floors, named "0", "1", ...), pure and without a project.</summary>
-        public static List<SteelLevel> Rule(IList<double> floorElevationsMm, double doorHeightMm, double spacingMm, double baseMm, double topMm)
+        public static List<SteelLevel> Rule(IList<double> floorElevationsMm, double doorHeightMm, double spacingMm, double baseMm, double topMm, bool entranceFace)
         {
             if (floorElevationsMm == null)
                 throw new ArgumentException("Floors are required.");
@@ -87,17 +89,17 @@ namespace Elevator.Core.Steel
             {
                 floors.Add(new FloorElevation { FloorId = i.ToString(CultureInfo.InvariantCulture), Name = i.ToString(CultureInfo.InvariantCulture), ElevationMm = floorElevationsMm[i], IsServed = true });
             }
-            return Rule(floors, doorHeightMm, spacingMm, baseMm, topMm);
+            return Rule(floors, doorHeightMm, spacingMm, baseMm, topMm, entranceFace);
         }
 
-        /// <summary>The rule for the served floors of a building.</summary>
-        public static List<SteelLevel> Rule(IList<FloorElevation> floors, double doorHeightMm, double spacingMm, double baseMm, double topMm)
+        /// <summary>The rule for the served floors of a building on one face (entranceFace: the face with the doors).</summary>
+        public static List<SteelLevel> Rule(IList<FloorElevation> floors, double doorHeightMm, double spacingMm, double baseMm, double topMm, bool entranceFace)
         {
             var served = Served(floors);
             Check(served, doorHeightMm, spacingMm, baseMm, topMm);
             var levels = new List<SteelLevel>();
             int k = 0;
-            foreach (double y in Step(baseMm, served[0].ElevationMm, spacingMm))
+            foreach (double y in Divide(baseMm, served[0].ElevationMm, spacingMm))
                 levels.Add(new SteelLevel { Key = "P:" + (++k).ToString(CultureInfo.InvariantCulture), Kind = SteelLevelKind.Pit, ElevationMm = y });
             for (int i = 0; i < served.Count; i++)
             {
@@ -107,13 +109,13 @@ namespace Elevator.Core.Steel
                 levels.Add(new SteelLevel { Key = "F:" + f.Name, Kind = SteelLevelKind.Floor, ElevationMm = f.ElevationMm, FloorName = f.Name });
                 double from = f.ElevationMm;
                 double head = f.ElevationMm + doorHeightMm;
-                if (head < next - Epsilon)
+                if (entranceFace && head < next - Epsilon)
                 {
                     levels.Add(new SteelLevel { Key = "D:" + f.Name, Kind = SteelLevelKind.DoorHead, ElevationMm = head, FloorName = f.Name });
                     from = head;
                 }
                 k = 0;
-                foreach (double y in Step(from, next, spacingMm))
+                foreach (double y in Divide(from, next, spacingMm))
                 {
                     k++;
                     levels.Add(last
@@ -125,17 +127,16 @@ namespace Elevator.Core.Steel
             return levels;
         }
 
-        // The beams strictly between from and to: from + s, from + 2s ... while the rest to "to" is more than s.
-        static IEnumerable<double> Step(double from, double to, double s)
+        // The beams strictly between from and to when the gap is divided equally into the fewest parts none larger than s.
+        static IEnumerable<double> Divide(double from, double to, double s)
         {
-            double y = from;
-            while (to - y > s + Epsilon)
-            {
-                y += s;
-                yield return y;
-            }
+            double gap = to - from;
+            int parts = (int)Math.Ceiling(gap / s - Epsilon);
+            if (parts < 1)
+                parts = 1;
+            for (int j = 1; j < parts; j++)
+                yield return from + gap * j / parts;
         }
-
         static List<FloorElevation> Served(IList<FloorElevation> floors)
         {
             if (floors == null)
@@ -165,20 +166,14 @@ namespace Elevator.Core.Steel
         }
 
         /// <summary>
-        /// The rules the levels cannot meet: a gap larger than s that cannot be split because of a door, and a door head that does not fit
-        /// under the next floor beam. Advisory text for the Design Notes; empty when the rule is met everywhere.
+        /// The rule the levels cannot meet: a door head that does not fit under the next floor beam (a gap at a door is by design, not an issue).
+        /// Advisory text for the Design Notes; empty when the rule is met.
         /// </summary>
         public static List<string> Issues(IList<FloorElevation> floors, double doorHeightMm, double spacingMm, double baseMm, double topMm)
         {
             var issues = new List<string>();
             var served = Served(floors);
             Check(served, doorHeightMm, spacingMm, baseMm, topMm);
-            if (doorHeightMm > spacingMm + Epsilon)
-            {
-                issues.Add("The gap between a floor beam and its door-head beam is " + N(doorHeightMm)
-                    + " mm (the door construction height), larger than the beam spacing of " + N(spacingMm)
-                    + " mm. The door opening cannot be split by a beam, so the guide-rail bracket spacing there is " + N(doorHeightMm) + " mm.");
-            }
             for (int i = 0; i < served.Count; i++)
             {
                 double next = i == served.Count - 1 ? topMm : served[i + 1].ElevationMm;

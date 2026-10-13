@@ -511,13 +511,6 @@ return m==null?(double?)null:m.MachineMassKg;
         // The guide-rail recommendation of a field. Without a design context (a caller that cannot give one) the stored value is kept.
         static object RailRecommendation(PresetContext c, string key)
         {
-            if (key == CarSpacingKey)
-            {
-                // A steel shaft: the bracket spacing is derived from the beam levels (the largest gap), not recommended.
-                var derived = Steel.SteelStructure.DerivedSpacing(c);
-                if (derived.HasValue)
-                    return derived.Value;
-            }
             if (c.Design == null)
             {
                 return Fields.First(f=>f.Key==key).Stored(c.Project);

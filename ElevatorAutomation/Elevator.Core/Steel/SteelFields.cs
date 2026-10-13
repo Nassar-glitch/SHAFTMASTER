@@ -22,7 +22,6 @@ namespace Elevator.Core.Steel
         public const string BeamProfileKey = "Steel.BeamProfile";
         public const string BracingProfileKey = "Steel.BracingProfile";
         public const string BracingKey = "Steel.Bracing";
-        public const string BeamSpacingKey = "Steel.BeamSpacingMm";
         public const string PlateWidthKey = "Steel.BasePlateWidthMm";
         public const string PlateDepthKey = "Steel.BasePlateDepthMm";
         public const string PlateThicknessKey = "Steel.BasePlateThicknessMm";
@@ -133,7 +132,6 @@ namespace Elevator.Core.Steel
         public static readonly PresetField BeamProfile = Text("BeamProfile", "Beam profile", t => t.BeamProfile);
         public static readonly PresetField BracingProfile = Text("BracingProfile", "Bracing profile", t => t.BracingProfile);
         public static readonly PresetField Bracing = Text("Bracing", "Bracing", t => t.Bracing);
-        public static readonly PresetField BeamSpacing = Lib("BeamSpacingMm", "Beam spacing s (mm)", t => t.BeamSpacingMm);
         public static readonly PresetField PlateWidth = Lib("BasePlateWidthMm", "Base plate width (mm)", t => t.BasePlateWidthMm);
         public static readonly PresetField PlateDepth = Lib("BasePlateDepthMm", "Base plate depth (mm)", t => t.BasePlateDepthMm);
         public static readonly PresetField PlateThickness = Lib("BasePlateThicknessMm", "Base plate thickness (mm)", t => t.BasePlateThicknessMm);
@@ -153,7 +151,7 @@ namespace Elevator.Core.Steel
         /// <summary>Every steel field, in the order of the page.</summary>
         public static readonly PresetField[] All =
         {
-            Construction, System, ColumnProfile, BeamProfile, BracingProfile, Bracing, BeamSpacing, PlateWidth, PlateDepth, PlateThickness,
+            Construction, System, ColumnProfile, BeamProfile, BracingProfile, Bracing, PlateWidth, PlateDepth, PlateThickness,
             BoltCount, BoltDiameter, GussetLength, GussetWidth, GussetThickness, SteelGrade, BaseMargin, BaseThickness, BarDiameter,
             BarCountAlongX, BarCountAlongY
         };
@@ -178,102 +176,132 @@ namespace Elevator.Core.Steel
             return Text_(Construction, project, library) == SteelShaftPreset.SteelStructure;
         }
 
-        // ---------- the beam levels the user edited ----------
-        /// <summary>The user's level edits (locked levels), in storage order; empty when the rule is untouched.</summary>
-        public static List<SteelLevelEdit> LevelEdits(ElevatorProject p)
+        // ---------- the beam levels the user edited (per face) ----------
+        /// <summary>The faces of the tower; the level edits are kept per face.</summary>
+        public static readonly string[] Faces = { "Front", "Back", "Left", "Right" };
+
+        static string FaceKey(string face, string key)
+        {
+            return face + "|" + key;
+        }
+
+        static bool OfFace(string stored, string face, out string key)
+        {
+            string prefix = face + "|";
+            key = null;
+            if (stored == null || !stored.StartsWith(prefix, StringComparison.Ordinal))
+                return false;
+            key = stored.Substring(prefix.Length);
+            return true;
+        }
+
+        /// <summary>The user's level edits of one face (locked levels), in storage order; empty when the rule is untouched.</summary>
+        public static List<SteelLevelEdit> LevelEdits(ElevatorProject p, string face)
         {
             var list = new List<SteelLevelEdit>();
+            string key;
             var edits = Get(p, LevelEditsMember) as IDictionary<string, object>;
             if (edits != null)
             {
                 foreach (var kv in edits)
                 {
-                    if (kv.Value != null)
-                        list.Add(new SteelLevelEdit { Key = kv.Key, ElevationMm = ToDouble(kv.Value) });
+                    if (kv.Value != null && OfFace(kv.Key, face, out key))
+                        list.Add(new SteelLevelEdit { Key = key, ElevationMm = ToDouble(kv.Value) });
                 }
             }
             var removed = Get(p, LevelRemovedMember) as IEnumerable;
             if (removed != null && !(removed is string))
             {
-                foreach (var key in removed)
+                foreach (var item in removed)
                 {
-                    var s = key as string;
-                    if (s != null)
-                        list.Add(new SteelLevelEdit { Key = s, Removed = true });
+                    var s = item as string;
+                    if (s != null && OfFace(s, face, out key))
+                        list.Add(new SteelLevelEdit { Key = key, Removed = true });
                 }
             }
             return list;
         }
 
-        /// <summary>Moves a level (or adds one with key C:n) and locks it.</summary>
-        public static void EditLevel(ElevatorProject p, string key, double elevationMm)
+        /// <summary>Moves a level of a face (or adds one with key C:n) and locks it.</summary>
+        public static void EditLevel(ElevatorProject p, string face, string key, double elevationMm)
         {
-            if (String.IsNullOrEmpty(key) || Double.IsNaN(elevationMm) || Double.IsInfinity(elevationMm))
-                throw new ArgumentException("A level key and a finite elevation are required.");
+            if (String.IsNullOrEmpty(face) || String.IsNullOrEmpty(key) || Double.IsNaN(elevationMm) || Double.IsInfinity(elevationMm))
+                throw new ArgumentException("A face, a level key and a finite elevation are required.");
             var edits = Get(p, LevelEditsMember) as IDictionary<string, object>;
             if (edits == null)
             {
                 edits = new Dictionary<string, object>();
                 Write(p)[LevelEditsMember] = edits;
             }
-            edits[key] = elevationMm;
+            string stored = FaceKey(face, key);
+            edits[stored] = elevationMm;
             var removed = Get(p, LevelRemovedMember) as IList;
             if (removed != null)
             {
-                while (removed.Contains(key))
-                    removed.Remove(key);
+                while (removed.Contains(stored))
+                    removed.Remove(stored);
             }
         }
 
-        /// <summary>Removes a level and locks the removal.</summary>
-        public static void RemoveLevel(ElevatorProject p, string key)
+        /// <summary>Removes a level of a face and locks the removal.</summary>
+        public static void RemoveLevel(ElevatorProject p, string face, string key)
         {
-            if (String.IsNullOrEmpty(key))
-                throw new ArgumentException("A level key is required.");
+            if (String.IsNullOrEmpty(face) || String.IsNullOrEmpty(key))
+                throw new ArgumentException("A face and a level key are required.");
+            string stored = FaceKey(face, key);
             var edits = Get(p, LevelEditsMember) as IDictionary<string, object>;
             if (edits != null)
-                edits.Remove(key);
+                edits.Remove(stored);
             var removed = Get(p, LevelRemovedMember) as IList;
             if (removed == null)
             {
                 removed = new List<object>();
                 Write(p)[LevelRemovedMember] = removed;
             }
-            if (!removed.Contains(key))
-                removed.Add(key);
+            if (!removed.Contains(stored))
+                removed.Add(stored);
         }
 
-        /// <summary>Gives one level back to the rule.</summary>
-        public static void ResetLevel(ElevatorProject p, string key)
+        /// <summary>Gives one level of a face back to the rule.</summary>
+        public static void ResetLevel(ElevatorProject p, string face, string key)
         {
+            string stored = FaceKey(face, key);
             var edits = Get(p, LevelEditsMember) as IDictionary<string, object>;
             if (edits != null)
             {
-                edits.Remove(key);
+                edits.Remove(stored);
                 if (edits.Count == 0)
                     Set(p, LevelEditsMember, null);
             }
             var removed = Get(p, LevelRemovedMember) as IList;
             if (removed != null)
             {
-                while (removed.Contains(key))
-                    removed.Remove(key);
+                while (removed.Contains(stored))
+                    removed.Remove(stored);
                 if (removed.Count == 0)
                     Set(p, LevelRemovedMember, null);
             }
         }
 
-        /// <summary>Reset for the whole list: every level follows the rule again.</summary>
-        public static void ResetLevels(ElevatorProject p)
+        /// <summary>Reset for the whole list of one face (or of every face when face is null): the levels follow the rule again.</summary>
+        public static void ResetLevels(ElevatorProject p, string face = null)
         {
-            Set(p, LevelEditsMember, null);
-            Set(p, LevelRemovedMember, null);
+            if (face == null)
+            {
+                Set(p, LevelEditsMember, null);
+                Set(p, LevelRemovedMember, null);
+                return;
+            }
+            foreach (var e in LevelEdits(p, face))
+                ResetLevel(p, face, e.Key);
         }
 
-        /// <summary>True when any level is locked by an edit.</summary>
-        public static bool LevelsEdited(ElevatorProject p)
+        /// <summary>True when any level of a face (any face when null) is locked by an edit.</summary>
+        public static bool LevelsEdited(ElevatorProject p, string face = null)
         {
-            return LevelEdits(p).Count > 0;
+            if (face != null)
+                return LevelEdits(p, face).Count > 0;
+            return Faces.Any(f => LevelEdits(p, f).Count > 0);
         }
     }
 }
