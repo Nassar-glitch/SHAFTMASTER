@@ -105,6 +105,18 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - Q6, Q7 and Q12: presets from typical catalogues (CW shoe spacing, shoe type and lining, clip push-through force), all editable. Keep it simple.
   - The research and implementation run in the cloud as far as possible.
 
+## Steel shaft structure (requested 2026-10-13, in planning)
+
+- **Shaft construction** on the shaft page: Concrete (today, the default) or Steel structure. The first steel system is UPN.
+- **Reference drawing:** `UPN STEEL SHAFT.dxf` (repository root; shaft only, no lift). The first client case is:
+  - UPN 140 columns at the corners;
+  - UPN 100 beams every 1500 mm, at the same levels as the guide-rail brackets;
+  - double-cross (X) bracing L50×50×5.
+- **Beam levels:** there is always a beam at every floor level, because the doors are fixed to the structure: automatic doors always, manual doors by default. Between floors the levels are divided equally. The preset is 2 spaces per floor (for example 3250 → 1625), and the levels are editable.
+- **One model:** the steel structure is generated from the same project as everything else (plan, A-A, the sheet, and later STEP and the calculations). The rail brackets sit on the beams, so the rail bracket spacing follows the beam levels.
+- **Not now:** structural calculations (a later STEEL STRUCTURE module), and the generated details stage G (postponed).
+- **Profile catalogue:** UPN sizes (dimensions and mass) and L angles, as editable data.
+
 ## Layouts and PDF (agreed 2026-10-12)
 
 - **Sheets:** the generated DWG carries ready paper-space layouts built from the user's templates in `Layouts_Sec/`. The first is `01_Geared_MR_1-1_LAYOUT.dxf` (A0). The Gearless 2:1, Forklift and Hydraulic layouts wait for those systems.
@@ -143,6 +155,12 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - drawing number 1;
   - entrances = number of stops (one entrance per floor).
 - **Detailing (later stage):** detail views (rail size and bracket spacing, fixings, door elevation and so on) become generated from the project. Until then, the template's detail views stay as drawn.
+
+## Where we are (2026-10-13)
+
+- **Done and released:** doors (v05); the A0 sheet with PDF and file names (v06); the guide-rail check R1 and R2 (merge pending the user's golden approval, then a push).
+- **Postponed:** stage G, the generated detail views (rails and brackets with the real profile and spacing, the door detail, STEP rails).
+- **Now:** the steel shaft structure (UPN), for a real client project.
 
 ## Build stages (order)
 
