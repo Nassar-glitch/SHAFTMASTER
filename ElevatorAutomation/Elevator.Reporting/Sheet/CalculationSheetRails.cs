@@ -56,6 +56,15 @@ namespace Elevator.Reporting.Sheet
             }
         }
 
+        // The summary row: the chosen rails and the overall result.
+        string GuideRailsSummary()
+        {
+            var r = GuideRails;
+            return "Car rails " + r.Car.Profile.Name + " at " + L(r.Car.SpacingMm) + " mm: " + (r.Car.Ok ? "OK" : "NOT OK")
+                + "; counterweight rails " + r.Counterweight.Profile.Name + " at " + L(r.Counterweight.SpacingMm) + " mm: "
+                + (r.Counterweight.Ok ? "OK" : "NOT OK");
+        }
+
         static string RailValue(RailItem i, double v)
         {
             if (i.IsForce)

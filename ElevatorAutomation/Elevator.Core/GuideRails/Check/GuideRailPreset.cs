@@ -44,6 +44,11 @@ namespace Elevator.Core.GuideRails
         /// <summary>The catalog, in the order of the recommendation (smallest first).</summary>
         public List<RailProfile> Profiles;
 
+        public GuideRailPreset Clone()
+        {
+            return (GuideRailPreset)MemberwiseClone();
+        }
+
         /// <summary>The profile with a name, or null.</summary>
         public RailProfile Profile(string name)
         {

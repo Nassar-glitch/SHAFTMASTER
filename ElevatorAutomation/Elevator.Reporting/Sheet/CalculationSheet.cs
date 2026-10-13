@@ -73,9 +73,8 @@ namespace Elevator.Reporting.Sheet
             // FF1/FF2: independent workflow.
             BuildCarGuideForces(project, context, s);
             BuildPlan(project, context, s);
-            var profiles = new ElevatorDesignResult();
-            s.CarRail = ProportionalRailSection.Parse(profiles.CarRailProfile);
-            s.CounterweightRail = ProportionalRailSection.Parse(profiles.CounterweightRailProfile);
+            s.CarRail = ProportionalRailSection.Parse(project.Rails.CarProfileShown());
+            s.CounterweightRail = ProportionalRailSection.Parse(project.Rails.CwProfileShown());
             RecordOmissions(s);
             s.BuildRopeTraction(context);
             s.BuildGuideRails(context);
@@ -628,6 +627,8 @@ namespace Elevator.Reporting.Sheet
                     "FF1 " + KN(f.FF1DesignN) + " kN (" + KG(f.FF1DesignN) + " kg); FF2 " + KN(f.FF2DesignN) + " kN (" + KG(f.FF2DesignN) + " kg) (design, per guide rail)"
                 });
             }
+            if (GuideRailsAvailable)
+                rows.Add(new[] { GuideRailsSectionTitle, GuideRailsSummary() });
             d.Table(new[] { "Calculation", "Key result" }, rows, new[] { 3900, 5738 }, new HashSet<int> { 0 });
         }
 

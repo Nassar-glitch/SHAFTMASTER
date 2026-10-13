@@ -43,12 +43,42 @@ namespace Elevator.Core.GuideRails
         public double MachineLoadMassKg;
         public double MachineMassKg;
         public double RopeMassKg;
+        // Advanced guide-shoe and material values of the project (null: the catalog value of the profile).
+        public string CarShoeType;
+        public string CwShoeType;
+        public double? CarShoeLiningLengthMm;
+        public double? CwShoeLiningLengthMm;
+        public string A5Band;
+
+        /// <summary>The profile as used on a line: the catalog row with the project shoe and A5 values applied.</summary>
+        public RailProfile ForLine(bool car, RailProfile profile)
+        {
+            string shoe = car ? CarShoeType : CwShoeType;
+            double? lining = car ? CarShoeLiningLengthMm : CwShoeLiningLengthMm;
+            if (profile == null || (shoe == null && !lining.HasValue && A5Band == null))
+                return profile;
+            var p = profile.Clone();
+            if (shoe != null)
+                p.ShoeType = shoe;
+            if (lining.HasValue)
+                p.ShoeLiningLengthMm = lining.Value;
+            if (A5Band != null)
+                p.A5Band = A5Band;
+            return p;
+        }
 
         /// <summary>The effective value of a managed field, or null.</summary>
         static object Eff(PresetContext c, string key)
         {
             var f = ProjectPresets.Find(key);
             return f == null ? null : f.Effective(c);
+        }
+
+        // The project value of a field the user edited; null while it follows the catalog.
+        static object Edited(PresetContext c, string key)
+        {
+            var f = ProjectPresets.Find(key);
+            return f != null && f.IsEdited(c.Project) ? f.Stored(c.Project) : null;
         }
 
         static double? D(object v)
@@ -64,9 +94,28 @@ namespace Elevator.Core.GuideRails
                 issues.Add(new CalculationIssue("Project", "Project, design context and preset library are required."));
                 return null;
             }
-            var preset = lib.GuideRailsOrDefault();
+            var preset = lib.GuideRailsOrDefault().Clone();
             var c = new PresetContext { Project = p, Library = lib, Design = ctx };
             var g = new GuideRailInputs { Preset = preset };
+            // Advanced values: the project value when edited, otherwise the library value (the catalog value of the profile).
+            double? nm = D(Eff(c, "Rails.MachineRailCount")), fr = D(Eff(c, "Rails.ClipPushThroughN")), hcw = D(Eff(c, "Rails.CwShoeSpacingMm"));
+            double? dstr = D(Eff(c, "Rails.StructureDeflectionMm"));
+            if (nm.HasValue && nm.Value >= 1)
+                preset.MachineRailCount = (int)Math.Round(nm.Value);
+            if (fr.HasValue && fr.Value >= 0)
+                preset.ClipPushThroughN = fr.Value;
+            if (hcw.HasValue && hcw.Value > 0)
+                preset.CwShoeSpacingMm = hcw.Value;
+            if (dstr.HasValue && dstr.Value >= 0)
+            {
+                preset.StructureDeflectionXMm = dstr.Value;
+                preset.StructureDeflectionYMm = dstr.Value;
+            }
+            g.CarShoeType = Edited(c, "Rails.CarShoeType") as string;
+            g.CwShoeType = Edited(c, "Rails.CwShoeType") as string;
+            g.CarShoeLiningLengthMm = D(Edited(c, "Rails.CarShoeLiningMm"));
+            g.CwShoeLiningLengthMm = D(Edited(c, "Rails.CwShoeLiningMm"));
+            g.A5Band = Edited(c, "Rails.A5Band") as string;
             double? q = D(Eff(c, "Elevator.CapacityKg")), car = D(Eff(c, "Calculations.CarMassKg")), cw = D(Eff(c, "Calculations.CounterweightMassKg"));
             double? h = D(Eff(c, "Calculations.CarGuideForces.GuideShoeSpacingMm"));
             double? pit = D(Eff(c, "Shaft.PitDepthMm")), overhead = D(Eff(c, "Shaft.OverheadMm"));

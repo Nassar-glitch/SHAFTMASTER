@@ -63,6 +63,8 @@ namespace Elevator.Core.Project
         ElevatorDesignResult CalculateInternal(ElevatorProject project, DesignContext context, DrawingViews views, bool basicGeometry)
         {
             var result = new ElevatorDesignResult();
+            result.CarRailProfile = project.Rails.CarProfileShown();
+            result.CounterweightRailProfile = project.Rails.CwProfileShown();
             result.Validation = ProjectValidator.Validate(project, views, basicGeometry);
             if (!result.CanGenerate)
                 return result;

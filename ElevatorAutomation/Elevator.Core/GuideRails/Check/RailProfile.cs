@@ -45,6 +45,11 @@ namespace Elevator.Core.GuideRails
         /// <summary>b: half the width of the guide-shoe lining.</summary>
         public double ShoeHalfWidthMm;
 
+        public RailProfile Clone()
+        {
+            return (RailProfile)MemberwiseClone();
+        }
+
         /// <summary>The minimum radius of gyration i.</summary>
         public double MinimumRadiusMm
         {

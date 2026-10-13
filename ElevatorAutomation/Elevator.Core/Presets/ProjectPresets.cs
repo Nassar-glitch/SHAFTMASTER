@@ -201,7 +201,7 @@ return r==null?(int?)null:r.RopeCount;
                 "RAILS",
                 "Rails.BracketMaximumSpacingMm",
                 "Maximum bracket spacing (mm)",
-                c=>c.Library.BracketMaximumSpacingMm,
+                c=>BracketSpacing(c),
                 p=>p.Rails.BracketMaximumSpacingMm,
                 (p,v)=>p.Rails.BracketMaximumSpacingMm=D(v)),
             F(
@@ -427,7 +427,86 @@ return m==null?(double?)null:m.MachineMassKg;
                 c=>RailRecommendation(c,CwSpacingKey),
                 p=>p.Rails.CwSpacingMm,
                 (p,v)=>p.Rails.CwSpacingMm=D(v)),
+            // Advanced guide-rail values: the library value, or the catalog value of the chosen profile, until edited.
+            F(
+                "RAILS",
+                "Rails.MachineRailCount",
+                "Number of rails carrying the machine",
+                c=>c.Library.GuideRailsOrDefault().MachineRailCount,
+                p=>p.Rails.MachineRailCount,
+                (p,v)=>p.Rails.MachineRailCount=I(v)),
+            F(
+                "RAILS",
+                "Rails.ClipPushThroughN",
+                "Push-through force of the clips of one bracket (N)",
+                c=>c.Library.GuideRailsOrDefault().ClipPushThroughN,
+                p=>p.Rails.ClipPushThroughN,
+                (p,v)=>p.Rails.ClipPushThroughN=D(v)),
+            F(
+                "RAILS",
+                "Rails.CwShoeSpacingMm",
+                "Counterweight guide-shoe spacing (mm)",
+                c=>c.Library.GuideRailsOrDefault().CwShoeSpacingMm,
+                p=>p.Rails.CwShoeSpacingMm,
+                (p,v)=>p.Rails.CwShoeSpacingMm=D(v)),
+            F(
+                "RAILS",
+                "Rails.StructureDeflectionMm",
+                "Structure deflection at the brackets (mm)",
+                c=>c.Library.GuideRailsOrDefault().StructureDeflectionXMm,
+                p=>p.Rails.StructureDeflectionMm,
+                (p,v)=>p.Rails.StructureDeflectionMm=D(v)),
+            F(
+                "RAILS",
+                "Rails.CarShoeType",
+                "Car guide-shoe type",
+                c=>CatalogOf(c,CarProfileKey,r=>r.ShoeType),
+                p=>p.Rails.CarShoeType,
+                (p,v)=>p.Rails.CarShoeType=v as string),
+            F(
+                "RAILS",
+                "Rails.CarShoeLiningMm",
+                "Car guide-shoe lining length (mm)",
+                c=>CatalogOf(c,CarProfileKey,r=>(object)r.ShoeLiningLengthMm),
+                p=>p.Rails.CarShoeLiningMm,
+                (p,v)=>p.Rails.CarShoeLiningMm=D(v)),
+            F(
+                "RAILS",
+                "Rails.CwShoeType",
+                "Counterweight guide-shoe type",
+                c=>CatalogOf(c,CwProfileKey,r=>r.ShoeType),
+                p=>p.Rails.CwShoeType,
+                (p,v)=>p.Rails.CwShoeType=v as string),
+            F(
+                "RAILS",
+                "Rails.CwShoeLiningMm",
+                "Counterweight guide-shoe lining length (mm)",
+                c=>CatalogOf(c,CwProfileKey,r=>(object)r.ShoeLiningLengthMm),
+                p=>p.Rails.CwShoeLiningMm,
+                (p,v)=>p.Rails.CwShoeLiningMm=D(v)),
+            F(
+                "RAILS",
+                "Rails.A5Band",
+                "Rail steel elongation A5",
+                c=>CatalogOf(c,CarProfileKey,r=>r.A5Band),
+                p=>p.Rails.A5Band,
+                (p,v)=>p.Rails.A5Band=v as string),
         };
+
+        // The maximum bracket spacing of the drawings follows the effective car rail spacing; the library value when that is not known.
+        static double? BracketSpacing(PresetContext c)
+        {
+            var v = Fields.First(f=>f.Key==CarSpacingKey).Effective(c);
+            return v == null ? c.Library.BracketMaximumSpacingMm : D(v);
+        }
+
+        // A catalog value of the profile in effect on a line (the preset of the advanced shoe and A5 values); null without a design context.
+        static object CatalogOf(PresetContext c, string profileKey, Func<RailProfile, object> value)
+        {
+            var name = Fields.First(f=>f.Key==profileKey).Effective(c) as string;
+            var profile = name == null ? null : c.Library.GuideRailsOrDefault().Profile(name);
+            return profile == null ? null : value(profile);
+        }
 
         // The guide-rail recommendation of a field. Without a design context (a caller that cannot give one) the stored value is kept.
         static object RailRecommendation(PresetContext c, string key)

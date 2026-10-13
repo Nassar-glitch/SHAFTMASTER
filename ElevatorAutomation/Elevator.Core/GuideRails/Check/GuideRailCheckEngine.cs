@@ -75,6 +75,7 @@ namespace Elevator.Core.GuideRails
         public static RailLineResult Line(GuideRailInputs g, bool car, RailProfile profile, double spacingMm)
         {
             var pr = g.Preset;
+            profile = g.ForLine(car, profile);
             var line = new RailLineResult { Name = car ? "Car" : "Counterweight", Profile = profile, SpacingMm = spacingMm };
             line.LineLengthMm = g.WellHeightMm;
             line.LineMassKg = profile.MassKgPerM * g.WellHeightMm / 1000.0;
