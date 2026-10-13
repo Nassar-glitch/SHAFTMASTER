@@ -13,6 +13,8 @@ $env:DOTNET_CLI_TELEMETRY_OPTOUT='1';$env:DOTNET_NOLOGO='1'
 # The folder is passed with a trailing '/', never '\': a backslash before the closing quote would escape it.
 & dotnet build (Join-Path $root 'ElevatorAutomation.sln') -c $Configuration "-p:BinDir=$out/" "-p:AutoCADDir=$AutoCADDir" "-p:SolidWorksDir=$SolidWorksDir" -nologo -v:minimal
 if($LASTEXITCODE){throw 'Build failed'}
+# The PdfSharp package also holds PdfSharp.Charting.dll: not referenced by the program, not shipped.
+$charting=Join-Path $out 'PdfSharp.Charting.dll';if(Test-Path -LiteralPath $charting){Remove-Item -LiteralPath $charting -Force}
 if(-not $SkipTests){
  foreach($test in 'RuleTests','MachineRoomRuleTests'){& (Join-Path $out "$test.exe") (Join-Path $root 'config\equipment-profile.json');if($LASTEXITCODE){throw "$test failed"}}
  & (Join-Path $out 'ReevingTests.exe');if($LASTEXITCODE){throw 'ReevingTests failed'}

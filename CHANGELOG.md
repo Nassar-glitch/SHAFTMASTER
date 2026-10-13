@@ -6,17 +6,32 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
-- **One output set per Generate Drawings run (L3):** the DWG (with the A0 sheet), the PDF of that sheet and the project file are written together into
-  the output folder under one base name `COMPANY-TYPE-CW-W{SW}D{SD}-PROJECT-MODEL{NN}`. When any of the three files exists the program asks: replace
-  them, or raise the revision to the next NN (the same number on the sheet, the title block, the calculation sheet and the names), or cancel; nothing
-  is replaced silently. The PDF is plotted by the AutoCAD Core Console plot engine (DWG To PDF, ISO full bleed A0, monochrome.ctb, 1:1) and the
-  company logo is put onto the page at the logo area (PdfSharp 1.50.5147, MIT licence, shipped in the program folder). An error of the PDF step
-  keeps the DWG and the project file and says what failed.
-- **One set of company and report data (L2b prep):** Company / report settings now holds the company name (as typed, Arabic or English), the logo and
-  the default prepared / checked / approved names; a project's own value wins while it is not blank. Client, document number, revision and the new
-  phase stay in the project (General page). The calculation sheet and the Design Notes read the same resolved data as the drawing title block and the
-  file names. The revision is a number (00, 01, 02 …): a stored non-number keeps loading and shows the validation message, never changed silently.
-  A blank revision is shown as 00 ("Rev 00" in the title block and the footer of both documents). See `ElevatorAutomation/docs/design/layouts/`.
+## [v06] — 2026-10-13
+
+v06 adds the A0 geared drawing sheet: every Generate Drawings run writes the drawing with a composed A0 sheet, its PDF and the project file.
+Calculations, presets and the four generated views (except the removal of the B-B remark texts, below) are unchanged.
+
+- **The A0 geared drawing sheet:** the generated DWG carries the layout SM_Geared_A0 built from the template (`ElevatorAutomation/Templates/`). The
+  views are placed by an automatic arrangement that follows the sheet composition of the user's own edit: the machine-room plan above the shaft plan,
+  the section A-A with the fish plate above it, the section B-B on top right with the door, the guides and brackets and the rail-bracket elevation under
+  it; each view takes the largest standard scale that fits, a tall A-A takes its column. Every view and detail title states its scale on the sheet
+  (one line, 5 mm printed). The title block is filled from the project, the company settings and the calculations (loads P1-P7 in kg, speed, travel,
+  stops, supply, control, dates, revision, names); the company, client, project and drawing names are written in the xarab font for Arabic text.
+  See `ElevatorAutomation/docs/design/layouts/`.
+- **One company / report settings screen:** the company name (as typed, Arabic or English), the logo and the default prepared / checked / approved
+  names are one set of settings, used by the calculation sheet, the Design Notes, the title block and the file names. A project's own value wins
+  while it is not blank. Client, document number, revision and phase stay in the project (General page).
+- **Revision NN everywhere:** the revision is a number (00, 01, 02 …), shown the same on the sheet, the title block, the calculation sheet and the file
+  name; a blank revision is 00. A stored non-number keeps loading and shows the validation message, never changed silently.
+- **The output set:** one Generate Drawings run writes the DWG (with the sheet), the PDF of that sheet and the project file under one name
+  `COMPANY-TYPE-CW-W{SW}D{SD}-PROJECT-MODEL{NN}` into the folder the user chooses. When any of the three files exists the program asks: replace them,
+  or raise the revision to the next NN, or cancel; nothing is replaced silently. An error of the PDF step keeps the DWG and the project file and says
+  what failed.
+- **PDF with the logo:** the PDF is plotted from the layout by the AutoCAD Core Console plot engine (DWG To PDF, ISO full bleed A0, monochrome.ctb,
+  1:1). The company logo is put onto the page at the logo area with **PdfSharp 1.50.5147, which is MIT licensed** (`PdfSharp.dll` in the program
+  folder; no other component is added). Without a logo nothing is added.
+- **Remark texts removed from B-B:** the status block beside the machine in the section B-B ("Beam PRELIMINARY", "Concrete NOT EVALUATED", "REVIEW
+  REQUIRED", "NOT YET EVALUABLE" ...) is no longer drawn in any generated drawing; such items belong in the Design Notes only.
 
 ## [v05] — 2026-10-12
 
