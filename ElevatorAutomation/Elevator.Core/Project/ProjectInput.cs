@@ -32,6 +32,8 @@ namespace Elevator.Core.Project
         public string MachineType { get; set; }
         public double? Speed { get; set; }
         public string RailType { get; set; }
+        public string CarRailProfile { get; set; }
+        public string CounterweightRailProfile { get; set; }
         public string SuspensionType { get; set; }
         public Dictionary<string, object> Extensions { get; set; }
 

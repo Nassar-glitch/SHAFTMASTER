@@ -37,6 +37,8 @@ namespace Elevator.Core.Geometry
         public string CarReferenceFloorId;
         public double LevelingOffsetMm;
         public double RequestedBracketMaxSpacingMm; // Mandatory: no default.
+        public string CarRailProfile;
+        public string CwRailProfile;
         public string BracketSpacingSource = "ProjectInputPendingFutureCalculation";
         public string SuspensionTopology = "1:1";
         public string PitDatumDefinition = "Lowest modeled normal-floor FFL (Z=0) to finished pit floor";

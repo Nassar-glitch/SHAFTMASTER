@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Elevator.Core.Calculations;
 using Elevator.Core.Doors;
+using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Serialization;
 using Elevator.Core.Suspension;
@@ -44,6 +45,15 @@ namespace Elevator.Core.Presets
 
         /// <summary>The door catalog (DESIGN-FLOW "Doors"); null in an older library: the shipped default catalog applies.</summary>
         public DoorCatalog Doors;
+
+        /// <summary>The guide-rail catalog and check presets; null in an older library: the shipped defaults apply.</summary>
+        public GuideRailPreset GuideRails;
+
+        /// <summary>The guide-rail presets of the library, or the shipped defaults.</summary>
+        public GuideRailPreset GuideRailsOrDefault()
+        {
+            return GuideRails ?? GuideRailDefaults.Create();
+        }
 
         /// <summary>The title-block presets (control, supply); null in an older library: the shipped defaults apply.</summary>
         public TitleBlockPreset TitleBlock;
@@ -141,6 +151,8 @@ namespace Elevator.Core.Presets
             ValidateProject(p);
             if (Doors != null)
                 p.AddRange(Doors.Validate());
+            if (GuideRails != null)
+                p.AddRange(GuideRails.Validate());
             if (TitleBlock != null && (TitleBlock.Control == null || TitleBlock.Supply == null))
                 p.Add("TitleBlock needs Control and Supply");
             return p;
@@ -379,7 +391,7 @@ namespace Elevator.Core.Presets
             var value = hash;
             if (value == null)
             {
-                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock");
+                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock", "GuideRails");
                 hash = value;
             }
             return value;

@@ -44,6 +44,8 @@ P7 counterweight-buffer reaction
 39.34 kN (4015 kg) per buffer; 39.34 kN (4015 kg) total
 FF1 / FF2 car guide-rail forces
 FF1 1.238 kN (130 kg); FF2 0.788 kN (85 kg) (design, per guide rail)
+Guide rails
+Car rails T70/65/9 at 2000 mm: OK; counterweight rails T50/50/5 at 2000 mm: OK
 
 2  Input data
 Input
@@ -507,6 +509,414 @@ NTS
 Figure 10 — Car guide rail T70/65/9 — section
 Dimensions in mm
 NTS
+
+8  Guide rails
+Guide rails of the car and of the counterweight: bending, combined stress, buckling, flange bending and deflection (EN 81-50:2014 5.10; EN 81-20:2014 5.7).
+Input
+Value
+Machine supported on the guide rails
+No
+Car rail profile
+T70/65/9
+Car rail bracket spacing l
+2000 mm
+Counterweight rail profile
+T50/50/5
+Counterweight rail bracket spacing l
+2000 mm
+Number of guide rails per line n
+2
+Rated load Q
+630 kg
+Car mass P
+700 kg
+Counterweight mass Mcwt
+983.5 kg
+Car depth Dx
+1400 mm
+Car width Dy
+1100 mm
+Guide-shoe spacing of the car h
+2800 mm
+Counterweight depth
+100 mm
+Counterweight width
+1000 mm
+Guide-shoe spacing of the counterweight hcw
+2000 mm
+Impact factor of the safety gear k1
+2
+Impact factor of running kr
+1.2
+Well height (pit + travel + overhead)
+17500 mm
+Travel
+12000 mm
+Modulus of elasticity E
+210000 N/mm²
+Structure deflection δstr-x / δstr-y
+0 mm / 0 mm
+
+Rail data
+Quantity
+Car rails
+Counterweight rails
+Profile
+T70/65/9
+T50/50/5
+Cross-section A (mm²)
+951
+475
+Section modulus Wx (mm³)
+9240
+3150
+Section modulus Wy (mm³)
+5350
+2100
+Second moment Ix (mm⁴)
+413000
+112400
+Second moment Iy (mm⁴)
+186500
+52500
+Minimum radius of gyration i (mm)
+14
+10.5
+Mass per metre (kg/m)
+7.47
+3.73
+Mass of one rail line Mg (kg)
+130.73
+65.28
+Tensile strength Rm (N/mm²)
+370
+370
+Rail height h1 (mm)
+65
+50
+Width of the connection c (mm)
+6
+5
+Foot depth f (mm)
+8
+5
+Guide shoes
+Sliding
+Sliding
+Half width of the shoe lining b (mm)
+19
+19
+Length of the shoe lining lL (mm)
+135
+60
+
+Car rails — Normal operation, running (EN 81-20 5.7.2.2 Table 13; EN 81-50 C.2.2)
+σperm = Rm / St = 370 / 2.25 = 164.44 N/mm²
+Fx = kr·gn·Q·(Dx/8) / (n·h) = 1.2 × 9.81 × 630 × (1400 / 8) / (2 × 2800) = 231.761 N (25 kg)
+Fy = kr·gn·Q·(Dy/8) / ((n/2)·h) = 1.2 × 9.81 × 630 × (1100 / 8) / (1 × 2800) = 364.196 N (40 kg)
+Fv = Mg·gn + Fp = 130.725 × 9.81 + 0 = 1282.412 N (135 kg)
+σx = 3·Fy·l / (16·Wx) = 3 × 364.196 × 2000 / (16 × 9240) = 14.781 N/mm²
+σy = 3·Fx·l / (16·Wy) = 3 × 231.761 × 2000 / (16 × 5350) = 16.245 N/mm²
+σm = max(0 + 16.245; 14.781 + 0) = 16.245 N/mm²
+λ = lk / i = 2000 / 14 = 142.857
+ω = 0.00016887 × 142.857² = 3.446
+σk = (Fv + k3·Maux)·ω / A = (1282.412 + 0) × 3.446 / 951 = 4.647 N/mm²
+σ = σm + (Fv + k3·Maux) / A = 16.245 + (1282.412 + 0) / 951 = 17.593 N/mm²
+σ = σk + 0.9·σm = 4.647 + 0.9 × 16.245 = 19.268 N/mm²
+σF = 6·Fx·(h1 − b − f) / (c²·(lL + 2·(h1 − f))) = 6 × 231.761 × (65 − 19 − 8) / (6² × (135 + 2 × (65 − 8))) = 5.895 N/mm²
+δx = 0.7·Fx·l³ / (48·E·Iy) + δstr-x = 0.7 × 231.761 × 2000³ / (48 × 210000 × 186500) + 0 = 0.69 mm
+δy = 0.7·Fy·l³ / (48·E·Ix) + δstr-y = 0.7 × 364.196 × 2000³ / (48 × 210000 × 413000) + 0 = 0.49 mm
+Item
+Value
+Permissible
+Result
+Guiding force Fx
+231.76 N (25 kg)
+
+
+Guiding force Fy
+364.2 N (40 kg)
+
+
+Vertical force Fv
+1282.41 N (135 kg)
+
+
+Bending stress σx
+14.78 N/mm²
+164.44 N/mm²
+OK
+Bending stress σy
+16.24 N/mm²
+164.44 N/mm²
+OK
+Bending stress σm
+16.24 N/mm²
+164.44 N/mm²
+OK
+Slenderness λ
+142.9
+250
+OK
+Omega ω
+3.446
+
+
+Buckling stress σk
+4.65 N/mm²
+164.44 N/mm²
+OK
+Bending and compression σ
+17.59 N/mm²
+164.44 N/mm²
+OK
+Bending and buckling σ
+19.27 N/mm²
+164.44 N/mm²
+OK
+Flange bending σF
+5.89 N/mm²
+164.44 N/mm²
+OK
+Deflection δx
+0.69 mm
+5 mm
+OK
+Deflection δy
+0.49 mm
+5 mm
+OK
+
+Car rails — Normal operation, loading (EN 81-20 5.7.2.2 Table 13, 5.7.2.3.6; EN 81-50 C.2.3)
+σperm = Rm / St = 370 / 2.25 = 164.44 N/mm²
+Fx = Fs·(Dx/2) / (n·h) = 2472.12 × (1400 / 2) / (2 × 2800), Fs = 0.4 × 9.81 × 630 = 309.015 N (35 kg)
+Fy = 0 = 0 N (0 kg)
+Fv = Mg·gn + Fp = 130.725 × 9.81 + 0 = 1282.412 N (135 kg)
+σx = 3·Fy·l / (16·Wx) = 3 × 0 × 2000 / (16 × 9240) = 0 N/mm²
+σy = 3·Fx·l / (16·Wy) = 3 × 309.015 × 2000 / (16 × 5350) = 21.66 N/mm²
+σm = σx + σy = 0 + 21.66 = 21.66 N/mm²
+λ = lk / i = 2000 / 14 = 142.857
+ω = 0.00016887 × 142.857² = 3.446
+σk = (Fv + k3·Maux)·ω / A = (1282.412 + 0) × 3.446 / 951 = 4.647 N/mm²
+σ = σm + (Fv + k3·Maux) / A = 21.66 + (1282.412 + 0) / 951 = 23.008 N/mm²
+σ = σk + 0.9·σm = 4.647 + 0.9 × 21.66 = 24.141 N/mm²
+σF = 6·Fx·(h1 − b − f) / (c²·(lL + 2·(h1 − f))) = 6 × 309.015 × (65 − 19 − 8) / (6² × (135 + 2 × (65 − 8))) = 7.86 N/mm²
+δx = 0.7·Fx·l³ / (48·E·Iy) + δstr-x = 0.7 × 309.015 × 2000³ / (48 × 210000 × 186500) + 0 = 0.921 mm
+δy = 0.7·Fy·l³ / (48·E·Ix) + δstr-y = 0.7 × 0 × 2000³ / (48 × 210000 × 413000) + 0 = 0 mm
+Item
+Value
+Permissible
+Result
+Guiding force Fx
+309.02 N (35 kg)
+
+
+Guiding force Fy
+0 N (0 kg)
+
+
+Vertical force Fv
+1282.41 N (135 kg)
+
+
+Bending stress σx
+0 N/mm²
+164.44 N/mm²
+OK
+Bending stress σy
+21.66 N/mm²
+164.44 N/mm²
+OK
+Bending stress σm
+21.66 N/mm²
+164.44 N/mm²
+OK
+Slenderness λ
+142.9
+250
+OK
+Omega ω
+3.446
+
+
+Buckling stress σk
+4.65 N/mm²
+164.44 N/mm²
+OK
+Bending and compression σ
+23.01 N/mm²
+164.44 N/mm²
+OK
+Bending and buckling σ
+24.14 N/mm²
+164.44 N/mm²
+OK
+Flange bending σF
+7.86 N/mm²
+164.44 N/mm²
+OK
+Deflection δx
+0.92 mm
+5 mm
+OK
+Deflection δy
+0 mm
+5 mm
+OK
+
+Car rails — Safety device operation (EN 81-20 5.7.2.2 Table 13, 5.7.2.3.5; EN 81-50 C.2.1)
+σperm = Rm / St = 370 / 1.8 = 205.56 N/mm²
+Fx = FF2 = 787.5 N = 787.5 N (85 kg)
+Fy = FF1 = 1237.5 N = 1237.5 N (130 kg)
+Fv = k1·gn·(P + Q) / n + Mg·gn + Fp = 130.725 × 9.81 + 0 = 2 × 9.81 × (700 + 630) / 2 + 1282.412 = 14329.712 N (1465 kg)
+σx = 3·Fy·l / (16·Wx) = 3 × 1237.5 × 2000 / (16 × 9240) = 50.223 N/mm²
+σy = 3·Fx·l / (16·Wy) = 3 × 787.5 × 2000 / (16 × 5350) = 55.199 N/mm²
+σm = σx + σy = 50.223 + 55.199 = 105.422 N/mm²
+λ = lk / i = 2000 / 14 = 142.857
+ω = 0.00016887 × 142.857² = 3.446
+σk = (Fv + k3·Maux)·ω / A = (14329.712 + 0) × 3.446 / 951 = 51.929 N/mm²
+σ = σm + (Fv + k3·Maux) / A = 105.422 + (14329.712 + 0) / 951 = 120.49 N/mm²
+σ = σk + 0.9·σm = 51.929 + 0.9 × 105.422 = 146.809 N/mm²
+σF = 6·Fx·(h1 − b − f) / (c²·(lL + 2·(h1 − f))) = 6 × 787.5 × (65 − 19 − 8) / (6² × (135 + 2 × (65 − 8))) = 20.03 N/mm²
+δx = 0.7·Fx·l³ / (48·E·Iy) + δstr-x = 0.7 × 787.5 × 2000³ / (48 × 210000 × 186500) + 0 = 2.346 mm
+δy = 0.7·Fy·l³ / (48·E·Ix) + δstr-y = 0.7 × 1237.5 × 2000³ / (48 × 210000 × 413000) + 0 = 1.665 mm
+Item
+Value
+Permissible
+Result
+Guiding force Fx
+787.5 N (85 kg)
+
+
+Guiding force Fy
+1237.5 N (130 kg)
+
+
+Vertical force Fv
+14329.71 N (1465 kg)
+
+
+Bending stress σx
+50.22 N/mm²
+205.56 N/mm²
+OK
+Bending stress σy
+55.2 N/mm²
+205.56 N/mm²
+OK
+Bending stress σm
+105.42 N/mm²
+205.56 N/mm²
+OK
+Slenderness λ
+142.9
+250
+OK
+Omega ω
+3.446
+
+
+Buckling stress σk
+51.93 N/mm²
+205.56 N/mm²
+OK
+Bending and compression σ
+120.49 N/mm²
+205.56 N/mm²
+OK
+Bending and buckling σ
+146.81 N/mm²
+205.56 N/mm²
+OK
+Flange bending σF
+20.03 N/mm²
+205.56 N/mm²
+OK
+Deflection δx
+2.35 mm
+5 mm
+OK
+Deflection δy
+1.66 mm
+5 mm
+OK
+
+Counterweight rails — Normal operation, counterweight (EN 81-20 5.7.2.3.3; EN 81-50 5.10)
+σperm = Rm / St = 370 / 2.25 = 164.44 N/mm²
+Fx = kr·gn·Mcwt·ex / (n·hcw) = 1.2 × 9.81 × 983.5 × 10 / (2 × 2000), ex = 10 % × 100 = 28.944 N (5 kg)
+Fy = kr·gn·Mcwt·ey / ((n/2)·hcw) = 1.2 × 9.81 × 983.5 × 50 / (1 × 2000), ey = 5 % × 1000 = 289.444 N (30 kg)
+Fv = Mg·gn + Fp = 65.275 × 9.81 + 0 = 640.348 N (70 kg)
+σx = 3·Fy·l / (16·Wx) = 3 × 289.444 × 2000 / (16 × 3150) = 34.458 N/mm²
+σy = 3·Fx·l / (16·Wy) = 3 × 28.944 × 2000 / (16 × 2100) = 5.169 N/mm²
+σm = σx + σy = 34.458 + 5.169 = 39.626 N/mm²
+λ = lk / i = 2000 / 10.5 = 190.476
+ω = 0.00016887 × 190.476² = 6.127
+σk = (Fv + k3·Maux)·ω / A = (640.348 + 0) × 6.127 / 475 = 8.26 N/mm²
+σ = σm + (Fv + k3·Maux) / A = 39.626 + (640.348 + 0) / 475 = 40.974 N/mm²
+σ = σk + 0.9·σm = 8.26 + 0.9 × 39.626 = 43.923 N/mm²
+σF = 6·Fx·(h1 − b − f) / (c²·(lL + 2·(h1 − f))) = 6 × 28.944 × (50 − 19 − 5) / (5² × (60 + 2 × (50 − 5))) = 1.204 N/mm²
+δx = 0.7·Fx·l³ / (48·E·Iy) + δstr-x = 0.7 × 28.944 × 2000³ / (48 × 210000 × 52500) + 0 = 0.306 mm
+δy = 0.7·Fy·l³ / (48·E·Ix) + δstr-y = 0.7 × 289.444 × 2000³ / (48 × 210000 × 112400) + 0 = 1.431 mm
+Item
+Value
+Permissible
+Result
+Guiding force Fx
+28.94 N (5 kg)
+
+
+Guiding force Fy
+289.44 N (30 kg)
+
+
+Vertical force Fv
+640.35 N (70 kg)
+
+
+Bending stress σx
+34.46 N/mm²
+164.44 N/mm²
+OK
+Bending stress σy
+5.17 N/mm²
+164.44 N/mm²
+OK
+Bending stress σm
+39.63 N/mm²
+164.44 N/mm²
+OK
+Slenderness λ
+190.5
+250
+OK
+Omega ω
+6.127
+
+
+Buckling stress σk
+8.26 N/mm²
+164.44 N/mm²
+OK
+Bending and compression σ
+40.97 N/mm²
+164.44 N/mm²
+OK
+Bending and buckling σ
+43.92 N/mm²
+164.44 N/mm²
+OK
+Flange bending σF
+1.2 N/mm²
+164.44 N/mm²
+OK
+Deflection δx
+0.31 mm
+10 mm
+OK
+Deflection δy
+1.43 mm
+10 mm
+OK
 
 === /word/footer1.xml
 Prepared with ShaftMaster · 2026-10-09

@@ -24,7 +24,7 @@ namespace Elevator.Core.Geometry
                 s.RoomRearX - 1450,
                 g.CeilingZ + 900);
             g.Note("ReviewSummary", String.Join("\\P", g.ReviewItems.ToArray()), 2300, g.CeilingZ);
-            g.Note("Rails.Label", "CAR T70/65/9  |  CW T50/50/5\\PMAX BRACKET SPACING "
+            g.Note("Rails.Label", "CAR " + (d.CarRailProfile ?? "T70/65/9") + "  |  CW " + (d.CwRailProfile ?? "T50/50/5") + "\\PMAX BRACKET SPACING "
                 + d.RequestedBracketMaxSpacingMm.ToString("0.###", CultureInfo.InvariantCulture)
                 + " mm\\PPROJECT INPUT - STRUCTURAL/FIXING REVIEW REQUIRED\\PCoincident rails retain separate physical IDs",
                     2300,

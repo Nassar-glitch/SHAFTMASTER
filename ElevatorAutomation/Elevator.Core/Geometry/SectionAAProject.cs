@@ -14,6 +14,8 @@ namespace Elevator.Core.Geometry
         public double ReferenceCarZ = 0;
         public double ReferenceCWBottomZ = 12347.128322572622;
         public string CWCalibrationStatus = "PROVISIONAL_SOURCE_REFERENCE_POSE";
+        public string CarRailProfile;
+        public string CwRailProfile;
         public string BracketSource = "PROJECT INPUT PENDING FUTURE CALCULATION SHEET";
     }
 }

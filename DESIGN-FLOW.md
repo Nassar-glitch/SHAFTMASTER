@@ -85,7 +85,8 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   1. **Machine supported on the guide rails:** Yes / No. This is the first choice, because it changes the loads on the rails.
   2. **Car rail profile:** a list (T50/50/5, T70/65/9, T89/62/16, T90/75/16). The recommendation is the smallest profile that passes the checks with the recommended bracket spacing.
   3. **Car rail bracket spacing:** a number in mm, not a list. The recommendation is the largest spacing that passes with the chosen profile, never above the 2000 mm preset.
-  4. **The same for the counterweight rails:** profile, then bracket spacing. The CW rails are checked for normal operation (no safety gear).
+  4. **CW bracket spacing follows the car bracket spacing (user, 2026-10-13).** It changes with the car value until the user types a CW spacing. Fields that only matter for "machine on the guide rails = Yes" (number of rails carrying the machine) are hidden when the answer is No. Spacings above 2000 mm, for example one bracket per floor slab at 3000 mm, are normal inputs: the check decides OK / NOT OK, and nothing is refused.
+  5. **The same for the counterweight rails:** profile, then bracket spacing. The CW rails are checked for normal operation (no safety gear).
 - **Generative:** while unlocked, every value follows when an upstream value changes (lock and follow). A typed or chosen value is kept.
 - **Checks:** EN 81-50 5.10 for bending, combined stress, buckling, flange bending and deflection, using FF1 / FF2, P5 and the machine loads when the machine sits on the rails. The equations come from the user's calculation note or EN 81-50, and are never guessed.
 - **Material:** Rm 370 N/mm² for every profile, as a catalog value.

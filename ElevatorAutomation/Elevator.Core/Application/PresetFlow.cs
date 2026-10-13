@@ -63,7 +63,7 @@ namespace Elevator.Core.Application
                 LastRopeSizing = ProjectPresets.Apply(project, Library, context);
             else
             {
-                var c = new PresetContext { Project = project, Library = Library };
+                var c = new PresetContext { Project = project, Library = Library, Design = context };
                 foreach (var f in ProjectPresets.Fields)
                 {
                     if (!f.IsEdited(project))
@@ -122,6 +122,7 @@ namespace Elevator.Core.Application
             {
                 Project = project,
                 Library = Library,
+                Design = context,
                 DeflectorPitchMm = RopeTractionCalculationEngine.DeflectorPitch(project, context)
             };
         }

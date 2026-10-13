@@ -768,8 +768,8 @@ namespace Elevator.AutoCAD.SectionAA
                 "SectionAAProfiles",
                 new
                 {
-                    Car = "T70/65/9",
-                    CW = "T50/50/5",
+                    Car = data.CarRailProfile ?? "T70/65/9",
+                    CW = data.CwRailProfile ?? "T50/50/5",
                     RailEndAdequacy = "NOT_YET_EVALUABLE",
                     Projection = "Left/right coincide in A-A projection; not artificially separated"
                 });

@@ -121,6 +121,8 @@ namespace Elevator.Core.Project
                 SuspensionRopeDiameterMm = p.Suspension.RopeDiameterMm,
                 NumberOfSuspensionRopes = p.Suspension.RopeCount,
                 RailType = p.Rails.RequestedRailType,
+                CarRailProfile = p.Rails.CarProfileShown(),
+                CounterweightRailProfile = p.Rails.CwProfileShown(),
                 PlanTitle = p.Drawing.PlanTitle,
                 MachineRoomLeftExtension = p.MachineRoom.LeftExtensionMm,
                 MachineRoomRightExtension = p.MachineRoom.RightExtensionMm,
@@ -168,7 +170,9 @@ namespace Elevator.Core.Project
                 ReferenceCarZ = p.Counterweight.ReferenceCarElevationMm.Value,
                 ReferenceCWBottomZ = p.Counterweight.ReferenceBottomElevationMm.Value,
                 CWCalibrationStatus = p.Counterweight.CalibrationStatus,
-                BracketSource = p.Rails.BracketSource
+                BracketSource = p.Rails.BracketSource,
+                CarRailProfile = p.Rails.CarProfileShown(),
+                CwRailProfile = p.Rails.CwProfileShown()
             };
             d.Floors = ProjectFloors.Elevations(p.Building)
                 .Select(f => new VerticalFloor { FloorId = f.FloorId, Name = f.Name, Served = f.IsServed, FflZ = f.ElevationMm })

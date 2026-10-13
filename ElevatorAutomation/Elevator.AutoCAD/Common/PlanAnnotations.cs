@@ -74,11 +74,36 @@ namespace Elevator.AutoCAD.Common
                     ProjectDataStorage.Write(db, tr, "PlanBindings", manifest);
                 }
                 if (template == null)
+                {
+                    // The rail profile labels of the plan show the chosen profiles (not stored as a template in the binding).
+                    string rail = RailLabel(binding.Key, snapshot.Entities[binding.Key], input);
+                    if (rail != null)
+                        result[binding.Key] = rail;
                     continue;
+                }
                 Text(snapshot.Entities[binding.Key]); // Reject incompatible content before geometry is changed.
                 result[binding.Key] = PlanAnnotationRules.Render(template, values, Escape);
             }
             return result;
+        }
+
+        static readonly System.Text.RegularExpressions.Regex RailDesignation =
+            new System.Text.RegularExpressions.Regex(@"T\d+/\d+/\d+");
+
+        // The text of a plan rail label (a car or counterweight annotation holding only a profile designation) with the project profile;
+        // null when the entity is not such a label or the project has no profile for it.
+        static string RailLabel(string key, Entity entity, ProjectInput input)
+        {
+            bool car = key.StartsWith("Plan.Car", StringComparison.Ordinal);
+            bool cw = key.StartsWith("Plan.Cw", StringComparison.Ordinal);
+            string profile = car ? input.CarRailProfile : cw ? input.CounterweightRailProfile : null;
+            if (String.IsNullOrWhiteSpace(profile) || !(entity is MText))
+                return null;
+            string existing = Text(entity);
+            var matches = RailDesignation.Matches(existing);
+            if (matches.Count != 1 || existing.Replace(matches[0].Value, "").Replace("{", "").Replace("}", "").Replace("\\", "").Replace("Fcent|c0;", "").Trim().Length != 0)
+                return null;
+            return RailDesignation.Replace(existing, Escape(profile));
         }
 
         /// <summary>Writes the annotation values.</summary>
