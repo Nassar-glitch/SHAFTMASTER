@@ -346,7 +346,7 @@ namespace Elevator.AutoCAD.Steel
             w.LabelLeft(fl.Box.X0, fl.Box.CenterY, fl.Box.X0 - 800, fl.Box.CenterY, PlanTextHeight, st.Inputs.Column.Name + " STEEL COLUMN");
             var right = beams.First(b => b.Face == "Right");
             double ly = right.Box.Y0 + (right.Box.Y1 - right.Box.Y0) * 0.25;
-            w.Label(right.Box.X1, ly, right.Box.X1 + 900, ly, PlanTextHeight, st.Inputs.Beam.Name + " STEEL BEAM");
+            w.Label(right.Box.X1, ly, right.Box.X1 + 500, ly, PlanTextHeight, st.Inputs.Beam.Name + " STEEL BEAM");
             if (plates)
             {
                 var plate = br.Plate;

@@ -364,3 +364,37 @@ The calculation sheet has a "Shaft structure" table under the input data, only f
 beam spacing, the beam levels, the derived bracket spacing, base plate, steel grade. No structural check. Design Notes: a recommendation line when a
 gap larger than s cannot be split because of a door (the floor-to-door-head gap is the door height, 2160 > 1500: this is the case with the
 presets, see the handoff), and when a floor is not higher than the door height (no door-head beam fits). Nothing for a concrete shaft.
+
+## 9. Stage S3 (local): what is built
+
+The Core model of S2 with the per-face beam rule (beams follow the car rail bracket spacing), the Shaft page, and the steel tower in the four
+generated views and on the A0 sheet. Evidence (plotted from generated DWGs) is in `s3/`: `steel-client-*` (shaft 1500 x 2000, 4 stops,
+floors 3750, pit 1150, overhead 4100) and `steel-default-*` (the default steel project): `-sheet.png`, `-plan.png`, `-tower-top-plan.png`,
+`-aa-top.png`, `-aa-panel.png`, `-aa-base.png`, `-bb.png`, `-title-block.png`.
+
+- **Beam levels per face** (`SteelBeamLevels`): s is the effective car rail bracket spacing of the project. Side and back faces: a beam at every
+  floor; every gap between floor beams, the pit and the top is divided equally into the fewest parts not larger than s. Entrance face: a floor
+  beam and a door-head beam (the opening between them is not split); from the door head to the next floor beam (or the tower top) the gap is
+  divided equally into the fewest parts not larger than s. Levels are editable per face (lock, Reset). The rail check uses the largest gap of the
+  side and back faces. There is no steel spacing preset.
+- **Shaft page:** Shaft construction (Concrete / Steel structure); for steel the column, beam and bracing lists (UPN 80 to 200, L40 to L60),
+  base plate (200 x 200 x 15) and bolts (4 x 20), and under Advanced the gusset plate, steel grade, concrete base and the beam levels of each face.
+- **Plan:** the walls and their hatch are hidden (never edited: they stay bound) and the four columns are drawn as solid sections (web outside,
+  flanges in) with the 200 x 200 x 15 base plates and the bolt circles, and the beam ring. Labels "UPN 140 STEEL COLUMN", "UPN 100 STEEL BEAM",
+  "BASE PL ...". The door and the clearances are unchanged; the door frame is fixed to the beams (no wall opening is drawn).
+- **Tower-top plan** (in place of the machine-room plan): the machine within the shaft footprint on the top ring of columns and beams, no outriggers;
+  the room walls, ventilation, entrance notes, concrete beams and control panel are hidden; the note "CONTROLLER AND SWITCHES AT THE TOP FLOOR,
+  RIGHT OF THE DOOR AS SEEN FROM THE LANDING" is drawn under the tower.
+- **A-A:** the tower elevation seen on the left face: columns, the beams at the levels of that face, the beams of the entrance and back faces
+  end-on, the double cross of L50x50x5 in every panel with its gusset plates (PL 400 x 250), the concrete base with its hatch, the platform on top
+  and the labels; the walls, the slabs and the machine-room walls are hidden. The machine-room floor level follows the top beam (the platform
+  replaces the slab: `SectionAAProject.SteelPlatformDropMm`), and the rail brackets sit on the beams (the bracket marks are the beam levels).
+- **B-B:** the slab and the concrete bearing blocks are hidden; the front and back top beams (UPN channels cut across) stand under the ends of the
+  machine beams, with the column stubs below them.
+- **Sheet:** for a steel shaft the two masonry notes of the title block ("all dimensions are for finished masonry", English and Arabic) are left
+  out and a STEEL entry is added to the legend. The template file is not edited (the assembler erases and adds in the generated layout).
+- **Concrete projects** are untouched: every steel step reads the project first and does nothing for a concrete shaft (tests: `steel-native` has
+  the same project as concrete; the native golden is unchanged).
+
+Not done in S3 (list for a later stage): the generated steel details (splice, beam-column joint, base plate and bolt; stage G); the face-by-face
+bracing choice and the structural check (the STEEL module); STEEL in STEP; the bracing of the entrance face is never drawn.
