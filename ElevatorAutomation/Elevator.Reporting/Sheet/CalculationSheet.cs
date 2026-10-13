@@ -42,7 +42,7 @@ namespace Elevator.Reporting.Sheet
         {
             get
             {
-                return ChassisAvailable || Loads.Any(Available) || CarGuideForcesAvailable || RopeTractionAvailable;
+                return ChassisAvailable || Loads.Any(Available) || CarGuideForcesAvailable || RopeTractionAvailable || GuideRailsAvailable;
             }
         }
 
@@ -78,6 +78,7 @@ namespace Elevator.Reporting.Sheet
             s.CounterweightRail = ProportionalRailSection.Parse(profiles.CounterweightRailProfile);
             RecordOmissions(s);
             s.BuildRopeTraction(context);
+            s.BuildGuideRails(context);
             // A Doors Offset outside its range is listed with the other NOT OK results before export.
             if (s.DoorOffset != null && s.DoorOffset.Warning != null && s.NotOk != null)
                 s.NotOk.Add(s.DoorOffset.Warning);
@@ -577,6 +578,8 @@ namespace Elevator.Reporting.Sheet
                 SafetyPitSection(d, n++);
             if (CarGuideForcesAvailable)
                 ForcesSection(d, n++);
+            if (GuideRailsAvailable)
+                GuideRailsSection(d, n++);
             return d;
         }
 

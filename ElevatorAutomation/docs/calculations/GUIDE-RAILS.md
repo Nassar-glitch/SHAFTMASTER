@@ -1,6 +1,6 @@
 # Guide rails: engineering basis (stage R, Part A)
 
-Status: **Part A, engineering basis. No code.** Written 2026-10-13 from the sources listed in section 1, for a cloud session that has no
+Status: **Part A, engineering basis (sections 1-12), and Part B research and adopted method (section 13, cloud branch `cloud/rails-r1`).** Part A was written 2026-10-13 from the sources listed in section 1, for a cloud session that has no
 access to the standards. Everything a cloud implementation needs is in this file: equations, symbols, table values, section values and the
 source clause of each. Where the sources do not settle a point it is listed in section 12 as a **question for the user**; those points must
 not be implemented until they are answered. DESIGN-FLOW.md "Guide rails (agreed 2026-10-13)" is binding for the inputs, the order, the
@@ -374,3 +374,129 @@ The check must not be coded for these points until they are answered.
   Wx / Wy check? (The strict check is conservative.)
 - **Q14 Number of rails and shoes.** n = 2 always (two car rails, two CW rails)? Rail forces per rail "at one shoe level, equal and opposite
   at upper and lower shoes" (S4): confirm that the same per-rail force is used at mid-span of the bracket distance.
+
+
+## 13. Adopted method and presets (stage R, Part B, cloud R1, 2026-10-13)
+
+The user answered section 12 on 2026-10-13. Their answers are binding and are listed in 13.1. 13.2 is the research log. 13.3 to 13.7 are the adopted
+method. 13.8 is the list of values that no source supports. Nothing here is certification: every equation is an adopted source rule (EN 81-50:2014 5.10 and
+Annex C, EN 81-20:2014 5.7) and every preset is an editable catalog value.
+
+### 13.1 The user's answers (binding)
+
+| Q | Answer |
+|---|---|
+| Q1 | A5 > 12 % for every profile (St 2,25 normal operation and loading, 1,8 safety device), **editable per profile** in the catalog (stored as the band `Over12` / `Between8And12`). |
+| Q2 | E = 210 000 N/mm². |
+| Q3 | Section values of 8 as written. T50/50/5 flange bending: c = f = 5 mm. |
+| Q4 | Running (k2 = 1,2) and loading (Fs = 0,4·gn·Q, car empty, Q = 0) as 4.3 (Dim/8, gn = 9,81), P and S at the rail cross, one front entrance centred on the car front. No 10 % sill-force waiver. The safety-device case keeps the FF1 / FF2 convention (the values the application calculates). |
+| Q5 | k1 from the project's safety gear type: progressive 2; instantaneous 3 or 5 (Table 14). |
+| Q9 | δstr-x = δstr-y = 0, editable presets. |
+| Q10 | λ > 250 is NOT OK. λ < 20 is calculated with λ = 20. The recommendation never goes below 500 mm. |
+| Q11 | Recommendation as 9. |
+| Q13 | Strict check, no relaxation (S1 C.2.1.3 footnote not used). |
+| Q14 | n = 2 for car and CW rails. |
+
+### 13.2 Research log (what was searched, what was found, what was not)
+
+Searches of 2026-10-13. The sandbox lets a search engine return result snippets, but **direct page and PDF fetches were refused by the network policy**
+(403), so only the snippets below could be read; full papers, catalogues and data sheets could not be opened. Short quotes only.
+
+| Id | Source | What it gave |
+|---|---|---|
+| S7 | N. Mellor, "Lift system calculations in EN 81-50", 4th Symposium on Lift & Escalator Technologies (LEIA), liftescalatorlibrary.org paper 00000063 (the paper that is S6) | Snippet: EN 81-50 "now includes such equations"; worked conventional and cantilever examples with h = 2800 mm and a counterweight balance factor 0,45. Confirms S6 is the published worked example. No machine-on-rails case and no CW guiding force seen. |
+| S8 | P. Sanz, J. Fernandez, "The Impact of EN 81-20 and EN 81-50 in Clips", Elevator World (ELEVCON 2016 paper, web.itu.edu.tr/candas) | Snippet: EN 81-20 and 81-50 add "the weight of the guide rails and building settlement or concrete shrinkage ... push-through forces ... friction between clip and guide rail" to Fv. Confirms the Fp term and its origin. **No numerical Fr value could be read.** |
+| S9 | Candas and co-authors, "Modelling and Analysis of Guide Rail Brackets and Attaching Parts", ELEVCON 2012 (web.itu.edu.tr/candas) | Snippet: "no standards available for the calculation of clips and brackets". No Fr value. |
+| S10 | Elevator World, "New Modules, Changes to Elevator Portal" (LIWETEC) | Snippets: "the tare weight of guide rails for counterweights must be considered under EN 81-20/-50"; rails may be calculated by EN 81-50, EN 1993-1-1 or FEM. Confirms Mg for the CW rails. |
+| S11 | Patents and an Elevator World MRL article (US 10589962 and similar; "MRL Lift Design and Development") | Qualitative only: in MRL lifts "the hoisting machine ... is supported by a common machine base ... attached ... to the car guide rail and the counter weight guide rails". No numbers, no load split. |
+| S12 | Reeley (UK parts supplier), guide-shoe liner listings, parts 89801, 20139, 77005 and the Otis 150 mm holder | Liner lengths in use: **60 mm** (CW liner, 6 mm rail), **100 mm** (8 mm rail), **135 mm** (9 mm rail), **150 mm** (9 mm rail holder). Only dimensions of replacement parts; no half-width. |
+| S14 | S. Tavaslıoğlu, "TS EN 81-20 and TS EN 81-50" (rail calculations with examples), serdartavaslioglu.com/wp-content/uploads/2019/06/İngilizce-Ray-hesapları-ve-örnek-hesap.pdf, section D. **Read locally by the Planner** (the sandbox could not fetch it) and given to the Cloud Executor on 2026-10-13 | Quotes: "For MRL lifts, (k3.Maux) value shall be taken as [k1.gn.(P+Q+Machineweight+rope) / n] when considering the upwards braking made from the car. n is the number of rails carrying the weight of the machine frame." k3 = k1 when the upward braking acts from the car. Counterweight rails: Fv = [k1.gn.Mcwt / n] + Mg.gn + Fp; Fp = nb.Fr for rails secured at the top or bottom, **Fp = nb.Fr/3 for rails not secured at any point (the CW rails)**. CW without safety gear: normal operation only, deflection limit 10 mm. |
+| S13 | Nova Elevator (made-in-china.com) rail tables | T70/B 70 × 65, 9 mm blade; T89/B 89 × 62, 16 mm blade: the same designations as S5. |
+
+**Per question:**
+
+- **R-a (machine on rails): published formula found in S14 (Planner, 2026-10-13); 13.4 follows it.** Before S14 none was found. S2 5.7.2.3.7 says only that additional load cases according to Table 13 shall be considered and that forces and torques
+  per guide rail due to auxiliary equipment are Maux; k3 "to be determined by the manufacturer". S11 shows only that the machine base is fixed to car and CW rails.
+  S14 now gives the formula for the safety-device case; 13.4 uses it and marks the two adopted choices (kr in running and loading, n_m = 4).
+- **R-b (CW shoe spacing hcw): no catalogue value found** (Wittur, Dynatech, Sicor, Monteferro, Savera data sheets were not reachable). The CW guiding force method is
+  S2 5.7.2.3.3 with the car's S1 Annex C structure (13.5). hcw is a choice (13.8).
+- **R-c (guide shoes): no catalogue lining half-width found.** S12 gives lining lengths for 6, 8 and 9 mm rails; S6 gives b = 19 mm and l = 140 mm for the 16 mm class. Sliding shoes are the usual type for 1:1
+  geared passenger lifts up to 1,0 m/s (roller shoes are the choice for higher speeds): this is general practice and is **not backed by a source read in this session**. The preset is
+  "Sliding", editable per profile.
+- **R-d (Fr): no per-clip value found.** S8 confirms the term only. Fr is a choice (13.8). Fp = 0 up to 40 m travel (S2 5.7.2.3.5 note); above 40 m Fp = nb·Fr.
+
+### 13.3 Inputs, in DESIGN-FLOW order (project values, lock and follow)
+
+| Order | Key | Preset / recommendation |
+|---|---|---|
+| 1 | `Rails.MachineOnRails` | No |
+| 2 | `Rails.CarProfile` | the smallest profile of the catalog order that passes every item of every car load case at the largest spacing (2000 mm); if none passes, the largest profile |
+| 3 | `Rails.CarSpacingMm` | the largest spacing in 50 mm steps from 2000 down to 500 mm for which the chosen car profile passes; 500 mm when none passes |
+| 4 | `Rails.CwProfile` | the same, for the CW load case |
+| 5 | `Rails.CwSpacingMm` | the same, for the CW load case |
+
+A locked value that fails is kept. Catalog order: T50/50/5, T70/65/9, T89/62/16, T90/75/16. Existing `Rails.BracketMaximumSpacingMm` (1500 mm, used by the drawings) is a different field and is not changed by this stage.
+
+### 13.4 Machine supported on the guide rails (R-a; source S14, with adopted choices marked)
+
+Only when `MachineOnRails` = Yes. Symbols: P car mass (+ car-side additional mass), Q rated load, Mmachine machine mass (+ chassis mass when included),
+Mrope = n_ropes · w · H (suspended rope mass, H = travel + overhead), gn = 9,81, n_m = number of rails that carry the machine frame.
+
+1. **Safety-device case (S14):** **k3·Maux = k1 · gn · (P + Q + Mmachine + Mrope) / n_m**, with k1 of Table 14 (S14: k3 = k1 when the upward braking acts from the car).
+2. **Running and loading: adopted choice.** S14 gives the upward-braking case only; the same expression is used with the running factor **kr = 1,2 in place of k1**.
+   The counterweight rails use the same kr expression (normal operation only).
+3. **n_m = 4** (two car rails + two counterweight rails): **adopted choice, editable preset** `MachineRailCount`.
+4. The result is added to the vertical force term of **every rail that carries the frame (car and counterweight)**: (Fv + k3·Maux) in σk and in the compression term, exactly as S1 5.10.3 and 5.10.4 write it.
+5. No horizontal force and no torque from the machine are added (none is given by S14 or any other source read). Open point (13.8).
+
+The sheet shows the machine load as one line in each load case: `k3·Maux = k·gn·(P + Q + Mmachine + Mrope) / nm = … = N (kg)`.
+This replaces the earlier equal split of (Mmach + P + Q + Mcwt + Mrope) and the preset k3 = 1,2 (removed).
+
+### 13.5 Counterweight guiding forces (R-b; S2 5.7.2.3.3 with the structure of S1 C.2.2.1)
+
+CW dimensions come from the project's CW plan geometry (`ElevatorParameters.CwWidth` along the rail line between the two CW rails, `CwDepth` perpendicular to it) through the same plan recipe as the car dimensions.
+"Width" maps to the Y direction (along the rail line) and "depth" to the X direction, as for the car (S4).
+
+- ex = 10 % of CW depth, ey = 5 % of CW width (S2 5.7.2.3.3), both acting together on a centrally guided and suspended counterweight.
+- **Fx = kr · gn · Mcwt · ex / (n · hcw)**; **Fy = kr · gn · Mcwt · ey / ((n/2) · hcw)**, kr = 1,2, n = 2, hcw = CW guide-shoe spacing.
+- Fv = Mg · gn + Fp (+ k3·Maux in the buckling terms); k1 = 0 as the counterweight has no safety gear (S14: Fv = k1·gn·Mcwt/n + Mg·gn + Fp). **Fp = nb·Fr / 3** for the counterweight rails (not secured at any point, S14), **Fp = nb·Fr** for the car rails (standing in the pit); both only above 40 m travel. Normal operation only; δperm = 10 mm (S14); flange bending with the profile's shoe data.
+- The standard gives the eccentricities only. These two equations are the car's Annex C structure with Q·x replaced by Mcwt·e: **an adopted rule, not a quoted one.**
+
+### 13.6 Car load cases (Q4)
+
+Dx = car depth (X), Dy = car width (Y), h = guide-shoe spacing, kr = 1,2 (the sheet writes the running factor as kr).
+
+| Load case | Fx | Fy | Fv |
+|---|---|---|---|
+| Running, case 1 (load Dx/8 off in X) | kr · gn · Q · (Dx/8) / (n·h) | 0 | Mg·gn + Fp |
+| Running, case 2 (load Dy/8 off in Y) | 0 | kr · gn · Q · (Dy/8) / ((n/2)·h) | Mg·gn + Fp |
+| Loading (car empty, Fs = 0,4·gn·Q at the centred front entrance, xi = Dx/2, yi = 0) | Fs · (Dx/2) / (n·h) | 0 | Mg·gn + Fp |
+| Safety device | FF2 design value | FF1 design value | k1·gn·(P+Q)/n + Mg·gn + Fp |
+
+Running: the two distribution cases are not added; the load-case result takes σy and δx from case 1, σx and δy from case 2, σm = the larger σm (as S6). σF uses Fx of case 1.
+Mg = mass per metre · full well height (pit + travel + overhead). n_b = ⌈H / l⌉ + 1 brackets per rail, Fp = n_b·Fr above 40 m travel (car rails; n_b·Fr / 3 for the counterweight rails), 0 up to 40 m. k1 enters Fv only (the FF design values already carry the note's multiplier 2).
+
+### 13.7 Checks and items
+
+Per load case and rail line, every item gives value, permissible value and OK / NOT OK (N with kg beside it for forces):
+Fx, Fy, Fv (values); σx, σy, σm, λ, ω, σk; σ = σm + (Fv + k3·Maux)/A; σ = σk + 0,9·σm; σF; δx, δy.
+σperm = Rm / St (St from the profile's A5 band and the load case, 6.3); λ permissible 250 (λ < 20 is calculated with 20); δperm 5 mm (car) or 10 mm (CW); δ includes δstr.
+Rm of a profile must lie in 370 to 520 N/mm² (ω of 6.1; between the two columns the S1 interpolation). Overall result of a rail line = every checked item of every load case OK.
+Design Notes list a failed item once (σm, σ + compression, σ + buckling, λ, σF, δx, δy; σx, σy and σk are parts of those) with the profile or spacing that would pass.
+
+### 13.8 Values that no source supports (named, editable presets; to confirm)
+
+| Preset (`GuideRails` group, config/presets.json) | Value | Basis |
+|---|---|---|
+| `CwShoeSpacingMm` hcw | 2000 mm | **choice**: a smaller hcw gives a larger force, so 2000 mm errs safe; no catalogue value read |
+| `ClipPushThroughN` Fr (per bracket, all clips) | 1000 N | **adopted choice (editable preset)**; S8 confirms the term only, S14 gives the formula Fp = nb·Fr (/3 for the counterweight) but no value; matters only above 40 m travel |
+| `MachineRailCount` n_m | 4 | **adopted choice** (editable preset): two car + two counterweight rails; S14 only says "the number of rails carrying the weight of the machine frame" |
+| running factor kr in the machine load of running, loading and the counterweight rails | 1,2 | **adopted choice**: S14 gives k1 for the upward-braking case only |
+| machine-on-rails: no horizontal force or torque | - | **open point**, no source |
+| CW guiding-force equations (13.5) | - | **adopted rule** (structure of Annex C) |
+| profile `ShoeType` | Sliding | general practice, not read in a source this session |
+| profile `ShoeLiningLengthMm` l | T50 60, T70 135, T89 140, T90 140 mm | S12 (60 mm CW liner for 6 mm rail; 135 mm for 9 mm rail) and S6 (140 mm); T89 / T90 equal S6 |
+| profile `ShoeHalfWidthMm` b | 19 mm for all | S6 assumption; no catalogue value found |
+| `InstantaneousK1` | 5 | Table 14 non-captive roller; use 3 for a captive roller type |
+
+Contradictions with the user's answers: none. Where the user's answer needs a number the sources do not give, the table above names the preset.

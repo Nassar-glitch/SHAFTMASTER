@@ -11,6 +11,7 @@ namespace Elevator.Core.Presets
     {
         public ElevatorProject Project;
         public PresetLibrary Library;
+        public DesignContext Design; // the design context (plan dimensions) for the guide-rail recommendations; null when not known
         public double? DeflectorPitchMm; // driver for the deflector mass preset (from the shared deflector rule)
     }
 }

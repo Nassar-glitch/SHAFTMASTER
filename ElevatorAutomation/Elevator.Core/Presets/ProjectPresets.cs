@@ -23,6 +23,16 @@ namespace Elevator.Core.Presets
         public const string RopeCountKey = "Suspension.RopeCount";
         /// <summary>Key of the rope diameter field.</summary>
         public const string RopeDiameterKey = "Suspension.RopeDiameterMm";
+        /// <summary>Key of the machine-on-rails field.</summary>
+        public const string MachineOnRailsKey = "Rails.MachineOnRails";
+        /// <summary>Key of the car rail profile field.</summary>
+        public const string CarProfileKey = "Rails.CarProfile";
+        /// <summary>Key of the car rail bracket spacing field.</summary>
+        public const string CarSpacingKey = "Rails.CarSpacingMm";
+        /// <summary>Key of the counterweight rail profile field.</summary>
+        public const string CwProfileKey = "Rails.CwProfile";
+        /// <summary>Key of the counterweight rail bracket spacing field.</summary>
+        public const string CwSpacingKey = "Rails.CwSpacingMm";
         /// <summary>Key of the traction sheave field.</summary>
         public const string SheaveKey = "Machine.TractionSheavePitchDiameterMm";
         /// <summary>Safety-gear type: progressive.</summary>
@@ -381,7 +391,53 @@ return m==null?(double?)null:m.MachineMassKg;
                 c=>c.Library.Buffers.Sharing,
                 p=>PitValue(p,s=>s.CounterweightBufferSharing),
                 (p,v)=>Pit(p).CounterweightBufferSharing=v as string),
+            // Guide rails (DESIGN-FLOW "Guide rails"): in the order of the rails page, each recommended from the earlier ones.
+            F(
+                "RAILS",
+                MachineOnRailsKey,
+                "Machine supported on the guide rails",
+                c=>c.Library.GuideRailsOrDefault().MachineOnRails,
+                p=>p.Rails.MachineOnRails,
+                (p,v)=>p.Rails.MachineOnRails=B(v)),
+            F(
+                "RAILS",
+                CarProfileKey,
+                "Car rail profile",
+                c=>RailRecommendation(c,CarProfileKey),
+                p=>p.Rails.CarProfile,
+                (p,v)=>p.Rails.CarProfile=v as string),
+            F(
+                "RAILS",
+                CarSpacingKey,
+                "Car rail bracket spacing (mm)",
+                c=>RailRecommendation(c,CarSpacingKey),
+                p=>p.Rails.CarSpacingMm,
+                (p,v)=>p.Rails.CarSpacingMm=D(v)),
+            F(
+                "RAILS",
+                CwProfileKey,
+                "Counterweight rail profile",
+                c=>RailRecommendation(c,CwProfileKey),
+                p=>p.Rails.CwProfile,
+                (p,v)=>p.Rails.CwProfile=v as string),
+            F(
+                "RAILS",
+                CwSpacingKey,
+                "Counterweight rail bracket spacing (mm)",
+                c=>RailRecommendation(c,CwSpacingKey),
+                p=>p.Rails.CwSpacingMm,
+                (p,v)=>p.Rails.CwSpacingMm=D(v)),
         };
+
+        // The guide-rail recommendation of a field. Without a design context (a caller that cannot give one) the stored value is kept.
+        static object RailRecommendation(PresetContext c, string key)
+        {
+            if (c.Design == null)
+            {
+                return Fields.First(f=>f.Key==key).Stored(c.Project);
+            }
+            return GuideRailRecommendation.ForField(c, key);
+        }
 
         // CW = P + q·Q with the selected q (balance factor step) while the CW is unlocked, else the library q.
         static object CounterweightPreset(PresetContext c)
@@ -501,7 +557,7 @@ return m==null?(double?)null:m.MachineMassKg;
         {
             if (p == null || lib == null || !Follows(p))
                 return null;
-            var c = new PresetContext { Project = p, Library = lib };
+            var c = new PresetContext { Project = p, Library = lib, Design = ctx };
             foreach (var f in Fields)
             {
                 if (!f.IsEdited(p))
@@ -1021,7 +1077,7 @@ return m==null?(double?)null:m.MachineMassKg;
             if (p == null || lib == null || !Follows(p))
                 return null;
             var copy = ProjectJson.Clone(p);
-            var c = new PresetContext { Project = copy, Library = lib };
+            var c = new PresetContext { Project = copy, Library = lib, Design = ctx };
             foreach (var f in Fields)
             {
                 if (!f.IsEdited(copy))
