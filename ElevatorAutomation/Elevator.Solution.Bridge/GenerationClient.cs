@@ -108,8 +108,44 @@ namespace Elevator.Solution.Bridge
             return r;
         }
 
+        /// <summary>
+        /// Plots the layout of a drawing to PDF in the Core Console (a copy of the drawing is plotted, never the file itself), puts the
+        /// logo onto the page when given, and writes the PDF to <paramref name="pdfPath"/> (replacing it).
+        /// </summary>
+        public PdfPlotResult PlotPdf(string dwg, string pdfPath, string layout, Elevator.Core.Layouts.SheetResult sheet, string logoFile, int logoWidthPx, int logoHeightPx)
+        {
+            if (!File.Exists(ConsolePath))
+                throw new FileNotFoundException("AutoCAD 2023 Core Console is required.", ConsolePath);
+            if (!File.Exists(dwg))
+                throw new FileNotFoundException("The drawing to plot is missing.", dwg);
+            string job = Path.Combine(Root, "output", "solution-v01", "jobs", "plot-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(job);
+            LastJobDirectory = job;
+            string copy = Path.Combine(job, "plot.dwg"), pdf = Path.Combine(job, "sheet.pdf");
+            File.Copy(dwg, copy, true);
+            Wire.Write(Path.Combine(job, "plot-request.json"), new PdfPlotRequest { Layout = layout, Pdf = pdf });
+            RunHost(copy, "plot", job, 300000);
+            string answer = Path.Combine(job, "plot.json");
+            if (!File.Exists(answer))
+                throw new IOException("The plot host gave no answer; see " + Path.Combine(job, "plot.log") + ".");
+            var result = Wire.Read<PdfPlotResult>(answer);
+            if (!result.Success)
+                throw new InvalidOperationException("Plotting the PDF failed: " + result.Error);
+            if (!String.IsNullOrWhiteSpace(logoFile) && sheet != null)
+                PdfLogoOverlay.Apply(pdf, logoFile, sheet.LogoAreaX, sheet.LogoAreaY, sheet.LogoAreaWidth, sheet.LogoAreaHeight, logoWidthPx, logoHeightPx);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(pdfPath)));
+            File.Copy(pdf, pdfPath, true);
+            return result;
+        }
+
         /// <summary>Starts the Core Console with the host script.</summary>
         public void RunHost(string drawing, string mode, string job)
+        {
+            RunHost(drawing, mode, job, 600000);
+        }
+
+        /// <summary>Starts the Core Console with the host script; a timeout kills it and the run fails (the log stays in the job folder).</summary>
+        public void RunHost(string drawing, string mode, string job, int timeoutMs)
         {
             string plugin = Path.Combine(Bin, "Elevator.Solution.Host.dll").Replace('\\', '/');
             if (plugin.Contains("\"") || plugin.Contains("\n"))
@@ -132,11 +168,11 @@ namespace Elevator.Solution.Bridge
             {
                 var stdout = process.StandardOutput.ReadToEndAsync();
                 var stderr = process.StandardError.ReadToEndAsync();
-                if (!process.WaitForExit(600000))
+                if (!process.WaitForExit(timeoutMs))
                 {
                     process.Kill();
                     process.WaitForExit();
-                    throw new TimeoutException("Disposable AutoCAD host exceeded ten minutes; no output published.");
+                    throw new TimeoutException("The AutoCAD host exceeded " + (timeoutMs / 60000) + " minutes; no output published.");
                 }
                 Task.WaitAll(stdout, stderr);
                 File.WriteAllText(Path.Combine(job, mode + ".log"), stdout.Result + stderr.Result);

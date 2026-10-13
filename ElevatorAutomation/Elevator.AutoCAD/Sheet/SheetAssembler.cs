@@ -910,6 +910,10 @@ namespace Elevator.AutoCAD.Sheet
                 return;
             }
             double aw = box.Value.MaxPoint.X - box.Value.MinPoint.X, ah = box.Value.MaxPoint.Y - box.Value.MinPoint.Y;
+            result.LogoAreaX = box.Value.MinPoint.X;
+            result.LogoAreaY = box.Value.MinPoint.Y;
+            result.LogoAreaWidth = aw;
+            result.LogoAreaHeight = ah;
             double k = Math.Min(aw / request.LogoWidthPx, ah / request.LogoHeightPx);
             double w = request.LogoWidthPx * k, h = request.LogoHeightPx * k;
             var origin = new Point3d(box.Value.MinPoint.X + (aw - w) / 2, box.Value.MinPoint.Y + (ah - h) / 2, 0);

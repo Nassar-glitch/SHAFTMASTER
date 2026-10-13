@@ -58,6 +58,7 @@ namespace Elevator.Solution.Desktop
     case "projectName":return w.ProjectName;
     case "dirtyLabel":return w.DirtyLabel;
     case "outputFolderButton":return w.OutputFolderButton;
+    case "lastSet":return w.Commands.LastSet;
    }
    throw new ArgumentException("Unknown test handle: "+name);
   }
@@ -72,6 +73,7 @@ namespace Elevator.Solution.Desktop
     case "root":w.Root=(string)value;return;
     case "outputFolder":w.Drawings.ViewModel.OutputFolder=(string)value;return;
     case "outputName":w.Drawings.ViewModel.OutputName=(string)value;return;
+    case "outputPrompt":w.Commands.OutputPrompt=(Func<Elevator.Core.Layouts.OutputSetPlan,Elevator.Core.Layouts.OutputChoice>)value;return;
    }
    throw new ArgumentException("Unknown test handle: "+name);
   }

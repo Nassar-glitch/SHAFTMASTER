@@ -32,6 +32,11 @@ namespace Elevator.Solution.Host
             string mode = editor.GetString("\nOperation: ").StringResult;
             if (String.IsNullOrWhiteSpace(job))
                 throw new InvalidOperationException("This host requires an explicit desktop request.");
+            if (mode == "plot")
+            {
+                PlotJob(job);
+                return;
+            }
             var request = Wire.Read<GenerationRequest>(Path.Combine(job, "request.json"));
             var response = new GenerationResponse { RequestId = request.RequestId, InputHash = Wire.HashText(request.ProjectJson) };
             try
@@ -59,6 +64,27 @@ namespace Elevator.Solution.Host
                 response.Success = false;
             }
             Wire.Write(Path.Combine(job, mode == "verify" ? "verified.json" : "response.json"), response);
+        }
+
+        // The PDF of the sheet layout of the open drawing, by the plug-in plot engine (not a -PLOT script); the answer is plot.json.
+        private static void PlotJob(string job)
+        {
+            var result = new PdfPlotResult();
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                var plot = Wire.Read<PdfPlotRequest>(Path.Combine(job, "plot-request.json"));
+                var db = Application.DocumentManager.MdiActiveDocument.Database;
+                result.Media = SheetPlotter.Plot(db, String.IsNullOrWhiteSpace(plot.Layout) ? SheetLayout.Name : plot.Layout, plot.Pdf);
+                result.Success = true;
+            }
+            catch (System.Exception e)
+            {
+                result.Success = false;
+                result.Error = e.ToString();
+            }
+            result.ElapsedSeconds = timer.Elapsed.TotalSeconds;
+            Wire.Write(Path.Combine(job, "plot.json"), result);
         }
 
         private void GenerateOutput(

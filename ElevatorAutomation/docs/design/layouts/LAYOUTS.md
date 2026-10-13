@@ -263,16 +263,24 @@ So 3,065 entities (3.3 %) carry the four static detail viewports and everything 
 
 A missing value is written as empty, never a placeholder (DESIGN-FLOW principle). The north arrow, bar scale and notes stay static; the bar scale should be removed or generated from the scale.
 
-### 6.4 PDF through AutoCAD Core Console
+### 6.4 PDF through AutoCAD Core Console (implemented in L3)
 
-- Replace `PDFCreator.pc3` with **`DWG To PDF.pc3`** (ships with AutoCAD) and the paper `ISO full bleed A0 (1189.00 x 841.00 MM)` or `ISO A0 (841.00 x 1189.00 MM)` with rotation 90; keep `monochrome.ctb` (ships in AutoCAD's Plot Styles; verify it is present where Core Console runs). Set the plot area to **Layout** (or to the frame rectangle), scale 1:1.
-- Do it in the plug-in, not in a `-PLOT` script: a command `ELEVATORPLOTPDF` using `PlotSettingsValidator` + `PlotEngine` (`PlotFactory.CreatePublishEngine`), run by `accoreconsole.exe /i <dwg> /s <script>` with `BACKGROUNDPLOT = 0`. Rationale: explicit control of device, media, style sheet and area, and a readable error when one is missing.
-- Not tested in this task. It needs a local spike: does `DWG To PDF.pc3` with `monochrome.ctb` and TrueType Arabic reproduce the sheet in Core Console, and how long does it take for a full project?
+- `Elevator.AutoCAD/Sheet/SheetPlotter.cs`: the plug-in plot engine (`PlotSettingsValidator` + `PlotEngine`, no `-PLOT` script), device
+  `DWG To PDF.pc3`, media `ISO full bleed A0 (841 x 1189)` plotted landscape (rotation 90, the PDF page is a portrait media box with /Rotate 270),
+  plot type layout, custom scale 1:1, `monochrome.ctb`, `BACKGROUNDPLOT` 0, `PDFSHX` 1 (SHX text is also stored as searchable comments).
+  A missing device or style table is an error with a clear message. The host mode `plot` (`SOLUTIONHOST <job> plot`) plots a COPY of the DWG.
+- `GenerationClient.PlotPdf`: Core Console with a 5 minute timeout and a log in the job folder, then the logo.
+- **Logo:** the Core Console does not plot raster images. `PdfLogoOverlay` (PdfSharp, MIT) draws the logo onto page 1 at the SM_LOGO_AREA
+  rectangle (aspect kept, centred); the rectangle comes from the host's `SheetResult.LogoArea*`. Without a logo nothing is added; the DWG keeps
+  its image reference. PdfSharp reports the displayed size of a rotated page but flips y with the media box height: the overlay compensates.
+- Measured: a full project plots in under a second (0.5 s, 650 KB); TrueType and SHX text are both plotted (Arabic is drawn as xarab SHX).
 
-### 6.5 Where the file-name builder is called
+### 6.5 Where the file-name builder is called (implemented in L3)
 
-At the three outputs of one run, so one base name is computed once:
-`BaseName(project, library, counterweight)` -> `Files(baseName)` gives `.dwg`, `.pdf`, `.elevator.json`. Call it in the project save path (project file), the drawing generation path (DWG output path, never overwriting the source) and the PDF export (same folder, `.pdf`). The counterweight code is `RCW` for every geared project now (2026-10-12 decision). Call sites belong to L3; L2b only needs the name for the sheet's own file stamp if that is wanted.
+`OutputSetWriter` (Bridge) is the one place: `DrawingFileName.BaseName(project, company, revision)` -> `Files(baseName)`; the desktop
+decides with the pure function `OutputSet.Plan` / `OutputSet.Resolve` (overwrite, next revision, cancel) before it calls the writer. The writer
+publishes the DWG through `OutputConsent` (after generation and verification), writes the project file, then plots the PDF. A request
+without a sheet (tests, internal runs) keeps the old single-DWG paths.
 
 ### 6.6 Tests
 

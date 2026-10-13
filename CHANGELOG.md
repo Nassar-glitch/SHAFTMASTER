@@ -6,6 +6,12 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **One output set per Generate Drawings run (L3):** the DWG (with the A0 sheet), the PDF of that sheet and the project file are written together into
+  the output folder under one base name `COMPANY-TYPE-CW-W{SW}D{SD}-PROJECT-MODEL{NN}`. When any of the three files exists the program asks: replace
+  them, or raise the revision to the next NN (the same number on the sheet, the title block, the calculation sheet and the names), or cancel; nothing
+  is replaced silently. The PDF is plotted by the AutoCAD Core Console plot engine (DWG To PDF, ISO full bleed A0, monochrome.ctb, 1:1) and the
+  company logo is put onto the page at the logo area (PdfSharp 1.50.5147, MIT licence, shipped in the program folder). An error of the PDF step
+  keeps the DWG and the project file and says what failed.
 - **One set of company and report data (L2b prep):** Company / report settings now holds the company name (as typed, Arabic or English), the logo and
   the default prepared / checked / approved names; a project's own value wins while it is not blank. Client, document number, revision and the new
   phase stay in the project (General page). The calculation sheet and the Design Notes read the same resolved data as the drawing title block and the
