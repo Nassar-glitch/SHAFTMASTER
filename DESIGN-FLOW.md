@@ -114,6 +114,11 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - double-cross (X) bracing L50×50×5.
 - **Beam levels:** there is always a beam at every floor level, because the doors are fixed to the structure: automatic doors always, manual doors by default. Between floors the levels are divided equally. The preset is 2 spaces per floor (for example 3250 → 1625), and the levels are editable.
 - **One model:** the steel structure is generated from the same project as everything else (plan, A-A, the sheet, and later STEP and the calculations). The rail brackets sit on the beams, so the rail bracket spacing follows the beam levels.
+- **Goal:** the same four main views (shaft plan, machine-room plan, A-A and B-B) and the same A0 sheet as for a concrete shaft, drawn with the steel tower. The reference DXF is only a source of the steel look and rules.
+- **Settled (user, 2026-10-13):**
+  - When the door is fixed to the structure, there is also a beam at the door head (the header beam).
+  - The current product is an external lift: the machine room sits on top of the steel structure. A steel tower inside a stairwell comes later.
+  - The bracing (which faces, single or double cross) is drawn as in the reference side elevation for now. The face-by-face questions belong to the later STEEL module.
 - **Not now:** structural calculations (a later STEEL STRUCTURE module), and the generated details stage G (postponed).
 - **Profile catalogue:** UPN sizes (dimensions and mass) and L angles, as editable data.
 

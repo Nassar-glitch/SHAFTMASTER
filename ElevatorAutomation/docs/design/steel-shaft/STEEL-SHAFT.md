@@ -5,7 +5,9 @@ Stage S1 (analysis only, no product code). Source: `UPN STEEL SHAFT.dxf` (the us
 made from that file with ezdxf + matplotlib (black on white, lineweights flattened, so hatches and splines look denser than in
 AutoCAD). Dimensions below are the drawing's own dimension values; geometry that was measured from entities is marked "measured".
 
-Contents: 1 sheets and views, 2 plan rules, 3 elevation rules, 4 details and notes, 5 proposed model, 6 questions, 7 inconsistencies in the drawing.
+Scope (user, 2026-10-13): the program draws its **own four views and A0 sheet** with the steel tower; the reference DXF is only the source of
+the steel look and rules. Sections 1 to 4 read the reference; **section 5 is what changes in each existing view and the sheet**; 6 the
+model; 7 questions; 8 inconsistencies in the drawing.
 
 ## 1. What the file holds
 
@@ -125,19 +127,85 @@ Pit, floors and overhead are as in the lift: total 16500 = pit 1150 + travel 112
   client's template, not the program's own statements.
 - **Legend in the title block:** CONCRETE, REINFORCED CONCRETE, BRICK hatch swatches.
 
-## 5. Proposed model
+## 5. How the four existing views and the sheet change
 
-### 5.1 Inputs and presets (Core)
+Goal (user, 2026-10-13): the same four main views (shaft plan, machine-room plan, A-A, B-B) and the same A0 sheet as today, drawn with the
+steel tower instead of concrete walls. The reference file gives the steel look and its rules; its sheets are not reproduced. Settled and
+not asked again: a beam at the door head when the door is fixed to the structure; the product is an external lift, so the machine room
+(MR) sits on top of the steel; the bracing is drawn as in the reference side elevation (double cross per panel; the face-by-face choice
+is the later STEEL module). Today's concrete views are in `../layouts/l2b/6-stops-1600x1800-arabic-sheet.png`.
+
+**Common rule: the clear shaft stays the clear shaft.** Width W and depth D are the dimensions everything else is measured from
+(car, counterweight, guides, DBG, TZ, entrance). With steel they are the clear size between the inner faces of the beams, which is the
+flange-tip line of the columns in the reference. The steel lies outside that rectangle where the wall used to be, so no car,
+counterweight or rail calculation changes; only what is drawn for the "wall" changes.
+
+### 5.1 Shaft plan ("SHAFT and CAR 1:10", today concrete walls with the opening and the door jambs)
+
+- The wall outline and hatch are replaced by the **four corner columns** (UPN 140 section, solid, web outside, flanges into the shaft,
+  channels facing each other along the width) on their 200 x 200 x 15 base plates (plate outline under the column) with the 4 x Ø20
+  bolt circles.
+- The **beam ring at the cut level** (UPN 100 channel on the four faces, between the columns) is drawn as double lines on the clear
+  rectangle. The plan is cut just above the entrance floor beam, so the door-head beam is not in it.
+- **Entrance face:** the corner columns and the floor beam only; the door opening lies between the columns, where today's entrance wall
+  jambs (the 300 mm blocks) are. The door frame is fixed to the beams.
+- The bracing lies in the face planes and is not drawn in plan (it would only repeat the beam lines).
+- Dimensions: W and D as today; add only the profile labels ("UPN 140", "UPN 100") as leader texts in the style of the existing
+  guide-rail labels.
+
+### 5.2 Machine-room plan ("MACHINE ROOM 1:10")
+
+- The MR is bigger than the shaft (2650 over 1600 in the example, 525 each side): its floor is a **steel frame on top of the tower**:
+  the top beam ring of the shaft plus **outrigger beams** carrying the overhang, with the machine beams and the P1 to P4 supports on
+  them. In plan: the top beam grid (shaft beams, outriggers, machine beams), the support points P1-P4 and TZ, and the MR walls as
+  today (their construction is question 2).
+- The hatch of the concrete slab is replaced by the steel floor (a floor-plate outline, no hatch).
+
+### 5.3 Section A-A (today a 1:50 elevation: the walls as vertical lines, floor levels, brackets, car and counterweight)
+
+- The wall lines are replaced by the **tower elevation**: two columns (double lines), the base plates on the concrete base at the pit,
+  the top frame under the MR.
+- **A beam at every floor level**, **a beam at each door head** (the header, at the door height above the floor) and the **mid beams**
+  that divide the gaps (preset "2 spaces per floor", editable): see 6.1 and question 1.
+- **Bracing:** double cross (X) of L50x50x5 in every panel between consecutive beams, as in the reference side elevation, at the
+  gusset plates of the beam-column joints; none on the entrance face.
+- The **rail brackets sit on the beams**: the bracket marks are the beam levels (the `Rails.BracketMaximumSpacingMm` layout becomes the
+  beam layout), so the A-A bracket chain is the same chain.
+- Labels in the reference style: "UPN 100 STEEL BEAM", "UPN 140 STEEL COLUMN", "L50X50X5mm.".
+
+### 5.4 Section B-B ("SEC AT B-B 1:10": the machine-room section with the traction machine, TZ and the slab hatch)
+
+- The reinforced-concrete slab and its hatch become the **steel MR floor on the top frame**: the main beams, the machine beams under the
+  machine and its support stand, the deflector beam, with the P1 to P4 arrows landing on the steel. TZ and the machine dimensions are
+  unchanged.
+- The concrete bearing blocks drawn at the two sides become the steel top beams on the columns.
+
+### 5.5 Title block and sheet
+
+- Same A0 geared sheet and the same arrangement rules (`SheetArrangement` unchanged); the views only have new content.
+- Legend swatches CONCRETE / REINFORCED CONCRETE / BRICK: add a STEEL swatch; the concrete ones stay only where concrete is drawn (the
+  base).
+- The note `ALL THE DIMENSION INDICATED ARE FOR FINISHED MASONRY` does not apply to a steel shaft (and is a remark under principle 6):
+  it is not generated for steel.
+- Title-block data: add the construction text ("STEEL STRUCTURE UPN") and the profile names where a field exists; other fields unchanged.
+- Detail group (right of the sheet): "Guide rail support bracket and anchor details" becomes the bracket-on-beam fixing; the steel
+  details of the reference (column splice, beam-column joint, base plate and bolt) are new reference details (stage G, postponed).
+- General notes: notes 2 to 5 of the reference as the steel notes preset (steel grade, standard, high-strength bolts).
+
+## 6. Proposed model
+
+### 6.1 Inputs and presets (Core)
 
 - **Shaft construction** (shaft page): Concrete (default) | Steel structure. `Steel` group in the project:
   - Construction system: `UPN` (first one; the field exists so other systems can come later).
   - **Column profile:** list from the UPN catalogue (preset UPN 140), also placed at the 4 corners; **Beam profile:** list (preset UPN 100,
     the user's rule; the drawing itself uses U14 for both); **Bracing profile:** list from the L catalogue (preset L50x50x5).
-  - **Bracing scheme:** None | Single diagonal (zigzag) | Double cross (X); per face: front, back, left, right; presets: UPN10
-    none, current client double cross on the side and back faces, entrance face none (see question 1).
-  - **Beam levels:** preset rule "a beam at every floor level (the doors are fixed to the steel), the space between floors divided
-    equally, preset 2 spaces per floor (3250 -> 1625), editable". Also the pit-top level and the top beam. Editable list of levels
-    (each locks when edited, Reset gives the rule back); like every other input it starts from the preset.
+  - **Bracing:** drawn as in the reference side elevation (double cross in every panel, L50x50x5); the face-by-face choice
+    (single diagonal, double cross, which faces) is left to the later STEEL module.
+  - **Beam levels:** preset rule "a beam at every floor level and one at each door head (the doors are fixed to the steel), the
+    space between divided equally, preset 2 spaces per floor (3250 -> 1625), editable" (the exact header / mid rule is question 1).
+    Also the pit-top level and the top beam. Editable list of levels (each locks when edited, Reset gives the rule back); like
+    every other input it starts from the preset.
   - Base plate (preset 200 x 200 x 15), bolt count and diameter (4 x Ø20), washer plate (60 x 60 x 10), gusset plate (PL 400 x 250 x 6),
     steel grade text and the standard notes as editable presets.
 - **Rail brackets follow the beam levels:** the bracket levels are the beam levels (the bracket sits on a beam), so
@@ -149,19 +217,10 @@ Pit, floors and overhead are as in the lift: total 16500 = pit 1150 + travel 112
 - A UPN catalogue and an L-angle catalogue in `config/presets.json` (group `SteelShaft`), like the guide-rail profile catalogue
   (cloud: Elevator.Core, xUnit).
 
-### 5.2 Drawings (what each view shows)
+### 6.2 Core (cloud) and AutoCAD (local)
 
-- **Plan:** column sections (channel with its web outwards, flanges into the shaft, as in section 2) in place of the concrete wall
-  hatch, the base plates, bolts and the beam ring; the shaft dimensions W and D measured clear between the steel faces. Doors and
-  car as today.
-- **Section A-A:** columns as two lines, beams at every level, the bracing per face as above, base plates and the concrete base,
-  with the bracket levels on the beams; floors and pit / OH unchanged.
-- **A0 sheet:** the same views in the user's arrangement; a detail group for the column splice, the beam-column joint and the base
-  (stage G, postponed).
-- **STEP:** later, same model (columns, beams, angles as extrusions along their profile).
-
-### 5.3 Core (cloud) and AutoCAD (local)
-
+- **Machine room on the steel:** the MR frame (top ring, outriggers, machine beams) is part of the same Steel group, with its own
+  presets (profiles, overhang), and carries P1 to P4.
 - **Core / Reporting (cloud, tier 1):** catalogues, input model and presets, beam-level rule, the derived bracket spacing,
   the plan / section geometry as data (column rectangles, beam lines, brace polylines, labels with the profile names), the
   steel member list (profile, length, count, mass: the base of a bill of materials and, later, the STEEL STRUCTURE calculation), the
@@ -169,7 +228,7 @@ Pit, floors and overhead are as in the lift: total 16500 = pit 1150 + travel 112
 - **AutoCAD (local):** drawing the channel section, the hatch, the beam / bracing linework in plan and A-A, dimension chains,
   layers (CL, S-PLATES, S-TEXT conventions of the client file), sheet assembly, PDF.
 
-### 5.4 Catalogue (DIN 1026-1 / EN 10279 standard sections; to be verified by the cloud session against a manufacturer table)
+### 6.3 Catalogue (DIN 1026-1 / EN 10279 standard sections; to be verified by the cloud session against a manufacturer table)
 
 Channel UPN (parallel-flange-less, inclined flange 8 %), dimensions in mm, A in cm², mass in kg/m, Ix and Wx about the strong axis:
 
@@ -188,27 +247,25 @@ Source: DIN 1026-1:2000 and EN 10279:2000 (hot-rolled steel channels), EN 10056-
 catalogue values from memory of the common producer tables (not fetched here: no web access in this analysis); cloud
 session to confirm and cite the producer table. The drawing itself only draws the section outline and does not state any of these.
 
-## 6. Questions for the user (only what the drawing does not settle)
+## 7. Questions for the user (only what the drawing does not settle)
 
-1. **Braced faces:** sheet E braces the two 2000 faces and the 1500 back face, never the entrance face. For the target "double
-   cross (X) bracing", is that the same face set (sides and back, not the entrance)? Is it a double cross in every panel, or one
-   per floor?
-2. **Beam at the door head:** beams at floor levels sit at the sill level. Do the automatic doors need a second beam at the
-   header (door height above the floor, about 2100 to 2400 mm)? The drawing shows none.
-3. **Pit and top levels:** is the first beam at the pit top (1150, as drawn) or at the pit floor plate? What are the top
-   beam level and the cap (the roof pyramid): at the overhead height 4100 above the top floor, or at the machine-room slab?
-4. **Columns on a 2000 face:** the plan shows 4 corner columns only. Do you want intermediate columns on faces wider than 2000
-   (bigger shafts), and from what width?
-5. **Machine room:** does the machine room (or the machine on a beam) sit on this steel, so the top beams carry the machine
-   reactions (P1-P4 become steel loads), or is it a separate structure?
-6. **Base:** is the plate 200 x 200 x 15 with 4 x Ø20 fixed for every shaft, or scaled with the column? Does the program draw the
-   concrete base (2600 x 250, Ø8 @ 120) or leave it to the structural engineer?
-7. **Profile of beams on the drawing:** the drawing says U14 for beams, your target says UPN 100 beams every 1500. Confirm that the
-   beam profile preset is UPN 100 and the column UPN 140.
-8. **Notes and remarks:** keep notes 2 to 5 (specification) as the preset text of the steel sheet and drop note 1 and "finished
-   masonry"?
+Settled by the user and removed from the earlier list: the door-head beam, the MR on the steel (external lift), the bracing as in the
+reference side elevation.
 
-## 7. Inconsistencies in the drawing (not decisions; for information)
+1. **Door-head beam level and the mid beams.** The header sits at the door construction height above the floor (2160 in the project
+   constants). The preset rule "2 spaces per floor" (3250 -> 1625) does not put a beam on 2160. Which rule: (a) the floor beam and the
+   header are fixed, and each gap between fixed beams is divided equally so that no gap exceeds a target (preset 1500 mm); or (b) the
+   equal division of the floor height, with the header added as an extra beam?
+2. **Machine room walls and overhang.** The MR is larger than the shaft (525 each side in the example). Are the MR walls part of the
+   steel (cladding on a steel frame), and does the program draw the outrigger beams that carry the overhang with a preset (profile,
+   length), or only the top ring of the shaft?
+3. **Clear size.** Confirm that W x D on the shaft page is the clear size between the inner faces of the beams, as in the reference
+   (1500 between flange tips), with the steel outside it.
+4. **Plan cut level.** The plan shows the beam ring of the entrance floor beam. Confirm, or ask for the plan at the door-head beam.
+5. **Base.** Does the program draw the concrete base (2600 x 250 with Ø8 @ 120 in the reference) in A-A, or only the plates on a base
+   line?
+
+## 8. Inconsistencies in the drawing (not decisions; for information)
 
 - Total shaft height is `16500` (title block and dimension) but the A-A dimension chain 1150 + 9 x 1600 + 500 adds to 16050 (and
   UPN10 sheet C: 700 + 9 x 1600 + 500 = 15600 against 16050). The C-C chain 1150 + 11250 + 4100 = 16500 is consistent.
