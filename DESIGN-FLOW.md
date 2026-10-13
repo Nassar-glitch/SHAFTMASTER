@@ -120,7 +120,11 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - The current product is an external lift: the machine room sits on top of the steel structure. A steel tower inside a stairwell comes later.
   - The bracing (which faces, single or double cross) is drawn as in the reference side elevation for now. The face-by-face questions belong to the later STEEL module.
 - **Answers of 2026-10-13 (STEEL-SHAFT.md section 7):**
-  1. **Beam levels:** the fixed beams are the floor beam and the door-head beam (at the door construction height above the floor). Going up from the door-head beam, a beam is placed every s mm (the beam-spacing preset, 1500 mm, editable). When the rest up to the next floor beam is not more than s, the next beam is the floor beam. A tall floor therefore gets more beams automatically. The floor-to-door-head gap is the door height. The pit and the top follow the same spacing. The rail bracket spacing is the largest gap.
+  1. **Beam levels (corrected by the user, 2026-10-13):**
+     - **s is the guide-rail bracket spacing,** recommended by the rail check or typed on the RAILS page, as for any lift. It is not a fixed 1500; the beams follow it.
+     - **Side and back faces** (no doors in this system; the rails are fixed there): a floor beam at every floor. Between floor beams, the gap is divided equally into the fewest parts, none larger than s. The pit and the top follow the same rule.
+     - **Entrance face only:** the floor beam and the door-head beam (at the door construction height). From the door-head beam to the next floor beam, the gap is divided equally into the fewest parts, none larger than s. The floor-to-door-head gap is the door opening and is not split.
+     - The rail check uses the largest gap on the faces that carry the rails. The door-height gap on the entrance face is by design: no Design Notes line about it.
   2. **No outriggers.** The machine sits on top of the tower, within the shaft footprint. The controller and the switches go inside the top floor, for example to the right of the door as seen standing in front of the lift. The machine-room plan becomes the tower-top plan with the machine.
   3. W × D is the clear size between the inner steel faces; the steel is outside it.
   4. The shaft plan is cut just above the floor beam (the Planner's decision).
