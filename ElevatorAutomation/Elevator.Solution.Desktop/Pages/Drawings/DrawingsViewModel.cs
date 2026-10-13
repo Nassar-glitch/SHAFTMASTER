@@ -6,7 +6,8 @@ namespace Elevator.Solution.Desktop.Pages
 {
  sealed class DrawingsViewModel:PageViewModel
  {
-  string outputFolder,outputName="Elevator Project.dwg";
+  // OutputName stays empty: the output set (DWG, PDF, project file) is named automatically from the project (DrawingFileName).
+  string outputFolder,outputName="";
   public DrawingsViewModel(string outputFolder):base("DRAWINGS"){this.outputFolder=outputFolder;}
   // Where Generate writes the coordinated DWG.
   public string OutputFolder{get{return outputFolder;}set{SetProperty(ref outputFolder,value);}}
@@ -17,7 +18,7 @@ namespace Elevator.Solution.Desktop.Pages
   // Commit of the output fields: a filename without directories.
   public void SetOutput(string folder,string name)
   {
-   OutputFolder=folder;OutputName=name;if(String.IsNullOrWhiteSpace(OutputName)||Path.GetFileName(OutputName)!=OutputName)throw new ArgumentException("Enter a filename without directories.");
+   OutputFolder=folder;OutputName=name;if(!String.IsNullOrWhiteSpace(OutputName)&&Path.GetFileName(OutputName)!=OutputName)throw new ArgumentException("Enter a filename without directories.");
   }
  }
 }

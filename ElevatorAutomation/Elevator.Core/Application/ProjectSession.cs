@@ -36,7 +36,8 @@ namespace Elevator.Core.Application
         public void Save(string path)
         {
             path = Path.GetFullPath(path);
-            string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            // a short temporary name in the same folder: a long project file name plus a suffix must not pass the path limit
+            string temporary = Path.Combine(Path.GetDirectoryName(path) ?? "", ".sm-" + Guid.NewGuid().ToString("N").Substring(0, 10) + ".tmp");
             try
             {
                 File.WriteAllText(temporary, ProjectJson.Serialize(Project));

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 using Elevator.Core.Application;
+using Elevator.Core.Company;
+using Elevator.Core.Layouts;
 using Elevator.Core.Project;
 using Elevator.Solution.Bridge;
 namespace Elevator.Solution.Desktop
@@ -15,6 +17,10 @@ namespace Elevator.Solution.Desktop
  {
   readonly MainWindow shell;
   public GenerationResponse Last;
+  // L3: the output set of the last Generate Drawings run (DWG with the sheet, PDF of it, project file; one base name).
+  public OutputSetResult LastSet;
+  // The decision when files of the set exist (overwrite / next revision / cancel); tests answer it, the window asks.
+  public Func<OutputSetPlan,OutputChoice> OutputPrompt;
   public StepExportResult LastStep;
   public ProjectCommands(MainWindow shell){this.shell=shell;}
   ProjectSession Session{get{return shell.Session;}}
@@ -70,9 +76,61 @@ namespace Elevator.Solution.Desktop
    return new Elevator.Core.Layouts.SheetRequest{Attributes=title.Attributes(),DoorType=Session.Project.Doors==null?null:Session.Project.Doors.Type,
     LogoFile=logo==null?null:company.LogoPath,LogoWidthPx=logo==null?0:logo.PixelWidth,LogoHeightPx=logo==null?0:logo.PixelHeight};
   }
+  OutputChoice AskOutputChoice(OutputSetPlan plan)
+  {
+   if(OutputPrompt!=null)return OutputPrompt(plan);
+   var existing=String.Join("\n",plan.Existing);
+   string text="These files of the output set already exist:\n"+existing+"\n\nYes: replace them (after the new set is generated and verified).\n"
+    +(plan.NextRevision.HasValue?"No: raise the revision to "+DrawingRevision.Text(plan.NextRevision.Value)+" and write the set as\n"+plan.NextNames.BaseName+"\n":"No: there is no free revision up to 99.\n")+"Cancel: write nothing.";
+   var answer=MessageBox.Show(shell,text,"Output files exist",MessageBoxButton.YesNoCancel,MessageBoxImage.Warning);
+   return answer==MessageBoxResult.Yes?OutputChoice.Overwrite:answer==MessageBoxResult.No?OutputChoice.NextRevision:OutputChoice.Cancel;
+  }
+  // Generate Drawings: one output set (DWG with the sheet, PDF of that sheet, project file) under one base name in the output folder.
+  // A file name typed by tests or scripts (OutputName) keeps the earlier single-drawing behaviour.
   public async Task Generate()
   {
    if(shell.Busy)return;shell.Commit();Calculate();if(!shell.Live.Design.CanGenerate){shell.ShowPage("VALIDATION");throw new ArgumentException("Correct blocking validation issues before generation.");}
+   if(!String.IsNullOrWhiteSpace(Output.OutputName)){await GenerateDrawing();return;}
+   var project=Session.Project;var company=Elevator.Reporting.Sheet.CompanyReportSettings.Load().ToCompanySettings();var doc=DocumentData.Resolve(project,company);
+   if(!doc.RevisionNumber.HasValue)throw new ArgumentException(doc.RevisionIssue.Message);
+   string folder=Path.GetFullPath(Output.OutputFolder);
+   var plan=OutputSet.Plan(doc.RevisionNumber.Value,r=>DrawingFileName.BaseName(project,company,r),n=>File.Exists(Path.Combine(folder,n)));
+   var choice=OutputChoice.Overwrite;
+   if(plan.Conflict){if(shell.Smoke)throw new IOException("Smoke output already exists; choose a fresh test folder.");choice=AskOutputChoice(plan);if(choice==OutputChoice.Cancel){shell.SetStatus("Generation cancelled; no file was written.");return;}}
+   var resolved=OutputSet.Resolve(plan,choice);
+   if(resolved==null)throw new IOException("There is no free revision up to 99 for these file names.");
+   if(resolved.Item1!=plan.Revision)
+   {
+    // the next revision: the same number on the sheet, the title block, the calculation sheet and the file names
+    project.Report.Revision=DrawingRevision.Text(resolved.Item1);Session.Dirty=true;shell.ResetCalculations();Calculate();
+   }
+   var sheet=Sheet();
+   shell.SetBusy(true);
+   try{
+    var client=new GenerationClient(shell.Root,shell.Bin,@"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe");
+    var request=new OutputSetRequest{Project=project,Options=new GenerationOptions{Views=Session.Views,ArrangeViews=Session.Arrange},Sheet=sheet,Folder=folder,Names=resolved.Item2,
+     Overwrite=plan.Conflict&&choice==OutputChoice.Overwrite,Progress=message=>shell.Dispatcher.BeginInvoke(new Action(()=>shell.SetStatus(message))),
+     SaveProject=path=>shell.Dispatcher.Invoke(new Action(()=>Session.Save(path)))};
+    var set=await Task.Run(()=>OutputSetWriter.Write(client,request));
+    LastSet=set;Last=set.Generation;
+    if(!Last.Success)throw new InvalidOperationException(Last.Error??"Host generation failed.");
+    shell.SetOutputLocation(set.Dwg);
+    var design=shell.Live.Design;
+    design.Validation=Last.Validation;design.LayoutStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.LayoutStatus);design.WrapAngleStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.WrapAngleStatus);design.CodeDiameterRatioStatus=(ValidationStatus)Enum.Parse(typeof(ValidationStatus),Last.CodeDiameterRatioStatus);
+    // the first line is the status line; the paths are in the operation details (tooltip, "Operation details")
+    string written="DWG: "+set.Dwg+"\nPDF: "+(set.PdfError==null?set.Pdf:"not written")+"\nProject file: "+(set.ProjectError==null?set.ProjectFile:"not written");
+    if(set.PdfError!=null||set.ProjectError!=null)
+    {
+     string failed=(set.PdfError!=null?"The PDF was not written: "+set.PdfError+"\n":"")+(set.ProjectError!=null?"The project file was not written: "+set.ProjectError+"\n":"");
+     shell.SetStatus("DRAWING WRITTEN · "+failed.Replace("\n"," ")+"\n"+written);shell.ShowPage("DRAWINGS");
+     if(!shell.Smoke&&OutputPrompt==null)MessageBox.Show(shell,"The drawing was written.\n"+written+"\n\n"+failed,"Output set incomplete",MessageBoxButton.OK,MessageBoxImage.Warning);
+    }
+    else{shell.SetStatus("DRAWING SET WRITTEN · "+Last.ElapsedSeconds.ToString("0.0")+" s\n"+written);shell.ShowPage("DRAWINGS");}
+   }finally{shell.SetBusy(false);}
+  }
+  // The earlier flow: one DWG under the typed file name (no PDF, no project file).
+  async Task GenerateDrawing()
+  {
    string path=Path.GetFullPath(Path.Combine(Output.OutputFolder,Output.OutputName));bool confirmed=false;
    if(File.Exists(path)){if(shell.Smoke)throw new IOException("Smoke output already exists; choose a fresh test folder.");confirmed=MessageBox.Show(shell,"Replace this existing drawing after successful generation and verification?\n"+path,"Confirm replacement",MessageBoxButton.YesNo,MessageBoxImage.Warning)==MessageBoxResult.Yes;if(!confirmed)return;}
    var consent=OutputConsent.Capture(path,confirmed);shell.SetBusy(true);

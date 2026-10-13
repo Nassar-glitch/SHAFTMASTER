@@ -14,8 +14,9 @@ namespace Elevator.Solution.Desktop.Pages
   public override void Build()
   {
    foreach(var view in DrawingsViewModel.Views){var flag=DrawingsViewModel.Flag(view);var box=new CheckBox{Content=view.Name,IsChecked=(Session.Views&flag)!=0,Margin=new Thickness(0,0,0,12),FontSize=16};box.Click+=(s,e)=>{if(box.IsChecked==true)Session.Views|=flag;else Session.Views&=~flag;Live.Design=null;};Content.Children.Add(box);}
-   Heading("Output");var folder=new TextBox{Text=vm.OutputFolder,Margin=new Thickness(0,0,0,10)};var file=new TextBox{Text=vm.OutputName,Margin=new Thickness(0,0,0,12)};Content.Children.Add(new TextBlock{Text="Output folder"});Content.Children.Add(folder);Content.Children.Add(new TextBlock{Text="DWG filename"});Content.Children.Add(file);
-   Form.Committers.Add(()=>vm.SetOutput(folder.Text,file.Text));
+   Heading("Output");var folder=new TextBox{Text=vm.OutputFolder,Margin=new Thickness(0,0,0,10)};Content.Children.Add(new TextBlock{Text="Output folder"});Content.Children.Add(folder);
+   Content.Children.Add(new TextBlock{Text="The drawing (with the sheet), its PDF and the project file are written together under one name built from the company, the system, the shaft, the project and the revision.",TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,12),Foreground=System.Windows.Media.Brushes.DimGray});
+   Form.Committers.Add(()=>vm.SetOutput(folder.Text,vm.OutputName));
    var arrange=new CheckBox{Content="Automatic coordinated arrangement (measured extents)",IsChecked=Session.Arrange,Margin=new Thickness(0,4,0,12)};arrange.Click+=(s,e)=>Session.Arrange=arrange.IsChecked==true;Content.Children.Add(arrange);
    Form.Field("View margin (mm)","Drawing.ViewMarginMm");Form.Field("Plan title","Drawing.PlanTitle");
    Content.Children.Add(Form.Button("GENERATE DRAWINGS",()=>Shell.Commands.StartGeneration(),true));
@@ -23,7 +24,17 @@ namespace Elevator.Solution.Desktop.Pages
    Content.Children.Add(Form.Button("Export STEP…",()=>Shell.Commands.StartStepExport()));
    var lastStep=Shell.Commands.LastStep;var last=Shell.Commands.Last;
    if(lastStep!=null){Note("STEP exported and verified · "+lastStep.Verification.ReopenedSolidCount+" solids");OutputCard("STEP model",lastStep.OutputPath,lastStep.SourceFolder);}
-   if(last!=null&&last.Success){Heading("DRAWING GENERATED SUCCESSFULLY");OutputCard("Coordinated drawing",last.OutputPath,null);var actions=new WrapPanel();actions.Children.Add(Form.Button("Open Drawing",()=>System.Diagnostics.Process.Start(last.OutputPath)));actions.Children.Add(Form.Button("Open Output Folder",()=>System.Diagnostics.Process.Start("explorer.exe",Path.GetDirectoryName(last.OutputPath))));Content.Children.Add(actions);}
+   var set=Shell.Commands.LastSet;
+   if(set!=null&&set.Generation!=null&&set.Generation.Success)
+   {
+    Heading("OUTPUT SET");OutputCard("Drawing with the A0 sheet",set.Dwg,null);
+    if(set.PdfError==null)OutputCard("PDF of the sheet",set.Pdf,null);else Note("The PDF was not written: "+set.PdfError);
+    if(set.ProjectError==null)OutputCard("Project file",set.ProjectFile,null);else Note("The project file was not written: "+set.ProjectError);
+    var files=new WrapPanel();files.Children.Add(Form.Button("Open Drawing",()=>System.Diagnostics.Process.Start(set.Dwg)));
+    if(set.PdfError==null)files.Children.Add(Form.Button("Open PDF",()=>System.Diagnostics.Process.Start(set.Pdf)));
+    files.Children.Add(Form.Button("Open Output Folder",()=>System.Diagnostics.Process.Start("explorer.exe",Path.GetDirectoryName(set.Dwg))));Content.Children.Add(files);
+   }
+   else if(last!=null&&last.Success){Heading("DRAWING GENERATED SUCCESSFULLY");OutputCard("Coordinated drawing",last.OutputPath,null);var actions=new WrapPanel();actions.Children.Add(Form.Button("Open Drawing",()=>System.Diagnostics.Process.Start(last.OutputPath)));actions.Children.Add(Form.Button("Open Output Folder",()=>System.Diagnostics.Process.Start("explorer.exe",Path.GetDirectoryName(last.OutputPath))));Content.Children.Add(actions);}
   }
   void OutputCard(string label,string output,string source)
   {

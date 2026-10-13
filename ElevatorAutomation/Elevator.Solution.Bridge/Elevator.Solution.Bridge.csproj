@@ -8,5 +8,7 @@
   <ItemGroup>
     <Reference Include="System.Web.Extensions" />
     <ProjectReference Include="..\Elevator.Core\Elevator.Core.csproj" />
+    <!-- MIT licence: puts the company logo onto the plotted PDF (the Core Console does not plot raster images). -->
+    <PackageReference Include="PdfSharp" Version="1.50.5147" />
   </ItemGroup>
 </Project>

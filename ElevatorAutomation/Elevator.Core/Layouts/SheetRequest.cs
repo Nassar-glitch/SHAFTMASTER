@@ -115,6 +115,8 @@ namespace Elevator.Core.Layouts
         public double FillRatio;
         public bool LogoPlaced;
         public string LogoMessage;
+        /// <summary>The logo area of the template on the paper (mm from the paper's lower left corner): the PDF step puts the image there.</summary>
+        public double LogoAreaX, LogoAreaY, LogoAreaWidth, LogoAreaHeight;
         public List<string> NotPlaced = new List<string>();
         public List<SheetAttributeFit> Attributes = new List<SheetAttributeFit>();
     }

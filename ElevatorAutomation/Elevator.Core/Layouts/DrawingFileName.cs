@@ -113,6 +113,25 @@ namespace Elevator.Core.Layouts
                 doc.RevisionNumber.Value);
         }
 
+        /// <summary>The base name of a project for a given revision (the output set can move to the next revision).</summary>
+        public static string BaseName(ElevatorProject project, CompanySettings company, int revision)
+        {
+            if (project == null)
+                throw new ArgumentNullException("project");
+            var type = SystemTypeOf(project);
+            if (!type.HasValue)
+                throw new ArgumentException("The elevator system has no file-name type code.");
+            var doc = DocumentData.Resolve(project, company);
+            return BaseName(
+                doc.CompanyName,
+                type.Value,
+                CounterweightOf(project),
+                project.Shaft == null ? 0 : project.Shaft.WidthMm,
+                project.Shaft == null ? 0 : project.Shaft.DepthMm,
+                project.Info == null ? null : project.Info.Name,
+                revision);
+        }
+
         /// <summary>The DWG, PDF and project file names of one base name.</summary>
         public static DrawingFileNames Files(string baseName)
         {
