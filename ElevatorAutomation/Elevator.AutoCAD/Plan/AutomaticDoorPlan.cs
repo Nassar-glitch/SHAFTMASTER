@@ -158,9 +158,9 @@ namespace Elevator.AutoCAD.Plan
         }
 
         /// <summary>Draws the automatic door of a layout on the updated plan (call after <see cref="Clear"/> and the plan update).</summary>
-        public static void Draw(Database db, Transaction tr, DrawingSnapshot s, DoorLayout l)
+        public static void Draw(Database db, Transaction tr, DrawingSnapshot s, DoorLayout l, bool steel = false)
         {
-            new Builder(db, tr, s, l).Run();
+            new Builder(db, tr, s, l) { Steel = steel }.Run();
         }
 
         sealed class Builder
@@ -173,6 +173,8 @@ namespace Elevator.AutoCAD.Plan
             readonly BlockTableRecord model;
             int count;
             double jambDepth;
+            /// <summary>A steel tower: there is no wall to open, the door frame is fixed to the beams.</summary>
+            public bool Steel;
 
             public Builder(Database db, Transaction tr, DrawingSnapshot s, DoorLayout l)
             {
@@ -264,7 +266,8 @@ namespace Elevator.AutoCAD.Plan
                         e.Visible = false;
                     }
                 }
-                Wall();
+                if (!Steel)
+                    Wall();
                 Jambs();
                 if (l.Type == DoorTypes.Automatic2S)
                     SideOpening();

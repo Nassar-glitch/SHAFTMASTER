@@ -20,6 +20,8 @@ namespace Elevator.Core.Layouts
         public int LogoWidthPx, LogoHeightPx;
         /// <summary>The project's door type (DoorTypes): Manual shows the swing-door reference, an automatic door the automatic one.</summary>
         public string DoorType;
+        /// <summary>True for a steel shaft: the notes that apply to concrete and masonry are left out and a STEEL legend entry is added.</summary>
+        public bool SteelStructure;
         /// <summary>The attribute values of SM_TITLEBLOCK.</summary>
         public List<TitleBlockAttribute> Attributes = new List<TitleBlockAttribute>();
     }

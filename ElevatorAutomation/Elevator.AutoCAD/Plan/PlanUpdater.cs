@@ -20,6 +20,7 @@ namespace Elevator.AutoCAD.Plan
         {
             // An earlier automatic door is removed first (reads only when the drawing has none).
             AutomaticDoorPlan.Clear(db, tr);
+            Steel.SteelDrawing.ClearPlan(db, tr);
             var snapshot = DrawingReader.Read(db, tr);
             var calculator = new PlanGeometryAdapter(snapshot, design);
             var gaps = DrawingUpdater.Preflight(snapshot, calculator);
@@ -34,8 +35,12 @@ namespace Elevator.AutoCAD.Plan
             PlanAnnotations.Validate(updated, annotations);
             // The automatic door (2S, 2C) of the project stored in the drawing; a Manual door leaves the template geometry as it is.
             var door = AutomaticDoorPlan.LayoutFor(db, tr, design);
+            var steel = Steel.SteelDrawing.Read(db, tr);
             if (door != null)
-                AutomaticDoorPlan.Draw(db, tr, updated, door);
+                AutomaticDoorPlan.Draw(db, tr, updated, door, steel != null);
+            // A steel shaft: the tower is drawn in place of the walls (hidden, not edited).
+            if (steel != null)
+                Steel.SteelDrawing.DrawPlan(db, tr, updated, steel);
             return new ViewUpdateResult
             {
                 Dimensions = expected,

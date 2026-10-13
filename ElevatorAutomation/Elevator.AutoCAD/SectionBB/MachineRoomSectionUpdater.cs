@@ -31,6 +31,7 @@ namespace Elevator.AutoCAD.SectionBB
         /// <summary>Moves the B-B entities to the new design.</summary>
         public ViewUpdateResult Update(Database db, Transaction tr, ElevatorParameters design)
         {
+            Steel.SteelDrawing.ClearSection(db, tr);
             var s = MachineRoomSectionDrawing.Read(db, tr);
             var p = design.MachineRoomSection;
             var g = new MachineRoomSectionGeometry(design);
@@ -77,6 +78,10 @@ namespace Elevator.AutoCAD.SectionBB
                 MachineRoomSectionGeometryAudit.Run(MachineRoomSectionDrawing.Read(db, tr), design, MachineRoomDrawing.Read(db, tr));
             ProjectDataStorage.Write(db, tr, "MachineRoomSectionDesign", p);
             ProjectDataStorage.Write(db, tr, "MachineRoomSectionGeometryAudit", audit);
+            // A steel shaft: the machine stands on the steel top frame in place of the slab and the concrete blocks.
+            var steel = Steel.SteelDrawing.Read(db, tr);
+            if (steel != null)
+                Steel.SteelDrawing.DrawSection(db, tr, s.Frame, steel, p.SteelBottomZ);
             return new ViewUpdateResult
             {
                 Dimensions = new Dictionary<string, double>(),

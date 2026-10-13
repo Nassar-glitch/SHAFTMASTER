@@ -58,6 +58,8 @@ namespace Elevator.AutoCAD.Sheet
                     src.DxfIn(templateFile, null);
                     layoutId = CreateLayout(db, layoutName);
                     CloneTemplate(db, src, layoutName, layoutId);
+                    if (request.SteelStructure)
+                        SteelLegend(db, layoutId);
                 }
             }
             catch
@@ -234,6 +236,59 @@ namespace Elevator.AutoCAD.Sheet
 
         // Paper-space entities (without the overall viewport) and every model-space entity of the template go into the new layout and
         // the model space; names already in the drawing keep the drawing's definition (DuplicateRecordCloning.Ignore).
+        // A steel shaft: the two masonry notes of the title block (English and Arabic, "all dimensions are for finished masonry") do not
+        // apply and are left out; a STEEL entry is added to the legend in the place they leave. The template is not edited.
+        const double NoteX0 = 1021, NoteX1 = 1170, NoteY0 = 566, NoteY1 = 591;
+
+        static void SteelLegend(Database db, ObjectId layoutId)
+        {
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var layout = (Layout)tr.GetObject(layoutId, OpenMode.ForRead);
+                var paper = (BlockTableRecord)tr.GetObject(layout.BlockTableRecordId, OpenMode.ForWrite);
+                var erase = new List<ObjectId>();
+                foreach (ObjectId id in paper)
+                {
+                    var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (e == null || e is Viewport || e is BlockReference)
+                        continue;
+                    try
+                    {
+                        var box = e.GeometricExtents;
+                        double cx = (box.MinPoint.X + box.MaxPoint.X) / 2, cy = (box.MinPoint.Y + box.MaxPoint.Y) / 2;
+                        if (cx > NoteX0 && cx < NoteX1 && cy > NoteY0 && cy < NoteY1)
+                            erase.Add(id);
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                    }
+                }
+                foreach (var id in erase)
+                    ((Entity)tr.GetObject(id, OpenMode.ForWrite)).Erase();
+                // the STEEL entry: a hatched swatch and its name, in the style of the legend row below
+                var swatch = new Polyline();
+                swatch.AddVertexAt(0, new Point2d(1030, 575), 0, 0, 0);
+                swatch.AddVertexAt(1, new Point2d(1046, 575), 0, 0, 0);
+                swatch.AddVertexAt(2, new Point2d(1046, 580), 0, 0, 0);
+                swatch.AddVertexAt(3, new Point2d(1030, 580), 0, 0, 0);
+                swatch.Closed = true;
+                paper.AppendEntity(swatch);
+                tr.AddNewlyCreatedDBObject(swatch, true);
+                var hatch = new Hatch();
+                paper.AppendEntity(hatch);
+                tr.AddNewlyCreatedDBObject(hatch, true);
+                hatch.SetHatchPattern(HatchPatternType.PreDefined, "ANSI32");
+                hatch.PatternScale = 0.5;
+                hatch.Associative = false;
+                hatch.AppendLoop(HatchLoopTypes.Default, new ObjectIdCollection(new[] { swatch.ObjectId }));
+                hatch.EvaluateHatch(true);
+                var text = new MText { Location = new Point3d(1049, 580.5, 0), TextHeight = 3, Contents = "STEEL", Attachment = AttachmentPoint.TopLeft };
+                paper.AppendEntity(text);
+                tr.AddNewlyCreatedDBObject(text, true);
+                tr.Commit();
+            }
+        }
+
         static void CloneTemplate(Database db, Database src, string layoutName, ObjectId targetLayoutId)
         {
             var paperIds = new ObjectIdCollection();
@@ -334,8 +389,10 @@ namespace Elevator.AutoCAD.Sheet
         {
             if (key == null)
                 return 0;
-            if (key.StartsWith("MachineRoomSection.", StringComparison.Ordinal))
+            if (key.StartsWith("MachineRoomSection.", StringComparison.Ordinal) || key.StartsWith("Steel.Section.", StringComparison.Ordinal))
                 return DrawingViews.SectionBB;
+            if (key.StartsWith("Steel.MachineRoom.", StringComparison.Ordinal))
+                return DrawingViews.MachineRoomPlan;
             if (key.StartsWith("MachineRoom.", StringComparison.Ordinal))
                 return DrawingViews.MachineRoomPlan;
             if (key.StartsWith("SectionAA.", StringComparison.Ordinal))

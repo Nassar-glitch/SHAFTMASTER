@@ -1,0 +1,167 @@
+"""S3 tier 3 (steel-native): reads the generated steel drawings back from the DWGs.
+
+usage: verify_steel.py <folder SteelNativeTests wrote> [<summary json to write>]
+
+For each <id>.dwg (DWG -> DXF with the AutoCAD Core Console, read only; then ezdxf) and its <id>-expected.json:
+  * steel project: the plan has four column sections (8 vertices) with their plates and bolts and the beam ring; the template wall
+    entities are still there and hidden; the machine-room plan has the four columns and the ring and the room walls are hidden; B-B has
+    the two top beams and the slab is hidden; A-A has the tower of the expected faces: beams at the levels of the left face, the beams
+    of the entrance and back faces end-on, two diagonals in every panel, gusset plates, the base block, and the walls and slabs are hidden;
+  * the sheet: the masonry notes are gone, a STEEL legend entry is there;
+  * concrete project: no steel entity anywhere and the walls are visible.
+"""
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+import ezdxf
+
+CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
+LAYOUT = "SM_Geared_A0"
+failures = []
+checks = 0
+
+
+def check(ok, name):
+    global checks
+    checks += 1
+    if not ok:
+        failures.append(name)
+        print("FAIL:", name)
+
+
+def to_dxf(dwg, dxf):
+    work = tempfile.mkdtemp(prefix="stl_")
+    src, out, scr = os.path.join(work, "in.dwg"), os.path.join(work, "out.dxf"), os.path.join(work, "run.scr")
+    shutil.copyfile(dwg, src)
+    with open(scr, "w", newline="") as f:
+        f.write("\r\n".join(["FILEDIA", "0", "DXFOUT", out, "16", ""]))
+    try:
+        subprocess.run([CORE_CONSOLE, "/i", src, "/s", scr, "/l", "en-US"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
+    except subprocess.TimeoutExpired:
+        pass
+    if not os.path.exists(out):
+        raise RuntimeError("DXF not written for " + dwg)
+    shutil.copyfile(out, dxf)
+    shutil.rmtree(work, ignore_errors=True)
+
+
+def tag(e):
+    if not e.xdata or "ELEVATOR_AUTOMATION" not in e.xdata:
+        return None
+    values = [v.value for v in e.get_xdata("ELEVATOR_AUTOMATION")]
+    return (values[0], values[1] if len(values) > 1 else "")
+
+
+def invisible(e):
+    return bool(e.dxf.get("invisible", 0))
+
+
+def closed_poly(e, n):
+    return e.dxftype() == "LWPOLYLINE" and e.closed and len(e) == n
+
+
+def main():
+    folder = sys.argv[1]
+    summary = sys.argv[2] if len(sys.argv) > 2 else None
+    cases = sorted(f[:-len("-expected.json")] for f in os.listdir(folder) if f.endswith("-expected.json"))
+    for case in cases:
+        expected = json.load(open(os.path.join(folder, case + "-expected.json")))
+        dwg = os.path.join(folder, case + ".dwg")
+        dxf = os.path.join(folder, case + ".dxf")
+        to_dxf(dwg, dxf)
+        doc = ezdxf.readfile(dxf)
+        ms = doc.modelspace()
+        tagged = [(e, tag(e)) for e in ms]
+        tagged = [(e, t) for e, t in tagged if t]
+        steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
+        if not expected["Steel"]:
+            check(len(steel_keys) == 0, case + ": a concrete project has no steel entity")
+            walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]
+            check(len(walls) > 0 and all(not invisible(e) for e in walls), case + ": the template walls are visible")
+            slabs = [e for e, t in tagged if t[0].startswith("SectionAA.Floor.") and ".Slab." in t[0]]
+            check(len(slabs) > 0 and all(not invisible(e) for e in slabs), case + ": the A-A slabs are visible")
+            continue
+        tower = expected["Tower"]
+        bolts = tower["BoltCount"]
+        # ---- plan ----
+        plan = [e for e, t in tagged if t[0].startswith("Plan.Steel.")]
+        cols = [e for e in plan if closed_poly(e, 8)]
+        rects = [e for e in plan if closed_poly(e, 4)]
+        circles = [e for e in plan if e.dxftype() == "CIRCLE"]
+        check(len(cols) == 4, case + ": the plan has four column sections (" + str(len(cols)) + ")")
+        check(len(rects) == 8, case + ": four base plates and four ring beams in plan (" + str(len(rects)) + ")")
+        check(len(circles) == 4 * bolts, case + ": " + str(4 * bolts) + " bolt circles in plan (" + str(len(circles)) + ")")
+        check(sum(1 for e in plan if e.dxftype() == "HATCH") == 4, case + ": four solid column sections")
+        check(any(e.dxftype() == "MTEXT" and tower["Column"] in e.text and "STEEL COLUMN" in e.text for e in plan), case + ": the plan names the column profile")
+        check(any(e.dxftype() == "MTEXT" and tower["Beam"] in e.text and "STEEL BEAM" in e.text for e in plan), case + ": the plan names the beam profile")
+        walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]
+        check(len(walls) > 0 and all(invisible(e) for e in walls), case + ": the template walls of the plan are hidden (" + str(len(walls)) + ")")
+        # ---- machine-room plan ----
+        mr = [e for e, t in tagged if t[0].startswith("Steel.MachineRoom.")]
+        check(sum(1 for e in mr if closed_poly(e, 8)) == 4, case + ": the machine-room plan has the four column sections")
+        check(sum(1 for e in mr if closed_poly(e, 4)) == 4, case + ": and the four ring beams")
+        check(not any(e.dxftype() == "CIRCLE" for e in mr), case + ": no base plate bolts at the tower top")
+        room = [e for e, t in tagged if t[1] == "room" and t[0].startswith("MachineRoom.")]
+        check(len(room) > 0 and all(invisible(e) for e in room), case + ": the room walls are hidden")
+        check(any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": the controller note is there")
+        # ---- B-B ----
+        bb = [e for e, t in tagged if t[0].startswith("Steel.Section.")]
+        check(sum(1 for e in bb if closed_poly(e, 8)) == 2, case + ": B-B has the two top beams")
+        slab = [e for e, t in tagged if t[1] in ("slab", "concrete") and t[0].startswith("MachineRoomSection.")]
+        check(len(slab) > 0 and all(invisible(e) for e in slab), case + ": the B-B slab and the concrete blocks are hidden (" + str(len(slab)) + ")")
+        # ---- A-A ----
+        aa = [e for e, t in tagged if t[0].startswith("SectionAA.Steel.")]
+        axis = [e for e, t in tagged if t[0] == "SectionAA.Frame.Axis"]
+        check(len(axis) == 1, case + ": the A-A frame is there")
+        a = axis[0]
+        o = a.dxf.start
+        vx = (a.dxf.end - a.dxf.start).normalize()
+        closed4 = [e for e in aa if closed_poly(e, 4)]
+        expected_rects = tower["LeftBeams"] + tower["FrontBeams"] + tower["BackBeams"] + 2 + tower["Plates"] + 1 + tower["LeftGussets"] + 2 * tower["LeftBraces"]
+        check(len(closed4) == expected_rects, case + ": A-A rectangles and strips " + str(len(closed4)) + " of " + str(expected_rects))
+        check(sum(1 for e in aa if e.dxftype() == "HATCH") == 1, case + ": A-A has the hatched base block")
+        # beam levels of the face: rectangles as wide as the face and as high as the beam, by their centre height
+        length = tower["Depth"]
+        levels = []
+        for e in closed4:
+            pts = [p for p in e.get_points()]
+            xs = [(p[0] - o.x) * vx.x + (p[1] - o.y) * vx.y for p in pts]
+            ys = [-(p[0] - o.x) * vx.y + (p[1] - o.y) * vx.x for p in pts]
+            if abs((max(xs) - min(xs)) - length) < 1.0:
+                levels.append((max(ys) + min(ys)) / 2)
+        want = sorted(tower["Levels"]["Left"])
+        got = sorted(levels)
+        check(len(got) == len(want) and all(abs(x - y) < 1.0 for x, y in zip(got, want)),
+              case + ": the A-A beams are at the levels of the face (" + str(len(got)) + " of " + str(len(want)) + ")")
+        check(any(e.dxftype() == "MTEXT" and "STEEL COLUMN" in e.text for e in aa), case + ": the A-A labels name the column")
+        check(any(e.dxftype() == "MTEXT" and "L50X50X5" in e.text for e in aa), case + ": and the bracing angle")
+        replaced = [e for e, t in tagged if t[0].startswith("SectionAA.Floor.") and ".Slab." in t[0]]
+        replaced += [e for e, t in tagged if t[0].startswith(("SectionAA.Shaft.", "SectionAA.MR.Wall.", "SectionAA.MR.Ceiling"))]
+        check(len(replaced) > 0 and all(invisible(e) for e in replaced), case + ": the A-A walls, slabs and room walls are hidden (" + str(len(replaced)) + ")")
+        # ---- the sheet ----
+        layout = doc.layouts.get(LAYOUT)
+        texts = [e.text for e in layout if e.dxftype() == "MTEXT"]
+        check(any("STEEL" == t.strip() or t.strip().endswith("STEEL") for t in texts), case + ": the legend has a STEEL entry")
+        from ezdxf import bbox
+        stray = 0
+        for e in layout:
+            if e.dxftype() in ("LWPOLYLINE", "SPLINE", "LINE", "HATCH"):
+                try:
+                    b = bbox.extents([e], fast=True)
+                except Exception:
+                    continue
+                if b.has_data and 1021 < b.center.x < 1170 and 566 < b.center.y < 591 and not (1029 < b.center.x < 1048):
+                    stray += 1
+        check(stray == 0, case + ": the masonry notes are gone from the title block (" + str(stray) + " left)")
+    print("steel-native read-back: " + str(checks) + " checks, " + str(len(failures)) + " failures")
+    if summary:
+        with open(summary, "w") as f:
+            json.dump({"Checks": checks, "Failures": failures}, f, indent=1)
+    return 1 if failures else 0
+
+
+sys.exit(main())

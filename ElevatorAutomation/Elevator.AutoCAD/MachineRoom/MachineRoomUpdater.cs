@@ -33,6 +33,8 @@ namespace Elevator.AutoCAD.MachineRoom
         {
             if (design.MachineRoom == null)
                 throw new InvalidOperationException("MachineRoom requires the shared Core design result.");
+            // A steel tower of an earlier run is removed first (reads only when the drawing has none).
+            Steel.SteelDrawing.ClearMachineRoom(db, tr);
             var s = MachineRoomDrawing.Read(db, tr);
             MachineRoomDependencies.Prepare(db, tr, s);
             var g = new MachineRoomGeometry(design, s.SW, s.SD, s.CarRow, s.CwRow, s.PitchProjection, s.Extensions, s.GovernorStartOffset);
@@ -99,6 +101,10 @@ namespace Elevator.AutoCAD.MachineRoom
                 });
             ProjectDataStorage.Write(db, tr, "MachineRoomEngineeringRules", design.MachineRoom.Rules);
             ProjectDataStorage.Write(db, tr, "MachineRoomReeving", design.MachineRoom.Reeving);
+            // A steel shaft: the top of the tower is drawn in place of the room (hidden, not edited).
+            var steel = Steel.SteelDrawing.Read(db, tr);
+            if (steel != null)
+                Steel.SteelDrawing.DrawMachineRoom(db, tr, updated.Frame, steel);
             return new ViewUpdateResult
             {
                 Dimensions = expected,
