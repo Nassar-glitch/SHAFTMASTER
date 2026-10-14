@@ -78,8 +78,8 @@ def main():
         to_dxf(dwg, dxf)
         doc = ezdxf.readfile(dxf)
         ms = doc.modelspace()
-        tagged = [(e, tag(e)) for e in ms]
-        tagged = [(e, t) for e, t in tagged if t]
+        # the insertions of the steel blocks are read through their parts (principle 11: named blocks), a label is a multileader
+        tagged = steel_overlap.expand(ms)
         steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
         if expected["Steel"]:
             overlaps = steel_overlap.check(ms)
@@ -102,10 +102,23 @@ def main():
         check(len(rects) == 9, case + ": four base plates, four ring beams and the slab edge in plan (" + str(len(rects)) + ")")
         check(len(circles) == 4 * bolts, case + ": " + str(4 * bolts) + " bolt circles in plan (" + str(len(circles)) + ")")
         check(sum(1 for e in plan if e.dxftype() == "HATCH") == 4, case + ": four solid column sections")
-        check(any(e.dxftype() == "MTEXT" and tower["Column"] in e.text and "STEEL COLUMN" in e.text for e in plan), case + ": the plan names the column profile")
-        check(any(e.dxftype() == "MTEXT" and tower["Beam"] in e.text and "STEEL BEAM" in e.text for e in plan), case + ": the plan names the beam profile")
+        check(any(tower["Column"] in steel_overlap.text_of(e) and "STEEL COLUMN" in steel_overlap.text_of(e) for e in plan), case + ": the plan names the column profile")
+        check(any(tower["Beam"] in steel_overlap.text_of(e) and "STEEL BEAM" in steel_overlap.text_of(e) for e in plan), case + ": the plan names the beam profile")
         walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]
         check(len(walls) > 0 and all(invisible(e) for e in walls), case + ": the template walls of the plan are hidden (" + str(len(walls)) + ")")
+        # editable drawing: every pointing label is one multileader, repeated parts are named blocks, members are on their layers
+        steel_all = [(e, t) for e, t in [(e, tag(e)) for e in ms] if t and t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
+        check(sum(1 for e, t in steel_all if e.dxftype() == "MULTILEADER") >= 8, case + ": the steel labels are multileaders")
+        check(not any(e.dxftype() == "MTEXT" and ("STEEL COLUMN" in e.text or "STEEL BEAM" in e.text or "BASE PL" in e.text) for e, t in steel_all),
+              case + ": no steel label is a loose text")
+        block_names = [e.dxf.name for e, t in steel_all if e.dxftype() == "INSERT"]
+        plan_blocks = [e.dxf.name for e, t in steel_all if e.dxftype() == "INSERT" and t[0].startswith("Plan.Steel.")]
+        check(sorted(n[-1] for n in plan_blocks if n.startswith("SM_COLUMN_")) == ["L", "L", "R", "R"], case + ": the four column sections are references of two named blocks (left and right web)")
+        check(sum(1 for n in plan_blocks if n.startswith("SM_BASE_PLATE_")) == 4, case + ": the four base plates are references of one named block")
+        check(any(n == "SM_CONTROL_PANEL" for n in block_names), case + ": the control panel is a named block")
+        layers = set(e.dxf.layer for e, t in steel_all)
+        check({"S-COLUMN", "S-BEAM", "S-PLATE", "A-ANNO", "A-SLAB"} <= layers and "Steel" not in layers, case + ": the steel entities are on S- and A- layers " + str(sorted(layers)))
+        check(any(e.dxftype() == "MULTILEADER" and e.dxf.layer == "A-ANNO" for e, t in steel_all), case + ": the labels are on A-ANNO")
         # ---- machine-room plan ----
         mr_all = [(e, t) for e, t in tagged if t[0].startswith("Steel.MachineRoom.")]
         mr = [e for e, t in mr_all if not t[0].startswith("Steel.MachineRoom.Controller.")]
@@ -115,10 +128,10 @@ def main():
         check(not any(e.dxftype() == "CIRCLE" for e in mr), case + ": no base plate bolts at the tower top")
         room = [e for e, t in tagged if t[1] == "room" and t[0].startswith("MachineRoom.")]
         check(len(room) > 0 and all(invisible(e) for e in room), case + ": the room walls are hidden")
-        check(any(e.dxftype() == "MTEXT" and "TOWER TOP" in e.text and "1:" in e.text for e in mr), case + ": the tower-top plan has its title with the scale")
-        check(not any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": no long controller note")
-        check(not any(e.dxftype() == "MTEXT" and "CONTROLLER" in e.text for e in plan), case + ": no controller on the shaft plan")
-        check(any(e.dxftype() == "MTEXT" and "CONTROL PANEL" in e.text for e in controller), case + ": the tower-top plan labels the control panel")
+        check(any("TOWER TOP" in steel_overlap.text_of(e) and "1:" in steel_overlap.text_of(e) for e in mr), case + ": the tower-top plan has its title with the scale")
+        check(not any("CONTROLLER AND SWITCHES" in steel_overlap.text_of(e) for e in mr), case + ": no long controller note")
+        check(not any("CONTROLLER" in steel_overlap.text_of(e) for e in plan), case + ": no controller on the shaft plan")
+        check(any("CONTROL PANEL" in steel_overlap.text_of(e) for e in controller), case + ": the tower-top plan labels the control panel")
         check(sum(1 for e in controller if e.dxftype() == "LWPOLYLINE") >= 10, case + ": the control panel symbol is drawn on the tower-top plan")
         cols8 = [e for e in mr if closed_poly(e, 8)]
         rects4 = [e for e in mr if closed_poly(e, 4)]
@@ -165,7 +178,7 @@ def main():
         # ---- B-B ----
         bb = [e for e, t in tagged if t[0].startswith("Steel.Section.")]
         check(sum(1 for e in bb if closed_poly(e, 8)) == 0, case + ": B-B draws no steel profile sections (the section carries no labels)")
-        check(not any(e.dxftype() == "MTEXT" for e in bb), case + ": B-B has no steel label")
+        check(not any(steel_overlap.text_of(e) for e in bb), case + ": B-B has no steel label")
         titles_bb = [e for e in ms if e.dxftype() == "MTEXT" and not tag(e) is None and "B-B" in e.text and "SEC" in e.text]
         check(len(titles_bb) >= 1 and all(not invisible(e) for e in titles_bb), case + ": the B-B title stays")
         slab = [e for e, t in tagged if t[1] in ("slab", "concrete") and t[0].startswith("MachineRoomSection.") and not (e.dxftype() == "MTEXT" and "B-B" in e.text)]
@@ -194,8 +207,8 @@ def main():
         got = sorted(levels)
         check(len(got) == len(want) and all(abs(x - y) < 1.0 for x, y in zip(got, want)),
               case + ": the A-A beams are at the levels of the face (" + str(len(got)) + " of " + str(len(want)) + ")")
-        check(any(e.dxftype() == "MTEXT" and "STEEL COLUMN" in e.text for e in aa), case + ": the A-A labels name the column")
-        check(any(e.dxftype() == "MTEXT" and "L50X50X5" in e.text for e in aa), case + ": and the bracing angle")
+        check(any("STEEL COLUMN" in steel_overlap.text_of(e) for e in aa), case + ": the A-A labels name the column")
+        check(any("L50X50X5" in steel_overlap.text_of(e) for e in aa), case + ": and the bracing angle")
         replaced = [e for e, t in tagged if t[0].startswith("SectionAA.Floor.") and ".Slab." in t[0]]
         replaced += [e for e, t in tagged if t[0].startswith(("SectionAA.Shaft.", "SectionAA.MR.Wall.", "SectionAA.MR.Ceiling"))]
         check(len(replaced) > 0 and all(invisible(e) for e in replaced), case + ": the A-A walls, slabs and room walls are hidden (" + str(len(replaced)) + ")")

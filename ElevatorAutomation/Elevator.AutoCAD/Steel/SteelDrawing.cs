@@ -163,15 +163,127 @@ namespace Elevator.AutoCAD.Steel
             tr.AddNewlyCreatedDBObject(l, true);
         }
 
-        static void EnsureLayer(Database db, Transaction tr)
+        // The layers of the steel tower (DESIGN-FLOW principle 11: meaningful layers). They are plain layers of the drawing's default colour,
+        // so the plotted look is the one of the single steel layer before.
+        public const string LayerColumn = "S-COLUMN";
+        public const string LayerBeam = "S-BEAM";
+        public const string LayerBrace = "S-BRACE";
+        public const string LayerPlate = "S-PLATE";
+        public const string LayerBase = "S-BASE";
+        public const string LayerHousing = "S-HOUSING";
+        public const string LayerSlab = "A-SLAB";
+        public const string LayerAnno = "A-ANNO";
+        public const string LayerDims = "A-DIMS";
+        public const string LayerEquip = "A-EQUIP";
+
+        static void EnsureLayer(Database db, Transaction tr, string name)
         {
             var lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
-            if (lt.Has(LayerName))
+            if (lt.Has(name))
                 return;
             lt.UpgradeOpen();
-            var l = new LayerTableRecord { Name = LayerName, IsPlottable = true };
+            var l = new LayerTableRecord { Name = name, IsPlottable = true };
             lt.Add(l);
             tr.AddNewlyCreatedDBObject(l, true);
+        }
+
+        // ---------- named blocks and the leader style ----------
+        const string LeaderStyleName = "SM_LEADER";
+
+        // The multileader style of every pointing label: no arrow head, no landing, the text beside the end of the leader.
+        static ObjectId LeaderStyle(Database db, Transaction tr)
+        {
+            var dict = (DBDictionary)tr.GetObject(db.MLeaderStyleDictionaryId, OpenMode.ForRead);
+            if (dict.Contains(LeaderStyleName))
+                return dict.GetAt(LeaderStyleName);
+            var style = new MLeaderStyle();
+            style.ContentType = ContentType.MTextContent;
+            style.EnableLanding = true;
+            style.EnableDogleg = true;
+            style.DoglegLength = 0.3 * PlanTextHeight;
+            style.ExtendLeaderToText = false;
+            style.ArrowSize = 1;
+            style.TextHeight = PlanTextHeight;
+            style.LandingGap = 0;
+            style.TextAttachmentType = TextAttachmentType.AttachmentMiddle;
+            dict.UpgradeOpen();
+            var id = dict.SetAt(LeaderStyleName, style);
+            tr.AddNewlyCreatedDBObject(style, true);
+            return id;
+        }
+
+        // A named block, created once from the geometry the callback puts into it (local coordinates, origin at the insertion point).
+        static ObjectId Block(Database db, Transaction tr, string name, Action<BlockTableRecord> fill)
+        {
+            var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+            if (bt.Has(name))
+                return bt[name];
+            bt.UpgradeOpen();
+            var btr = new BlockTableRecord { Name = name };
+            var id = bt.Add(btr);
+            tr.AddNewlyCreatedDBObject(btr, true);
+            fill(btr);
+            return id;
+        }
+
+        static T Put<T>(BlockTableRecord btr, Transaction tr, T e, string layer) where T : Entity
+        {
+            EnsureLayer(btr.Database, tr, layer);
+            e.Layer = layer;
+            btr.AppendEntity(e);
+            tr.AddNewlyCreatedDBObject(e, true);
+            return e;
+        }
+
+        static string Clean(string name)
+        {
+            return new string(name.Select(c => Char.IsLetterOrDigit(c) ? c : '_').ToArray());
+        }
+
+        // The channel section of a column in plan, origin at the lower left corner of its box: the closed outline and its solid fill. The
+        // web is at the left edge for the left columns (flanges to the right) and at the right edge for the right ones (_R).
+        static ObjectId ColumnBlock(Database db, Transaction tr, ChannelProfile c, bool webRight)
+        {
+            string name = "SM_COLUMN_" + Clean(c.Name) + "_" + L(c.WidthMm) + "x" + L(c.HeightMm) + "x" + L(c.WebMm) + "x" + L(c.FlangeMm)
+                + (webRight ? "_R" : "_L");
+            return Block(db, tr, name, btr =>
+            {
+                double b = c.WidthMm, h = c.HeightMm, tw = c.WebMm, tf = c.FlangeMm;
+                var pl = new Polyline();
+                double[][] pts = { new[] { 0.0, 0 }, new[] { b, 0 }, new[] { b, tf }, new[] { tw, tf }, new[] { tw, h - tf }, new[] { b, h - tf }, new[] { b, h }, new[] { 0.0, h } };
+                if (webRight)
+                    pts = pts.Select(q => new[] { b - q[0], q[1] }).Reverse().ToArray();
+                for (int i = 0; i < pts.Length; i++)
+                    pl.AddVertexAt(i, new Point2d(pts[i][0], pts[i][1]), 0, 0, 0);
+                pl.Closed = true;
+                Put(btr, tr, pl, LayerColumn);
+                var hatch = new Hatch();
+                hatch.SetDatabaseDefaults(db);
+                Put(btr, tr, hatch, LayerColumn);
+                hatch.Normal = Vector3d.ZAxis;
+                hatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+                hatch.Associative = true;
+                hatch.AppendLoop(HatchLoopTypes.Default, new ObjectIdCollection(new[] { pl.ObjectId }));
+                hatch.EvaluateHatch(true);
+            });
+        }
+
+        // The base plate with its bolt circles, origin at the plate centre.
+        static ObjectId PlateBlock(Database db, Transaction tr, SteelInputs i, IList<SteelCircle> bolts, double cx, double cy)
+        {
+            string name = "SM_BASE_PLATE_" + L(i.PlateWidthMm) + "x" + L(i.PlateDepthMm) + "x" + L(i.PlateThicknessMm) + "_" + bolts.Count + "B" + L(i.BoltDiameterMm);
+            return Block(db, tr, name, btr =>
+            {
+                double hw = i.PlateWidthMm / 2, hd = i.PlateDepthMm / 2;
+                var pl = new Polyline();
+                double[][] pts = { new[] { -hw, -hd }, new[] { hw, -hd }, new[] { hw, hd }, new[] { -hw, hd } };
+                for (int k = 0; k < 4; k++)
+                    pl.AddVertexAt(k, new Point2d(pts[k][0], pts[k][1]), 0, 0, 0);
+                pl.Closed = true;
+                Put(btr, tr, pl, LayerPlate);
+                foreach (var bolt in bolts)
+                    Put(btr, tr, new Circle(new Point3d(bolt.X - cx, bolt.Y - cy, 0), Vector3d.ZAxis, bolt.DiameterMm / 2), LayerPlate);
+            });
         }
 
         // ---------- the writer ----------
@@ -185,7 +297,11 @@ namespace Elevator.AutoCAD.Steel
             readonly string role;
             readonly Func<double, double, Point3d> world;
             readonly Vector3d unit;
+            readonly double angle;
             int count;
+
+            /// <summary>The layer of the entities added next (see the S- and A- layers).</summary>
+            public string Layer = LayerAnno;
 
             public Writer(Database db, Transaction tr, string prefix, string role, Func<double, double, Point3d> world)
             {
@@ -196,7 +312,7 @@ namespace Elevator.AutoCAD.Steel
                 this.world = world;
                 var o = world(0, 0);
                 unit = world(1, 0) - o;
-                EnsureLayer(db, tr);
+                angle = Math.Atan2(unit.Y, unit.X);
                 ComponentBinding.Register(db, tr);
                 model = Model(db, tr, OpenMode.ForWrite);
             }
@@ -206,10 +322,24 @@ namespace Elevator.AutoCAD.Steel
                 get { return count; }
             }
 
+            public Database Database
+            {
+                get { return db; }
+            }
+
+            public Transaction Transaction
+            {
+                get { return tr; }
+            }
+
             T Add<T>(T e) where T : Entity
             {
                 count++;
-                e.Layer = LayerName;
+                if (e.Layer == "0" || String.IsNullOrEmpty(e.Layer) || e.Layer == LayerName)
+                {
+                    EnsureLayer(db, tr, Layer);
+                    e.Layer = Layer;
+                }
                 model.AppendEntity(e);
                 tr.AddNewlyCreatedDBObject(e, true);
                 ComponentBinding.Tag(e, prefix + count.ToString("000", CultureInfo.InvariantCulture), role);
@@ -237,7 +367,7 @@ namespace Elevator.AutoCAD.Steel
                 return Poly(new[] { new[] { u0, v0 }, new[] { u1, v0 }, new[] { u1, v1 }, new[] { u0, v1 } }, true);
             }
 
-            /// <summary>Adds an entity built by the caller (it is placed on the steel layer and tagged).</summary>
+            /// <summary>Adds an entity built by the caller (on the current layer unless it has its own, and tagged).</summary>
             public T Adopt<T>(T entity) where T : Entity
             {
                 return Add(entity);
@@ -249,7 +379,10 @@ namespace Elevator.AutoCAD.Steel
                 var e = (T)source.Clone();
                 e.TransformBy(move);
                 e.Visible = true;
-                return Add(e);
+                string own = source.Layer;
+                e = Add(e);
+                e.Layer = own;      // a copy keeps the layer of the entity it copies
+                return e;
             }
 
             public Line Seg(double u0, double v0, double u1, double v1)
@@ -268,6 +401,15 @@ namespace Elevator.AutoCAD.Steel
                 t.SetDatabaseDefaults(db);
                 t.Attachment = AttachmentPoint.TopLeft;
                 return Add(t);
+            }
+
+            /// <summary>An insertion of a named block at a local point, mirrored in x when scaleX is -1.</summary>
+            public BlockReference Insert(ObjectId block, double u, double v, double scaleX, double extraRotation)
+            {
+                var br = new BlockReference(world(u, v), block);
+                br.ScaleFactors = new Scale3d(scaleX, 1, 1);
+                br.Rotation = angle + extraRotation;
+                return Add(br);
             }
 
             /// <summary>Fills a closed polyline with a predefined pattern (SOLID, ANSI31, AR-CONC).</summary>
@@ -289,27 +431,62 @@ namespace Elevator.AutoCAD.Steel
                     h.SetHatchPattern(HatchPatternType.PreDefined, "ANSI31");
                     h.PatternScale = scale;
                 }
-                h.Associative = false;
+                h.Associative = true;
                 h.AppendLoop(HatchLoopTypes.Default, new ObjectIdCollection(new[] { boundary.ObjectId }));
                 h.EvaluateHatch(true);
             }
 
-            /// <summary>A label with a leader line from (u0, v0) to the text at (u1, v1).</summary>
+            /// <summary>A label: one multileader (SM_LEADER) from (u0, v0) to its text, which starts beside (u1, v1).</summary>
             public void Label(double u0, double v0, double u1, double v1, double height, string text)
             {
-                Seg(u0, v0, u1, v1);
-                // the text sits to the right of the leader end
-                Text(u1 + height * 0.3, v1 + height * 0.6, height, text);
+                Pointer(u0, v0, u1, v1, height, text, false);
             }
 
             /// <summary>A label whose text ends at the end of its leader (the leader goes to the left of the member).</summary>
             public void LabelLeft(double u0, double v0, double u1, double v1, double height, string text)
             {
-                Seg(u0, v0, u1, v1);
-                var t = new MText { Location = world(u1 - height * 0.3, v1 + height * 0.2), TextHeight = height, Contents = text };
-                t.SetDatabaseDefaults(db);
-                t.Attachment = AttachmentPoint.BottomRight;
-                Add(t);
+                Pointer(u0, v0, u1, v1, height, text, true);
+            }
+
+            void Pointer(double u0, double v0, double u1, double v1, double height, string text, bool textLeft)
+            {
+                // The leader runs from the member to (u1, v1), then a short landing of 0.3 text heights in the direction of the text,
+                // which stands at the end of the landing (middle left of the text for a leader coming from the left, middle right
+                // otherwise): AutoCAD places the text itself from the landing, so a label stays one editable object.
+                double gap = 0.3 * height;
+                var ml = new MLeader();
+                ml.SetDatabaseDefaults(db);
+                ml.MLeaderStyle = LeaderStyle(db, tr);
+                ml.ContentType = ContentType.MTextContent;
+                var mt = new MText();
+                mt.SetDatabaseDefaults(db);
+                mt.Contents = text;
+                mt.TextHeight = height;
+                mt.Attachment = AttachmentPoint.MiddleLeft;
+                var dir = new Vector3d(textLeft ? -unit.X : unit.X, textLeft ? -unit.Y : unit.Y, 0);
+                var landingEnd = world(u1, v1) + dir * gap;
+                // AutoCAD takes the text location as the near edge of the text frame on the leader's side: for a text left of its leader
+                // that is the left edge, one text width further out
+                var up = world(0, 1) - world(0, 0);
+                // and AutoCAD takes the location as the top of the frame: half a text height up puts the landing at (u1, v1)
+                var textAt = (textLeft ? landingEnd + dir * (text.Length * height * CharFactor) : landingEnd) + up * (height / 2);
+                mt.Location = textAt;
+                ml.MText = mt;
+                ml.TextHeight = height;
+                ml.EnableLanding = true;
+                ml.EnableDogleg = true;
+                ml.DoglegLength = gap;
+                ml.LandingGap = 0;
+                ml.SetTextAttachmentType(TextAttachmentType.AttachmentMiddle, LeaderDirectionType.LeftLeader);
+                ml.SetTextAttachmentType(TextAttachmentType.AttachmentMiddle, LeaderDirectionType.RightLeader);
+                ml.ArrowSize = 1;
+                ml.ExtendLeaderToText = false;
+                int line = ml.AddLeaderLine(world(u0, v0));
+                ml.AddLastVertex(line, world(u1, v1));
+                ml.SetDogleg(0, dir);
+                ml.TextLocation = textAt;
+                Layer = LayerAnno;
+                Add(ml);
             }
 
             /// <summary>A diagonal member: a strip of the given width between two points.</summary>
@@ -402,14 +579,33 @@ namespace Elevator.AutoCAD.Steel
             void AddDimensionLines(Dimension d)
             {
                 var r = d as RotatedDimension;
-                if (r == null)
+                var al = d as AlignedDimension;
+                Point3d p1, p2, dp;
+                double c, s;
+                if (r != null)
+                {
+                    c = Math.Cos(r.Rotation);
+                    s = Math.Sin(r.Rotation);
+                    p1 = r.XLine1Point;
+                    p2 = r.XLine2Point;
+                    dp = r.DimLinePoint;
+                }
+                else if (al != null)
+                {
+                    var v = al.XLine2Point - al.XLine1Point;
+                    if (v.Length < 1e-9)
+                        return;
+                    c = v.X / v.Length;
+                    s = v.Y / v.Length;
+                    p1 = al.XLine1Point;
+                    p2 = al.XLine2Point;
+                    dp = al.DimLinePoint;
+                }
+                else
                     return;
-                double c = Math.Cos(r.Rotation), s = Math.Sin(r.Rotation);
-                var u = new Vector3d(c, s, 0);
                 var n = new Vector3d(-s, c, 0);
-                var dp = r.DimLinePoint;
                 var feet = new List<Point3d>();
-                foreach (var x in new[] { r.XLine1Point, r.XLine2Point })
+                foreach (var x in new[] { p1, p2 })
                 {
                     double off = (dp - x).DotProduct(n);
                     var foot = x + n * off;
@@ -586,8 +782,8 @@ namespace Elevator.AutoCAD.Steel
                         continue;
                     double ex = toLeft ? ax - c[1] : ax + c[1], ey = ay + c[2];
                     double[] box = toLeft
-                        ? new[] { ex - 0.3 * h - width, ey + 0.2 * h, ex - 0.3 * h, ey + 0.2 * h + height }
-                        : new[] { ex + 0.3 * h, ey + 0.6 * h - height, ex + 0.3 * h + width, ey + 0.6 * h };
+                        ? new[] { ex - 0.3 * h - width, ey - height / 2, ex - 0.3 * h, ey + height / 2 }
+                        : new[] { ex + 0.3 * h, ey - height / 2, ex + 0.3 * h + width, ey + height / 2 };
                     if (ob.BoxClear(box, gap) && ob.LeaderClear(ax, ay, ex, ey))
                     {
                         bestCost = c[0] + penalty;
@@ -608,12 +804,12 @@ namespace Elevator.AutoCAD.Steel
             if (toLeft)
             {
                 w.LabelLeft(bax, bay, endX, endY, h, text);
-                ob.AddText(new[] { endX - 0.3 * h - width, endY + 0.2 * h, endX - 0.3 * h, endY + 0.2 * h + height });
+                ob.AddText(new[] { endX - 0.3 * h - width, endY - height / 2, endX - 0.3 * h, endY + height / 2 });
             }
             else
             {
                 w.Label(bax, bay, endX, endY, h, text);
-                ob.AddText(new[] { endX + 0.3 * h, endY + 0.6 * h - height, endX + 0.3 * h + width, endY + 0.6 * h });
+                ob.AddText(new[] { endX + 0.3 * h, endY - height / 2, endX + 0.3 * h + width, endY + height / 2 });
             }
         }
 
@@ -717,6 +913,7 @@ namespace Elevator.AutoCAD.Steel
             var ob = new Obstacles(db, tr, f, "Plan.");
             ob.AddOutline(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
             PlanTower(w, ob, st, st.Plan.Columns, st.Plan.Beams, true);
+            w.Layer = LayerSlab;
             w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
         }
 
@@ -724,6 +921,9 @@ namespace Elevator.AutoCAD.Steel
         // labels of the plan.
         static void PlanTower(Writer w, Obstacles ob, SteelStructure st, IList<SteelColumnPlan> columns, IList<SteelBeamPlan> beams, bool plates)
         {
+            var colLeft = ColumnBlock(w.Database, w.Transaction, st.Inputs.Column, false);
+            var colRight = ColumnBlock(w.Database, w.Transaction, st.Inputs.Column, true);
+            w.Layer = LayerBeam;
             foreach (var b in beams)
             {
                 w.Rect(b.Box.X0, b.Box.Y0, b.Box.X1, b.Box.Y1);
@@ -741,14 +941,15 @@ namespace Elevator.AutoCAD.Steel
             }
             foreach (var c in columns)
             {
-                var pts = c.Outline.Select(p => new[] { p.X, p.Y }).ToList();
-                var outline = w.Poly(pts, true);
-                w.Fill(outline, "SOLID", 1);
+                // the channel section: one block reference (a right column is the mirrored block)
+                w.Layer = LayerColumn;
+                w.Insert(c.WebSide == "Left" ? colLeft : colRight, c.Box.X0, c.Box.Y0, 1, 0);
                 if (plates)
                 {
-                    w.Rect(c.Plate.X0, c.Plate.Y0, c.Plate.X1, c.Plate.Y1);
-                    foreach (var bolt in c.Bolts)
-                        w.Circ(bolt.X, bolt.Y, bolt.DiameterMm);
+                    // the base plate with its bolts: one block reference at the plate centre
+                    w.Layer = LayerPlate;
+                    var plateBlock = PlateBlock(w.Database, w.Transaction, st.Inputs, c.Bolts, c.Plate.CenterX, c.Plate.CenterY);
+                    w.Insert(plateBlock, c.Plate.CenterX, c.Plate.CenterY, 1, 0);
                 }
             }
             var fl = columns.First(c => c.Corner == "FrontLeft");
@@ -880,6 +1081,7 @@ namespace Elevator.AutoCAD.Steel
             var ob = new Obstacles(db, tr, frame, "MachineRoom.", "Steel.MachineRoom.");
             ob.AddOutline(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
             PlanTower(w, ob, st, top.Columns, top.Beams, false);
+            w.Layer = LayerSlab;
             w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
             double lowest = DrawController(db, tr, frame, st, top, ob);
             GovernorDimension(db, tr, frame, w);
@@ -1103,6 +1305,8 @@ namespace Elevator.AutoCAD.Steel
             var centre = new Point3d((governorAxis + axisX) / 2 + place[0].AlongMm, line0, 0);
             dim.TextPosition = frame.World(new Point3d(centre.X, line0 + height * 0.75, 0));
             dim.Visible = true;
+            EnsureLayer(db, tr, LayerDims);
+            dim.Layer = LayerDims;
             w.Adopt(dim);
         }
 
@@ -1113,6 +1317,7 @@ namespace Elevator.AutoCAD.Steel
         static double DrawController(Database db, Transaction tr, ShaftFrame frame, SteelStructure st, SteelTowerTop top, Obstacles ob)
         {
             var symbol = new List<Polyline>();
+            var origin0 = frame.World(new Point3d(0, 0, 0));
             double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
             foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
             {
@@ -1138,13 +1343,24 @@ namespace Elevator.AutoCAD.Steel
             // y' in [-maxX, -minX].
             double widthR = maxY - minY, heightR = maxX - minX;
             double x0 = st.Inputs.WidthMm / 2 + 800, y0 = st.SlabEdge.Y0 - 30 - heightR;
-            var origin = frame.World(new Point3d(0, 0, 0));
             var w = new Writer(db, tr, ControllerPrefix, "controller", (u, v) => frame.World(new Point3d(u, v, 0)));
-            var turn = Matrix3d.Rotation(-Math.PI / 2, Vector3d.ZAxis, origin);
-            double dx = x0 - minY, dy = y0 + maxX;
-            var move = Matrix3d.Displacement(frame.World(new Point3d(dx, dy, 0)) - origin) * turn;
-            foreach (var e in symbol)
-                w.Copy(e, move);
+            // the symbol of the master as one named block (origin at its lower left corner), inserted turned a quarter
+            var panel = Block(db, tr, "SM_CONTROL_PANEL", btr =>
+            {
+                foreach (var e in symbol)
+                {
+                    var pl = new Polyline();
+                    for (int k = 0; k < e.NumberOfVertices; k++)
+                    {
+                        var v = frame.Local(e.GetPoint3dAt(k));
+                        pl.AddVertexAt(k, new Point2d(v.X - minX, v.Y - minY), e.GetBulgeAt(k), 0, 0);
+                    }
+                    pl.Closed = e.Closed;
+                    Put(btr, tr, pl, LayerEquip);
+                }
+            });
+            w.Layer = LayerEquip;
+            w.Insert(panel, x0, y0 + heightR, 1, -Math.PI / 2);
             // the label stands left of the symbol with a leader to it, clear of the column labels on the right
             PlaceLabel(w, ob, new[] { new[] { x0 + widthR * 0.3, y0 + heightR * 0.2 } }, true, PlanTextHeight, "CONTROL PANEL", 300 + widthR * 0.3, -120 - heightR * 0.2);
             return y0 - 120;
@@ -1249,12 +1465,14 @@ namespace Elevator.AutoCAD.Steel
             // section carries no profile labels). The front column box is x = bb - column depth .. bb (x = -y), the back one mirrored.
             // the machine housing: walls on the column envelope up to the roof plate, which overhangs it
             var hs = st.Housing;
+            w.Layer = LayerHousing;
             double xFront = bb, xBack = -depth - bb;
             double deck = machineBeamBottom, roofBottom = deck + hs.HeightMm, roofTop = roofBottom + hs.RoofMm;
             w.Rect(xFront - hs.WallMm, deck, xFront, roofBottom);
             w.Rect(xBack, deck, xBack + hs.WallMm, roofBottom);
             w.Rect(xBack - hs.OverhangMm, roofBottom, xFront + hs.OverhangMm, roofTop);
             double stub = 500, zFoot = zBottom - stub;
+            w.Layer = LayerColumn;
             double[][] columns = { new[] { bb - col.HeightMm, bb }, new[] { -depth - bb, -depth - bb + col.HeightMm } };
             foreach (var c in columns)
             {
@@ -1346,14 +1564,18 @@ namespace Elevator.AutoCAD.Steel
             var i = st.Inputs;
             // the base block (reinforced concrete) and the base plates
             var block = face.BaseBlock;
+            w.Layer = LayerBase;
             var blockOutline = w.Rect(-block.X1, block.Y0, -block.X0, block.Y1);
             w.Fill(blockOutline, "AR-CONC", 25);
+            w.Layer = LayerPlate;
             foreach (var p in face.Plates)
                 w.Rect(-p.X1, p.Y0, -p.X0, p.Y1);
             // columns
+            w.Layer = LayerColumn;
             foreach (var c in face.Columns)
                 w.Rect(-c.X1, c.Y0, -c.X0, c.Y1);
             // the beams of the face: a double line across between the columns
+            w.Layer = LayerBeam;
             foreach (var b in face.Beams)
             {
                 w.Rect(-b.U1, b.Z0, -b.U0, b.Z1);
@@ -1372,11 +1594,13 @@ namespace Elevator.AutoCAD.Steel
             }
             // bracing: both diagonals in every panel, between the beams
             double angle = i.Brace.LegMm;
+            w.Layer = LayerBrace;
             foreach (var br in face.Braces)
             {
                 w.Strip(0, br.Z0, -len, br.Z1, angle);
                 w.Strip(0, br.Z1, -len, br.Z0, angle);
             }
+            w.Layer = LayerPlate;
             foreach (var g in face.Gussets.Where(x => x.Y > st.BaseMm + 1e-6))
             {
                 double gw = i.GussetWidthMm, gl = i.GussetLengthMm;
@@ -1385,6 +1609,7 @@ namespace Elevator.AutoCAD.Steel
             }
             // the machine housing on the platform: walls on the column envelope, the roof plate overhangs it
             var hs = st.Housing;
+            w.Layer = LayerHousing;
             double xFront = i.Beam.WidthMm, xBack = -len - i.Beam.WidthMm;
             w.Rect(xFront - hs.WallMm, hs.DeckMm, xFront, hs.RoofBottomMm);
             w.Rect(xBack, hs.DeckMm, xBack + hs.WallMm, hs.RoofBottomMm);
@@ -1392,6 +1617,7 @@ namespace Elevator.AutoCAD.Steel
             // the platform on top: a deck line over the top ring beams
             double top = st.TopMm + i.Beam.HeightMm / 2;
             double colDepth = i.Column.HeightMm;
+            w.Layer = LayerBeam;
             w.Seg(-len - i.Beam.WidthMm, top, i.Beam.WidthMm, top);
             // labels in the reference style, stacked in the free band right of the tower under the tower top
             double h = ElevationTextHeight;
