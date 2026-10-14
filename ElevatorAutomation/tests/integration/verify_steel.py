@@ -19,6 +19,9 @@ import tempfile
 
 import ezdxf
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import steel_overlap  # noqa: E402
+
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
 LAYOUT = "SM_Geared_A0"
 failures = []
@@ -78,6 +81,9 @@ def main():
         tagged = [(e, tag(e)) for e in ms]
         tagged = [(e, t) for e, t in tagged if t]
         steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
+        if expected["Steel"]:
+            overlaps = steel_overlap.check(ms)
+            check(len(overlaps) == 0, case + ": no steel label lies on a text, a dimension text or the slab edge, no leader crosses a text " + str(overlaps[:4]))
         if not expected["Steel"]:
             check(len(steel_keys) == 0, case + ": a concrete project has no steel entity")
             walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]

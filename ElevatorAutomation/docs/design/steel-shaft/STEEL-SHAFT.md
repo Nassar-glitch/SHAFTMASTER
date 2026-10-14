@@ -426,3 +426,6 @@ Source and diff: `s4/USER-EDIT-DIFF.md`; evidence `s4/plots/side-*.png` (his edi
 - **B-B:** no steel profile sections or labels, no concrete-height dimension and no rope-fall box note; dimensions in whole millimetres.
 - **Sheet:** the door section C-C stays; the main views take the next larger scale where there is room (1:40 is on the ladder of a steel
   sheet; A-A is kept at 1:50 or larger while a layout exists); the anchor-in-concrete rail detail stays out until stage G.
+- **Labels:** the steel labels are placed with the same no-overlap rule as the dimension rows: outside the dimension texts and the slab
+  edge, with leaders that cross no text (`SteelDrawing.PlaceLabel`; checked on every generated steel drawing by
+  `tests/integration/steel_overlap.py`).

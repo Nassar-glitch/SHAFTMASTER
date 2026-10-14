@@ -326,6 +326,261 @@ namespace Elevator.AutoCAD.Steel
             }
         }
 
+        // ---------- label placement (no text on text) ----------
+        /// <summary>
+        /// The texts of a drawing (text, multi-line text and the texts inside the dimension blocks) and the outlines a label must not lie
+        /// on, in the local frame of a view. Labels are placed with the same no-overlap rule as the dimension rows: a label takes the
+        /// nearest position (leader length and offset) whose text box is clear of every text and outline by a gap and whose leader crosses
+        /// no text.
+        /// </summary>
+        sealed class Obstacles
+        {
+            readonly List<double[]> texts = new List<double[]>();
+            readonly List<string> names = new List<string>();
+            string current = "";
+            readonly List<double[]> outlines = new List<double[]>();
+            readonly ShaftFrame frame;
+
+            // Only the entities of the view the labels belong to (the views stand on top of each other until they are arranged).
+            public Obstacles(Database db, Transaction tr, ShaftFrame frame, params string[] viewPrefixes)
+            {
+                this.frame = frame;
+                foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+                {
+                    var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (e == null || !e.Visible || e.Layer == HiddenLayer)
+                        continue;
+                    var tg = Tag(e);
+                    if (tg == null || !viewPrefixes.Any(v => tg[0].StartsWith(v, StringComparison.Ordinal)))
+                        continue;
+                    current = tg[0];
+                    if (e is MText || e is DBText)
+                        AddWorld(e);
+                    else
+                    {
+                        var d = e as Dimension;
+                        if (d == null)
+                            continue;
+                        int before = texts.Count;
+                        if (!d.DimBlockId.IsNull)
+                        {
+                            var block = tr.GetObject(d.DimBlockId, OpenMode.ForRead) as BlockTableRecord;
+                            if (block != null)
+                            {
+                                foreach (ObjectId bid in block)
+                                {
+                                    var t = tr.GetObject(bid, OpenMode.ForRead) as Entity;
+                                    if (t is MText || t is DBText)
+                                        AddWorld(t);
+                                }
+                            }
+                        }
+                        AddDimensionText(d);
+                    }
+                }
+            }
+
+            // The dimension block is not there yet (the dimension was just written): the text box is estimated from its position, its
+            // string and the direction of its dimension line.
+            void AddDimensionText(Dimension d)
+            {
+                string t = String.IsNullOrEmpty(d.DimensionText) || d.DimensionText == "<>"
+                    ? Math.Round(d.Measurement).ToString(CultureInfo.InvariantCulture)
+                    : d.DimensionText.Replace("<>", Math.Round(d.Measurement).ToString(CultureInfo.InvariantCulture));
+                double h = Math.Max(d.Dimtxt, 40);
+                double w = t.Length * 0.7 * h, hh = 1.4 * h;
+                double angle = Math.Abs(d.TextRotation) > 1e-9 ? d.TextRotation : (d is RotatedDimension ? ((RotatedDimension)d).Rotation : 0);
+                bool vertical = Math.Abs(Math.Sin(angle)) > 0.7;
+                var c = frame.Local(d.TextPosition);
+                double hw = (vertical ? hh : w) / 2, hhh = (vertical ? w : hh) / 2;
+                texts.Add(new[] { c.X - hw, c.Y - hhh, c.X + hw, c.Y + hhh });
+                names.Add(current + "(est)");
+            }
+
+            void AddWorld(Entity e)
+            {
+                try
+                {
+                    var b = e.GeometricExtents;
+                    var a = frame.Local(b.MinPoint);
+                    var c = frame.Local(b.MaxPoint);
+                    texts.Add(new[] { Math.Min(a.X, c.X), Math.Min(a.Y, c.Y), Math.Max(a.X, c.X), Math.Max(a.Y, c.Y) });
+                    names.Add(current);
+                }
+                catch (Autodesk.AutoCAD.Runtime.Exception)
+                {
+                }
+            }
+
+            /// <summary>An outline (a rectangle) a label must not lie on.</summary>
+            public void AddOutline(double x0, double y0, double x1, double y1)
+            {
+                const double t = 2;
+                outlines.Add(new[] { x0, y0 - t, x1, y0 + t });
+                outlines.Add(new[] { x0, y1 - t, x1, y1 + t });
+                outlines.Add(new[] { x0 - t, y0, x0 + t, y1 });
+                outlines.Add(new[] { x1 - t, y0, x1 + t, y1 });
+            }
+
+            public int Count
+            {
+                get { return texts.Count; }
+            }
+
+            public string Dump(double xMax)
+            {
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < texts.Count; i++)
+                {
+                    var t = texts[i];
+                    if (t[2] < xMax && t[0] > -4000 && t[3] > 1000 && t[1] < 1800 && t[0] < -600)
+                        sb.Append(" [" + t[0].ToString("0") + "," + t[1].ToString("0") + "," + t[2].ToString("0") + "," + t[3].ToString("0") + " " + names[i] + "]");
+                }
+                return sb.ToString();
+            }
+
+            public void AddText(double[] box)
+            {
+                names.Add("label");
+                texts.Add(box);
+            }
+
+            static bool Hit(double[] a, double[] b, double gap)
+            {
+                return a[0] < b[2] + gap && b[0] < a[2] + gap && a[1] < b[3] + gap && b[1] < a[3] + gap;
+            }
+
+            /// <summary>True when the text box lies on no text (within the gap) and no outline.</summary>
+            public bool BoxClear(double[] box, double gap)
+            {
+                foreach (var t in texts)
+                    if (Hit(box, t, gap))
+                        return false;
+                foreach (var o in outlines)
+                    if (Hit(box, o, 0))
+                        return false;
+                return true;
+            }
+
+            /// <summary>True when the segment crosses no text.</summary>
+            public bool LeaderClear(double x0, double y0, double x1, double y1)
+            {
+                foreach (var t in texts)
+                {
+                    if (SegmentHits(x0, y0, x1, y1, t[0], t[1], t[2], t[3]))
+                        return false;
+                }
+                return true;
+            }
+
+            static bool SegmentHits(double x0, double y0, double x1, double y1, double bx0, double by0, double bx1, double by1)
+            {
+                double dx = x1 - x0, dy = y1 - y0, t0 = 0, t1 = 1;
+                double[] p = { -dx, dx, -dy, dy };
+                double[] q = { x0 - bx0, bx1 - x0, y0 - by0, by1 - y0 };
+                for (int i = 0; i < 4; i++)
+                {
+                    if (Math.Abs(p[i]) < 1e-12)
+                    {
+                        if (q[i] < 0)
+                            return false;
+                    }
+                    else
+                    {
+                        double r = q[i] / p[i];
+                        if (p[i] < 0)
+                        {
+                            if (r > t1)
+                                return false;
+                            t0 = Math.Max(t0, r);
+                        }
+                        else
+                        {
+                            if (r < t0)
+                                return false;
+                            t1 = Math.Min(t1, r);
+                        }
+                    }
+                }
+                return t0 < t1 - 1e-9;
+            }
+        }
+
+        // A label with a leader. The anchors are the points of the member the leader may start from (the preferred one first); for
+        // each, the candidate positions are leader lengths from len0 and offsets across from dy0; the cheapest candidate whose text
+        // box is clear of every text and outline and whose leader crosses no text wins. The text stands at the end of the leader (to its
+        // left for toLeft, otherwise to its right).
+        static void PlaceLabel(Writer w, Obstacles ob, IList<double[]> anchors, bool toLeft, double h, string text, double len0, double dy0)
+        {
+            double width = text.Length * 0.7 * h, height = 1.4 * h, gap = 0.25 * h;
+            var steps = new List<double[]>();
+            for (int k = 0; k <= 40; k++)
+            {
+                for (int j = 0; j <= 32; j++)
+                {
+                    foreach (int sign in new[] { 1, -1 })
+                    {
+                        if (j == 0 && sign == -1)
+                            continue;
+                        double dy = dy0 + sign * j * 50;
+                        steps.Add(new[] { k * 100 + 2 * Math.Abs(dy - dy0), len0 + k * 100, dy });
+                    }
+                }
+            }
+            steps.Sort((a, b) => a[0].CompareTo(b[0]));
+            double bestCost = double.MaxValue;
+            double[] best = null;
+            double bax = 0, bay = 0;
+            for (int ai = 0; ai < anchors.Count; ai++)
+            {
+                double ax = anchors[ai][0], ay = anchors[ai][1];
+                double penalty = ai * 150;           // the preferred anchor is kept unless another one is clearly better
+                double minAcross = anchors[ai].Length > 2 ? anchors[ai][2] : 0;
+                foreach (var c in steps)
+                {
+                    if (c[0] + penalty >= bestCost)
+                        break;
+                    if (Math.Abs(c[2] - dy0) < minAcross)
+                        continue;
+                    double ex = toLeft ? ax - c[1] : ax + c[1], ey = ay + c[2];
+                    double[] box = toLeft
+                        ? new[] { ex - 0.3 * h - width, ey + 0.2 * h, ex - 0.3 * h, ey + 0.2 * h + height }
+                        : new[] { ex + 0.3 * h, ey + 0.6 * h - height, ex + 0.3 * h + width, ey + 0.6 * h };
+                    if (ob.BoxClear(box, gap) && ob.LeaderClear(ax, ay, ex, ey))
+                    {
+                        bestCost = c[0] + penalty;
+                        best = c;
+                        bax = ax;
+                        bay = ay;
+                        break;
+                    }
+                }
+            }
+            if (best == null)
+            {
+                best = new[] { 0, len0, dy0 };
+                bax = anchors[0][0];
+                bay = anchors[0][1];
+            }
+            double endX = toLeft ? bax - best[1] : bax + best[1], endY = bay + best[2];
+            if (toLeft)
+            {
+                w.LabelLeft(bax, bay, endX, endY, h, text);
+                ob.AddText(new[] { endX - 0.3 * h - width, endY + 0.2 * h, endX - 0.3 * h, endY + 0.2 * h + height });
+            }
+            else
+            {
+                w.Label(bax, bay, endX, endY, h, text);
+                ob.AddText(new[] { endX + 0.3 * h, endY + 0.6 * h - height, endX + 0.3 * h + width, endY + 0.6 * h });
+            }
+        }
+
+        static double[][] Along(double x, double y0, double y1, params double[] fractions)
+        {
+            // an anchor at an end of the member keeps its leader off the member's own outline: at least 100 mm across
+            return fractions.Select(f => f <= 0 || f >= 1 ? new[] { x, y0 + (y1 - y0) * f, 100.0 } : new[] { x, y0 + (y1 - y0) * f }).ToArray();
+        }
+
         // ---------- plan ----------
         static readonly string[] PlanRoles = { "wall" };
 
@@ -417,13 +672,15 @@ namespace Elevator.AutoCAD.Steel
             var f = s.Frame;
             ShiftFrontRows(db, tr, f, st);
             var w = new Writer(db, tr, PlanPrefix, "steel", (u, v) => f.World(new Point3d(u, v, 0)));
-            PlanTower(w, st, st.Plan.Columns, st.Plan.Beams, true);
+            var ob = new Obstacles(db, tr, f, "Plan.");
+            ob.AddOutline(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
+            PlanTower(w, ob, st, st.Plan.Columns, st.Plan.Beams, true);
             w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
         }
 
         // The columns (solid sections), the base plates with their bolts and the beam ring, in plan; labels in the style of the guide-rail
         // labels of the plan.
-        static void PlanTower(Writer w, SteelStructure st, IList<SteelColumnPlan> columns, IList<SteelBeamPlan> beams, bool plates)
+        static void PlanTower(Writer w, Obstacles ob, SteelStructure st, IList<SteelColumnPlan> columns, IList<SteelBeamPlan> beams, bool plates)
         {
             foreach (var b in beams)
             {
@@ -461,27 +718,26 @@ namespace Elevator.AutoCAD.Steel
             var right = beams.First(b => b.Face == "Right");
             var left = beams.First(b => b.Face == "Left");
             double ly = right.Box.Y0 + (right.Box.Y1 - right.Box.Y0) * 0.25;
-            w.Label(right.Box.X1, ly, right.Box.X1 + 500, ly, PlanTextHeight, beamText);
+            PlaceLabel(w, ob, Along(right.Box.X1, right.Box.Y0, right.Box.Y1, 0.25, 0.5, 0.75, 0.1, 0.9), false, PlanTextHeight, beamText, 500, 0);
             if (plates)
             {
                 // shaft plan: the columns at the left corners, the beam of the left face
-                w.LabelLeft(fl.Box.X0, fl.Box.CenterY, fl.Box.X0 - 800, fl.Box.CenterY, PlanTextHeight, columnText);
-                w.LabelLeft(bl.Box.X0, bl.Box.CenterY, bl.Box.X0 - 800, bl.Box.CenterY, PlanTextHeight, columnText);
-                double lly = left.Box.Y0 + (left.Box.Y1 - left.Box.Y0) * 0.5;
-                w.LabelLeft(left.Box.X0, lly, left.Box.X0 - 560, lly, PlanTextHeight, beamText);
+                PlaceLabel(w, ob, Along(fl.Box.X0, fl.Box.Y0, fl.Box.Y1, 0.5, 0.2, 0.8, 0.0, 1.0), true, PlanTextHeight, columnText, 800, 0);
+                PlaceLabel(w, ob, Along(bl.Box.X0, bl.Box.Y0, bl.Box.Y1, 0.5, 0.2, 0.8, 1.0, 0.0), true, PlanTextHeight, columnText, 800, 0);
+                PlaceLabel(w, ob, Along(left.Box.X0, left.Box.Y0, left.Box.Y1, 0.5, 0.35, 0.65, 0.2, 0.8, 0.1, 0.9), true, PlanTextHeight, beamText, 560, 0);
             }
             else
             {
                 // tower-top plan: the two front columns, leaders running down and outwards
-                w.LabelLeft(fl.Box.X0, fl.Box.Y0, fl.Box.X0 - 500, fl.Box.Y0 - 500, PlanTextHeight, columnText);
-                w.Label(fr.Box.X1, fr.Box.Y0, fr.Box.X1 + 500, fr.Box.Y0 - 500, PlanTextHeight, columnText);
+                PlaceLabel(w, ob, new[] { new[] { fl.Box.X0, fl.Box.Y0 } }, true, PlanTextHeight, columnText, 500, -500);
+                PlaceLabel(w, ob, new[] { new[] { fr.Box.X1, fr.Box.Y0 } }, false, PlanTextHeight, columnText, 500, -500);
             }
             if (plates)
             {
                 var plate = br.Plate;
-                w.Label(plate.X1, plate.Y1, plate.X1 + 150, plate.Y1 + 150, PlanTextHeight,
+                PlaceLabel(w, ob, new[] { new[] { plate.X1, plate.Y1 } }, false, PlanTextHeight,
                     "BASE PL " + L(st.Inputs.PlateWidthMm) + "X" + L(st.Inputs.PlateDepthMm) + "X" + L(st.Inputs.PlateThicknessMm) + "MM., "
-                    + st.Inputs.BoltCount + " BOLTS " + L(st.Inputs.BoltDiameterMm) + "MM.");
+                    + st.Inputs.BoltCount + " BOLTS " + L(st.Inputs.BoltDiameterMm) + "MM.", 150, 150);
             }
         }
 
@@ -579,9 +835,11 @@ namespace Elevator.AutoCAD.Steel
             ProjectDataStorage.Write(db, tr, LeftoverRecord, left);
             var w = new Writer(db, tr, MachineRoomPrefix, "MachineRoom", (u, v) => frame.World(new Point3d(u, v, 0)));
             var top = st.TowerTop;
-            PlanTower(w, st, top.Columns, top.Beams, false);
+            var ob = new Obstacles(db, tr, frame, "MachineRoom.", "Steel.MachineRoom.");
+            ob.AddOutline(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
+            PlanTower(w, ob, st, top.Columns, top.Beams, false);
             w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
-            double lowest = DrawController(db, tr, frame, st, top);
+            double lowest = DrawController(db, tr, frame, st, top, ob);
             GovernorDimension(db, tr, frame, w);
             // the title of the view: the sheet writes its scale into it, as into the other titles
             var title = w.Text(st.Inputs.WidthMm / 2, Math.Min(lowest, st.SlabEdge.Y0) - 450, PlanTextHeight * 2, "{\\Fcent|c0;\\L\\C6;TOWER TOP 1:10}");
@@ -810,7 +1068,7 @@ namespace Elevator.AutoCAD.Steel
 
         // The control panel of the concrete machine room (the same drawing symbol, copied) beside the tower top on the door side, right
         // of the door as seen from the landing, with its short label.
-        static double DrawController(Database db, Transaction tr, ShaftFrame frame, SteelStructure st, SteelTowerTop top)
+        static double DrawController(Database db, Transaction tr, ShaftFrame frame, SteelStructure st, SteelTowerTop top, Obstacles ob)
         {
             var symbol = new List<Polyline>();
             double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
@@ -846,7 +1104,7 @@ namespace Elevator.AutoCAD.Steel
             foreach (var e in symbol)
                 w.Copy(e, move);
             // the label stands left of the symbol with a leader to it, clear of the column labels on the right
-            w.LabelLeft(x0 + widthR * 0.3, y0 + heightR * 0.2, x0 - 300, y0 - 120, PlanTextHeight, "CONTROL PANEL");
+            PlaceLabel(w, ob, new[] { new[] { x0 + widthR * 0.3, y0 + heightR * 0.2 } }, true, PlanTextHeight, "CONTROL PANEL", 300 + widthR * 0.3, -120 - heightR * 0.2);
             return y0 - 120;
         }
 
