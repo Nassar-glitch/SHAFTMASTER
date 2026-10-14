@@ -130,6 +130,16 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   4. The shaft plan is cut just above the floor beam (the Planner's decision).
   5. **The concrete base** is drawn from editable presets (size, thickness, bars: count and diameter), sized from the steel footprint plus a margin. Its structural design belongs to the later STEEL STRUCTURE module.
 - **Bracing:** double cross (X) of L50×50×5 in every panel; the faces wait for the STEEL module.
+- **From the user's own steel sheet (S4, 2026-10-14):**
+  - The clear W × D is measured between the beam faces. The columns reach slightly into it (UPN 140 / UPN 100: 10 mm in width, 90 mm in depth), as in the user's edit.
+  - **The building slab edge** in front of the entrance face is always drawn in the shaft plan and the tower-top plan. Preset depth 250; preset width W + 2 × 850; both editable.
+  - **A machine housing** sits on top of the tower of every external lift. The machine stands inside it. Preset height about 1950; roof plate with a 160 overhang; editable.
+  - The control-panel label is "CONTROL PANEL".
+  - Dimension from the governor to the machine in the tower-top plan.
+  - B-B for steel has no concrete heights, and its dimensions are rounded to whole millimetres.
+  - The arrangement takes larger scales whenever the sheet has room.
+  - The door section C-C stays on steel sheets.
+  - The machine supports P1–P4 sit on the steel, inside the tower envelope.
 - **Not now:** structural calculations (a later STEEL STRUCTURE module), and the generated details stage G (postponed).
 - **Profile catalogue:** UPN sizes (dimensions and mass) and L angles, as editable data.
 
