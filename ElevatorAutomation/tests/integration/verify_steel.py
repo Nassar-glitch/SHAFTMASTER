@@ -131,8 +131,11 @@ def main():
         check(len(hidden_leftovers) > 0, case + ": the wall-opening leftover of the concrete room is hidden (" + str(len(hidden_leftovers)) + ")")
         # ---- B-B ----
         bb = [e for e, t in tagged if t[0].startswith("Steel.Section.")]
-        check(sum(1 for e in bb if closed_poly(e, 8)) == 2, case + ": B-B has the two top beams")
-        slab = [e for e, t in tagged if t[1] in ("slab", "concrete") and t[0].startswith("MachineRoomSection.")]
+        check(sum(1 for e in bb if closed_poly(e, 8)) == 0, case + ": B-B draws no steel profile sections (the section carries no labels)")
+        check(not any(e.dxftype() == "MTEXT" for e in bb), case + ": B-B has no steel label")
+        titles_bb = [e for e in ms if e.dxftype() == "MTEXT" and not tag(e) is None and "B-B" in e.text and "SEC" in e.text]
+        check(len(titles_bb) >= 1 and all(not invisible(e) for e in titles_bb), case + ": the B-B title stays")
+        slab = [e for e, t in tagged if t[1] in ("slab", "concrete") and t[0].startswith("MachineRoomSection.") and not (e.dxftype() == "MTEXT" and "B-B" in e.text)]
         check(len(slab) > 0 and all(invisible(e) for e in slab), case + ": the B-B slab and the concrete blocks are hidden (" + str(len(slab)) + ")")
         # ---- A-A ----
         aa = [e for e, t in tagged if t[0].startswith("SectionAA.Steel.")]

@@ -447,7 +447,7 @@ namespace Elevator.Core.Tests
 
         // ---------- geometry ----------
         [Fact]
-        public void Plan_has_four_corner_columns_outside_the_clear_rectangle_web_outside_and_channels_facing_each_other()
+        public void Plan_has_four_corner_columns_flush_with_the_beams_web_outside_and_channels_facing_each_other()
         {
             var p = SteelProject(3000, 3000);
             var s = Build(p);
@@ -458,7 +458,8 @@ namespace Elevator.Core.Tests
             Assert.Equal(new[] { "BackLeft", "BackRight", "FrontLeft", "FrontRight" }, plan.Columns.Select(c => c.Corner).OrderBy(x => x).ToArray());
             foreach (var c in plan.Columns)
             {
-                Assert.False(c.Box.Overlaps(plan.Clear), c.Corner + " steel must lie outside the clear rectangle");
+                // the outer face of the column is the outer face of the beam: 50 outside the clear rectangle (the beam flange width)
+                Assert.True(c.Box.X0 >= -50 - 1e-9 && c.Box.X1 <= plan.Clear.X1 + 50 + 1e-9 && c.Box.Y0 >= -50 - 1e-9 && c.Box.Y1 <= plan.Clear.Y1 + 50 + 1e-9);
                 Assert.Equal(60, c.Box.Width);       // UPN 140 flange width into the shaft
                 Assert.Equal(140, c.Box.Height);     // UPN 140 depth along the face
                 Assert.Equal("UPN 140", c.Profile);
@@ -477,19 +478,20 @@ namespace Elevator.Core.Tests
             // the web is on the outside: the outline reaches the outer edge along the whole depth, the flange tips are on the clear line
             foreach (var c in left)
             {
-                Assert.Equal(-60, c.Outline.Min(pt => pt.X)); Assert.Equal(0, c.Outline.Max(pt => pt.X));
-                Assert.Equal(c.Box.Height, c.Outline.Where(pt => pt.X == -60).Max(pt => pt.Y) - c.Outline.Where(pt => pt.X == -60).Min(pt => pt.Y));
+                Assert.Equal(-50, c.Outline.Min(pt => pt.X)); Assert.Equal(10, c.Outline.Max(pt => pt.X));
+                Assert.Equal(c.Box.Height, c.Outline.Where(pt => pt.X == -50).Max(pt => pt.Y) - c.Outline.Where(pt => pt.X == -50).Min(pt => pt.Y));
             }
             foreach (var c in right)
             {
-                Assert.Equal(plan.Clear.X1, c.Outline.Min(pt => pt.X)); Assert.Equal(plan.Clear.X1 + 60, c.Outline.Max(pt => pt.X));
+                Assert.Equal(plan.Clear.X1 - 10, c.Outline.Min(pt => pt.X)); Assert.Equal(plan.Clear.X1 + 50, c.Outline.Max(pt => pt.X));
             }
-            // a face's columns have the clear width between their flange tips
-            Assert.Equal(plan.Clear.Width, right.Min(c => c.Box.X0) - left.Max(c => c.Box.X1));
+            // a face's columns are flush with the beams' outer faces and reach (60 - 50) mm in along the width, (140 - 50) mm along the depth
+            Assert.Equal(plan.Clear.Width - 20, right.Min(c => c.Box.X0) - left.Max(c => c.Box.X1));
+            Assert.Equal(90, plan.Columns.Where(c => c.Corner == "FrontLeft").Select(c => c.Box.Y1).Single());
             // plates are centred on the column; the footprint is the bounding box of the four plates
             Assert.Equal(plan.Columns.Min(c => c.Plate.X0), plan.PlateFootprint.X0);
             Assert.Equal(plan.Columns.Max(c => c.Plate.Y1), plan.PlateFootprint.Y1);
-            Assert.Equal(70, plan.PlateIntrusionMm, 6);   // (200 - 60) / 2 of the plate reaches inside along the width
+            Assert.Equal(120, plan.PlateIntrusionMm, 6);   // the plate is centred on the column box: 70 + 50 along the depth
         }
 
         [Fact]
@@ -505,8 +507,9 @@ namespace Elevator.Core.Tests
                 Assert.Equal(50, Math.Min(b.Box.Width, b.Box.Height));      // UPN 100 flange width across the face
                 Assert.All(plan.Columns, c => Assert.False(b.Box.Overlaps(c.Box), b.Face + " beam must not run through a column"));
             }
-            Assert.Equal(plan.Clear.Width, plan.Beams.Single(b => b.Face == "Front").Box.Width);
-            Assert.Equal(plan.Clear.Height, plan.Beams.Single(b => b.Face == "Left").Box.Height);
+            // the runs are between the columns
+            Assert.Equal(plan.Clear.Width - 20, plan.Beams.Single(b => b.Face == "Front").Box.Width);
+            Assert.Equal(plan.Clear.Height - 180, plan.Beams.Single(b => b.Face == "Left").Box.Height);
             Assert.Equal("Front", plan.EntranceFace);
         }
 
@@ -519,9 +522,9 @@ namespace Elevator.Core.Tests
                 var columns = top ? s.TowerTop.Columns : s.Plan.Columns;
                 var beams = top ? s.TowerTop.Beams : s.Plan.Beams;
                 var env = new SteelRect(columns.Min(c => c.Box.X0), columns.Min(c => c.Box.Y0), columns.Max(c => c.Box.X1), columns.Max(c => c.Box.Y1));
-                // the envelope is the rectangle of the columns: the clear size plus the column on each side
-                Assert.Equal(s.Plan.Clear.Width + 2 * 60, env.Width, 6);
-                Assert.Equal(s.Plan.Clear.Height + 2 * 140, env.Height, 6);
+                // the envelope is the clear rectangle plus the beam flange width (50) on every side
+                Assert.Equal(s.Plan.Clear.Width + 2 * 50, env.Width, 6);
+                Assert.Equal(s.Plan.Clear.Height + 2 * 50, env.Height, 6);
                 var front = beams.Single(b => b.Face == "Front"); var back = beams.Single(b => b.Face == "Back");
                 var left = beams.Single(b => b.Face == "Left"); var right = beams.Single(b => b.Face == "Right");
                 Assert.Equal(env.Y0, front.Box.Y0, 6);          // outer face of the beam = outer face of the column on every side
@@ -533,6 +536,7 @@ namespace Elevator.Core.Tests
                     Assert.True(b.Box.X0 >= env.X0 - 1e-9 && b.Box.X1 <= env.X1 + 1e-9 && b.Box.Y0 >= env.Y0 - 1e-9 && b.Box.Y1 <= env.Y1 + 1e-9,
                         b.Face + " beam must lie within the envelope");
                     Assert.False(b.Box.Overlaps(s.Plan.Clear), b.Face + " beam stays outside the clear rectangle");
+                    Assert.All(columns, c => Assert.False(b.Box.Overlaps(c.Box), b.Face + " beam runs between the columns"));
                 }
                 foreach (var c in columns)
                     Assert.True(c.Outline.All(pt => pt.X >= env.X0 - 1e-9 && pt.X <= env.X1 + 1e-9 && pt.Y >= env.Y0 - 1e-9 && pt.Y <= env.Y1 + 1e-9));

@@ -345,10 +345,13 @@ Y = 0 (the front). **The steel lies outside the clear rectangle:**
   distance between flange tips; the outline is the parallel-flange channel (8 % slope and radii not drawn);
 - base plates: P x P centred on the column box (as in the reference), so a plate reaches (200 - 60) / 2 = 70 mm inside the clear rectangle along
   the width at the pit floor (`Plan.PlateIntrusionMm`; the reference plates intrude 75 mm per side too); bolts on the 120 square about the plate centre;
-- beam ring: four beams between the columns, flange width across the face (UPN 100: 50), **flush with the outer faces of the columns** (Planner
-  correction, as in the reference `u14-plan-corner-TL.png`): the outer face of the beam is the outer face of the column on every side, so the
-  tower has one flat outer face per side, to be fixed directly to the facade. The envelope is the rectangle of the four column boxes (clear
-  W + 2 x 60 by D + 2 x 140); no member lies outside it except the base plates and the concrete base. The clear W x D is unchanged;
+- beam ring: four beams between the columns, flange width across the face (UPN 100: 50), standing **against the clear faces, outside the
+  clear rectangle**; the columns are flush with the beams' outer faces (the user's own edit of the S3 sheet, S4; also the reference
+  `u14-plan-corner-TL.png`): the outer face of the beam is the outer face of the column on every side, one flat outer face per side, to be
+  fixed directly to the facade. The column box is the beam flange width outside the clear rectangle and reaches (60 - 50) mm into the
+  clear width and (140 - 50) mm into the clear depth at each corner; the plates stay centred on the column box. The envelope of the
+  tower is the clear rectangle + the beam flange width on every side; no member lies outside it except the base plates and the
+  concrete base. The runs of the beams are between the columns;
 - elevation per face (u along the face, z from the lowest floor): two columns base to tower top, a plate each, a beam band (beam depth, centred on
   the level) at every level, and on every face except the entrance face the double cross in every panel between consecutive levels (the panels start
   at the base), plus gusset points at the panel corners; the concrete block under the base (top at the base elevation, its thickness below);

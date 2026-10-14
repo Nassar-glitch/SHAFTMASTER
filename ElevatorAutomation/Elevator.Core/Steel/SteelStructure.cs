@@ -279,10 +279,10 @@ namespace Elevator.Core.Steel
         // ---------- plan ----------
         static SteelRect FootprintOf(SteelInputs i, ChannelProfile col)
         {
-            double b = col.WidthMm, h = col.HeightMm;
-            // The column box centres: x = -b/2 (left) and W + b/2 (right); y = -h/2 (front) and D + h/2 (back).
-            double x0 = -b / 2 - i.PlateWidthMm / 2, x1 = i.WidthMm + b / 2 + i.PlateWidthMm / 2;
-            double y0 = -h / 2 - i.PlateDepthMm / 2, y1 = i.DepthMm + h / 2 + i.PlateDepthMm / 2;
+            double b = col.WidthMm, h = col.HeightMm, t = i.Beam.WidthMm;
+            // The column box centres: x = -t + b/2 (left) and W + t - b/2 (right); y = -t + h/2 (front) and D + t - h/2 (back).
+            double x0 = -t + b / 2 - i.PlateWidthMm / 2, x1 = i.WidthMm + t - b / 2 + i.PlateWidthMm / 2;
+            double y0 = -t + h / 2 - i.PlateDepthMm / 2, y1 = i.DepthMm + t - h / 2 + i.PlateDepthMm / 2;
             return new SteelRect(x0, y0, x1, y1);
         }
 
@@ -295,21 +295,23 @@ namespace Elevator.Core.Steel
         {
             var i = Inputs;
             var col = i.Column;
-            double b = col.WidthMm, h = col.HeightMm, tw = col.WebMm, tf = col.FlangeMm;
-            double xa = left ? -b : i.WidthMm, xb = left ? 0 : i.WidthMm + b;
-            double ya = front ? -h : i.DepthMm, yb = front ? 0 : i.DepthMm + h;
+            double b = col.WidthMm, h = col.HeightMm, tw = col.WebMm, tf = col.FlangeMm, t = i.Beam.WidthMm;
+            // The outer faces of the columns are the outer faces of the ring beams, which stand against the clear faces (user's edit of the
+            // S3 sheet): the box is the beam flange width (t) outside the clear rectangle and reaches b / h into it.
+            double xa = left ? -t : i.WidthMm + t - b, xb = left ? -t + b : i.WidthMm + t;
+            double ya = front ? -t : i.DepthMm + t - h, yb = front ? -t + h : i.DepthMm + t;
             var c = new SteelColumnPlan { Corner = corner, Profile = col.Name, WebSide = left ? "Left" : "Right", Box = new SteelRect(xa, ya, xb, yb) };
-            // Left outline: web at x = -b, flanges to x = 0. The right column is its mirror image about the column's own box.
+            // Left outline: web at the outer side (xa), flanges to xb. The right column is its mirror image about the column's own box.
             var pts = new List<SteelPoint>
             {
-                new SteelPoint(-b, ya), new SteelPoint(0, ya), new SteelPoint(0, ya + tf), new SteelPoint(-b + tw, ya + tf),
-                new SteelPoint(-b + tw, yb - tf), new SteelPoint(0, yb - tf), new SteelPoint(0, yb), new SteelPoint(-b, yb)
+                new SteelPoint(xa, ya), new SteelPoint(xb, ya), new SteelPoint(xb, ya + tf), new SteelPoint(xa + tw, ya + tf),
+                new SteelPoint(xa + tw, yb - tf), new SteelPoint(xb, yb - tf), new SteelPoint(xb, yb), new SteelPoint(xa, yb)
             };
             if (left)
                 c.Outline = pts;
             else
             {
-                c.Outline = pts.Select(p => new SteelPoint(i.WidthMm - p.X, p.Y)).Reverse().ToList();
+                c.Outline = pts.Select(p => new SteelPoint(xa + xb - p.X, p.Y)).Reverse().ToList();
             }
             double cx = c.Box.CenterX, cy = c.Box.CenterY;
             c.Plate = new SteelRect(cx - i.PlateWidthMm / 2, cy - i.PlateDepthMm / 2, cx + i.PlateWidthMm / 2, cy + i.PlateDepthMm / 2);
@@ -333,14 +335,15 @@ namespace Elevator.Core.Steel
         List<SteelBeamPlan> MakeRing()
         {
             var i = Inputs;
-            // The beams lie within the column envelope, flush with the outer faces of the columns: one flat outer face on every side
-            // (column and beam), which is fixed directly to the facade of the building. The run is between the columns.
+            // The beams stand against the clear faces, outside the clear rectangle, and run between the columns; the columns are flush with
+            // their outer faces: one flat outer face per side (column and beam), fixed directly to the facade of the building.
             double bb = i.Beam.WidthMm, w = i.WidthMm, d = i.DepthMm, cw = i.Column.WidthMm, ch = i.Column.HeightMm;
+            double runX0 = -bb + cw, runX1 = w + bb - cw, runY0 = -bb + ch, runY1 = d + bb - ch;
             var ring = new List<SteelBeamPlan>();
-            ring.Add(new SteelBeamPlan { Face = "Front", Profile = i.Beam.Name, Box = new SteelRect(0, -ch, w, -ch + bb), CenterLine = new SteelSegment(0, -ch + bb / 2, w, -ch + bb / 2) });
-            ring.Add(new SteelBeamPlan { Face = "Back", Profile = i.Beam.Name, Box = new SteelRect(0, d + ch - bb, w, d + ch), CenterLine = new SteelSegment(0, d + ch - bb / 2, w, d + ch - bb / 2) });
-            ring.Add(new SteelBeamPlan { Face = "Left", Profile = i.Beam.Name, Box = new SteelRect(-cw, 0, -cw + bb, d), CenterLine = new SteelSegment(-cw + bb / 2, 0, -cw + bb / 2, d) });
-            ring.Add(new SteelBeamPlan { Face = "Right", Profile = i.Beam.Name, Box = new SteelRect(w + cw - bb, 0, w + cw, d), CenterLine = new SteelSegment(w + cw - bb / 2, 0, w + cw - bb / 2, d) });
+            ring.Add(new SteelBeamPlan { Face = "Front", Profile = i.Beam.Name, Box = new SteelRect(runX0, -bb, runX1, 0), CenterLine = new SteelSegment(runX0, -bb / 2, runX1, -bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Back", Profile = i.Beam.Name, Box = new SteelRect(runX0, d, runX1, d + bb), CenterLine = new SteelSegment(runX0, d + bb / 2, runX1, d + bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Left", Profile = i.Beam.Name, Box = new SteelRect(-bb, runY0, 0, runY1), CenterLine = new SteelSegment(-bb / 2, runY0, -bb / 2, runY1) });
+            ring.Add(new SteelBeamPlan { Face = "Right", Profile = i.Beam.Name, Box = new SteelRect(w, runY0, w + bb, runY1), CenterLine = new SteelSegment(w + bb / 2, runY0, w + bb / 2, runY1) });
             return ring;
         }
 
