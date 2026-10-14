@@ -26,6 +26,14 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
    - **Dimensions are arranged.** Chained dimensions sit on one common dimension line, and successive rows keep an equal spacing. Extension lines start at the real geometry edges. No text overlaps another text, line or dimension. A value too small to fit between its arrows is placed outside the chain, beside it, never on top of a neighbour.
    - **Every component is drawn as a real part,** not as floating lines. For example, automatic door panels sit inside their door frame or header outline.
 9. **Clear names (agreed 2026-10-11).** Field and option names in the application are short, plain and self-explanatory, for example "Doors Offset". Directions are given as Left / Right (as seen in the plan drawing), never as internal terms such as "towards the fixed side" or a sign convention.
+11. **Editable drawings (user, 2026-10-14).** A generated drawing must be as easy to edit in AutoCAD as a hand-made one:
+    - a label that points at something is one MULTILEADER (leader and text together), not a loose line plus a text;
+    - dimensions are real DIMENSION entities, associative where possible, and never exploded;
+    - a repeated part (column section, base plate with bolts, control panel, bracket, door symbol) is a named block;
+    - text is TEXT / MTEXT in the drawing's styles, and hatches are HATCH entities;
+    - everything sits on meaningful layers.
+    
+    Moving, retyping or restyling an item must take one click, not a hunt for pieces.
 10. **Loads also in kg (agreed 2026-10-11).** Wherever a load or force is shown in N or kN (application pages, calculation sheet, figures, Design Notes), its kg value is shown beside it.
     - kg = N / 9.81, rounded UP to the next multiple of 5 kg (1201 → 1205; an exact multiple stays).
     - This is a display rule only. Every calculation and every OK / NOT OK result keeps using the unrounded N values.

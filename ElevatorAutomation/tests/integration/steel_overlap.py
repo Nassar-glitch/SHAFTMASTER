@@ -25,8 +25,9 @@ def _visible(e):
     return not e.dxf.get("invisible", 0) and e.dxf.get("layer", "0") != HIDDEN_LAYER
 
 
-CHAR_WIDTH = 0.65     # of the text height, a little above the average of capitals and digits
-LINE_HEIGHT = 1.3
+CHAR_WIDTH = 0.7      # of the text height, other texts of the drawing
+LABEL_CHAR_WIDTH = 1.0   # steel labels: measured on the generated sheets, about 0.97 of the text height
+LINE_HEIGHT = 1.2
 
 
 def _mtext_box(e):
@@ -36,7 +37,9 @@ def _mtext_box(e):
     except Exception:
         lines = [e.text]
     h = float(e.dxf.get("char_height", 2.5))
-    w = max(len(l) for l in lines) * CHAR_WIDTH * h
+    key = _tag(e)
+    factor = LABEL_CHAR_WIDTH if key and key.startswith(STEEL_PREFIXES) else CHAR_WIDTH
+    w = max(len(l) for l in lines) * factor * h
     hh = LINE_HEIGHT * h * len(lines)
     a = int(e.dxf.get("attachment_point", 1))
     col = (a - 1) % 3          # 0 left, 1 centre, 2 right
@@ -108,6 +111,48 @@ def _what(e):
         return "?"
 
 
+AXIS_ROLES = ("mainAxis", "carAxis", "cwAxis")
+
+
+def _role(e):
+    try:
+        if e.xdata and "ELEVATOR_AUTOMATION" in e.xdata:
+            values = [v.value for v in e.get_xdata("ELEVATOR_AUTOMATION")]
+            return values[1] if len(values) > 1 else ""
+    except Exception:
+        pass
+    return ""
+
+
+def lines_of(ms):
+    """Segments a label text box may not touch: the lines inside the dimension blocks (dimension and extension lines, arrows) and the
+    axes of the drawing. Only the leader of a label may cross them."""
+    out = []
+    for e in ms:
+        if not _visible(e):
+            continue
+        t = e.dxftype()
+        if t == "DIMENSION":
+            try:
+                for v in e.virtual_entities():
+                    vt = v.dxftype()
+                    if vt == "LINE":
+                        out.append((v.dxf.start.x, v.dxf.start.y, v.dxf.end.x, v.dxf.end.y))
+                    elif vt == "LWPOLYLINE":
+                        pts = list(v.get_points())
+                        for i in range(len(pts) - 1):
+                            out.append((pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]))
+                    elif vt in ("SOLID", "TRACE", "INSERT"):
+                        b = _box(v)
+                        if b is not None:
+                            out += [(b[0], b[1], b[2], b[1]), (b[2], b[1], b[2], b[3]), (b[2], b[3], b[0], b[3]), (b[0], b[3], b[0], b[1])]
+            except Exception:
+                continue
+        elif t == "LINE" and _role(e) in AXIS_ROLES:
+            out.append((e.dxf.start.x, e.dxf.start.y, e.dxf.end.x, e.dxf.end.y))
+    return [g for g in out if g[0] < 900000 and g[2] < 900000]
+
+
 def texts_of(ms):
     """(owner, box) of every text of the model space, the dimension blocks included."""
     out = []
@@ -134,6 +179,7 @@ def texts_of(ms):
 def check(ms):
     """Returns the list of overlaps found (strings); empty when every steel label is clear."""
     texts = texts_of(ms)
+    segs = lines_of(ms)
     labels = []
     leaders = []
     slab_lines = []
@@ -166,6 +212,11 @@ def check(ms):
                 continue
             if _overlap(b, ob, 0.5):
                 found.append("label '" + text + "' on a text of " + other.dxftype() + " '" + _what(other) + "' at (%.0f, %.0f)" % (b[0], b[1]))
+        inner = (b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1)
+        for g in segs:
+            if _segment_hits_box(g[0], g[1], g[2], g[3], inner):
+                found.append("label '" + text + "' on a dimension, extension or axis line at (%.0f, %.0f)" % (g[0], g[1]))
+                break
         for s in slab_lines:
             pts = list(s.get_points())
             n = len(pts)

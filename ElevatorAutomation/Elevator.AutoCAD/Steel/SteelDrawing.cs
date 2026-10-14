@@ -326,6 +326,9 @@ namespace Elevator.AutoCAD.Steel
             }
         }
 
+        // Width of a character of the steel labels as a fraction of their height (measured on the generated sheets: about 0.97).
+        const double CharFactor = 1.0;
+
         // ---------- label placement (no text on text) ----------
         /// <summary>
         /// The texts of a drawing (text, multi-line text and the texts inside the dimension blocks) and the outlines a label must not lie
@@ -339,6 +342,8 @@ namespace Elevator.AutoCAD.Steel
             readonly List<string> names = new List<string>();
             string current = "";
             readonly List<double[]> outlines = new List<double[]>();
+            // the dimension lines, extension lines and the axes of the view: a label text box may not touch one (its leader may cross)
+            readonly List<double[]> segments = new List<double[]>();
             readonly ShaftFrame frame;
 
             // Only the entities of the view the labels belong to (the views stand on top of each other until they are arranged).
@@ -354,6 +359,11 @@ namespace Elevator.AutoCAD.Steel
                     if (tg == null || !viewPrefixes.Any(v => tg[0].StartsWith(v, StringComparison.Ordinal)))
                         continue;
                     current = tg[0];
+                    if (e is Line && (tg[1] == "mainAxis" || tg[1] == "carAxis" || tg[1] == "cwAxis"))
+                    {
+                        var axis = (Line)e;
+                        AddSegment(axis.StartPoint, axis.EndPoint);
+                    }
                     if (e is MText || e is DBText)
                         AddWorld(e);
                     else
@@ -376,8 +386,37 @@ namespace Elevator.AutoCAD.Steel
                             }
                         }
                         AddDimensionText(d);
+                        AddDimensionLines(d);
                     }
                 }
+            }
+
+            void AddSegment(Point3d a, Point3d b)
+            {
+                var p = frame.Local(a);
+                var q = frame.Local(b);
+                segments.Add(new[] { p.X, p.Y, q.X, q.Y });
+            }
+
+            // The dimension line and the two extension lines of a rotated dimension, from its definition points.
+            void AddDimensionLines(Dimension d)
+            {
+                var r = d as RotatedDimension;
+                if (r == null)
+                    return;
+                double c = Math.Cos(r.Rotation), s = Math.Sin(r.Rotation);
+                var u = new Vector3d(c, s, 0);
+                var n = new Vector3d(-s, c, 0);
+                var dp = r.DimLinePoint;
+                var feet = new List<Point3d>();
+                foreach (var x in new[] { r.XLine1Point, r.XLine2Point })
+                {
+                    double off = (dp - x).DotProduct(n);
+                    var foot = x + n * off;
+                    feet.Add(foot);
+                    AddSegment(x, foot);
+                }
+                AddSegment(feet[0], feet[1]);
             }
 
             // The dimension block is not there yet (the dimension was just written): the text box is estimated from its position, its
@@ -388,7 +427,7 @@ namespace Elevator.AutoCAD.Steel
                     ? Math.Round(d.Measurement).ToString(CultureInfo.InvariantCulture)
                     : d.DimensionText.Replace("<>", Math.Round(d.Measurement).ToString(CultureInfo.InvariantCulture));
                 double h = Math.Max(d.Dimtxt, 40);
-                double w = t.Length * 0.7 * h, hh = 1.4 * h;
+                double w = t.Length * 0.75 * h, hh = 1.4 * h;
                 double angle = Math.Abs(d.TextRotation) > 1e-9 ? d.TextRotation : (d is RotatedDimension ? ((RotatedDimension)d).Rotation : 0);
                 bool vertical = Math.Abs(Math.Sin(angle)) > 0.7;
                 var c = frame.Local(d.TextPosition);
@@ -459,6 +498,9 @@ namespace Elevator.AutoCAD.Steel
                 foreach (var o in outlines)
                     if (Hit(box, o, 0))
                         return false;
+                foreach (var g in segments)
+                    if (SegmentHits(g[0], g[1], g[2], g[3], box[0] - 3, box[1] - 3, box[2] + 3, box[3] + 3))
+                        return false;
                 return true;
             }
 
@@ -512,7 +554,7 @@ namespace Elevator.AutoCAD.Steel
         // left for toLeft, otherwise to its right).
         static void PlaceLabel(Writer w, Obstacles ob, IList<double[]> anchors, bool toLeft, double h, string text, double len0, double dy0)
         {
-            double width = text.Length * 0.7 * h, height = 1.4 * h, gap = 0.25 * h;
+            double width = text.Length * CharFactor * h, height = 1.4 * h, gap = 0.25 * h;
             var steps = new List<double[]>();
             for (int k = 0; k <= 40; k++)
             {
@@ -718,7 +760,7 @@ namespace Elevator.AutoCAD.Steel
             var right = beams.First(b => b.Face == "Right");
             var left = beams.First(b => b.Face == "Left");
             double ly = right.Box.Y0 + (right.Box.Y1 - right.Box.Y0) * 0.25;
-            PlaceLabel(w, ob, Along(right.Box.X1, right.Box.Y0, right.Box.Y1, 0.25, 0.5, 0.75, 0.1, 0.9), false, PlanTextHeight, beamText, 500, 0);
+            PlaceLabel(w, ob, Along(right.Box.X1, right.Box.Y0, right.Box.Y1, 0.25, 0.5, 0.75, 0.1, 0.9), false, PlanTextHeight, beamText, 150, 0);
             if (plates)
             {
                 // shaft plan: the columns at the left corners, the beam of the left face
