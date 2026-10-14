@@ -93,7 +93,7 @@ def main():
         rects = [e for e in plan if closed_poly(e, 4)]
         circles = [e for e in plan if e.dxftype() == "CIRCLE"]
         check(len(cols) == 4, case + ": the plan has four column sections (" + str(len(cols)) + ")")
-        check(len(rects) == 8, case + ": four base plates and four ring beams in plan (" + str(len(rects)) + ")")
+        check(len(rects) == 9, case + ": four base plates, four ring beams and the controller cabinet in plan (" + str(len(rects)) + ")")
         check(len(circles) == 4 * bolts, case + ": " + str(4 * bolts) + " bolt circles in plan (" + str(len(circles)) + ")")
         check(sum(1 for e in plan if e.dxftype() == "HATCH") == 4, case + ": four solid column sections")
         check(any(e.dxftype() == "MTEXT" and tower["Column"] in e.text and "STEEL COLUMN" in e.text for e in plan), case + ": the plan names the column profile")
@@ -107,7 +107,11 @@ def main():
         check(not any(e.dxftype() == "CIRCLE" for e in mr), case + ": no base plate bolts at the tower top")
         room = [e for e, t in tagged if t[1] == "room" and t[0].startswith("MachineRoom.")]
         check(len(room) > 0 and all(invisible(e) for e in room), case + ": the room walls are hidden")
-        check(any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": the controller note is there")
+        check(any(e.dxftype() == "MTEXT" and "TOWER TOP" in e.text and "1:" in e.text for e in mr), case + ": the tower-top plan has its title with the scale")
+        check(not any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": no long controller note")
+        check(any(e.dxftype() == "MTEXT" and "CONTROLLER" in e.text for e in plan), case + ": the plan has the controller symbol label")
+        hidden_leftovers = [e for e, t in tagged if t[1] == "governor" and invisible(e)]
+        check(len(hidden_leftovers) > 0, case + ": the wall-opening leftover of the concrete room is hidden (" + str(len(hidden_leftovers)) + ")")
         # ---- B-B ----
         bb = [e for e, t in tagged if t[0].startswith("Steel.Section.")]
         check(sum(1 for e in bb if closed_poly(e, 8)) == 2, case + ": B-B has the two top beams")
@@ -142,6 +146,13 @@ def main():
         replaced = [e for e, t in tagged if t[0].startswith("SectionAA.Floor.") and ".Slab." in t[0]]
         replaced += [e for e, t in tagged if t[0].startswith(("SectionAA.Shaft.", "SectionAA.MR.Wall.", "SectionAA.MR.Ceiling"))]
         check(len(replaced) > 0 and all(invisible(e) for e in replaced), case + ": the A-A walls, slabs and room walls are hidden (" + str(len(replaced)) + ")")
+        # ---- details of a concrete shaft left out of a steel sheet ----
+        untagged = [e for e in ms if e.dxftype() == "MTEXT" and not tag(e)]
+        for text in ("SIDE - GUIDE RAIL", "SEC. C-C"):
+            found = [e for e in untagged if text in e.text and invisible(e)]
+            check(len(found) >= 1, case + ": the concrete detail " + text + " is hidden")
+        check(any("VIEW at D-D" in e.text and not invisible(e) for e in untagged), case + ": the door view D-D stays")
+        check(any("FISH PLATE" in e.text and not invisible(e) for e in untagged), case + ": the fish plate stays")
         # ---- the sheet ----
         layout = doc.layouts.get(LAYOUT)
         texts = [e.text for e in layout if e.dxftype() == "MTEXT"]

@@ -416,7 +416,7 @@ namespace Elevator.AutoCAD.SectionAA
                 var roomLabel = new MText { Location = new Point3d(left + 300, g.Ceiling - 250, 0), TextHeight = 200, Contents = "M/R" };
                 roomLabel.SetDatabaseDefaults(db);
                 add(roomLabel, "MR.Room.Label", "annotation");
-                var rlabel = new MText { Location = new Point3d(1450, g.R + 240, 0), TextHeight = 200, Contents = "R FL" };
+                var rlabel = new MText { Location = new Point3d(1450, g.R + 240, 0), TextHeight = 200, Contents = steel == null ? "R FL" : "PLATFORM" };
                 rlabel.SetDatabaseDefaults(db);
                 add(rlabel, "MR.R.Label", "annotation");
                 if (steel != null)

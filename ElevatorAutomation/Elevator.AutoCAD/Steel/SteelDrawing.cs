@@ -306,6 +306,13 @@ namespace Elevator.AutoCAD.Steel
             var f = s.Frame;
             var w = new Writer(db, tr, PlanPrefix, "steel", (u, v) => f.World(new Point3d(u, v, 0)));
             PlanTower(w, st, st.Plan.Columns, st.Plan.Beams, true);
+            // the controller and the switches are at the top floor, right of the door as seen from the landing: a cabinet outside the
+            // entrance, right of the tower
+            double x0 = st.Inputs.WidthMm + 450, y0 = -450, cw = 300, ch = 150;
+            w.Rect(x0, y0, x0 + cw, y0 + ch);
+            w.Seg(x0, y0, x0 + cw, y0 + ch);
+            w.Seg(x0, y0 + ch, x0 + cw, y0);
+            w.Text(x0 + cw + 60, y0 + ch, PlanTextHeight, "CONTROLLER");
         }
 
         // The columns (solid sections), the base plates with their bolts and the beam ring, in plan; labels in the style of the guide-rail
@@ -372,23 +379,73 @@ namespace Elevator.AutoCAD.Steel
             "MachineRoom.Dimension.RightExtension"
         };
 
-        /// <summary>Clears the steel entities of the machine-room plan and shows the room again.</summary>
+        const string LeftoverRecord = "SteelMachineRoomHidden";
+
+        /// <summary>Clears the steel entities of the machine-room plan and shows the room and the leftovers again.</summary>
         public static void ClearMachineRoom(Database db, Transaction tr)
         {
             Clear(db, tr, MachineRoomPrefix, "MachineRoom.", MachineRoomRoles, MachineRoomKeys);
+            var hidden = ProjectDataStorage.Read<List<string>>(db, tr, LeftoverRecord);
+            if (hidden == null || hidden.Count == 0)
+                return;
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag != null && !e.Visible && hidden.Contains(tag[0]))
+                {
+                    e.UpgradeOpen();
+                    e.Visible = true;
+                }
+            }
+            ProjectDataStorage.Write(db, tr, LeftoverRecord, new List<string>());
+        }
+
+        // Details of the concrete machine room that stand outside the tower: the wall-opening symbol left of the shaft (tagged with
+        // the governor in the master): lines and polylines of the governor assembly further than 450 mm outside the left face.
+        static List<string> HideLeftovers(Database db, Transaction tr, ShaftFrame frame)
+        {
+            var keys = new List<string>();
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null || tag[1] != "governor" || !tag[0].StartsWith("MachineRoom.", StringComparison.Ordinal) || !e.Visible)
+                    continue;
+                if (!(e is Line) && !(e is Polyline))
+                    continue;
+                Extents3d box;
+                try
+                {
+                    box = e.GeometricExtents;
+                }
+                catch (Autodesk.AutoCAD.Runtime.Exception)
+                {
+                    continue;
+                }
+                double x1 = Math.Max(frame.Local(box.MinPoint).X, frame.Local(box.MaxPoint).X);
+                if (x1 < -450)
+                {
+                    e.UpgradeOpen();
+                    e.Visible = false;
+                    keys.Add(tag[0]);
+                }
+            }
+            return keys;
         }
 
         /// <summary>Draws the top of the tower in place of the machine room (call after the machine-room update).</summary>
         public static void DrawMachineRoom(Database db, Transaction tr, ShaftFrame frame, SteelStructure st)
         {
             Hide(db, tr, "MachineRoom.", MachineRoomRoles, MachineRoomKeys);
+            var left = HideLeftovers(db, tr, frame);
+            ProjectDataStorage.Write(db, tr, LeftoverRecord, left);
             var w = new Writer(db, tr, MachineRoomPrefix, "MachineRoom", (u, v) => frame.World(new Point3d(u, v, 0)));
             var top = st.TowerTop;
             PlanTower(w, st, top.Columns, top.Beams, false);
-            // under the tower, clear of the dimensions and the labels
-            double x = top.Outline.X0, y = top.Outline.Y0 - 450;
-            w.Text(x, y, PlanTextHeight, "CONTROLLER AND SWITCHES AT THE TOP FLOOR,");
-            w.Text(x, y - PlanTextHeight * 1.6, PlanTextHeight, "RIGHT OF THE DOOR AS SEEN FROM THE LANDING");
+            // the title of the view: the sheet writes its scale into it, as into the other titles
+            var title = w.Text(st.Inputs.WidthMm / 2, top.Outline.Y0 - 750, PlanTextHeight * 2, "{\\Fcent|c0;\\L\\C6;TOWER TOP 1:10}");
+            title.Attachment = AttachmentPoint.TopCenter;
         }
 
         // ---------- section B-B (the machine on the steel top frame) ----------
@@ -481,6 +538,9 @@ namespace Elevator.AutoCAD.Steel
             if (key.StartsWith(AAPrefix, StringComparison.Ordinal))
                 return false;
             if (AAKeyPrefixes.Any(p => key.StartsWith(p, StringComparison.Ordinal)))
+                return true;
+            // the machine-room label and the hoisting hook of the concrete ceiling
+            if (key.StartsWith("SectionAA.MR.Hook.", StringComparison.Ordinal) || key == "SectionAA.MR.Room.Label")
                 return true;
             if (key.StartsWith("SectionAA.Floor.", StringComparison.Ordinal))
                 return key.Contains(".Slab.");

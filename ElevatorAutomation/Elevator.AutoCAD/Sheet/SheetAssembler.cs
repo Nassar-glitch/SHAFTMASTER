@@ -59,7 +59,10 @@ namespace Elevator.AutoCAD.Sheet
                     layoutId = CreateLayout(db, layoutName);
                     CloneTemplate(db, src, layoutName, layoutId);
                     if (request.SteelStructure)
+                    {
                         SteelLegend(db, layoutId);
+                        HideConcreteDetails(db, details, request.DoorType);
+                    }
                 }
             }
             catch
@@ -239,6 +242,146 @@ namespace Elevator.AutoCAD.Sheet
         // A steel shaft: the two masonry notes of the title block (English and Arabic, "all dimensions are for finished masonry") do not
         // apply and are left out; a STEEL entry is added to the legend in the place they leave. The template is not edited.
         const double NoteX0 = 1021, NoteX1 = 1170, NoteY0 = 566, NoteY1 = 591;
+
+        // A steel shaft: the reference details that show a concrete shaft are left out until their steel versions are drawn: the rail
+        // bracket anchored in concrete ("SIDE - GUIDE RAIL", below the fish plate) and the door section C-C (the concrete wall). The
+        // entities stay in the drawing, hidden; the arrangement measures what is visible.
+        static void HideConcreteDetails(Database db, SheetDetailsFile details, string doorType)
+        {
+            bool manual = String.IsNullOrWhiteSpace(doorType) || String.Equals(doorType, DoorTypesManual, StringComparison.OrdinalIgnoreCase);
+            var fish = details.Details.FirstOrDefault(d => d.Name == "FISH_PLATE");
+            var door = details.Details.FirstOrDefault(d => d.Name == (manual ? "DOOR_SWING" : "DOOR_AUTOMATIC"));
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+                var entities = new List<Entity>();
+                foreach (ObjectId id in model)
+                {
+                    var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (e != null && e.Visible && SectionAADrawing.Tag(e) == null)
+                        entities.Add(e);
+                }
+                // The door detail holds two views side by side, VIEW at D-D and SEC. C-C, each with its title. The section starts after
+                // the widest empty stretch (of the centres of the entities) between the two titles.
+                double split = Double.NaN;
+                if (door != null)
+                {
+                    var w = door.Window;
+                    var titles = new List<double>();
+                    foreach (var e in entities.OfType<MText>())
+                    {
+                        string t = e.Contents ?? "";
+                        if (e.Location.X >= w[0] && e.Location.X <= w[2] && e.Location.Y >= w[1] && e.Location.Y <= w[3] && (t.Contains("D-D") || t.Contains("C-C")))
+                            titles.Add(e.Location.X);
+                    }
+                    if (titles.Count >= 2)
+                    {
+                        double lo = titles.Min(), hi = titles.Max();
+                        var centres = new List<double>();
+                        foreach (var e in entities)
+                        {
+                            try
+                            {
+                                var box = e.GeometricExtents;
+                                double cx = (box.MinPoint.X + box.MaxPoint.X) / 2, cy = (box.MinPoint.Y + box.MaxPoint.Y) / 2;
+                                if (cx > lo && cx < hi && cy >= w[1] && cy <= w[3])
+                                    centres.Add(cx);
+                            }
+                            catch (Autodesk.AutoCAD.Runtime.Exception)
+                            {
+                            }
+                        }
+                        centres.Sort();
+                        double best = 0;
+                        for (int i = 1; i < centres.Count; i++)
+                        {
+                            if (centres[i] - centres[i - 1] > best)
+                            {
+                                best = centres[i] - centres[i - 1];
+                                split = (centres[i] + centres[i - 1]) / 2;
+                            }
+                        }
+                    }
+                }
+                // The right edge of the door of VIEW at D-D: the tall entities (frame, leaf) left of the split. What lies right of it
+                // belongs to the section: its cut marks, its trace and the section itself.
+                double frameRight = Double.NaN, doorBottom = Double.NaN, doorTop = Double.NaN;
+                if (door != null && !Double.IsNaN(split))
+                {
+                    foreach (var e in entities)
+                    {
+                        try
+                        {
+                            var box = e.GeometricExtents;
+                            double cx = (box.MinPoint.X + box.MaxPoint.X) / 2, cy = (box.MinPoint.Y + box.MaxPoint.Y) / 2;
+                            if (cx < split && cx >= door.Window[0] && cy >= door.Window[1] && cy <= door.Window[3] && box.MaxPoint.Y - box.MinPoint.Y > 1000)
+                            {
+                                frameRight = Double.IsNaN(frameRight) ? box.MaxPoint.X : Math.Max(frameRight, box.MaxPoint.X);
+                                doorBottom = Double.IsNaN(doorBottom) ? box.MinPoint.Y : Math.Min(doorBottom, box.MinPoint.Y);
+                                doorTop = Double.IsNaN(doorTop) ? box.MaxPoint.Y : Math.Max(doorTop, box.MaxPoint.Y);
+                            }
+                        }
+                        catch (Autodesk.AutoCAD.Runtime.Exception)
+                        {
+                        }
+                    }
+                }
+                foreach (var e in entities)
+                {
+                    Extents3d box;
+                    try
+                    {
+                        box = e.GeometricExtents;
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                        continue;
+                    }
+                    double cx = (box.MinPoint.X + box.MaxPoint.X) / 2, cy = (box.MinPoint.Y + box.MaxPoint.Y) / 2;
+                    bool hide = false;
+                    if (fish != null && cx >= fish.Window[0] && cx <= fish.Window[2] && cy >= fish.Window[1] && cy < 1000)
+                        hide = true;
+                    if (door != null && !Double.IsNaN(split) && cx >= door.Window[0] && cx <= door.Window[2] && cy >= door.Window[1] && cy <= door.Window[3])
+                    {
+                        bool longLine = box.MaxPoint.X - box.MinPoint.X > 800 && box.MaxPoint.Y - box.MinPoint.Y < 5;
+                        if (longLine && !Double.IsNaN(frameRight) && box.MinPoint.X < frameRight)
+                        {
+                            // the floor line of the door runs on under the section: it ends a little beyond the door
+                            var ln = e as Line;
+                            if (ln != null)
+                            {
+                                e.UpgradeOpen();
+                                if (ln.StartPoint.X > ln.EndPoint.X)
+                                    ln.StartPoint = new Point3d(frameRight + 150, ln.StartPoint.Y, ln.StartPoint.Z);
+                                else
+                                    ln.EndPoint = new Point3d(frameRight + 150, ln.EndPoint.Y, ln.EndPoint.Z);
+                            }
+                            var pl = e as Polyline;
+                            if (pl != null && pl.NumberOfVertices == 2)
+                            {
+                                e.UpgradeOpen();
+                                int right = pl.GetPoint2dAt(0).X > pl.GetPoint2dAt(1).X ? 0 : 1;
+                                var v = pl.GetPoint2dAt(right);
+                                pl.SetPointAt(right, new Point2d(frameRight + 150, v.Y));
+                            }
+                        }
+                        else if (cx > split || (!Double.IsNaN(frameRight) && cx > frameRight + 1))
+                            hide = true;
+                        // the cut marks of the section C-C above and below the door view (arrows, the letter, the trace)
+                        else if (!Double.IsNaN(doorTop) && (cy > doorTop + 600 || cy < doorBottom - 200) && !longLine && !(e is MText))
+                            hide = true;
+                    }
+                    if (hide)
+                    {
+                        e.UpgradeOpen();
+                        e.Visible = false;
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
+        const string DoorTypesManual = "Manual";
 
         static void SteelLegend(Database db, ObjectId layoutId)
         {
@@ -559,8 +702,10 @@ namespace Elevator.AutoCAD.Sheet
         {
             if (key == null)
                 return null;
-            if (key.StartsWith("MachineRoomSection.", StringComparison.Ordinal))
+            if (key.StartsWith("MachineRoomSection.", StringComparison.Ordinal) || key.StartsWith("Steel.Section.", StringComparison.Ordinal))
                 return "Section B-B";
+            if (key.StartsWith("Steel.MachineRoom.", StringComparison.Ordinal))
+                return "Machine-room plan";
             if (key.StartsWith("MachineRoom.", StringComparison.Ordinal))
                 return "Machine-room plan";
             if (key.StartsWith("SectionAA.", StringComparison.Ordinal))
@@ -629,6 +774,8 @@ namespace Elevator.AutoCAD.Sheet
                     // untagged: a title text of a reference detail (underlined, inside its window)
                     if (tag != null && tag.Length > 0)
                         continue;
+                    if (!mt.Visible)
+                        continue; // a detail left out of this sheet
                     foreach (var d in details)
                     {
                         var w = d.Value.Window;
