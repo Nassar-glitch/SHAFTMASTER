@@ -93,7 +93,7 @@ def main():
         rects = [e for e in plan if closed_poly(e, 4)]
         circles = [e for e in plan if e.dxftype() == "CIRCLE"]
         check(len(cols) == 4, case + ": the plan has four column sections (" + str(len(cols)) + ")")
-        check(len(rects) == 9, case + ": four base plates, four ring beams and the controller cabinet in plan (" + str(len(rects)) + ")")
+        check(len(rects) == 8, case + ": four base plates and four ring beams in plan (" + str(len(rects)) + ")")
         check(len(circles) == 4 * bolts, case + ": " + str(4 * bolts) + " bolt circles in plan (" + str(len(circles)) + ")")
         check(sum(1 for e in plan if e.dxftype() == "HATCH") == 4, case + ": four solid column sections")
         check(any(e.dxftype() == "MTEXT" and tower["Column"] in e.text and "STEEL COLUMN" in e.text for e in plan), case + ": the plan names the column profile")
@@ -101,7 +101,9 @@ def main():
         walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]
         check(len(walls) > 0 and all(invisible(e) for e in walls), case + ": the template walls of the plan are hidden (" + str(len(walls)) + ")")
         # ---- machine-room plan ----
-        mr = [e for e, t in tagged if t[0].startswith("Steel.MachineRoom.")]
+        mr_all = [(e, t) for e, t in tagged if t[0].startswith("Steel.MachineRoom.")]
+        mr = [e for e, t in mr_all if not t[0].startswith("Steel.MachineRoom.Controller.")]
+        controller = [e for e, t in mr_all if t[0].startswith("Steel.MachineRoom.Controller.")]
         check(sum(1 for e in mr if closed_poly(e, 8)) == 4, case + ": the machine-room plan has the four column sections")
         check(sum(1 for e in mr if closed_poly(e, 4)) == 4, case + ": and the four ring beams")
         check(not any(e.dxftype() == "CIRCLE" for e in mr), case + ": no base plate bolts at the tower top")
@@ -109,7 +111,22 @@ def main():
         check(len(room) > 0 and all(invisible(e) for e in room), case + ": the room walls are hidden")
         check(any(e.dxftype() == "MTEXT" and "TOWER TOP" in e.text and "1:" in e.text for e in mr), case + ": the tower-top plan has its title with the scale")
         check(not any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": no long controller note")
-        check(any(e.dxftype() == "MTEXT" and "CONTROLLER" in e.text for e in plan), case + ": the plan has the controller symbol label")
+        check(not any(e.dxftype() == "MTEXT" and "CONTROLLER" in e.text for e in plan), case + ": no controller on the shaft plan")
+        check(any(e.dxftype() == "MTEXT" and "CONTROLLER AT TOP FLOOR" in e.text for e in controller), case + ": the tower-top plan labels the controller")
+        check(sum(1 for e in controller if e.dxftype() == "LWPOLYLINE") >= 10, case + ": the control panel symbol is drawn on the tower-top plan")
+        cols8 = [e for e in mr if closed_poly(e, 8)]
+        ring = [e for e in mr if closed_poly(e, 4)]
+        if cols8 and ring and controller:
+            ex0 = min(min(p[0] for p in e.get_points()) for e in cols8)
+            ex1 = max(max(p[0] for p in e.get_points()) for e in cols8)
+            ey0 = min(min(p[1] for p in e.get_points()) for e in cols8)
+            ey1 = max(max(p[1] for p in e.get_points()) for e in cols8)
+            inside = all(min(p[0] for p in e.get_points()) >= ex0 - 0.5 and max(p[0] for p in e.get_points()) <= ex1 + 0.5
+                         and min(p[1] for p in e.get_points()) >= ey0 - 0.5 and max(p[1] for p in e.get_points()) <= ey1 + 0.5 for e in ring)
+            check(inside, case + ": the ring beams lie within the column envelope")
+            flush = [any(abs(min(p[0] for p in e.get_points()) - ex0) < 0.5 for e in ring), any(abs(max(p[0] for p in e.get_points()) - ex1) < 0.5 for e in ring),
+                     any(abs(min(p[1] for p in e.get_points()) - ey0) < 0.5 for e in ring), any(abs(max(p[1] for p in e.get_points()) - ey1) < 0.5 for e in ring)]
+            check(all(flush), case + ": a beam is flush with the outer column face on every side")
         hidden_leftovers = [e for e, t in tagged if t[1] == "governor" and invisible(e)]
         check(len(hidden_leftovers) > 0, case + ": the wall-opening leftover of the concrete room is hidden (" + str(len(hidden_leftovers)) + ")")
         # ---- B-B ----

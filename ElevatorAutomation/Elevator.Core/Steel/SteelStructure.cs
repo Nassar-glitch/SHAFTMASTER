@@ -333,12 +333,14 @@ namespace Elevator.Core.Steel
         List<SteelBeamPlan> MakeRing()
         {
             var i = Inputs;
-            double bb = i.Beam.WidthMm, w = i.WidthMm, d = i.DepthMm;
+            // The beams lie within the column envelope, flush with the outer faces of the columns: one flat outer face on every side
+            // (column and beam), which is fixed directly to the facade of the building. The run is between the columns.
+            double bb = i.Beam.WidthMm, w = i.WidthMm, d = i.DepthMm, cw = i.Column.WidthMm, ch = i.Column.HeightMm;
             var ring = new List<SteelBeamPlan>();
-            ring.Add(new SteelBeamPlan { Face = "Front", Profile = i.Beam.Name, Box = new SteelRect(0, -bb, w, 0), CenterLine = new SteelSegment(0, -bb / 2, w, -bb / 2) });
-            ring.Add(new SteelBeamPlan { Face = "Back", Profile = i.Beam.Name, Box = new SteelRect(0, d, w, d + bb), CenterLine = new SteelSegment(0, d + bb / 2, w, d + bb / 2) });
-            ring.Add(new SteelBeamPlan { Face = "Left", Profile = i.Beam.Name, Box = new SteelRect(-bb, 0, 0, d), CenterLine = new SteelSegment(-bb / 2, 0, -bb / 2, d) });
-            ring.Add(new SteelBeamPlan { Face = "Right", Profile = i.Beam.Name, Box = new SteelRect(w, 0, w + bb, d), CenterLine = new SteelSegment(w + bb / 2, 0, w + bb / 2, d) });
+            ring.Add(new SteelBeamPlan { Face = "Front", Profile = i.Beam.Name, Box = new SteelRect(0, -ch, w, -ch + bb), CenterLine = new SteelSegment(0, -ch + bb / 2, w, -ch + bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Back", Profile = i.Beam.Name, Box = new SteelRect(0, d + ch - bb, w, d + ch), CenterLine = new SteelSegment(0, d + ch - bb / 2, w, d + ch - bb / 2) });
+            ring.Add(new SteelBeamPlan { Face = "Left", Profile = i.Beam.Name, Box = new SteelRect(-cw, 0, -cw + bb, d), CenterLine = new SteelSegment(-cw + bb / 2, 0, -cw + bb / 2, d) });
+            ring.Add(new SteelBeamPlan { Face = "Right", Profile = i.Beam.Name, Box = new SteelRect(w + cw - bb, 0, w + cw, d), CenterLine = new SteelSegment(w + cw - bb / 2, 0, w + cw - bb / 2, d) });
             return ring;
         }
 

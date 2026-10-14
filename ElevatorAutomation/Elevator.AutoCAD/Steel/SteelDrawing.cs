@@ -216,6 +216,15 @@ namespace Elevator.AutoCAD.Steel
                 return Poly(new[] { new[] { u0, v0 }, new[] { u1, v0 }, new[] { u1, v1 }, new[] { u0, v1 } }, true);
             }
 
+            /// <summary>Adds a displaced copy of an existing entity.</summary>
+            public T Copy<T>(T source, Matrix3d move) where T : Entity
+            {
+                var e = (T)source.Clone();
+                e.TransformBy(move);
+                e.Visible = true;
+                return Add(e);
+            }
+
             public Line Seg(double u0, double v0, double u1, double v1)
             {
                 return Add(new Line(world(u0, v0), world(u1, v1)));
@@ -306,13 +315,6 @@ namespace Elevator.AutoCAD.Steel
             var f = s.Frame;
             var w = new Writer(db, tr, PlanPrefix, "steel", (u, v) => f.World(new Point3d(u, v, 0)));
             PlanTower(w, st, st.Plan.Columns, st.Plan.Beams, true);
-            // the controller and the switches are at the top floor, right of the door as seen from the landing: a cabinet outside the
-            // entrance, right of the tower
-            double x0 = st.Inputs.WidthMm + 450, y0 = -450, cw = 300, ch = 150;
-            w.Rect(x0, y0, x0 + cw, y0 + ch);
-            w.Seg(x0, y0, x0 + cw, y0 + ch);
-            w.Seg(x0, y0 + ch, x0 + cw, y0);
-            w.Text(x0 + cw + 60, y0 + ch, PlanTextHeight, "CONTROLLER");
         }
 
         // The columns (solid sections), the base plates with their bolts and the beam ring, in plan; labels in the style of the guide-rail
@@ -323,15 +325,14 @@ namespace Elevator.AutoCAD.Steel
             {
                 w.Rect(b.Box.X0, b.Box.Y0, b.Box.X1, b.Box.Y1);
                 // the web: a line on the outer face of the channel
-                var c = b.CenterLine;
-                if (Math.Abs(c.Y0 - c.Y1) < 1e-6)
+                if (b.Face == "Front" || b.Face == "Back")
                 {
-                    double outer = c.Y0 < 0 ? b.Box.Y0 + st.Inputs.Beam.WebMm : b.Box.Y1 - st.Inputs.Beam.WebMm;
+                    double outer = b.Face == "Front" ? b.Box.Y0 + st.Inputs.Beam.WebMm : b.Box.Y1 - st.Inputs.Beam.WebMm;
                     w.Seg(b.Box.X0, outer, b.Box.X1, outer);
                 }
                 else
                 {
-                    double outer = c.X0 < 0 ? b.Box.X0 + st.Inputs.Beam.WebMm : b.Box.X1 - st.Inputs.Beam.WebMm;
+                    double outer = b.Face == "Left" ? b.Box.X0 + st.Inputs.Beam.WebMm : b.Box.X1 - st.Inputs.Beam.WebMm;
                     w.Seg(outer, b.Box.Y0, outer, b.Box.Y1);
                 }
             }
@@ -443,9 +444,48 @@ namespace Elevator.AutoCAD.Steel
             var w = new Writer(db, tr, MachineRoomPrefix, "MachineRoom", (u, v) => frame.World(new Point3d(u, v, 0)));
             var top = st.TowerTop;
             PlanTower(w, st, top.Columns, top.Beams, false);
+            DrawController(db, tr, frame, top);
             // the title of the view: the sheet writes its scale into it, as into the other titles
             var title = w.Text(st.Inputs.WidthMm / 2, top.Outline.Y0 - 750, PlanTextHeight * 2, "{\\Fcent|c0;\\L\\C6;TOWER TOP 1:10}");
             title.Attachment = AttachmentPoint.TopCenter;
+        }
+
+        const string ControllerPrefix = "Steel.MachineRoom.Controller.";
+
+        // The control panel of the concrete machine room (the same drawing symbol, copied) beside the tower top on the door side, right
+        // of the door as seen from the landing, with its short label.
+        static void DrawController(Database db, Transaction tr, ShaftFrame frame, SteelTowerTop top)
+        {
+            var symbol = new List<Polyline>();
+            double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = tr.GetObject(id, OpenMode.ForRead) as Polyline;
+                if (e == null)
+                    continue;
+                var tag = Tag(e);
+                if (tag == null || tag[1] != "panel" || !tag[0].StartsWith("MachineRoom.ControlPanel.", StringComparison.Ordinal))
+                    continue;
+                symbol.Add(e);
+                var box = e.GeometricExtents;
+                var a = frame.Local(box.MinPoint);
+                var b = frame.Local(box.MaxPoint);
+                minX = Math.Min(minX, Math.Min(a.X, b.X));
+                maxX = Math.Max(maxX, Math.Max(a.X, b.X));
+                minY = Math.Min(minY, Math.Min(a.Y, b.Y));
+                maxY = Math.Max(maxY, Math.Max(a.Y, b.Y));
+            }
+            if (symbol.Count == 0)
+                return;
+            // the symbol stands 300 mm right of the tower, on the door side, just in front of the front face and clear of the dimension rows
+            double x0 = top.Outline.X1 + 300, y0 = top.Outline.Y0 - 150 - (maxY - minY);
+            var w = new Writer(db, tr, ControllerPrefix, "controller", (u, v) => frame.World(new Point3d(u, v, 0)));
+            double dx = x0 - minX, dy = y0 - minY;
+            var move = Matrix3d.Displacement(frame.World(new Point3d(dx, dy, 0)) - frame.World(new Point3d(0, 0, 0)));
+            foreach (var e in symbol)
+                w.Copy(e, move);
+            double labelU = x0 + (maxX - minX) + 80, labelV = y0 + (maxY - minY) / 2 + PlanTextHeight / 2;
+            w.Text(labelU, labelV, PlanTextHeight, "CONTROLLER AT TOP FLOOR");
         }
 
         // ---------- section B-B (the machine on the steel top frame) ----------
@@ -481,9 +521,11 @@ namespace Elevator.AutoCAD.Steel
             var beam = st.Inputs.Beam;
             var col = st.Inputs.Column;
             double zTop = machineBeamBottom, zBottom = machineBeamBottom - beam.HeightMm;
-            // front beam: x 0..flange width, web on the outside (+x); back beam mirrored about the back face (x = -depth)
-            ChannelSection(w, beam.WidthMm, 0, zBottom, zTop, beam.WebMm, beam.FlangeMm);
-            ChannelSection(w, -depth - beam.WidthMm, -depth, zBottom, zTop, beam.WebMm, beam.FlangeMm);
+            // the beams are flush with the outer faces of the columns: the front beam from the column depth less the flange width to the
+            // column depth, web on the outside (+x); the back beam mirrored about the back column face
+            double outerFront = col.HeightMm, outerBack = -depth - col.HeightMm;
+            ChannelSection(w, outerFront, outerFront - beam.WidthMm, zBottom, zTop, beam.WebMm, beam.FlangeMm);
+            ChannelSection(w, outerBack, outerBack + beam.WidthMm, zBottom, zTop, beam.WebMm, beam.FlangeMm);
             // column stubs below the beams with a break
             double stub = 500, zFoot = zBottom - stub;
             double[][] columns = { new[] { 0.0, col.HeightMm }, new[] { -depth - col.HeightMm, -depth } };
@@ -496,7 +538,7 @@ namespace Elevator.AutoCAD.Steel
                 w.Seg(c[0] + (c[1] - c[0]) * 0.65, zFoot + 40, c[1], zFoot);
             }
             w.Label(col.HeightMm / 2, zFoot + stub / 2, col.HeightMm + 250, zFoot + stub / 2, ElevationTextHeight / 1.5, col.Name + " STEEL COLUMN");
-            w.LabelLeft(-depth - beam.WidthMm, zTop - beam.HeightMm / 2, -depth - 700, zTop - beam.HeightMm / 2 - 300, ElevationTextHeight / 1.5, beam.Name + " STEEL BEAM");
+            w.LabelLeft(outerBack, zTop - beam.HeightMm / 2, outerBack - 700, zTop - beam.HeightMm / 2 - 300, ElevationTextHeight / 1.5, beam.Name + " STEEL BEAM");
         }
 
         // ---------- section A-A (the tower elevation) ----------
@@ -594,13 +636,14 @@ namespace Elevator.AutoCAD.Steel
             // the beams of the entrance and the back faces seen end-on
             foreach (var other in st.Faces.Where(x => x.Name == "Front" || x.Name == "Back"))
             {
-                double bw = i.Beam.WidthMm;
+                // flush with the outer face of the columns of that face
+                double bw = i.Beam.WidthMm, ch = i.Column.HeightMm;
                 foreach (var b in other.Beams)
                 {
                     if (other.Name == "Front")
-                        w.Rect(0, b.Z0, bw, b.Z1);
+                        w.Rect(ch - bw, b.Z0, ch, b.Z1);
                     else
-                        w.Rect(-len - bw, b.Z0, -len, b.Z1);
+                        w.Rect(-len - ch, b.Z0, -len - ch + bw, b.Z1);
                 }
             }
             // bracing: both diagonals in every panel, between the beams

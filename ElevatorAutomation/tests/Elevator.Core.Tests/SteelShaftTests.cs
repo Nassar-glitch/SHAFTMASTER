@@ -511,6 +511,38 @@ namespace Elevator.Core.Tests
         }
 
         [Fact]
+        public void Beams_are_flush_with_the_outer_faces_of_the_columns_one_flat_face_per_side_and_nothing_outside_the_envelope_but_the_plates()
+        {
+            foreach (var top in new[] { false, true })
+            {
+                var s = Build(SteelProject(3000, 3000));
+                var columns = top ? s.TowerTop.Columns : s.Plan.Columns;
+                var beams = top ? s.TowerTop.Beams : s.Plan.Beams;
+                var env = new SteelRect(columns.Min(c => c.Box.X0), columns.Min(c => c.Box.Y0), columns.Max(c => c.Box.X1), columns.Max(c => c.Box.Y1));
+                // the envelope is the rectangle of the columns: the clear size plus the column on each side
+                Assert.Equal(s.Plan.Clear.Width + 2 * 60, env.Width, 6);
+                Assert.Equal(s.Plan.Clear.Height + 2 * 140, env.Height, 6);
+                var front = beams.Single(b => b.Face == "Front"); var back = beams.Single(b => b.Face == "Back");
+                var left = beams.Single(b => b.Face == "Left"); var right = beams.Single(b => b.Face == "Right");
+                Assert.Equal(env.Y0, front.Box.Y0, 6);          // outer face of the beam = outer face of the column on every side
+                Assert.Equal(env.Y1, back.Box.Y1, 6);
+                Assert.Equal(env.X0, left.Box.X0, 6);
+                Assert.Equal(env.X1, right.Box.X1, 6);
+                foreach (var b in beams)
+                {
+                    Assert.True(b.Box.X0 >= env.X0 - 1e-9 && b.Box.X1 <= env.X1 + 1e-9 && b.Box.Y0 >= env.Y0 - 1e-9 && b.Box.Y1 <= env.Y1 + 1e-9,
+                        b.Face + " beam must lie within the envelope");
+                    Assert.False(b.Box.Overlaps(s.Plan.Clear), b.Face + " beam stays outside the clear rectangle");
+                }
+                foreach (var c in columns)
+                    Assert.True(c.Outline.All(pt => pt.X >= env.X0 - 1e-9 && pt.X <= env.X1 + 1e-9 && pt.Y >= env.Y0 - 1e-9 && pt.Y <= env.Y1 + 1e-9));
+            }
+            // only the base plates (and the concrete base) project beyond the envelope
+            var plan = Build(SteelProject(3000, 3000)).Plan;
+            Assert.True(plan.PlateFootprint.X0 < plan.Columns.Min(c => c.Box.X0) && plan.PlateFootprint.Y1 > plan.Columns.Max(c => c.Box.Y1));
+        }
+
+        [Fact]
         public void Elevation_has_columns_beams_at_the_levels_and_braces_only_in_panels_never_on_the_entrance_face()
         {
             var s = Build(SteelProject(3000, 3000));
