@@ -16,6 +16,8 @@ namespace Elevator.Core.Steel
     ""BoltCount"": 4, ""BoltDiameterMm"": 20, ""BoltPitchMm"": 120,
     ""GussetLengthMm"": 400, ""GussetWidthMm"": 250, ""GussetThicknessMm"": 6,
     ""SteelGrade"": ""St 37"",
+    ""SlabEdgeDepthMm"": 250, ""SlabEdgeSideMm"": 850,
+    ""HousingHeightMm"": 1950, ""HousingOverhangMm"": 160, ""HousingWallMm"": 50, ""HousingRoofMm"": 50,
     ""Base"": { ""MarginMm"": 200, ""ThicknessMm"": 250, ""BarDiameterMm"": 8, ""BarSpacingMm"": 120, ""CoverMm"": 50 },
     ""Channels"": [
       { ""Name"": ""UPN 80"", ""HeightMm"": 80, ""WidthMm"": 45, ""WebMm"": 6, ""FlangeMm"": 8, ""RootRadiusMm"": 8, ""AreaCm2"": 11.0, ""MassKgPerM"": 8.64, ""IxCm4"": 106, ""WxCm3"": 26.5, ""IyCm4"": 19.4, ""WyCm3"": 6.36, ""EccentricityMm"": 14.5, ""Check"": ""e"" },

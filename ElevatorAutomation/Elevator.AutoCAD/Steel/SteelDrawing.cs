@@ -144,6 +144,25 @@ namespace Elevator.AutoCAD.Steel
             }
         }
 
+        /// <summary>The layer (switched off, not plotted) of the concrete-room entities the steel tower replaces and that the machine-room audit needs visible.</summary>
+        public const string HiddenLayer = "Steel.Hidden";
+
+        public static bool OffLayer(Entity e)
+        {
+            return e.Layer == HiddenLayer;
+        }
+
+        static void EnsureHiddenLayer(Database db, Transaction tr)
+        {
+            var lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+            if (lt.Has(HiddenLayer))
+                return;
+            lt.UpgradeOpen();
+            var l = new LayerTableRecord { Name = HiddenLayer, IsOff = true, IsPlottable = false };
+            lt.Add(l);
+            tr.AddNewlyCreatedDBObject(l, true);
+        }
+
         static void EnsureLayer(Database db, Transaction tr)
         {
             var lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
@@ -216,6 +235,12 @@ namespace Elevator.AutoCAD.Steel
             public Polyline Rect(double u0, double v0, double u1, double v1)
             {
                 return Poly(new[] { new[] { u0, v0 }, new[] { u1, v0 }, new[] { u1, v1 }, new[] { u0, v1 } }, true);
+            }
+
+            /// <summary>Adds an entity built by the caller (it is placed on the steel layer and tagged).</summary>
+            public T Adopt<T>(T entity) where T : Entity
+            {
+                return Add(entity);
             }
 
             /// <summary>Adds a displaced copy of an existing entity.</summary>
@@ -308,6 +333,81 @@ namespace Elevator.AutoCAD.Steel
         public static void ClearPlan(Database db, Transaction tr)
         {
             Clear(db, tr, PlanPrefix, "Plan.", PlanRoles);
+            RestoreFrontRows(db, tr);
+        }
+
+        const string FrontRowsRecord = "SteelPlanFrontRows";
+
+        static bool IsFrontRowKey(string key)
+        {
+            return key.StartsWith("Plan.Dimension.", StringComparison.Ordinal) || key.StartsWith("Plan.CenterFront.", StringComparison.Ordinal);
+        }
+
+        // The dimension rows and the title below the front face move down clear of the building slab edge (the slab edge stands directly
+        // outside the front beam). The moved keys and the distance are kept so that Clear puts them back.
+        static void ShiftFrontRows(Database db, Transaction tr, ShaftFrame f, SteelStructure st)
+        {
+            var moved = new List<Entity>();
+            double nearest = double.NegativeInfinity;
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null || !e.Visible || !IsFrontRowKey(tag[0]))
+                    continue;
+                Extents3d box;
+                try
+                {
+                    box = e.GeometricExtents;
+                }
+                catch (Autodesk.AutoCAD.Runtime.Exception)
+                {
+                    continue;
+                }
+                double y1 = Math.Max(f.Local(box.MinPoint).Y, f.Local(box.MaxPoint).Y);
+                if (y1 > 1)
+                    continue;
+                moved.Add(e);
+                var d = e as RotatedDimension;
+                if (d != null && Math.Abs(Math.Sin(d.Rotation)) < 1e-6)
+                    nearest = Math.Max(nearest, f.Local(d.DimLinePoint).Y);
+            }
+            if (moved.Count == 0 || Double.IsNegativeInfinity(nearest))
+                return;
+            double target = -(st.Inputs.Beam.WidthMm + st.Inputs.SlabEdgeDepthMm) - 30;
+            double delta = target - nearest;
+            if (delta > -0.5)
+                return;
+            var move = Matrix3d.Displacement(f.World(new Point3d(0, delta, 0)) - f.World(new Point3d(0, 0, 0)));
+            var keys = new List<string> { delta.ToString("R", CultureInfo.InvariantCulture) };
+            foreach (var e in moved)
+            {
+                e.UpgradeOpen();
+                e.TransformBy(move);
+                keys.Add(Tag(e)[0]);
+            }
+            ProjectDataStorage.Write(db, tr, FrontRowsRecord, keys);
+        }
+
+        static void RestoreFrontRows(Database db, Transaction tr)
+        {
+            var keys = ProjectDataStorage.Read<List<string>>(db, tr, FrontRowsRecord);
+            if (keys == null || keys.Count < 2)
+                return;
+            double delta = Double.Parse(keys[0], CultureInfo.InvariantCulture);
+            var set = new HashSet<string>(keys.Skip(1));
+            var frame = DrawingReader.Read(db, tr).Frame;
+            var move = Matrix3d.Displacement(frame.World(new Point3d(0, -delta, 0)) - frame.World(new Point3d(0, 0, 0)));
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null || !set.Contains(tag[0]))
+                    continue;
+                e.UpgradeOpen();
+                e.TransformBy(move);
+            }
+            ProjectDataStorage.Write(db, tr, FrontRowsRecord, new List<string>());
         }
 
         /// <summary>Draws the steel shaft in the plan (call after the plan update). The template walls are hidden.</summary>
@@ -315,8 +415,10 @@ namespace Elevator.AutoCAD.Steel
         {
             Hide(db, tr, "Plan.", PlanRoles);
             var f = s.Frame;
+            ShiftFrontRows(db, tr, f, st);
             var w = new Writer(db, tr, PlanPrefix, "steel", (u, v) => f.World(new Point3d(u, v, 0)));
             PlanTower(w, st, st.Plan.Columns, st.Plan.Beams, true);
+            w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
         }
 
         // The columns (solid sections), the base plates with their bolts and the beam ring, in plan; labels in the style of the guide-rail
@@ -366,7 +468,7 @@ namespace Elevator.AutoCAD.Steel
                 w.LabelLeft(fl.Box.X0, fl.Box.CenterY, fl.Box.X0 - 800, fl.Box.CenterY, PlanTextHeight, columnText);
                 w.LabelLeft(bl.Box.X0, bl.Box.CenterY, bl.Box.X0 - 800, bl.Box.CenterY, PlanTextHeight, columnText);
                 double lly = left.Box.Y0 + (left.Box.Y1 - left.Box.Y0) * 0.5;
-                w.LabelLeft(left.Box.X0, lly, left.Box.X0 - 1600, lly, PlanTextHeight, beamText);
+                w.LabelLeft(left.Box.X0, lly, left.Box.X0 - 560, lly, PlanTextHeight, beamText);
             }
             else
             {
@@ -408,11 +510,25 @@ namespace Elevator.AutoCAD.Steel
             var hidden = ProjectDataStorage.Read<List<string>>(db, tr, LeftoverRecord);
             if (hidden == null || hidden.Count == 0)
                 return;
+            var layers = new Dictionary<string, string>();
+            foreach (string h in hidden.Where(h => h.StartsWith("L|", StringComparison.Ordinal)))
+            {
+                string[] parts = h.Split('|');
+                layers[parts[1]] = parts[2];
+            }
             foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
             {
                 var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
                 var tag = Tag(e);
-                if (tag != null && !e.Visible && hidden.Contains(tag[0]))
+                if (tag == null)
+                    continue;
+                string layer;
+                if (layers.TryGetValue(tag[0], out layer) && e.Layer == HiddenLayer)
+                {
+                    e.UpgradeOpen();
+                    e.Layer = layer;
+                }
+                else if (!e.Visible && hidden.Contains(tag[0]))
                 {
                     e.UpgradeOpen();
                     e.Visible = true;
@@ -459,21 +575,242 @@ namespace Elevator.AutoCAD.Steel
         {
             Hide(db, tr, "MachineRoom.", MachineRoomRoles, MachineRoomKeys);
             var left = HideLeftovers(db, tr, frame);
+            left.AddRange(MachineWithinFootprint(db, tr, frame, st));
             ProjectDataStorage.Write(db, tr, LeftoverRecord, left);
             var w = new Writer(db, tr, MachineRoomPrefix, "MachineRoom", (u, v) => frame.World(new Point3d(u, v, 0)));
             var top = st.TowerTop;
             PlanTower(w, st, top.Columns, top.Beams, false);
-            DrawController(db, tr, frame, st, top);
+            w.Rect(st.SlabEdge.X0, st.SlabEdge.Y0, st.SlabEdge.X1, st.SlabEdge.Y1);
+            double lowest = DrawController(db, tr, frame, st, top);
+            GovernorDimension(db, tr, frame, w);
             // the title of the view: the sheet writes its scale into it, as into the other titles
-            var title = w.Text(st.Inputs.WidthMm / 2, top.Outline.Y0 - 750, PlanTextHeight * 2, "{\\Fcent|c0;\\L\\C6;TOWER TOP 1:10}");
+            var title = w.Text(st.Inputs.WidthMm / 2, Math.Min(lowest, st.SlabEdge.Y0) - 450, PlanTextHeight * 2, "{\\Fcent|c0;\\L\\C6;TOWER TOP 1:10}");
             title.Attachment = AttachmentPoint.TopCenter;
+        }
+
+        const string MachinePrefix = "Steel.MachineRoom.Machine.";
+
+        // The machine supports P1 to P4 and the machine beams of the master end on the walls (beyond the shaft). On a steel tower they
+        // stand on the ring beams inside the envelope: the support groups move in by the overshoot of the outermost one, so that its outer
+        // edge is on the outer face of the ring beam, and the machine beams are cut at the beam faces. The concrete-room entities are
+        // hidden (never edited) and copies are drawn; the hidden keys are returned for the record that Clear uses.
+        static List<string> MachineWithinFootprint(Database db, Transaction tr, ShaftFrame frame, SteelStructure st)
+        {
+            double bb = st.Inputs.Beam.WidthMm, depth = st.Inputs.DepthMm;
+            double inset = 10;
+            double lo = -bb + inset, hi = depth + bb - inset;
+            var groups = new Dictionary<string, List<Entity>>();
+            var beams = new List<Entity>();
+            var extents = new Dictionary<string, double[]>();
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null || !e.Visible || tag[1] != "machine")
+                    continue;
+                string[] parts = tag[0].Split('.');
+                if (parts.Length < 3 || parts[0] != "MachineRoom")
+                    continue;
+                if (parts[1] == "Support" && parts[2].Length == 2 && parts[2][0] == 'P')
+                {
+                    List<Entity> list;
+                    if (!groups.TryGetValue(parts[2], out list))
+                        groups[parts[2]] = list = new List<Entity>();
+                    list.Add(e);
+                    Extents3d box;
+                    try
+                    {
+                        box = e.GeometricExtents;
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                        continue;
+                    }
+                    double y0 = Math.Min(frame.Local(box.MinPoint).Y, frame.Local(box.MaxPoint).Y);
+                    double y1 = Math.Max(frame.Local(box.MinPoint).Y, frame.Local(box.MaxPoint).Y);
+                    double[] ex;
+                    if (!extents.TryGetValue(parts[2], out ex))
+                        extents[parts[2]] = ex = new[] { double.MaxValue, double.MinValue };
+                    ex[0] = Math.Min(ex[0], y0);
+                    ex[1] = Math.Max(ex[1], y1);
+                }
+                else if ((parts[1] == "Chassis" || parts[1] == "MachineChassis") && (e is Polyline || e is Line))
+                    beams.Add(e);
+            }
+            var hidden = new List<string>();
+            if (groups.Count == 0)
+                return hidden;
+            double overshoot = 0;
+            var front = new HashSet<string>();
+            foreach (var g in extents)
+            {
+                bool isFront = (g.Value[0] + g.Value[1]) / 2 < depth / 2;
+                if (isFront)
+                {
+                    front.Add(g.Key);
+                    overshoot = Math.Max(overshoot, -bb - g.Value[0]);
+                }
+                else
+                    overshoot = Math.Max(overshoot, g.Value[1] - (depth + bb));
+            }
+            var w = new Writer(db, tr, MachinePrefix, "machine", (u, v) => frame.World(new Point3d(u, v, 0)));
+            var origin = frame.World(new Point3d(0, 0, 0));
+            if (overshoot > 0.5)
+            {
+                foreach (var g in groups)
+                {
+                    double dy = front.Contains(g.Key) ? overshoot : -overshoot;
+                    var move = Matrix3d.Displacement(frame.World(new Point3d(0, dy, 0)) - origin);
+                    foreach (var e in g.Value)
+                    {
+                        w.Copy(e, move);
+                        hidden.Add(TakeOff(e));
+                    }
+                }
+            }
+            // the machine beams: cut at the ring beams
+            foreach (var e in beams)
+            {
+                var copy = CutAt(e, frame, lo, hi);
+                if (copy == null)
+                    continue;
+                w.Adopt(copy);
+                hidden.Add(TakeOff(e));
+            }
+            return hidden;
+        }
+
+        // Puts a concrete-room entity on the switched-off layer (it stays visible for the machine-room audit); returns its record entry.
+        static string TakeOff(Entity e)
+        {
+            string key = Tag(e)[0], layer = e.Layer;
+            var tr = e.Database.TransactionManager.TopTransaction;
+            EnsureHiddenLayer(e.Database, tr);
+            e.UpgradeOpen();
+            e.Layer = HiddenLayer;
+            return "L|" + key + "|" + layer;
+        }
+
+        // A copy of a polyline or line with its points clamped to y in [lo, hi] (local); null when nothing reaches beyond.
+        static Entity CutAt(Entity e, ShaftFrame frame, double lo, double hi)
+        {
+            var line = e as Line;
+            if (line != null)
+            {
+                var a = frame.Local(line.StartPoint);
+                var b = frame.Local(line.EndPoint);
+                if (a.Y >= lo - 1e-6 && a.Y <= hi + 1e-6 && b.Y >= lo - 1e-6 && b.Y <= hi + 1e-6)
+                    return null;
+                var copy = (Line)line.Clone();
+                copy.StartPoint = frame.World(new Point3d(a.X, Math.Max(lo, Math.Min(hi, a.Y)), a.Z));
+                copy.EndPoint = frame.World(new Point3d(b.X, Math.Max(lo, Math.Min(hi, b.Y)), b.Z));
+                copy.Visible = true;
+                return copy;
+            }
+            var pl = e as Polyline;
+            if (pl == null)
+                return null;
+            bool beyond = false;
+            for (int i = 0; i < pl.NumberOfVertices; i++)
+            {
+                double y = frame.Local(pl.GetPoint3dAt(i)).Y;
+                if (y < lo - 1e-6 || y > hi + 1e-6)
+                    beyond = true;
+            }
+            if (!beyond || pl.HasBulges)
+                return null;
+            var cp = (Polyline)pl.Clone();
+            for (int i = 0; i < cp.NumberOfVertices; i++)
+            {
+                var local = frame.Local(cp.GetPoint3dAt(i));
+                var world = frame.World(new Point3d(local.X, Math.Max(lo, Math.Min(hi, local.Y)), local.Z));
+                cp.SetPointAt(i, new Point2d(world.X, world.Y));
+            }
+            cp.Visible = true;
+            return cp;
+        }
+
+        // The dimension from the governor to the machine (the car centre line), below the governor, text placed by DimensionLayout.
+        static void GovernorDimension(Database db, Transaction tr, ShaftFrame frame, Writer w)
+        {
+            double gx0 = double.MaxValue, gx1 = double.MinValue, gy0 = double.MaxValue;
+            var centres = new Dictionary<double, int>();
+            double axisX = double.NaN, axisY0 = double.NaN;
+            RotatedDimension template = null;
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null)
+                    continue;
+                if (tag[1] == "governor" && tag[0].StartsWith("MachineRoom.", StringComparison.Ordinal) && e.Visible && (e is Line || e is Polyline))
+                {
+                    try
+                    {
+                        var box = e.GeometricExtents;
+                        var a = frame.Local(box.MinPoint);
+                        var b = frame.Local(box.MaxPoint);
+                        double x1 = Math.Max(a.X, b.X), x0 = Math.Min(a.X, b.X);
+                        if (x1 > 0 && x0 < 600)
+                        {
+                            gx0 = Math.Min(gx0, x0);
+                            gx1 = Math.Max(gx1, x1);
+                            gy0 = Math.Min(gy0, Math.Min(a.Y, b.Y));
+                            // the pulley of the governor: the polylines that share one centre
+                            if (e is Polyline && x1 - x0 > 40)
+                            {
+                                double c = Math.Round((x0 + x1) / 2 / 2) * 2;
+                                int n;
+                                centres[c] = centres.TryGetValue(c, out n) ? n + 1 : 1;
+                            }
+                        }
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                    }
+                }
+                if (tag[1] == "mainAxis" && tag[0] == "MachineRoom.Reference.ShaftCenterline")
+                {
+                    var line = e as Line;
+                    if (line != null)
+                    {
+                        axisX = frame.Local(line.StartPoint).X;
+                        axisY0 = Math.Min(frame.Local(line.StartPoint).Y, frame.Local(line.EndPoint).Y);
+                    }
+                }
+                if (template == null && e.Visible && e is RotatedDimension && tag[0].StartsWith("MachineRoom.Dimension.", StringComparison.Ordinal))
+                {
+                    var d = (RotatedDimension)e;
+                    if (Math.Abs(Math.Sin(d.Rotation)) < 1e-6)
+                        template = d;
+                }
+            }
+            if (gx0 > gx1 || Double.IsNaN(axisX) || template == null)
+                return;
+            double governorAxis = (gx0 + gx1) / 2;
+            if (centres.Count > 0)
+                governorAxis = centres.OrderByDescending(k => k.Value).First().Key;
+            var dim = (RotatedDimension)template.Clone();
+            double line0 = gy0 - 180;
+            dim.XLine1Point = frame.World(new Point3d(governorAxis, gy0, 0));
+            dim.XLine2Point = frame.World(new Point3d(axisX, gy0, 0));
+            dim.DimLinePoint = frame.World(new Point3d((governorAxis + axisX) / 2, line0, 0));
+            dim.DimensionText = "";
+            dim.Dimdec = 0;
+            double height = dim.Dimtxt;
+            string text = Math.Round(Math.Abs(axisX - governorAxis)).ToString(CultureInfo.InvariantCulture);
+            var place = Elevator.Core.Geometry.DimensionLayout.PlaceChainTexts(new[] { Math.Min(governorAxis, axisX), Math.Max(governorAxis, axisX) }, new[] { text }, height, dim.Dimasz, new List<double[]>());
+            var centre = new Point3d((governorAxis + axisX) / 2 + place[0].AlongMm, line0, 0);
+            dim.TextPosition = frame.World(new Point3d(centre.X, line0 + height * 0.75, 0));
+            dim.Visible = true;
+            w.Adopt(dim);
         }
 
         const string ControllerPrefix = "Steel.MachineRoom.Controller.";
 
         // The control panel of the concrete machine room (the same drawing symbol, copied) beside the tower top on the door side, right
         // of the door as seen from the landing, with its short label.
-        static void DrawController(Database db, Transaction tr, ShaftFrame frame, SteelStructure st, SteelTowerTop top)
+        static double DrawController(Database db, Transaction tr, ShaftFrame frame, SteelStructure st, SteelTowerTop top)
         {
             var symbol = new List<Polyline>();
             double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
@@ -495,12 +832,12 @@ namespace Elevator.AutoCAD.Steel
                 maxY = Math.Max(maxY, Math.Max(a.Y, b.Y));
             }
             if (symbol.Count == 0)
-                return;
+                return top.Outline.Y0;
             // The symbol stands in front of the entrance on the landing, right of the door as seen from the landing, turned a quarter so
             // that its front faces the landing (user's edit of the S3 sheet). Rotating (x, y) by -90 degrees gives x' in [minY, maxY] and
             // y' in [-maxX, -minX].
             double widthR = maxY - minY, heightR = maxX - minX;
-            double x0 = st.Inputs.WidthMm / 2 + 800, y0 = top.Outline.Y0 - 150 - heightR;
+            double x0 = st.Inputs.WidthMm / 2 + 800, y0 = st.SlabEdge.Y0 - 30 - heightR;
             var origin = frame.World(new Point3d(0, 0, 0));
             var w = new Writer(db, tr, ControllerPrefix, "controller", (u, v) => frame.World(new Point3d(u, v, 0)));
             var turn = Matrix3d.Rotation(-Math.PI / 2, Vector3d.ZAxis, origin);
@@ -508,8 +845,9 @@ namespace Elevator.AutoCAD.Steel
             var move = Matrix3d.Displacement(frame.World(new Point3d(dx, dy, 0)) - origin) * turn;
             foreach (var e in symbol)
                 w.Copy(e, move);
-            double labelU = x0 + widthR + 80, labelV = y0 + heightR / 2 + PlanTextHeight / 2;
-            w.Text(labelU, labelV, PlanTextHeight, "CONTROLLER AT TOP FLOOR");
+            // the label stands left of the symbol with a leader to it, clear of the column labels on the right
+            w.LabelLeft(x0 + widthR * 0.3, y0 + heightR * 0.2, x0 - 300, y0 - 120, PlanTextHeight, "CONTROL PANEL");
+            return y0 - 120;
         }
 
         // ---------- section B-B (the machine on the steel top frame) ----------
@@ -519,6 +857,65 @@ namespace Elevator.AutoCAD.Steel
         public static void ClearSection(Database db, Transaction tr)
         {
             Clear(db, tr, SectionPrefix, "MachineRoomSection.", SectionRoles);
+            var record = ProjectDataStorage.Read<List<string>>(db, tr, SectionRecord);
+            if (record == null || record.Count == 0)
+                return;
+            var hidden = new HashSet<string>(record.Where(r => r.StartsWith("H|", StringComparison.Ordinal)).Select(r => r.Substring(2)));
+            var decimals = new Dictionary<string, int>();
+            foreach (string r in record.Where(r => r.StartsWith("D|", StringComparison.Ordinal)))
+            {
+                string[] parts = r.Split('|');
+                decimals[parts[1]] = Int32.Parse(parts[2], CultureInfo.InvariantCulture);
+            }
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null)
+                    continue;
+                int dec;
+                if (hidden.Contains(tag[0]) && !e.Visible)
+                {
+                    e.UpgradeOpen();
+                    e.Visible = true;
+                }
+                else if (decimals.TryGetValue(tag[0], out dec) && e is Dimension)
+                {
+                    e.UpgradeOpen();
+                    ((Dimension)e).Dimdec = dec;
+                }
+            }
+            ProjectDataStorage.Write(db, tr, SectionRecord, new List<string>());
+        }
+
+        const string SectionRecord = "SteelSectionNotes";
+
+        // B-B of a steel tower has no concrete heights: the concrete-height dimension and the rope-fall box note are hidden, and the
+        // dimensions show whole millimetres (the values come from the real geometry).
+        static void SectionNotes(Database db, Transaction tr)
+        {
+            var record = new List<string>();
+            foreach (ObjectId id in Model(db, tr, OpenMode.ForRead))
+            {
+                var e = (Entity)tr.GetObject(id, OpenMode.ForRead);
+                var tag = Tag(e);
+                if (tag == null || !e.Visible || !tag[0].StartsWith("MachineRoomSection.", StringComparison.Ordinal))
+                    continue;
+                if (tag[0] == "MachineRoomSection.Dimension.ConcreteHeight" || tag[0].StartsWith("MachineRoomSection.Annotation.RopeFallBox.", StringComparison.Ordinal))
+                {
+                    e.UpgradeOpen();
+                    e.Visible = false;
+                    record.Add("H|" + tag[0]);
+                }
+                else if (e is Dimension && tag[0].StartsWith("MachineRoomSection.Dimension.", StringComparison.Ordinal))
+                {
+                    var d = (Dimension)e;
+                    record.Add("D|" + tag[0] + "|" + d.Dimdec.ToString(CultureInfo.InvariantCulture));
+                    d.UpgradeOpen();
+                    d.Dimdec = 0;
+                }
+            }
+            ProjectDataStorage.Write(db, tr, SectionRecord, record);
         }
 
         // A channel section of a beam end-on, web on the outer side: u0..u1 across, z0..z1 the height.
@@ -541,6 +938,7 @@ namespace Elevator.AutoCAD.Steel
         {
             // the title of the section stays: it is tagged with the slab of the master
             Hide(db, tr, "MachineRoomSection.", SectionRoles, null, true);
+            SectionNotes(db, tr);
             var w = new Writer(db, tr, SectionPrefix, "MachineRoomSection", (u, v) => frame.World(new Point3d(u, v, 0)));
             double depth = st.Inputs.DepthMm;
             double bb = st.Inputs.Beam.WidthMm;
@@ -549,6 +947,13 @@ namespace Elevator.AutoCAD.Steel
             double zBottom = machineBeamBottom - beam.HeightMm;
             // the column stubs below the machine beams with a break (the beams themselves are the machine bearings of the section; the
             // section carries no profile labels). The front column box is x = bb - column depth .. bb (x = -y), the back one mirrored.
+            // the machine housing: walls on the column envelope up to the roof plate, which overhangs it
+            var hs = st.Housing;
+            double xFront = bb, xBack = -depth - bb;
+            double deck = machineBeamBottom, roofBottom = deck + hs.HeightMm, roofTop = roofBottom + hs.RoofMm;
+            w.Rect(xFront - hs.WallMm, deck, xFront, roofBottom);
+            w.Rect(xBack, deck, xBack + hs.WallMm, roofBottom);
+            w.Rect(xBack - hs.OverhangMm, roofBottom, xFront + hs.OverhangMm, roofTop);
             double stub = 500, zFoot = zBottom - stub;
             double[][] columns = { new[] { bb - col.HeightMm, bb }, new[] { -depth - bb, -depth - bb + col.HeightMm } };
             foreach (var c in columns)
@@ -678,6 +1083,12 @@ namespace Elevator.AutoCAD.Steel
                 double u0 = g.X < len / 2 ? 0 : len - gw, u1 = u0 + gw;
                 w.Rect(-u1, g.Y - gl / 2, -u0, g.Y + gl / 2);
             }
+            // the machine housing on the platform: walls on the column envelope, the roof plate overhangs it
+            var hs = st.Housing;
+            double xFront = i.Beam.WidthMm, xBack = -len - i.Beam.WidthMm;
+            w.Rect(xFront - hs.WallMm, hs.DeckMm, xFront, hs.RoofBottomMm);
+            w.Rect(xBack, hs.DeckMm, xBack + hs.WallMm, hs.RoofBottomMm);
+            w.Rect(xBack - hs.OverhangMm, hs.RoofBottomMm, xFront + hs.OverhangMm, hs.RoofTopMm);
             // the platform on top: a deck line over the top ring beams
             double top = st.TopMm + i.Beam.HeightMm / 2;
             double colDepth = i.Column.HeightMm;

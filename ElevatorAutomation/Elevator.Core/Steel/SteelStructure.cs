@@ -32,6 +32,12 @@ namespace Elevator.Core.Steel
         public double BarDiameterMm;
         public int BarCountAlongX;
         public int BarCountAlongY;
+        public double SlabEdgeDepthMm;
+        public double SlabEdgeWidthMm;
+        public double HousingHeightMm;
+        public double HousingOverhangMm;
+        public double HousingWallMm;
+        public double HousingRoofMm;
         /// <summary>Clear shaft width W and depth D: between the inner faces of the steel.</summary>
         public double WidthMm;
         public double DepthMm;
@@ -99,6 +105,12 @@ namespace Elevator.Core.Steel
             i.BaseMarginMm = D(SteelFields.BaseMargin, c);
             i.BaseThicknessMm = D(SteelFields.BaseThickness, c);
             i.BarDiameterMm = D(SteelFields.BarDiameter, c);
+            i.SlabEdgeDepthMm = D(SteelFields.SlabEdgeDepth, c);
+            i.SlabEdgeWidthMm = D(SteelFields.SlabEdgeWidth, c);
+            i.HousingHeightMm = D(SteelFields.HousingHeight, c);
+            i.HousingOverhangMm = D(SteelFields.HousingOverhang, c);
+            i.HousingWallMm = i.Preset.HousingWallMm;
+            i.HousingRoofMm = i.Preset.HousingRoofMm;
             foreach (var pair in new[]
             {
                 new KeyValuePair<string, double>("The car rail bracket spacing", i.SpacingMm),
@@ -111,7 +123,11 @@ namespace Elevator.Core.Steel
                 new KeyValuePair<string, double>("The gusset plate thickness", i.GussetThicknessMm),
                 new KeyValuePair<string, double>("The concrete base margin", i.BaseMarginMm),
                 new KeyValuePair<string, double>("The concrete base thickness", i.BaseThicknessMm),
-                new KeyValuePair<string, double>("The base bar diameter", i.BarDiameterMm)
+                new KeyValuePair<string, double>("The base bar diameter", i.BarDiameterMm),
+                new KeyValuePair<string, double>("The building slab edge depth", i.SlabEdgeDepthMm),
+                new KeyValuePair<string, double>("The building slab edge width", i.SlabEdgeWidthMm),
+                new KeyValuePair<string, double>("The machine housing height", i.HousingHeightMm),
+                new KeyValuePair<string, double>("The housing roof overhang", i.HousingOverhangMm)
             })
             {
                 if (!ProjectFloors.FinitePositive(pair.Value))
@@ -190,6 +206,10 @@ namespace Elevator.Core.Steel
         public List<SteelFace> Faces = new List<SteelFace>();
         public SteelBaseBlock Base;
         public SteelTowerTop TowerTop;
+        /// <summary>The building slab edge in front of the entrance face (plan), directly outside the front beam.</summary>
+        public SteelRect SlabEdge;
+        /// <summary>The machine housing on top of the tower (walls on the column envelope, roof plate with an overhang).</summary>
+        public SteelHousing Housing;
         public List<SteelMember> Members = new List<SteelMember>();
 
         public double TotalMassKg
@@ -226,6 +246,7 @@ namespace Elevator.Core.Steel
             s.BuildBase();
             s.BuildFaces();
             s.BuildTowerTop();
+            s.BuildSlabAndHousing();
             s.BuildMembers();
             return s;
         }
@@ -501,6 +522,27 @@ namespace Elevator.Core.Steel
             double x1 = top.Columns.Max(c => c.Box.X1), y1 = top.Columns.Max(c => c.Box.Y1);
             top.Outline = new SteelRect(x0, y0, x1, y1);
             TowerTop = top;
+        }
+
+        // ---------- the building slab edge and the machine housing ----------
+        void BuildSlabAndHousing()
+        {
+            var i = Inputs;
+            double bb = i.Beam.WidthMm;
+            double cx = i.WidthMm / 2, half = i.SlabEdgeWidthMm / 2;
+            SlabEdge = new SteelRect(cx - half, -bb - i.SlabEdgeDepthMm, cx + half, -bb);
+            double deck = TopMm + i.Beam.HeightMm / 2;
+            Housing = new SteelHousing
+            {
+                Plan = TowerTop.Outline,
+                DeckMm = deck,
+                HeightMm = i.HousingHeightMm,
+                WallMm = i.HousingWallMm,
+                RoofMm = i.HousingRoofMm,
+                OverhangMm = i.HousingOverhangMm,
+                RoofBottomMm = deck + i.HousingHeightMm,
+                RoofTopMm = deck + i.HousingHeightMm + i.HousingRoofMm
+            };
         }
 
         // ---------- member list ----------

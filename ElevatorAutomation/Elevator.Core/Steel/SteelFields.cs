@@ -36,6 +36,10 @@ namespace Elevator.Core.Steel
         public const string BarDiameterKey = "Steel.Base.BarDiameterMm";
         public const string BarCountAlongXKey = "Steel.Base.BarCountAlongX";
         public const string BarCountAlongYKey = "Steel.Base.BarCountAlongY";
+        public const string SlabEdgeDepthKey = "Steel.SlabEdgeDepthMm";
+        public const string SlabEdgeWidthKey = "Steel.SlabEdgeWidthMm";
+        public const string HousingHeightKey = "Steel.HousingHeightMm";
+        public const string HousingOverhangKey = "Steel.HousingOverhangMm";
 
         const string ExtensionKey = "steel";
         const string LevelEditsMember = "levelEdits";
@@ -148,12 +152,22 @@ namespace Elevator.Core.Steel
         public static readonly PresetField BarCountAlongX = Number("Base.BarCountAlongX", "Base bars along the width", c => SteelStructure.PresetBarCount(c, true));
         public static readonly PresetField BarCountAlongY = Number("Base.BarCountAlongY", "Base bars along the depth", c => SteelStructure.PresetBarCount(c, false));
 
+        // The building slab edge in front of the entrance (its width follows the shaft width until typed) and the machine housing.
+        public static readonly PresetField SlabEdgeDepth = Lib("SlabEdgeDepthMm", "Building slab edge depth (mm)", t => t.SlabEdgeDepthMm);
+        public static readonly PresetField SlabEdgeWidth = Number("SlabEdgeWidthMm", "Building slab edge width (mm)", c =>
+        {
+            var shaft = c.Project == null ? null : c.Project.Shaft;
+            return shaft == null ? (object)null : shaft.WidthMm + 2 * c.Library.SteelShaftOrDefault().SlabEdgeSideMm;
+        });
+        public static readonly PresetField HousingHeight = Lib("HousingHeightMm", "Machine housing height (mm)", t => t.HousingHeightMm);
+        public static readonly PresetField HousingOverhang = Lib("HousingOverhangMm", "Housing roof overhang (mm)", t => t.HousingOverhangMm);
+
         /// <summary>Every steel field, in the order of the page.</summary>
         public static readonly PresetField[] All =
         {
             Construction, System, ColumnProfile, BeamProfile, BracingProfile, Bracing, PlateWidth, PlateDepth, PlateThickness,
             BoltCount, BoltDiameter, GussetLength, GussetWidth, GussetThickness, SteelGrade, BaseMargin, BaseThickness, BarDiameter,
-            BarCountAlongX, BarCountAlongY
+            BarCountAlongX, BarCountAlongY, SlabEdgeDepth, SlabEdgeWidth, HousingHeight, HousingOverhang
         };
 
         /// <summary>The field with a key, or null.</summary>

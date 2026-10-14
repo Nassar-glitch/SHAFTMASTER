@@ -5,6 +5,7 @@ using System.Linq;
 using Elevator.Core.Application;
 using Elevator.Core.Calculations;
 using Elevator.Core.Company;
+using Elevator.Core.Doors;
 using Elevator.Core.Layouts;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Presets;
@@ -25,7 +26,7 @@ public static class SteelNativeTests
     static readonly List<string> names = new List<string>();
     static void Check(bool value, string name) { if (!value) throw new Exception(name); ++count; names.Add(name); }
 
-    static ElevatorProject Project(PresetLibrary lib, DesignContext ctx, string name, int stops, double floorHeight, double w, double d, double pit, double overhead, bool steel)
+    static ElevatorProject Project(PresetLibrary lib, DesignContext ctx, string name, int stops, double floorHeight, double w, double d, double pit, double overhead, bool steel, string door = null)
     {
         var seed = ProjectJson.Deserialize(File.ReadAllText(Path.Combine(bin, "reviewed-example.elevator.json")));
         var p = ProjectPresets.CreateNew(lib, ctx, seed.Counterweight, seed.Rails.BracketSource);
@@ -41,6 +42,8 @@ public static class SteelNativeTests
             floors.Add(new FloorDefinition { Name = i == 0 ? "G" : i.ToString(), HeightToNextMm = i < stops - 1 ? (double?)floorHeight : null });
         p.Building.Floors = floors;
         p.Car.DisplayFloorId = floors[0].FloorId;
+        if (door != null)
+            DoorFlow.SetType(p, door);
         if (steel)
             SteelFields.Construction.Edit(p, SteelShaftPreset.SteelStructure);
         ProjectPresets.Apply(p, lib, ctx);
@@ -73,18 +76,19 @@ public static class SteelNativeTests
             var client = new GenerationClient(root, bin, @"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe");
             var cases = new[]
             {
-                new { Id = "steel-client", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null },
-                new { Id = "steel-default", Steel = true, Stops = 5, Floor = 3000.0, W = 1600.0, D = 1800.0, Pit = 1300.0, OH = 4200.0, File = (string)null },
-                new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null }
+                new { Id = "steel-client", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "steel-default", Steel = true, Stops = 5, Floor = 3000.0, W = 1600.0, D = 1800.0, Pit = 1300.0, OH = 4200.0, File = (string)null, Door = (string)null },
+                new { Id = "steel-2s", Steel = true, Stops = 4, Floor = 3000.0, W = 1720.0, D = 2000.0, Pit = 1300.0, OH = 4200.0, File = (string)null, Door = DoorTypes.Automatic2S },
+                new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
             }.ToList();
             // a project file of a user (S4): STEEL_USER_PROJECT=<file> generates it as the case "user-project"
             string userFile = Environment.GetEnvironmentVariable("STEEL_USER_PROJECT");
             if (!String.IsNullOrEmpty(userFile))
-                cases.Add(new { Id = "user-project", Steel = true, Stops = 0, Floor = 0.0, W = 0.0, D = 0.0, Pit = 0.0, OH = 0.0, File = userFile });
+                cases.Add(new { Id = "user-project", Steel = true, Stops = 0, Floor = 0.0, W = 0.0, D = 0.0, Pit = 0.0, OH = 0.0, File = userFile, Door = (string)null });
             string only = Environment.GetEnvironmentVariable("STEEL_CASES");
             foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {
-                var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel);
+                var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel, c.Door);
                 Check(SteelFields.IsSteel(p, lib) == c.Steel, c.Id + ": the construction is " + (c.Steel ? "steel" : "concrete"));
                 var design = new ElevatorDesignEngine().Calculate(p, ctx, DrawingViews.All);
                 Check(design.CanGenerate && design.Plan != null, c.Id + ": the design allows generation");

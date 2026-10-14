@@ -632,6 +632,46 @@ namespace Elevator.Core.Tests
             Assert.Equal(s.Plan.Columns.Max(c => c.Box.Y1), top.Outline.Y1);
         }
 
+        // ---------- the building slab edge and the machine housing (S4) ----------
+        [Fact]
+        public void Slab_edge_stands_outside_the_front_beam_and_follows_the_shaft_width_until_edited()
+        {
+            var p = SteelProject(3000);
+            var s = Build(p);
+            Assert.Equal(250, s.Inputs.SlabEdgeDepthMm);
+            Assert.Equal(p.Shaft.WidthMm + 1700, s.Inputs.SlabEdgeWidthMm, 6);
+            var e = s.SlabEdge;
+            Assert.Equal(-50, e.Y1, 6);                         // directly outside the front beam
+            Assert.Equal(-300, e.Y0, 6);
+            Assert.Equal(p.Shaft.WidthMm + 1700, e.Width, 6);
+            Assert.Equal(p.Shaft.WidthMm / 2, e.CenterX, 6);   // centred on the shaft
+            SteelFields.SlabEdgeWidth.Edit(p, 4000.0);
+            SteelFields.SlabEdgeDepth.Edit(p, 300.0);
+            var t = Build(p);
+            Assert.Equal(4000, t.SlabEdge.Width, 6);
+            Assert.Equal(300, t.SlabEdge.Height, 6);
+            Assert.True(SteelFields.SlabEdgeWidth.IsEdited(p));
+            SteelFields.SlabEdgeWidth.Reset(p);
+            Assert.Equal(p.Shaft.WidthMm + 1700, Build(p).SlabEdge.Width, 6);
+        }
+
+        [Fact]
+        public void Machine_housing_stands_on_the_deck_with_its_walls_on_the_column_envelope()
+        {
+            var p = SteelProject(3000);
+            var s = Build(p);
+            var h = s.Housing;
+            Assert.Equal(1950, h.HeightMm);
+            Assert.Equal(160, h.OverhangMm);
+            Assert.Equal(s.TopMm + s.Inputs.Beam.HeightMm / 2, h.DeckMm, 6);        // on top of the top ring beams
+            Assert.Equal(h.DeckMm + 1950, h.RoofBottomMm, 6);
+            Assert.True(h.RoofTopMm > h.RoofBottomMm);
+            Assert.Equal(s.TowerTop.Outline.X0, h.Plan.X0, 6);                      // the walls are on the envelope
+            Assert.Equal(s.TowerTop.Outline.Y1, h.Plan.Y1, 6);
+            SteelFields.HousingHeight.Edit(p, 2200.0);
+            Assert.Equal(2200, Build(p).Housing.HeightMm);
+        }
+
         // ---------- member list ----------
         [Fact]
         public void Member_list_counts_lengths_and_masses_of_the_steel()

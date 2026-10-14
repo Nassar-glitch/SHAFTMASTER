@@ -405,3 +405,24 @@ floors 3750, pit 1150, overhead 4100) and `steel-default-*` (the default steel p
 
 Not done in S3 (list for a later stage): the generated steel details (splice, beam-column joint, base plate and bolt; stage G); the face-by-face
 bracing choice and the structural check (the STEEL module); STEEL in STEP; the bracing of the entrance face is never drawn.
+
+## 10. S4: rules from the user's own steel sheet (2026-10-14)
+
+Source and diff: `s4/USER-EDIT-DIFF.md`; evidence `s4/plots/side-*.png` (his edit | the new output).
+
+- **Geometry:** the ring beams stand against the clear faces (outside the clear rectangle, one flange width thick); the columns are flush
+  with the beams' outer faces and reach (60 - 50) mm into the clear width and (140 - 50) mm into the clear depth. The clear W x D is
+  measured between the beam faces.
+- **Building slab edge:** always drawn in front of the entrance face in the shaft plan and the tower-top plan, directly outside the front
+  beam: preset depth 250 and width W + 2 x 850; both editable (Advanced on the Shaft page). The dimension rows below the front face
+  stand clear of it.
+- **Machine housing:** every steel tower carries the housing of the external machine: walls on the column envelope from the deck (the top
+  of the top ring beams) up to the roof plate, which overhangs the envelope by 160 mm; preset height 1950, editable. Drawn in A-A and in
+  B-B (50 mm walls and roof plate).
+- **Tower-top plan:** the machine supports P1 to P4 stand on the ring beams inside the envelope and the machine beams end on the beams
+  (no outriggers); the control panel symbol stands in front of the entrance, right of the door, turned towards the landing, with the
+  label "CONTROL PANEL"; a dimension from the governor to the machine; the two front columns and the beam are named.
+- **Shaft plan:** the columns are named at both left corners and the beams on both side faces; no gusset plates at the base level in A-A.
+- **B-B:** no steel profile sections or labels, no concrete-height dimension and no rope-fall box note; dimensions in whole millimetres.
+- **Sheet:** the door section C-C stays; the main views take the next larger scale where there is room (1:40 is on the ladder of a steel
+  sheet; A-A is kept at 1:50 or larger while a layout exists); the anchor-in-concrete rail detail stays out until stage G.

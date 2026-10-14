@@ -56,3 +56,21 @@ implemented, listed in SESSION_HANDOFF.md for the Planner.
 | c4 | Title block: the company box holds the client's logo image ("ROMA ELEVATORS" with a crest); the owner and project boxes are empty; the title-block text and the revision date follow the project. | not a rule (client data) |
 | c5 | Legend with the STEEL swatch, the masonry notes erased, the "CONCRETE / REINFORCED / BRICK" legend line. | matches |
 | c6 | Titles: "TOWER TOP 1:10", "SHAFT AND CAR 1:10", "SEC AT A-A 1:40", detail titles with their scales. | matches (the scale numbers follow the viewports) |
+
+## Planner's answers (same day) and how they are implemented
+
+| Question | Answer | Implementation |
+|---|---|---|
+| Q1 columns reach into the clear rectangle | yes: the clear W x D is between the beam faces | kept as applied in the first S4 commit |
+| Q2 building slab edge | yes, always, plan and tower-top plan: preset depth 250, width W + 2 x 850, editable | `SteelFields.SlabEdgeDepth/SlabEdgeWidth` (Advanced on the Shaft page), `SteelStructure.SlabEdge`, a plain rectangle directly outside the front beam; the dimension rows and the title below the front face move down clear of it (kept in a record, put back by Clear) |
+| Q3 machine housing | yes, every external lift: walls on the column envelope, roof plate with a 160 overhang, preset height 1950, editable | `SteelFields.HousingHeight/HousingOverhang`, `SteelStructure.Housing`, drawn in A-A and in B-B |
+| Q4 label | "CONTROL PANEL" | label with a leader, left of the symbol |
+| Q5 governor dimension | from the governor to the machine, arranged with DimensionLayout | from the governor pulley centre to the car centre line (724 in his project, 725 in his edit), text placed by `DimensionLayout.PlaceChainTexts` |
+| Q6 B-B | no concrete heights; whole mm | the concrete-height dimension and the rope-fall box note are hidden, the dimensions show whole millimetres (values from the real geometry) |
+| Q7 scales | next larger scale where there is room; 1:40 in the ladder | `SheetArrangement.SteelScales` (1:40 added) for steel sheets only; A-A is not taken smaller than 1:50 while a layout exists with it at 1:50 or larger |
+| Q8 C-C | stays | the door detail is no longer cut; only "SIDE - GUIDE RAIL" (anchor in concrete) stays out |
+| new: P1 to P4 | within the steel footprint | the support groups move in by the overshoot of the outermost one so that their outer edge is on the ring beam outer face; the machine beams are cut 10 mm inside the ring beam faces (copies on the steel layer; the concrete-room entities are put on a switched-off layer, not edited, so the machine-room audit still sees them) |
+
+Result for his project: `plots/side-sheet.png` and the per-view side-by-side images. Differences that remain: the door width of his
+project (1000 against his 800: the project input), the logo and cleared owner/project boxes (client data) and his manual arrangement
+(the engine's arrangement is similar: his A-A 1:40, B-B 1:10, door 1:20, details 1:5 are all taken).

@@ -34,6 +34,14 @@ namespace Elevator.Core.Steel
         public double GussetWidthMm;
         public double GussetThicknessMm;
         public string SteelGrade;
+        /// <summary>The building slab edge in front of the entrance face (plan): depth and the width it extends beyond the shaft on each side.</summary>
+        public double SlabEdgeDepthMm;
+        public double SlabEdgeSideMm;
+        /// <summary>The machine housing on top of the tower: height above the deck, the roof plate overhang, wall and roof thickness.</summary>
+        public double HousingHeightMm;
+        public double HousingOverhangMm;
+        public double HousingWallMm;
+        public double HousingRoofMm;
         public SteelBasePreset Base;
         public List<ChannelProfile> Channels;
         public List<AngleProfile> Angles;
@@ -75,6 +83,12 @@ namespace Elevator.Core.Steel
             pos("GussetLengthMm", GussetLengthMm);
             pos("GussetWidthMm", GussetWidthMm);
             pos("GussetThicknessMm", GussetThicknessMm);
+            pos("SlabEdgeDepthMm", SlabEdgeDepthMm);
+            pos("SlabEdgeSideMm", SlabEdgeSideMm);
+            pos("HousingHeightMm", HousingHeightMm);
+            pos("HousingOverhangMm", HousingOverhangMm);
+            pos("HousingWallMm", HousingWallMm);
+            pos("HousingRoofMm", HousingRoofMm);
             if (BoltCount != 4 && BoltCount != 6 && BoltCount != 8)
                 p.Add("SteelShaft.BoltCount must be 4, 6 or 8");
             if (String.IsNullOrWhiteSpace(SteelGrade))

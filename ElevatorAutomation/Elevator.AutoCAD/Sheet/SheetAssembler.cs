@@ -127,7 +127,7 @@ namespace Elevator.AutoCAD.Sheet
                         MaxScaleDenominator = d.TemplateScale
                     });
                 }
-                arrangement = SheetArrangement.Arrange(area, views);
+                arrangement = SheetArrangement.Arrange(area, views, request.SteelStructure ? SheetArrangement.SteelScales : null, request.SteelStructure ? 50 : 0);
                 if (arrangement.NotPlaced.Count > 0)
                     break;
                 // the titles state the sheet scale at 5 mm printed height: apply them, measure again until the scales are stable
@@ -244,13 +244,14 @@ namespace Elevator.AutoCAD.Sheet
         const double NoteX0 = 1021, NoteX1 = 1170, NoteY0 = 566, NoteY1 = 591;
 
         // A steel shaft: the reference details that show a concrete shaft are left out until their steel versions are drawn: the rail
-        // bracket anchored in concrete ("SIDE - GUIDE RAIL", below the fish plate) and the door section C-C (the concrete wall). The
-        // entities stay in the drawing, hidden; the arrangement measures what is visible.
+        // bracket anchored in concrete ("SIDE - GUIDE RAIL", below the fish plate). The door section C-C stays. The entities stay in the
+        // drawing, hidden; the arrangement measures what is visible.
         static void HideConcreteDetails(Database db, SheetDetailsFile details, string doorType)
         {
             bool manual = String.IsNullOrWhiteSpace(doorType) || String.Equals(doorType, DoorTypesManual, StringComparison.OrdinalIgnoreCase);
             var fish = details.Details.FirstOrDefault(d => d.Name == "FISH_PLATE");
-            var door = details.Details.FirstOrDefault(d => d.Name == (manual ? "DOOR_SWING" : "DOOR_AUTOMATIC"));
+            // The door section C-C stays on a steel sheet (the user's edit keeps it, S4): no part of the door detail is hidden.
+            var door = details.Details.FirstOrDefault(d => d.Name == (manual ? "DOOR_SWING" : "DOOR_AUTOMATIC") && false);
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
@@ -555,7 +556,7 @@ namespace Elevator.AutoCAD.Sheet
                 foreach (ObjectId id in model)
                 {
                     var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
-                    if (e == null || !e.Visible)
+                    if (e == null || !e.Visible || Steel.SteelDrawing.OffLayer(e))
                         continue;
                     var tag = SectionAADrawing.Tag(e);
                     DrawingViews view = 0;

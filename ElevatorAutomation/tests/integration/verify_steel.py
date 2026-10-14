@@ -93,7 +93,7 @@ def main():
         rects = [e for e in plan if closed_poly(e, 4)]
         circles = [e for e in plan if e.dxftype() == "CIRCLE"]
         check(len(cols) == 4, case + ": the plan has four column sections (" + str(len(cols)) + ")")
-        check(len(rects) == 8, case + ": four base plates and four ring beams in plan (" + str(len(rects)) + ")")
+        check(len(rects) == 9, case + ": four base plates, four ring beams and the slab edge in plan (" + str(len(rects)) + ")")
         check(len(circles) == 4 * bolts, case + ": " + str(4 * bolts) + " bolt circles in plan (" + str(len(circles)) + ")")
         check(sum(1 for e in plan if e.dxftype() == "HATCH") == 4, case + ": four solid column sections")
         check(any(e.dxftype() == "MTEXT" and tower["Column"] in e.text and "STEEL COLUMN" in e.text for e in plan), case + ": the plan names the column profile")
@@ -105,17 +105,23 @@ def main():
         mr = [e for e, t in mr_all if not t[0].startswith("Steel.MachineRoom.Controller.")]
         controller = [e for e, t in mr_all if t[0].startswith("Steel.MachineRoom.Controller.")]
         check(sum(1 for e in mr if closed_poly(e, 8)) == 4, case + ": the machine-room plan has the four column sections")
-        check(sum(1 for e in mr if closed_poly(e, 4)) == 4, case + ": and the four ring beams")
+        check(sum(1 for e in mr if closed_poly(e, 4)) == 5, case + ": and the four ring beams and the slab edge")
         check(not any(e.dxftype() == "CIRCLE" for e in mr), case + ": no base plate bolts at the tower top")
         room = [e for e, t in tagged if t[1] == "room" and t[0].startswith("MachineRoom.")]
         check(len(room) > 0 and all(invisible(e) for e in room), case + ": the room walls are hidden")
         check(any(e.dxftype() == "MTEXT" and "TOWER TOP" in e.text and "1:" in e.text for e in mr), case + ": the tower-top plan has its title with the scale")
         check(not any(e.dxftype() == "MTEXT" and "CONTROLLER AND SWITCHES" in e.text for e in mr), case + ": no long controller note")
         check(not any(e.dxftype() == "MTEXT" and "CONTROLLER" in e.text for e in plan), case + ": no controller on the shaft plan")
-        check(any(e.dxftype() == "MTEXT" and "CONTROLLER AT TOP FLOOR" in e.text for e in controller), case + ": the tower-top plan labels the controller")
+        check(any(e.dxftype() == "MTEXT" and "CONTROL PANEL" in e.text for e in controller), case + ": the tower-top plan labels the control panel")
         check(sum(1 for e in controller if e.dxftype() == "LWPOLYLINE") >= 10, case + ": the control panel symbol is drawn on the tower-top plan")
         cols8 = [e for e in mr if closed_poly(e, 8)]
-        ring = [e for e in mr if closed_poly(e, 4)]
+        rects4 = [e for e in mr if closed_poly(e, 4)]
+
+        def area(e):
+            pts = list(e.get_points())
+            return (max(p[0] for p in pts) - min(p[0] for p in pts)) * (max(p[1] for p in pts) - min(p[1] for p in pts))
+        slab_edge = max(rects4, key=area) if rects4 else None
+        ring = [e for e in rects4 if e is not slab_edge]
         if cols8 and ring and controller:
             ex0 = min(min(p[0] for p in e.get_points()) for e in cols8)
             ex1 = max(max(p[0] for p in e.get_points()) for e in cols8)
@@ -129,6 +135,27 @@ def main():
             check(all(flush), case + ": a beam is flush with the outer column face on every side")
         hidden_leftovers = [e for e, t in tagged if t[1] == "governor" and invisible(e)]
         check(len(hidden_leftovers) > 0, case + ": the wall-opening leftover of the concrete room is hidden (" + str(len(hidden_leftovers)) + ")")
+        # the slab edge: W + 2 x 850 wide, 250 deep, directly outside the front face; the supports and machine beams within the footprint
+        if slab_edge is not None and cols8:
+            pts = list(slab_edge.get_points())
+            width = max(p[0] for p in pts) - min(p[0] for p in pts)
+            depth_ = max(p[1] for p in pts) - min(p[1] for p in pts)
+            check(abs(width - (tower["Width"] + 1700)) < 1 and abs(depth_ - 250) < 1, case + ": the building slab edge is W + 1700 by 250 (" + str(round(width)) + " x " + str(round(depth_)) + ")")
+            check(abs(max(p[1] for p in pts) - min(min(q[1] for q in e.get_points()) for e in ring)) < 1, case + ": the slab edge touches the front beam face")
+        machine = [e for e, t in mr_all if t[0].startswith("Steel.MachineRoom.Machine.")]
+        if cols8 and ring and machine:
+            ey0 = min(min(q[1] for q in e.get_points()) for e in ring)
+            ey1 = max(max(q[1] for q in e.get_points()) for e in ring)
+            from ezdxf import bbox as _bbox
+            out = 0
+            for e in machine:
+                try:
+                    b = _bbox.extents([e], fast=True)
+                except Exception:
+                    continue
+                if b.has_data and (b.extmin.y < ey0 - 1 or b.extmax.y > ey1 + 1):
+                    out += 1
+            check(out == 0, case + ": the machine supports and beams are within the steel footprint (" + str(out) + " outside)")
         # ---- B-B ----
         bb = [e for e, t in tagged if t[0].startswith("Steel.Section.")]
         check(sum(1 for e in bb if closed_poly(e, 8)) == 0, case + ": B-B draws no steel profile sections (the section carries no labels)")
@@ -145,7 +172,7 @@ def main():
         o = a.dxf.start
         vx = (a.dxf.end - a.dxf.start).normalize()
         closed4 = [e for e in aa if closed_poly(e, 4)]
-        expected_rects = tower["LeftBeams"] + tower["FrontBeams"] + tower["BackBeams"] + 2 + tower["Plates"] + 1 + tower["LeftGussets"] + 2 * tower["LeftBraces"]
+        expected_rects = tower["LeftBeams"] + tower["FrontBeams"] + tower["BackBeams"] + 2 + tower["Plates"] + 1 + tower["LeftGussets"] + 2 * tower["LeftBraces"] + 3  # + the machine housing: two walls and the roof plate
         check(len(closed4) == expected_rects, case + ": A-A rectangles and strips " + str(len(closed4)) + " of " + str(expected_rects))
         check(sum(1 for e in aa if e.dxftype() == "HATCH") == 1, case + ": A-A has the hatched base block")
         # beam levels of the face: rectangles as wide as the face and as high as the beam, by their centre height
@@ -168,9 +195,9 @@ def main():
         check(len(replaced) > 0 and all(invisible(e) for e in replaced), case + ": the A-A walls, slabs and room walls are hidden (" + str(len(replaced)) + ")")
         # ---- details of a concrete shaft left out of a steel sheet ----
         untagged = [e for e in ms if e.dxftype() == "MTEXT" and not tag(e)]
-        for text in ("SIDE - GUIDE RAIL", "SEC. C-C"):
-            found = [e for e in untagged if text in e.text and invisible(e)]
-            check(len(found) >= 1, case + ": the concrete detail " + text + " is hidden")
+        found = [e for e in untagged if "SIDE - GUIDE RAIL" in e.text and invisible(e)]
+        check(len(found) >= 1, case + ": the concrete detail SIDE - GUIDE RAIL is hidden")
+        check(any("SEC. C-C" in e.text and not invisible(e) for e in untagged), case + ": the door section C-C stays")
         check(any("VIEW at D-D" in e.text and not invisible(e) for e in untagged), case + ": the door view D-D stays")
         check(any("FISH PLATE" in e.text and not invisible(e) for e in untagged), case + ": the fish plate stays")
         # ---- the sheet ----

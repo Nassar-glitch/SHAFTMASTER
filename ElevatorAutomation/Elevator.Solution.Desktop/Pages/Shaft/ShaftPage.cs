@@ -101,6 +101,7 @@ namespace Elevator.Solution.Desktop.Pages
     Number(SteelFields.GussetLength);Number(SteelFields.GussetWidth);Number(SteelFields.GussetThickness);
     Text(SteelFields.SteelGrade);
     Number(SteelFields.BaseMargin);Number(SteelFields.BaseThickness);Number(SteelFields.BarDiameter);Number(SteelFields.BarCountAlongX);Number(SteelFields.BarCountAlongY);
+    Number(SteelFields.SlabEdgeDepth);Number(SteelFields.SlabEdgeWidth);Number(SteelFields.HousingHeight);Number(SteelFields.HousingOverhang);
     BeamLevels();
    },false);
   }

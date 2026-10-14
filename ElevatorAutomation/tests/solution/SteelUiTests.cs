@@ -66,6 +66,13 @@ public static class SteelUiTests
                 Check((string)Choices()["Steel.BoltCount"].SelectedValue == "4" && Editors()["Steel.BoltDiameterMm"].Text == "20", "Four bolts of 20 mm");
                 await Expand();
                 Check(Editors()["Steel.GussetLengthMm"].Text == "400" && Editors()["Steel.Base.MarginMm"].Text == "200" && Editors()["Steel.Base.ThicknessMm"].Text == "250" && Editors()["Steel.Base.BarDiameterMm"].Text == "8", "The gusset and the concrete base presets are under Advanced");
+                // the building slab edge and the machine housing are under Advanced too
+                Check(Editors()["Steel.SlabEdgeDepthMm"].Text == "250" && Editors()["Steel.HousingHeightMm"].Text == "1950" && Editors()["Steel.HousingOverhangMm"].Text == "160", "The slab edge depth, the housing height and its roof overhang presets");
+                Check(Editors()["Steel.SlabEdgeWidthMm"].Text == (Project().Shaft.WidthMm + 1700).ToString(System.Globalization.CultureInfo.InvariantCulture), "The slab edge width is the shaft width + 2 x 850");
+                Editors()["Steel.HousingHeightMm"].Text = "2100"; await Ready();
+                Check(Project().UserEditedFields.Contains("Steel.HousingHeightMm") && Steel().Inputs.HousingHeightMm == 2100, "Typing the housing height locks it");
+                Reset(Editors()["Steel.HousingHeightMm"]); await Ready();
+                Check(Editors()["Steel.HousingHeightMm"].Text == "1950" && !Project().UserEditedFields.Contains("Steel.HousingHeightMm"), "Reset gives 1950 back");
                 // ---------- lock and Reset ----------
                 Choices()["Steel.ColumnProfile"].SelectedValue = "UPN 160"; await Ready();
                 Check(Project().UserEditedFields.Contains("Steel.ColumnProfile") && Steel().Inputs.Column.Name == "UPN 160", "Choosing another column locks it and the tower uses it");

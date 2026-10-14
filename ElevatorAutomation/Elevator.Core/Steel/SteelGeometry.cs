@@ -217,6 +217,23 @@ namespace Elevator.Core.Steel
         public SteelRect Outline;
     }
 
+    /// <summary>
+    /// The machine housing of an external lift: four walls on the column envelope from the deck (the top of the top ring beams) up to the
+    /// roof plate, which overhangs the envelope on every side. Elevations are from the lowest floor.
+    /// </summary>
+    public sealed class SteelHousing
+    {
+        /// <summary>The outer outline of the walls: the column envelope.</summary>
+        public SteelRect Plan;
+        public double DeckMm;
+        public double HeightMm;
+        public double WallMm;
+        public double RoofMm;
+        public double OverhangMm;
+        public double RoofBottomMm;
+        public double RoofTopMm;
+    }
+
     /// <summary>One row of the steel member list.</summary>
     public sealed class SteelMember
     {
