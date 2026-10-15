@@ -6,6 +6,38 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+## [v07] — 2026-10-15
+
+v07 adds the guide-rail check with its RAILS page, the steel shaft structure (UPN columns, beams and bracing) in all four views and on the
+A0 sheet, and editable drawings for the steel items. The calculations and the drawings of concrete projects are unchanged; the guide-rail
+check adds its Rails group to the project file, the calculation sheet and the Design Notes.
+
+- **Guide-rail check and the RAILS page (R1, R2):** the guide-rail bending, deflection and bracket-spacing check of the car and
+  counterweight rails (EN 81-50 5.10) with a recommended profile and the largest spacing that passes. The RAILS page holds the inputs
+  (profiles, bracket spacing, machine on rails, shoe type and lining, deflection); each follows its preset until typed, is locked when edited and has
+  Reset. Values that do not apply (machine values when the machine is not on the rails, the fish-plate force only above 40 m of travel, the lining
+  only for sliding shoes) are not shown; the counterweight spacing follows the car spacing. The results are in the calculation sheet and the Design
+  Notes.
+- **Steel shaft structure:** the shaft construction (Concrete / Steel structure) is chosen on the SHAFT page. A steel shaft is four corner
+  columns (UPN 140 preset, web outside) with ring beams (UPN 100) on the clear faces, the columns flush with the beams' outer faces, base plates
+  with bolts on a concrete base, and the double-cross bracing (L50x50x5). Every value follows its preset until edited. The beam levels follow the car
+  rail bracket spacing of the RAILS page per face (a beam at every floor, the gaps between divided equally, the door-head beam on the entrance
+  face) and can be edited per face; the rail check uses the largest side or back gap. The tower is in the shaft plan, in the tower-top plan (the
+  machine on the top ring, the machine supports and beams within the tower, the control panel on the landing, the dimension from the governor to the
+  machine), in section A-A (tower elevation, bracing, base, machine housing, platform) and in B-B (no concrete heights). The building slab edge in
+  front of the entrance and the machine housing are drawn from editable presets (Advanced on the SHAFT page).
+- **The A0 sheet for a steel shaft:** the masonry notes are left out and a STEEL entry is in the legend; the arrangement takes the larger scales
+  where the sheet has room (1:40 for A-A); the door section stays; the concrete-anchor rail detail is left out until its steel version is drawn.
+  The calculation sheet has a "Shaft structure" block with the member list and the beam levels of each face.
+- **Editable drawings (steel items):** every pointing label is one MULTILEADER (style SM_LEADER); the column section, the base plate with its
+  bolts and the control panel are named blocks (SM_COLUMN_*, SM_BASE_PLATE_*, SM_CONTROL_PANEL); members and annotation are on meaningful layers
+  (S-COLUMN, S-BEAM, S-BRACE, S-PLATE, S-BASE, S-HOUSING, A-SLAB, A-ANNO, A-EQUIP, A-DIMS); hatches are associative. The audit of the whole
+  generated drawing, with proposals for the template, is `ElevatorAutomation/docs/design/EDITABILITY.md`.
+- **Label placement without overlap:** the labels of the steel tower are placed so that no text lies on another text, a dimension text, a
+  dimension, extension or axis line or the slab edge, and no leader crosses a text; the generated drawings are checked for this.
+- **Tests:** new suites steel-ui (the SHAFT page), rails-ui (the RAILS page) and steel-native (the steel drawings read back from the DWG, with
+  the overlap check).
+
 ## [v06] — 2026-10-13
 
 v06 adds the A0 geared drawing sheet: every Generate Drawings run writes the drawing with a composed A0 sheet, its PDF and the project file.
