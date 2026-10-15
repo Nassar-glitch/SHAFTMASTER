@@ -38,7 +38,8 @@ namespace Elevator.AutoCAD.Plan
                         if (data != null
                             && data.AsArray().Length > 1
                             && (otherKeys.Contains(Convert.ToString(data.AsArray()[1].Value))
-                                || Convert.ToString(data.AsArray()[1].Value).StartsWith(AutomaticDoorPlan.KeyPrefix)))
+                                || Convert.ToString(data.AsArray()[1].Value).StartsWith(AutomaticDoorPlan.KeyPrefix)
+                                || Convert.ToString(data.AsArray()[1].Value).StartsWith(Steel.SteelDrawing.PlanPrefix)))
                         {
                             otherViewEntities++;
                             continue;

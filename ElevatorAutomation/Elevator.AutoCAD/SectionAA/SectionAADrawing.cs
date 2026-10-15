@@ -362,7 +362,12 @@ namespace Elevator.AutoCAD.SectionAA
             {
                 SectionSnapshot bb;
                 var source = VerticalExperimentDrawing.ReadSource(db, tr, out bb);
+                // A steel tower: the platform replaces the slab, so the machine-room floor level follows the top beam.
+                var steel = Elevator.AutoCAD.Steel.SteelDrawing.Read(db, tr);
+                data.SteelPlatformDropMm = steel == null ? (double?)null : source.Section.ConcreteHeight - steel.Inputs.Beam.HeightMm / 2;
                 var g = SectionAACalculator.Calculate(data, source.Section.Reference.SourceSlabThickness);
+                if (steel != null)
+                    g.Brackets = Elevator.AutoCAD.Steel.SteelDrawing.BracketsOnBeams(steel, g, data.BracketMaximum);
                 ShaftFrame f = ReplaceExistingDrawing(db, insertion, tr);
                 PrepareLayers(db, tr);
                 var model = (BlockTableRecord)tr.GetObject(Model(db, tr), OpenMode.ForWrite);
@@ -411,9 +416,15 @@ namespace Elevator.AutoCAD.SectionAA
                 var roomLabel = new MText { Location = new Point3d(left + 300, g.Ceiling - 250, 0), TextHeight = 200, Contents = "M/R" };
                 roomLabel.SetDatabaseDefaults(db);
                 add(roomLabel, "MR.Room.Label", "annotation");
-                var rlabel = new MText { Location = new Point3d(1450, g.R + 240, 0), TextHeight = 200, Contents = "R FL" };
+                var rlabel = new MText { Location = new Point3d(1450, g.R + 240, 0), TextHeight = 200, Contents = steel == null ? "R FL" : "PLATFORM" };
                 rlabel.SetDatabaseDefaults(db);
                 add(rlabel, "MR.R.Label", "annotation");
+                if (steel != null)
+                {
+                    // The tower replaces the walls, the slabs and the machine-room walls: they stay (bound) and are hidden.
+                    Elevator.AutoCAD.Steel.SteelDrawing.HideInAA(db, tr);
+                    Elevator.AutoCAD.Steel.SteelDrawing.DrawAA(db, tr, f, steel);
+                }
                 AAAudit result = StoreAndAudit(db, data, tr, g);
                 tr.Commit();
                 return result;

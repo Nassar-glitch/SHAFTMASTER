@@ -1,6 +1,8 @@
 """L2b evidence: plots the layout SM_Geared_A0 of generated DWGs to PNG through the AutoCAD 2023 Core Console.
 
-usage: plot_layouts.py <out folder> <dwg> [<dwg> ...]
+usage: plot_layouts.py <out folder> <dwg> [<dwg> ...] [<zoom name>=<x0>,<y0>,<x1>,<y1> ...]
+
+A zoom is a rectangle of the sheet in fractions of its width and height (y from the top): <name>-<zoom>.png at 130 dpi.
 
 For each DWG: a copy in a short path without spaces (a space ends a script answer), -PLOT of the layout with DWG To PDF.pc3 on ISO A0
 landscape, monochrome.ctb, layout area, 1:1; the PDF is rasterised with PyMuPDF to <name>-sheet.png (the whole sheet) and
@@ -47,7 +49,8 @@ def plot(dwg, pdf):
 def main():
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    for dwg in sys.argv[2:]:
+    zooms = [a for a in sys.argv[2:] if "=" in a]
+    for dwg in [a for a in sys.argv[2:] if "=" not in a]:
         name = os.path.splitext(os.path.basename(dwg))[0]
         pdf = os.path.join(out, name + ".pdf")
         plot(dwg, pdf)
@@ -60,6 +63,10 @@ def main():
         w, h = page.rect.width, page.rect.height
         clip = pymupdf.Rect(w * 0.855, 0, w, h)
         page.get_pixmap(dpi=110, clip=clip).save(os.path.join(out, name + "-title-block.png"))
+        for z in zooms:
+            zname, box = z.split("=")
+            x0, y0, x1, y1 = [float(v) for v in box.split(",")]
+            page.get_pixmap(dpi=130, clip=pymupdf.Rect(w * x0, h * y0, w * x1, h * y1)).save(os.path.join(out, name + "-" + zname + ".png"))
         rect = page.rect
         doc.close()
         os.remove(pdf)

@@ -73,7 +73,7 @@ namespace Elevator.Solution.Desktop
   {
    var company=Elevator.Reporting.Sheet.CompanyReportSettings.Load();var title=Elevator.Core.Layouts.TitleBlockData.Build(Session.Project,shell.Presets.Library,company.ToCompanySettings(),shell.Live,Elevator.Reporting.Docx.ReportClock.Now());
    var logo=company.Logo();
-   return new Elevator.Core.Layouts.SheetRequest{Attributes=title.Attributes(),DoorType=Session.Project.Doors==null?null:Session.Project.Doors.Type,
+   return new Elevator.Core.Layouts.SheetRequest{Attributes=title.Attributes(),DoorType=Session.Project.Doors==null?null:Session.Project.Doors.Type,SteelStructure=shell.Presets.Library!=null&&Elevator.Core.Steel.SteelFields.IsSteel(Session.Project,shell.Presets.Library),
     LogoFile=logo==null?null:company.LogoPath,LogoWidthPx=logo==null?0:logo.PixelWidth,LogoHeightPx=logo==null?0:logo.PixelHeight};
   }
   OutputChoice AskOutputChoice(OutputSetPlan plan)

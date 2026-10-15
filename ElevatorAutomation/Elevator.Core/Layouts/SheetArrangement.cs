@@ -160,6 +160,9 @@ namespace Elevator.Core.Layouts
         /// <summary>The standard scales, largest first.</summary>
         public static readonly int[] StandardScales = { 10, 20, 25, 50, 75, 100, 150, 200 };
 
+        /// <summary>The scales of a steel sheet's main views: the standard ladder with 1:40 (the user's own steel sheet shows A-A at 1:40).</summary>
+        public static readonly int[] SteelScales = { 10, 20, 25, 40, 50, 75, 100, 150, 200 };
+
         /// <summary>The weight of a detail view against a main view (1).</summary>
         public const double DetailWeight = 0.5;
 
@@ -235,9 +238,10 @@ namespace Elevator.Core.Layouts
         }
 
         /// <summary>Arranges the views in the drawing area.</summary>
-        public static SheetArrangementResult Arrange(SheetRect area, IList<SheetViewRequest> views)
+        public static SheetArrangementResult Arrange(SheetRect area, IList<SheetViewRequest> views, int[] mainScales = null, int sectionAAMaxDenominator = 0)
         {
             Validate(area, views);
+            int[] ladder = mainScales ?? StandardScales;
             var plan = views.FirstOrDefault(v => v.Kind == SheetViewKind.ShaftPlan);
             var room = views.FirstOrDefault(v => v.Kind == SheetViewKind.MachineRoomPlan);
             var aa = views.FirstOrDefault(v => v.Kind == SheetViewKind.SectionAA);
@@ -247,12 +251,21 @@ namespace Elevator.Core.Layouts
             int[] none = { 0 }; // a missing view keeps the loops the same
             Layout best = null;
             // The column grid of the user's own sheet first; the free packing only when the grid holds no combination at all.
+            // A-A is not taken smaller than 1:sectionAAMaxDenominator while a layout exists with it at that scale or larger (steel sheets:
+            // the section is the view that shows the tower); the search is repeated without the limit when none does.
+            for (int pass = 0; pass < 2 && best == null; pass++)
+            {
+            if (pass == 1 && sectionAAMaxDenominator <= 0)
+                break;
+            int cap = pass == 0 ? sectionAAMaxDenominator : 0;
             for (int mode = 0; mode < 2 && best == null; mode++)
-                foreach (int sp in plan != null ? StandardScales : none)
-                    foreach (int sm in room != null ? StandardScales : none)
-                        foreach (int sa in aa != null ? StandardScales : none)
-                            foreach (int sb in bb != null ? StandardScales : none)
+                foreach (int sp in plan != null ? ladder : none)
+                    foreach (int sm in room != null ? ladder : none)
+                        foreach (int sa in aa != null ? ladder : none)
+                            foreach (int sb in bb != null ? ladder : none)
                             {
+                                if (cap > 0 && sa > cap)
+                                    continue;
                                 // Hierarchy: the shaft plan leads. No other main view takes a larger scale (a smaller denominator) than it.
                                 if (plan != null && (sm != 0 && sm < sp || sa != 0 && sa < sp || sb != 0 && sb < sp))
                                     continue;
@@ -273,6 +286,7 @@ namespace Elevator.Core.Layouts
                                 if (l != null && (best == null || l.Better(best)))
                                     best = l;
                             }
+            }
             var result = new SheetArrangementResult { Area = area };
             if (best == null)
             {

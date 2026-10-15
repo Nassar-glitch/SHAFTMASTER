@@ -204,6 +204,10 @@ namespace Elevator.AutoCAD.Common
                 DrawingViews view;
                 if (tag[0].StartsWith("Plan."))
                     view = DrawingViews.Plan;
+                else if (tag[0].StartsWith(Steel.SteelDrawing.MachineRoomPrefix))
+                    view = DrawingViews.MachineRoomPlan;
+                else if (tag[0].StartsWith(Steel.SteelDrawing.SectionPrefix))
+                    view = DrawingViews.SectionBB;
                 else if (tag[0].StartsWith("MachineRoom."))
                     view = DrawingViews.MachineRoomPlan;
                 else if (tag[0].StartsWith("MachineRoomSection."))

@@ -26,6 +26,14 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
    - **Dimensions are arranged.** Chained dimensions sit on one common dimension line, and successive rows keep an equal spacing. Extension lines start at the real geometry edges. No text overlaps another text, line or dimension. A value too small to fit between its arrows is placed outside the chain, beside it, never on top of a neighbour.
    - **Every component is drawn as a real part,** not as floating lines. For example, automatic door panels sit inside their door frame or header outline.
 9. **Clear names (agreed 2026-10-11).** Field and option names in the application are short, plain and self-explanatory, for example "Doors Offset". Directions are given as Left / Right (as seen in the plan drawing), never as internal terms such as "towards the fixed side" or a sign convention.
+11. **Editable drawings (user, 2026-10-14).** A generated drawing must be as easy to edit in AutoCAD as a hand-made one:
+    - a label that points at something is one MULTILEADER (leader and text together), not a loose line plus a text;
+    - dimensions are real DIMENSION entities, associative where possible, and never exploded;
+    - a repeated part (column section, base plate with bolts, control panel, bracket, door symbol) is a named block;
+    - text is TEXT / MTEXT in the drawing's styles, and hatches are HATCH entities;
+    - everything sits on meaningful layers.
+    
+    Moving, retyping or restyling an item must take one click, not a hunt for pieces.
 10. **Loads also in kg (agreed 2026-10-11).** Wherever a load or force is shown in N or kN (application pages, calculation sheet, figures, Design Notes), its kg value is shown beside it.
     - kg = N / 9.81, rounded UP to the next multiple of 5 kg (1201 → 1205; an exact multiple stays).
     - This is a display rule only. Every calculation and every OK / NOT OK result keeps using the unrounded N values.
@@ -130,6 +138,16 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   4. The shaft plan is cut just above the floor beam (the Planner's decision).
   5. **The concrete base** is drawn from editable presets (size, thickness, bars: count and diameter), sized from the steel footprint plus a margin. Its structural design belongs to the later STEEL STRUCTURE module.
 - **Bracing:** double cross (X) of L50×50×5 in every panel; the faces wait for the STEEL module.
+- **From the user's own steel sheet (S4, 2026-10-14):**
+  - The clear W × D is measured between the beam faces. The columns reach slightly into it (UPN 140 / UPN 100: 10 mm in width, 90 mm in depth), as in the user's edit.
+  - **The building slab edge** in front of the entrance face is always drawn in the shaft plan and the tower-top plan. Preset depth 250; preset width W + 2 × 850; both editable.
+  - **A machine housing** sits on top of the tower of every external lift. The machine stands inside it. Preset height about 1950; roof plate with a 160 overhang; editable.
+  - The control-panel label is "CONTROL PANEL".
+  - Dimension from the governor to the machine in the tower-top plan.
+  - B-B for steel has no concrete heights, and its dimensions are rounded to whole millimetres.
+  - The arrangement takes larger scales whenever the sheet has room.
+  - The door section C-C stays on steel sheets.
+  - The machine supports P1–P4 sit on the steel, inside the tower envelope.
 - **Not now:** structural calculations (a later STEEL STRUCTURE module), and the generated details stage G (postponed).
 - **Profile catalogue:** UPN sizes (dimensions and mass) and L angles, as editable data.
 
@@ -174,9 +192,16 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 
 ## Where we are (2026-10-13)
 
-- **Done and released:** doors (v05); the A0 sheet with PDF and file names (v06); the guide-rail check R1 and R2 (merge pending the user's golden approval, then a push).
-- **Postponed:** stage G, the generated detail views (rails and brackets with the real profile and spacing, the door detail, STEP rails).
-- **Now:** the steel shaft structure (UPN), for a real client project.
+- **Done and released:**
+  - v05: doors;
+  - v06: the A0 sheet with PDF and file names;
+  - v07 (2026-10-15): the guide-rail check (R1 and R2), the steel shaft structure (UPN, S1–S4), and editable drawings for the steel items (E1).
+- **Now (resumed 2026-10-15):** stage G, the generated detail views:
+  - rails and brackets with the real profile and spacing;
+  - the door elevation and section from the door data;
+  - the steel versions (bracket on the beam, door frame on the beam);
+  - the STEP rails;
+  - making the template details editable (EDITABILITY.md section 3).
 
 ## Build stages (order)
 

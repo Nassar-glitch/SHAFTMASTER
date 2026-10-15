@@ -8,6 +8,7 @@ using Elevator.Core.Doors;
 using Elevator.Core.GuideRails;
 using Elevator.Core.MachineRoom;
 using Elevator.Core.Serialization;
+using Elevator.Core.Steel;
 using Elevator.Core.Suspension;
 
 namespace Elevator.Core.Presets
@@ -53,6 +54,15 @@ namespace Elevator.Core.Presets
         public GuideRailPreset GuideRailsOrDefault()
         {
             return GuideRails ?? GuideRailDefaults.Create();
+        }
+
+        /// <summary>The steel-shaft catalogues and presets; null in an older library: the shipped defaults apply.</summary>
+        public SteelShaftPreset SteelShaft;
+
+        /// <summary>The steel-shaft presets of the library, or the shipped defaults.</summary>
+        public SteelShaftPreset SteelShaftOrDefault()
+        {
+            return SteelShaft ?? SteelShaftDefaults.Shared;
         }
 
         /// <summary>The title-block presets (control, supply); null in an older library: the shipped defaults apply.</summary>
@@ -153,6 +163,8 @@ namespace Elevator.Core.Presets
                 p.AddRange(Doors.Validate());
             if (GuideRails != null)
                 p.AddRange(GuideRails.Validate());
+            if (SteelShaft != null)
+                p.AddRange(SteelShaft.Validate());
             if (TitleBlock != null && (TitleBlock.Control == null || TitleBlock.Supply == null))
                 p.Add("TitleBlock needs Control and Supply");
             return p;
@@ -391,7 +403,7 @@ namespace Elevator.Core.Presets
             var value = hash;
             if (value == null)
             {
-                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock", "GuideRails");
+                value = CalculationFingerprint.HashWithout(this, "Doors", "TitleBlock", "GuideRails", "SteelShaft");
                 hash = value;
             }
             return value;

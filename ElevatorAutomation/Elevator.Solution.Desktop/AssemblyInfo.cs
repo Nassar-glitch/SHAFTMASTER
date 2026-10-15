@@ -13,6 +13,7 @@ using System.Reflection;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("OutputSetUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("PresetsUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("RailsUiTests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SteelUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("RopeTractionUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SafetyPitDraftUiTests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SafetyPitUiTests")]

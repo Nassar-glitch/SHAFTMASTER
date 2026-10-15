@@ -44,7 +44,7 @@ namespace Elevator.Core.Geometry
                 CarZ = car.FflZ,
                 Travel = served.Last().FflZ - served.First().FflZ
             };
-            g.R = g.Underside + slab;
+            g.R = d.SteelPlatformDropMm.HasValue ? g.Underside - d.SteelPlatformDropMm.Value : g.Underside + slab;
             g.Ceiling = g.R + 2200;
             g.CWBottom = d.ReferenceCWBottomZ - (g.CarZ - d.ReferenceCarZ);
             if (n.Last().FflZ + 250 >= g.Underside || served.Last().FflZ + 2160 > g.Underside)
