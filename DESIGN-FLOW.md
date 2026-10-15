@@ -192,9 +192,16 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
 
 ## Where we are (2026-10-13)
 
-- **Done and released:** doors (v05); the A0 sheet with PDF and file names (v06); the guide-rail check R1 and R2 (merge pending the user's golden approval, then a push).
-- **Postponed:** stage G, the generated detail views (rails and brackets with the real profile and spacing, the door detail, STEP rails).
-- **Now:** the steel shaft structure (UPN), for a real client project.
+- **Done and released:**
+  - v05: doors;
+  - v06: the A0 sheet with PDF and file names;
+  - v07 (2026-10-15): the guide-rail check (R1 and R2), the steel shaft structure (UPN, S1–S4), and editable drawings for the steel items (E1).
+- **Now (resumed 2026-10-15):** stage G, the generated detail views:
+  - rails and brackets with the real profile and spacing;
+  - the door elevation and section from the door data;
+  - the steel versions (bracket on the beam, door frame on the beam);
+  - the STEP rails;
+  - making the template details editable (EDITABILITY.md section 3).
 
 ## Build stages (order)
 
