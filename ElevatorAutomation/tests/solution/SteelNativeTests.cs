@@ -79,7 +79,9 @@ public static class SteelNativeTests
                 new { Id = "steel-client", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "steel-default", Steel = true, Stops = 5, Floor = 3000.0, W = 1600.0, D = 1800.0, Pit = 1300.0, OH = 4200.0, File = (string)null, Door = (string)null },
                 new { Id = "steel-2s", Steel = true, Stops = 4, Floor = 3000.0, W = 1720.0, D = 2000.0, Pit = 1300.0, OH = 4200.0, File = (string)null, Door = DoorTypes.Automatic2S },
-                new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
+                new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                // G1: the rail details follow the profile and the real spacing (car T50/50/5 at 3000, the counterweight follows)
+                new { Id = "concrete-t50-3000", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
             }.ToList();
             // a project file of a user (S4): STEEL_USER_PROJECT=<file> generates it as the case "user-project"
             string userFile = Environment.GetEnvironmentVariable("STEEL_USER_PROJECT");
@@ -89,6 +91,11 @@ public static class SteelNativeTests
             foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {
                 var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel, c.Door);
+                if (c.Id == "concrete-t50-3000")
+                {
+                    ProjectPresets.Find(ProjectPresets.CarProfileKey).Edit(p, "T50/50/5");
+                    ProjectPresets.Find(ProjectPresets.CarSpacingKey).Edit(p, 3000.0);
+                }
                 Check(SteelFields.IsSteel(p, lib) == c.Steel, c.Id + ": the construction is " + (c.Steel ? "steel" : "concrete"));
                 var design = new ElevatorDesignEngine().Calculate(p, ctx, DrawingViews.All);
                 Check(design.CanGenerate && design.Plan != null, c.Id + ": the design allows generation");

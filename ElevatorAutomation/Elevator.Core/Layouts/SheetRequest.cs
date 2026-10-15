@@ -59,7 +59,7 @@ namespace Elevator.Core.Layouts
             return System.Math.Min(TitlePaperHeightMm * scaleDenominator, TitleMaxModelMm);
         }
         /// <summary>The scales a reference detail may take: its template scale or larger (the bracket detail was enlarged to 1:5).</summary>
-        public static readonly int[] DetailScales = { 5, 10, 20 };
+        public static readonly int[] DetailScales = { 5, 10, 20, 50 };
         public const string TemplateFileName = "Layout_Geared_A0.dxf";
         public const string DetailsFileName = "Layout_Geared_A0.details.json";
         public const string FieldsFileName = "Layout_Geared_A0.fields.json";

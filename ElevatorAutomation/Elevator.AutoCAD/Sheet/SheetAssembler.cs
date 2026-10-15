@@ -70,11 +70,16 @@ namespace Elevator.AutoCAD.Sheet
                 HostApplicationServices.WorkingDatabase = previous;
                 throw;
             }
+            // the rail plan and the bracket elevation are drawn from the project's rails and brackets (G1) at the text height of the scale
+            // each takes: first for the template scales, again whenever the arrangement gives one another scale
+            var rails = new RailDetails.Drawer(db, chosen);
+            HostApplicationServices.WorkingDatabase = db;
+            rails.Draw(10, 20);
             SheetArrangementResult arrangement = null;
             Dictionary<string, List<string>> titles = null;
             string last = null;
             var addedTitles = new Dictionary<DrawingViews, ObjectId>();
-            for (int pass = 0; pass < 4; pass++)
+            for (int pass = 0; pass < 6; pass++)
             {
                 var measured = MeasureViews(db, addedTitles);
                 var detailBoxes = MeasureDetails(db, chosen, 0);
@@ -124,7 +129,7 @@ namespace Elevator.AutoCAD.Sheet
                         MarginMm = SheetLayout.DetailMarginMm,
                         AllowedScales = SheetLayout.DetailScales,
                         MinScaleDenominator = 0,
-                        MaxScaleDenominator = d.TemplateScale
+                        MaxScaleDenominator = d.Kind == "RailBrackets" ? 50 : d.TemplateScale
                     });
                 }
                 arrangement = SheetArrangement.Arrange(area, views, request.SteelStructure ? SheetArrangement.SteelScales : null, request.SteelStructure ? 50 : 0);
@@ -133,6 +138,13 @@ namespace Elevator.AutoCAD.Sheet
                 // the titles state the sheet scale at 5 mm printed height: apply them, measure again until the scales are stable
                 titles = UpdateTitles(db, arrangement.Viewports, chosen, measured, addedTitles);
                 string key = String.Join(";", arrangement.Viewports.Select(v => v.Name + "=" + v.ScaleDenominator));
+                if (rails.Active && pass < 4)
+                {
+                    var pv = arrangement.Viewports.FirstOrDefault(v => v.Name == RailDetails.PlanDetail);
+                    var bv = arrangement.Viewports.FirstOrDefault(v => v.Name == RailDetails.BracketsDetail);
+                    if (pv != null && bv != null && rails.Draw(pv.ScaleDenominator, bv.ScaleDenominator))
+                        key += ";rails=" + rails.Key;
+                }
                 if (key == last)
                     break;
                 last = key;

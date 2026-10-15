@@ -92,9 +92,11 @@ def run_case(folder, case_id):
         for j in range(i + 1, len(rects)):
             check(not overlaps(rects[i], rects[j]), case_id + ": viewports %d and %d do not overlap" % (i, j))
     # the host's own report matches the DWG
-    exp = sorted((round(v["PaperX"], 1), round(v["PaperY"], 1), v["ScaleDenominator"]) for v in expected["Viewports"])
-    got = sorted((round(r[0], 1), round(r[1], 1), round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
-    check(exp == got, case_id + ": viewport positions and scales equal the arrangement")
+    # positions to 0.06 mm (a position such as 736.45 rounds to 736.4 in one place and 736.5 in the other), the scales exactly
+    exp = sorted((v["PaperX"], v["PaperY"], v["ScaleDenominator"]) for v in expected["Viewports"])
+    got = sorted((r[0], r[1], round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
+    check(len(exp) == len(got) and all(any(abs(e[0] - g[0]) < 0.06 and abs(e[1] - g[1]) < 0.06 and e[2] == g[2] for g in got) for e in exp),
+          case_id + ": viewport positions and scales equal the arrangement")
 
     # scale labels: only under a view that has no title of its own stating the scale
     labels = [e.dxf.text for e in lay if e.dxftype() == "TEXT" and e.dxf.text.startswith("1:")]
