@@ -74,7 +74,7 @@ namespace Elevator.AutoCAD.Sheet
             // each takes: first for the template scales, again whenever the arrangement gives one another scale
             var rails = new RailDetails.Drawer(db, chosen);
             HostApplicationServices.WorkingDatabase = db;
-            rails.Draw(10, 20);
+            rails.Draw(5, 10);
             SheetArrangementResult arrangement = null;
             Dictionary<string, List<string>> titles = null;
             string last = null;
@@ -129,7 +129,7 @@ namespace Elevator.AutoCAD.Sheet
                         MarginMm = SheetLayout.DetailMarginMm,
                         AllowedScales = SheetLayout.DetailScales,
                         MinScaleDenominator = 0,
-                        MaxScaleDenominator = d.Kind == "RailBrackets" ? 50 : d.TemplateScale
+                        MaxScaleDenominator = d.Kind == "RailBrackets" ? 20 : d.TemplateScale
                     });
                 }
                 arrangement = SheetArrangement.Arrange(area, views, request.SteelStructure ? SheetArrangement.SteelScales : null, request.SteelStructure ? 50 : 0);

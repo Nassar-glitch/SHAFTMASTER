@@ -77,6 +77,7 @@ are kept (the scale is appended as before).
   the anchors (or the bolts through the beam of a steel shaft, with the beam behind the bracket). Block `SM_RAIL_BRACKET_ELEV_*`.
 - Layers `S-RAIL`, `S-BRACKET`, `S-CLIP`, `S-ANCHOR`, `A-WALL`, `S-BEAM`, `A-DIMS`, `A-ANNO`; labels are MULTILEADERs placed with the
   same no-overlap rule as the steel drawing (PlaceLabel with obstacles), the dimension texts of a chain by `DimensionLayout`.
-- The text height is 3 mm printed at the scale the detail takes on the sheet; the elevation may take 1:50 (a 3000 spacing is 3.6 m
-  high), the plan stays at 1:10 or 1:5.
+- The text height is 2.5 mm printed at the scale the detail takes on the sheet. The elevation draws the two brackets close
+  together with a break of the rail between them; its spacing DIMENSION carries the real value (2000 / 3000) as text. Plan 1:5 or 1:10,
+  elevation 1:10 or 1:20.
 - The plate width is computed: the rail foot width plus the two clips (library: 270 x 50 x 4 for the 50 mm rail).

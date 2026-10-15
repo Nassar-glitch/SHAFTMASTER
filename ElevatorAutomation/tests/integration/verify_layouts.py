@@ -97,6 +97,19 @@ def run_case(folder, case_id):
     got = sorted((r[0], r[1], round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
     check(len(exp) == len(got) and all(any(abs(e[0] - g[0]) < 0.06 and abs(e[1] - g[1]) < 0.06 and e[2] == g[2] for g in got) for e in exp),
           case_id + ": viewport positions and scales equal the arrangement")
+    # no viewport shows another detail's drawing: the model areas of the detail viewports (x > 900000) do not overlap
+    areas = []
+    for v in vps:
+        d = v.dxf
+        cx, cy = d.view_center_point.x, d.view_center_point.y
+        if cx < 900000 or d.height <= 0:
+            continue
+        hh = d.view_height / 2
+        hw = hh * d.width / d.height
+        areas.append((cx - hw, cy - hh, cx + hw, cy + hh))
+    for i in range(len(areas)):
+        for j in range(i + 1, len(areas)):
+            check(not overlaps(areas[i], areas[j]), case_id + ": detail viewports %d and %d show different model areas" % (i, j))
 
     # scale labels: only under a view that has no title of its own stating the scale
     labels = [e.dxf.text for e in lay if e.dxftype() == "TEXT" and e.dxf.text.startswith("1:")]

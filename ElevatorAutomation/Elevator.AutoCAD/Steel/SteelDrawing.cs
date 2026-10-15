@@ -527,6 +527,8 @@ namespace Elevator.AutoCAD.Steel
             // the dimension lines, extension lines and the axes of the view: a label text box may not touch one (its leader may cross)
             readonly List<double[]> segments = new List<double[]>();
             readonly ShaftFrame frame;
+            // the leaders already placed (a new leader may not cross one of them)
+            readonly List<double[]> leaders = new List<double[]>();
 
             // Only the entities of the view the labels belong to (the views stand on top of each other until they are arranged).
             public Obstacles(Database db, Transaction tr, ShaftFrame frame, params string[] viewPrefixes)
@@ -684,6 +686,18 @@ namespace Elevator.AutoCAD.Steel
                 return sb.ToString();
             }
 
+            internal void AddLeader(double x0, double y0, double x1, double y1)
+            {
+                leaders.Add(new[] { x0, y0, x1, y1 });
+            }
+
+            static bool SegmentsCross(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy)
+            {
+                double d1 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), d2 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+                double d3 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx), d4 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+                return d1 * d2 < 0 && d3 * d4 < 0;
+            }
+
             public void AddText(double[] box)
             {
                 names.Add("label");
@@ -713,6 +727,11 @@ namespace Elevator.AutoCAD.Steel
             /// <summary>True when the segment crosses no text.</summary>
             public bool LeaderClear(double x0, double y0, double x1, double y1)
             {
+                foreach (var l in leaders)
+                {
+                    if (SegmentsCross(x0, y0, x1, y1, l[0], l[1], l[2], l[3]))
+                        return false;
+                }
                 foreach (var t in texts)
                 {
                     if (SegmentHits(x0, y0, x1, y1, t[0], t[1], t[2], t[3]))
@@ -811,6 +830,7 @@ namespace Elevator.AutoCAD.Steel
                 bay = anchors[0][1];
             }
             double endX = toLeft ? bax - best[1] : bax + best[1], endY = bay + best[2];
+            ob.AddLeader(bax, bay, endX, endY);
             if (toLeft)
             {
                 w.LabelLeft(bax, bay, endX, endY, h, text);
