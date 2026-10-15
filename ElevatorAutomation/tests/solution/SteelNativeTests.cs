@@ -81,6 +81,9 @@ public static class SteelNativeTests
                 new { Id = "steel-2s", Steel = true, Stops = 4, Floor = 3000.0, W = 1720.0, D = 2000.0, Pit = 1300.0, OH = 4200.0, File = (string)null, Door = DoorTypes.Automatic2S },
                 new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 // G1: the rail details follow the profile and the real spacing (car T50/50/5 at 3000, the counterweight follows)
+                // G1 round 3: CW rails far from the side walls (SW 1800, DBG 1040: 330 to the rail back) are fixed on a cross arm
+                new { Id = "concrete-wide", Steel = false, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "steel-wide", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t89", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t50-3000", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
             }.ToList();

@@ -109,8 +109,95 @@ namespace Elevator.Core.GuideRails
             };
         }
 
-        /// <summary>Every bracket field: the car rail's, then the counterweight rail's.</summary>
-        public static readonly PresetField[] All = new[] { Car, Cw }.SelectMany(f => Members.Select(m => Create(f, m))).ToArray();
+        // ---------- the fixing of each rail group and the cross arm ----------
+        public const string FixingCarKey = "Rails.Fixing.Car";
+        public const string FixingCwKey = "Rails.Fixing.CW";
+        public const string ReachKey = "Rails.Fixing.ReachMm";
+
+        static PresetField TextField(string key, string label, Func<PresetContext, object> preset)
+        {
+            return new PresetField
+            {
+                Page = "RAILS",
+                Key = key,
+                Label = label,
+                Preset = preset,
+                Stored = p =>
+                {
+                    var d = Read(p);
+                    object v;
+                    return d != null && d.TryGetValue(key, out v) ? v as string : null;
+                },
+                Store = (p, v) => Set(p, key, v as string)
+            };
+        }
+
+        static PresetField NumberField(string key, string label, Func<RailFixingPreset, double> preset)
+        {
+            return new PresetField
+            {
+                Page = "RAILS",
+                Key = key,
+                Label = label,
+                Preset = c => (object)preset(c.Library.GuideRailsOrDefault().FixingOrDefault()),
+                Stored = p =>
+                {
+                    var d = Read(p);
+                    object v;
+                    return d != null && d.TryGetValue(key, out v) && v != null ? (object)Convert.ToDouble(v, CultureInfo.InvariantCulture) : null;
+                },
+                Store = (p, v) => Set(p, key, v == null ? null : (object)Convert.ToDouble(v, CultureInfo.InvariantCulture))
+            };
+        }
+
+        public static readonly PresetField FixingCar = TextField(FixingCarKey, "Car rails fixing", c => RailFixing.Auto);
+        public static readonly PresetField FixingCw = TextField(FixingCwKey, "Counterweight rails fixing", c => RailFixing.Auto);
+        public static readonly PresetField Reach = NumberField(ReachKey, "Wall bracket reach (mm)", f => f.ReachMm);
+        public static readonly PresetField ArmProfile = TextField("Rails.CrossArm.Profile", "Cross arm section",
+            c => c.Library.GuideRailsOrDefault().FixingOrDefault().ArmProfile);
+        public static readonly PresetField ArmHeight = NumberField("Rails.CrossArm.HeightMm", "Cross arm height (mm)", f => f.ArmHeightMm);
+        public static readonly PresetField ArmWidth = NumberField("Rails.CrossArm.WidthMm", "Cross arm width (mm)", f => f.ArmWidthMm);
+        public static readonly PresetField ArmWeb = NumberField("Rails.CrossArm.WebMm", "Cross arm web (mm)", f => f.ArmWebMm);
+        public static readonly PresetField ArmFlange = NumberField("Rails.CrossArm.FlangeMm", "Cross arm flange (mm)", f => f.ArmFlangeMm);
+        public static readonly PresetField ArmEndPlate = NumberField("Rails.CrossArm.EndPlateMm", "Cross arm end plate (mm)", f => f.ArmEndPlateMm);
+        public static readonly PresetField ArmEndPlateThickness = NumberField("Rails.CrossArm.EndPlateThicknessMm", "Cross arm end plate thickness (mm)", f => f.ArmEndPlateThicknessMm);
+        public static readonly PresetField ArmAnchorDiameter = NumberField("Rails.CrossArm.AnchorDiameterMm", "Cross arm anchor diameter (mm)", f => f.ArmAnchorDiameterMm);
+        public static readonly PresetField ArmAnchorCount = NumberField("Rails.CrossArm.AnchorCount", "Cross arm anchors", f => f.ArmAnchorCount);
+
+        /// <summary>The fixing fields (type per group, reach, the cross arm), in the order of the page.</summary>
+        public static readonly PresetField[] Fixing =
+        {
+            FixingCar, FixingCw, Reach, ArmProfile, ArmHeight, ArmWidth, ArmWeb, ArmFlange, ArmEndPlate, ArmEndPlateThickness,
+            ArmAnchorDiameter, ArmAnchorCount
+        };
+
+        /// <summary>Every bracket field: the car rail's, then the counterweight rail's, then the fixing fields.</summary>
+        public static readonly PresetField[] All = new[] { Car, Cw }.SelectMany(f => Members.Select(m => Create(f, m))).Concat(Fixing).ToArray();
+
+        /// <summary>The fixing presets in effect: the library values with the edited ones.</summary>
+        public static RailFixingPreset EffectiveFixing(ElevatorProject project, PresetLibrary library)
+        {
+            var c = new PresetContext { Project = project, Library = library };
+            var f = library.GuideRailsOrDefault().FixingOrDefault().Clone();
+            f.ReachMm = Convert.ToDouble(Reach.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmProfile = (ArmProfile.Effective(c) as string) ?? f.ArmProfile;
+            f.ArmHeightMm = Convert.ToDouble(ArmHeight.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmWidthMm = Convert.ToDouble(ArmWidth.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmWebMm = Convert.ToDouble(ArmWeb.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmFlangeMm = Convert.ToDouble(ArmFlange.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmEndPlateMm = Convert.ToDouble(ArmEndPlate.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmEndPlateThicknessMm = Convert.ToDouble(ArmEndPlateThickness.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmAnchorDiameterMm = Convert.ToDouble(ArmAnchorDiameter.Effective(c), CultureInfo.InvariantCulture);
+            f.ArmAnchorCount = Convert.ToDouble(ArmAnchorCount.Effective(c), CultureInfo.InvariantCulture);
+            return f;
+        }
+
+        /// <summary>The fixing setting of a group in effect (Auto, Wall bracket, Cross arm).</summary>
+        public static string FixingSetting(ElevatorProject project, PresetLibrary library, string family)
+        {
+            var field = family == Car ? FixingCar : FixingCw;
+            return field.Effective(new PresetContext { Project = project, Library = library }) as string ?? RailFixing.Auto;
+        }
 
         public static PresetField Find(string key)
         {

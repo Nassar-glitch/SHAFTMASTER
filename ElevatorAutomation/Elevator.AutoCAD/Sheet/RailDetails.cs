@@ -49,6 +49,14 @@ namespace Elevator.AutoCAD.Sheet
             public RailProfile Profile;
             public RailBracketPreset Bracket;
             public double SpacingMm;
+            /// <summary>How the rail group is fixed, decided from the plan numbers.</summary>
+            public RailFixingDecision Fixing;
+            /// <summary>The leg of the angle section (L50x40x4) before the arm was set to the gap.</summary>
+            public double AngleLegB;
+            public bool CrossArm
+            {
+                get { return Fixing != null && Fixing.Type == RailFixingType.CrossArm; }
+            }
             // derived plate span
             public double PlateWidth { get { return Profile.WidthMm + 2 * Bracket.ClipWidthMm; } }
         }
@@ -58,6 +66,7 @@ namespace Elevator.AutoCAD.Sheet
             public bool Steel;
             public ChannelProfile Beam;
             public Rail Car, Cw;
+            public RailFixingPreset Arm;
         }
 
         /// <summary>
@@ -177,7 +186,7 @@ namespace Elevator.AutoCAD.Sheet
                 double spacing = s == null ? 0 : Convert.ToDouble(s, CultureInfo.InvariantCulture);
                 if (spacing <= 0)
                     return null;
-                return new Rail { Family = family, Title = title, Profile = profile, Bracket = bracket, SpacingMm = spacing };
+                return new Rail { Family = family, Title = title, Profile = profile, Bracket = bracket, SpacingMm = spacing, AngleLegB = bracket.AngleLegBMm };
             };
             var c = new Context
             {
@@ -187,6 +196,32 @@ namespace Elevator.AutoCAD.Sheet
             if (c.Car == null || c.Cw == null)
                 return null;
             c.Steel = SteelFields.IsSteel(project, lib);
+            c.Arm = RailBracketFields.EffectiveFixing(project, lib);
+            // the numbers the plan dimensions: Part016 shaft width, Part024 car DBG, Part003 CW DBG, Part017 rear wall to the CW row
+            var dims = PlanDimensions(db, tr);
+            double sw = dims.ContainsKey("Part016") ? dims["Part016"] : 0;
+            foreach (var r in new[] { c.Car, c.Cw })
+            {
+                bool car = r.Family == RailBracketFields.Car;
+                string dbgKey = car ? "Part024" : "Part003";
+                if (sw > 0 && dims.ContainsKey(dbgKey))
+                {
+                    var facts = new RailFixingFacts
+                    {
+                        Family = r.Family,
+                        ShaftWidthMm = sw,
+                        DbgMm = dims[dbgKey],
+                        RailHeightMm = r.Profile.HeightMm,
+                        RailWidthMm = r.Profile.WidthMm,
+                        RearWallToRowMm = !car && dims.ContainsKey("Part017") ? dims["Part017"] : 0,
+                        Steel = c.Steel
+                    };
+                    r.Fixing = RailFixing.Decide(facts, RailBracketFields.FixingSetting(project, lib, r.Family), c.Arm.ReachMm);
+                    // a wall bracket reaches the rail: its arm is the gap of the plan (the preset arm is the least)
+                    if (r.Fixing.Type == RailFixingType.WallBracket && r.Fixing.ArmLengthMm > 0)
+                        r.Bracket.AngleLegBMm = Math.Max(20, r.Fixing.ArmLengthMm - r.Bracket.PlateThicknessMm);
+                }
+            }
             if (c.Steel)
             {
                 var steel = SteelStructure.Build(project, lib);
@@ -196,6 +231,24 @@ namespace Elevator.AutoCAD.Sheet
                     c.Beam = steel.Inputs.Beam;
             }
             return c;
+        }
+
+        // The measurements of the plan dimensions of the drawing by the last part of their key (Plan.Dimension.PartNNN).
+        static Dictionary<string, double> PlanDimensions(Database db, Transaction tr)
+        {
+            var map = new Dictionary<string, double>();
+            var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+            foreach (ObjectId id in model)
+            {
+                var d = tr.GetObject(id, OpenMode.ForRead) as Dimension;
+                if (d == null)
+                    continue;
+                var tag = SectionAADrawing.Tag(d);
+                if (tag == null || tag.Length == 0 || !tag[0].StartsWith("Plan.Dimension.", StringComparison.Ordinal))
+                    continue;
+                map[tag[0].Substring("Plan.Dimension.".Length)] = d.Measurement;
+            }
+            return map;
         }
 
         // The template entities of a window go off; its titles (underlined texts) stay.
@@ -396,7 +449,7 @@ namespace Elevator.AutoCAD.Sheet
         // ---------- names of the parts: one full name per part, the same in the plan and in the elevation ----------
         static string AngleName(Rail r)
         {
-            return "ANGLE L" + N(r.Bracket.AngleLegAMm) + "x" + N(r.Bracket.AngleLegBMm) + "x" + N(r.Bracket.AngleThicknessMm);
+            return "ANGLE L" + N(r.Bracket.AngleLegAMm) + "x" + N(r.AngleLegB) + "x" + N(r.Bracket.AngleThicknessMm);
         }
 
         static string PlateName(Rail r)
@@ -419,6 +472,11 @@ namespace Elevator.AutoCAD.Sheet
             return c.Steel ? "BOLT M" + N(r.Bracket.AnchorDiameterMm) : "ANCHOR D" + N(r.Bracket.AnchorDiameterMm) + "x" + N(r.Bracket.AnchorLengthMm);
         }
 
+        static string ArmName(Context c)
+        {
+            return "CROSS ARM " + c.Arm.ArmProfile;
+        }
+
         static string RailName(Rail r)
         {
             return "RAIL " + r.Profile.Name;
@@ -427,6 +485,11 @@ namespace Elevator.AutoCAD.Sheet
         static string SupportName(Context c)
         {
             return c.Steel ? "BEAM " + c.Beam.Name : "WALL";
+        }
+
+        static string SupportName(Context c, bool rear)
+        {
+            return c.Steel ? "BEAM " + c.Beam.Name : (rear ? "REAR WALL" : "WALL");
         }
 
         // ---------- one tidy column of labels ----------
@@ -513,7 +576,7 @@ namespace Elevator.AutoCAD.Sheet
         // the room a plan takes left of its wall face (labels of the support and the fixing) and right of the rail tip
         static double LeftRoom(Rail r)
         {
-            return Wall(r) + 3 * Text + 13 * Text;
+            return Wall(r) + (r.CrossArm ? r.Fixing.ArmLengthMm : 0) + 3 * Text + 13 * Text;
         }
 
         static double RightRoom(Rail r)
@@ -566,8 +629,80 @@ namespace Elevator.AutoCAD.Sheet
             return list;
         }
 
+        // A rail fixed on a cross arm: the surface (rear wall or beam) at the left, the end plate with its anchors, the arm (a section of
+        // the library: UPE 120), the head plate, then the bracket and the rail as for a wall bracket.
+        static void DrawPlanCrossArm(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
+        {
+            var b = r.Bracket;
+            var a = c.Arm;
+            var w = WriterAt(db, tr, ox, oy);
+            double half = r.PlateWidth / 2 + b.AngleLegAMm;
+            double xr = b.AngleLegBMm + b.PlateThicknessMm;
+            double len = Math.Max(r.Fixing.ArmLengthMm, 2 * a.ArmEndPlateThicknessMm + 20);
+            double xw = -len;
+            double et = a.ArmEndPlateThicknessMm;
+            double span = Math.Max(half, a.ArmEndPlateMm / 2) + 2 * Text;
+            double depth = c.Steel ? c.Beam.WidthMm : Wall(r);
+            // the surface behind the arm
+            w.Layer = c.Steel ? SteelDrawing.LayerBeam : LayerWall;
+            var box = w.Rect(xw - depth, -span, xw, span);
+            if (c.Steel)
+                w.Fill(box, "ANSI32", 1.2 * Text);
+            // end plate, arm and head plate
+            w.Layer = LayerBracket;
+            w.Rect(xw, -a.ArmEndPlateMm / 2, xw + et, a.ArmEndPlateMm / 2);
+            w.Rect(-et, -half, 0, half);
+            w.Layer = SteelDrawing.LayerBeam;
+            w.Rect(xw + et, -a.ArmWidthMm / 2, -et, a.ArmWidthMm / 2);
+            // the fixing of the end plate: anchors into the wall, bolts through the beam
+            w.Layer = LayerAnchor;
+            double yAnchor = a.ArmEndPlateMm / 2 - 20, d = a.ArmAnchorDiameterMm;
+            double far = c.Steel ? xw - depth : xw - Math.Min(depth - 10, r.Bracket.AnchorLengthMm);
+            foreach (int s in new[] { -1, 1 })
+                w.Rect(far, s * yAnchor - d / 2, xw + et, s * yAnchor + d / 2);
+            // the bracket on the head plate and the rail
+            w.Layer = LayerBracket;
+            w.Insert(BracketPlanBlock(db, tr, r), 0, 0, 1, 0);
+            w.Layer = LayerRail;
+            w.Insert(RailBlock(db, tr, r.Profile), xr, 0, 1, 0);
+            w.Layer = LayerAnchor;
+            double fixA = b.AnchorDiameterMm, yfix = r.PlateWidth / 2 + b.AngleLegAMm / 2 - b.AngleThicknessMm / 2;
+            foreach (int s in new[] { -1, 1 })
+                w.Rect(-et, s * yfix - fixA / 2, b.AngleThicknessMm, s * yfix + fixA / 2);
+            // dimensions: the arm (surface to the bracket) and the rail height
+            var ob = new SteelDrawing.Obstacles();
+            Chain(w, ob, new[] { xw, 0.0 }, new[] { N(len) }, span + 2 * Text, 0, span, true);
+            Chain(w, ob, new[] { xr, xr + r.Profile.HeightMm }, new[] { N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
+            double xDim = xr + r.Profile.HeightMm + 1.5 * Text;
+            Single(w, ob, -r.PlateWidth / 2, r.PlateWidth / 2, xDim, N(r.PlateWidth), false, 0);
+            double ct = b.ClipThicknessMm, bw = r.Profile.WidthMm / 2;
+            double ybolt = bw + (ct + b.ClipWidthMm - 8) / 2;
+            var right = new List<Call>
+            {
+                new Call { Ax = b.AngleThicknessMm / 2, Ay = r.PlateWidth / 2 + b.AngleLegAMm / 2 - b.AngleThicknessMm, Text = AngleName(r) },
+                new Call { Ax = b.AngleLegBMm + b.PlateThicknessMm / 2, Ay = r.PlateWidth / 4, Text = PlateName(r) },
+                new Call { Ax = xr + ct / 2, Ay = -(bw + ct + (b.ClipWidthMm - 8 - ct) / 2), Text = ClipName(r) },
+                new Call { Ax = xr + ct + 0.3 * b.ClipBoltDiameterMm, Ay = ybolt, Text = BoltsName(r) },
+                new Call { Ax = xr + r.Profile.HeightMm, Ay = 0, Text = RailName(r) }
+            };
+            Column(w, right, xDim + 3.5 * Text, false);
+            var left = new List<Call>
+            {
+                new Call { Ax = xw - depth / 2, Ay = -span, Text = SupportName(c, true) },
+                new Call { Ax = xw - depth / 2, Ay = -yAnchor, Text = c.Steel ? "BOLT M" + N(d) : "ANCHOR D" + N(d) + "x" + N(r.Bracket.AnchorLengthMm) },
+                new Call { Ax = xw / 2, Ay = a.ArmWidthMm / 2, Text = ArmName(c) }
+            };
+            Column(w, left, xw - depth - 3 * Text, true);
+            w.Layer = SteelDrawing.LayerAnno;
+        }
+
         static void DrawPlanOf(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
         {
+            if (r.CrossArm)
+            {
+                DrawPlanCrossArm(db, tr, c, r, ox, oy);
+                return;
+            }
             var b = r.Bracket;
             var w = WriterAt(db, tr, ox, oy);
             double half = r.PlateWidth / 2 + b.AngleLegAMm;
@@ -602,7 +737,7 @@ namespace Elevator.AutoCAD.Sheet
             }
             // dimensions: the chain along x above the bracket (leg B, plate, rail height), the width of the plate at the right
             var ob = new SteelDrawing.Obstacles();
-            Chain(w, ob, new[] { 0.0, b.AngleLegBMm }, new[] { N(b.AngleLegBMm) }, span + 2 * Text, 0, span, true);
+            Chain(w, ob, new[] { 0.0, xr }, new[] { N(xr) }, span + 2 * Text, 0, span, true);
             Chain(w, ob, new[] { xr, xr + r.Profile.HeightMm }, new[] { N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
             double xDim = xr + r.Profile.HeightMm + 1.5 * Text;
             Single(w, ob, -r.PlateWidth / 2, r.PlateWidth / 2, xDim, N(r.PlateWidth), false, 0);
@@ -726,7 +861,7 @@ namespace Elevator.AutoCAD.Sheet
             {
                 var r = rails[i];
                 double half = r.PlateWidth / 2 + r.Bracket.AngleLegAMm;
-                double ox = x + 3 * Text + 4 * Text + half + 12 * Text;   // the support label and the spacing dimension on the left
+                double ox = x + 3 * Text + 4 * Text + half + 22 * Text;   // the support label and the spacing dimension on the left
                 centres[i] = ox;
                 DrawElevationOf(db, tr, c, r, ox, y0);
                 x = ox + half + 4 * Text + 18 * Text + 40;
@@ -779,6 +914,13 @@ namespace Elevator.AutoCAD.Sheet
                 double wd = bw + 0.5 * Text;
                 w.Poly(new[] { new[] { -wd, z }, new[] { -wd / 3, z + 0.35 * gap }, new[] { wd / 3, z - 0.35 * gap }, new[] { wd, z } }, false);
             }
+            // a cross arm: its section behind the bracket at each level (the arm runs away from the viewer to the rear surface)
+            if (r.CrossArm)
+            {
+                w.Layer = SteelDrawing.LayerBeam;
+                foreach (double z in new[] { zLow, zHigh })
+                    w.Rect(-c.Arm.ArmWidthMm / 2, z - c.Arm.ArmHeightMm / 2, c.Arm.ArmWidthMm / 2, z + c.Arm.ArmHeightMm / 2);
+            }
             // the brackets: one named block at each level
             var block = BracketElevationBlock(db, tr, c, r);
             foreach (double z in new[] { zLow, zHigh })
@@ -810,8 +952,10 @@ namespace Elevator.AutoCAD.Sheet
             Column(w, right, dimR + 1.2 * Text, false);
             var left = new List<Call>
             {
-                new Call { Ax = c.Steel ? -half - Text : -half - 2 * Text, Ay = c.Steel ? zLow : zLow - len / 2, Text = SupportName(c) }
+                new Call { Ax = c.Steel ? -half - Text : -half - 2 * Text, Ay = c.Steel ? zLow : zLow - len / 2, Text = SupportName(c, r.CrossArm) }
             };
+            if (r.CrossArm)
+                left.Add(new Call { Ax = -c.Arm.ArmWidthMm / 2, Ay = zLow + c.Arm.ArmHeightMm / 2 - 4, Text = ArmName(c) });
             Column(w, left, dimX - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
         }

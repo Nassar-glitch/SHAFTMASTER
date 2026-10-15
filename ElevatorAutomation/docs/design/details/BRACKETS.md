@@ -63,7 +63,45 @@ library sheets); the counterweight spacing follows the car spacing until the use
 2. The library shows the same arm and plate for 5 and 16 mm rails. If a heavier 16 mm rail needs a stronger bracket, the arm and plate rows
    are editable per profile and only the preset values change.
 
-## 6. How the details are drawn (G1)
+## 6. How the rails are fixed in each arrangement (inventory, G1 round 3)
+
+Read from the main plan of the generated drawings (the template plan, `docs/design/details/sets/set-inv-plan-*.png`), the plan
+dimensions of `DrawingUpdater` (Part003 CW DBG, Part016 shaft width, Part017 rear wall to the CW row, Part024 car DBG) and the library
+sheet `Layouts_Sec/01_Geared_MR_1-1_LAYOUT.dxf` (screenshots in `sets/`).
+
+| Arrangement | Car rails | CW rails | Source |
+|---|---|---|---|
+| **RCW** (the only plan geometry the program has) | at the side walls: a bracket block from the wall to the rail back (gap (SW - DBG) / 2 - h1: 85 for T70 at DBG 1200 in SW 1500) | at the rear: the template draws the CW bracket blocks on the **rear wall** (125 from the rear wall to the CW row, 75 / 100 / 75 across the rail band), 230 from the side wall to the DBG point | [set-inv-plan-concrete-client](sets/set-inv-plan-concrete-client.png) |
+| **RCW, steel** | the same, the bracket on the side UPN beam | the same, on the rear UPN beam; with the user's numbers 380 side, 125 rear, 75 / 100 / 75 | [set-inv-plan-steel-user](sets/set-inv-plan-steel-user.png) |
+| **SCWL / SCWR** | at the side walls | not in the program: `DrawingFileName` returns RCW for every project and the plan geometry places the counterweight at the rear (DesignRules). No template plan for it in the library file | `Elevator.Core/Layouts/DrawingFileName.cs` |
+| **Cross arm in the library** | | the sheet "GUIDE RAILS AND BRACKETS FIXATION AT THE SEPARATION BEAM": the rails fixed with brackets on a steel beam **UPE 120** that reaches from the shaft wall, fixed with an end plate "100 x 100 x 100 - 10 mm" and two anchor bolts M12 | [set-inv-separation-beam](sets/set-inv-separation-beam.png) |
+
+The library's rail plan details (sets of 5-9-3 ... 16-16-2.0) show only the rail with its bracket, the rail section sizes (50 / 65 / 70 /
+75 / 90 and the blade 5 / 9 / 16) and no wall: they are the bracket, not the arrangement.
+
+**Conflict reported:** the template plan draws the CW bracket blocks on the rear wall for every RCW project, also when the rail back is
+only 180 from the side wall (SW 1500). The program's rule (below) gives a wall bracket from the side wall for that case. The block is a
+template entity (it is not drawn by the program for a concrete shaft), so the plan is left as it is and the difference is reported here.
+Only the steel plan (the program's own tower) can follow the rule; the plan blocks of the template do not move with the fixing type.
+
+### The rule (implemented)
+
+1. **Numbers from the plan:** the gap from the rail back to the side surface = (SW - DBG) / 2 - h1 of the profile (the plan dimension to
+   the DBG point less the rail height); for the CW rails the arm to the rear surface = the plan dimension rear wall to the CW row less half
+   the rail width. A wall, a slab edge or a UPN beam is the surface (steel: the UPN beam).
+2. **Fixing type** (RAILS page, Advanced, per rail group): Auto / Wall bracket / Cross arm; **reach** 300 mm (preset, editable).
+   Auto = wall bracket when the side gap is within the reach, otherwise a cross arm from the rear surface; a chosen value is kept.
+3. **Wall bracket:** the arm of the bracket is the gap (the preset leg 40 is the least); VP5 dimensions the gap.
+4. **Cross arm:** section **UPE 120** (h 120, b 60, web 5, flange 8: from the library separation-beam detail), end plate 100 x 100 x 10
+   with 2 anchors M12 (steel: bolts through the beam), all editable presets (`GuideRails.Fixing`); the length is the plan number (100 for
+   the CW rails at 125 from the rear wall). The bracket stands on a head plate at the arm end.
+5. **Details:** VP5 and VP6 draw the fixing of each rail group (car and CW can differ): wall or beam, arm and plates, bracket, rail.
+
+Cases in the tests: `RailBracketTests` (Auto for the RCW default, CW far from the side walls giving a cross arm, chosen values, steel
+surfaces, no rear surface, lock / follow of the fixing presets); drawings `concrete-client` (wall brackets), `concrete-wide` and
+`steel-wide` (SW 1800: cross arm for the CW rails), the user's steel project (SW 1800, DBG 1040: cross arm).
+
+## 7. How the details are drawn (G1)
 
 Both details are generated at full size from the project; the template's static details VP5 and VP6 are hidden and only their titles
 are kept (the scale is appended as before).

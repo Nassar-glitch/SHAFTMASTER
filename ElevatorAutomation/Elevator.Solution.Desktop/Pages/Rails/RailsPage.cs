@@ -39,6 +39,10 @@ namespace Elevator.Solution.Desktop.Pages
     Form.Field(Label("Rails.CwShoeLiningMm"),"Rails.CwShoeLiningMm");
     ShownWhen(()=>GuideRailFieldRules.LiningShown(Presets.Context(Session.Project),false));
     Choice("Rails.A5Band",new[]{RailProfile.Over12,RailProfile.Between8And12},v=>v as string,id=>id);
+    Choice(RailBracketFields.FixingCarKey,RailFixing.Choices,v=>v as string,id=>id);
+    Choice(RailBracketFields.FixingCwKey,RailFixing.Choices,v=>v as string,id=>id);
+    Number(RailBracketFields.Reach);
+    foreach(var f in new[]{RailBracketFields.ArmHeight,RailBracketFields.ArmWidth,RailBracketFields.ArmWeb,RailBracketFields.ArmFlange,RailBracketFields.ArmEndPlate,RailBracketFields.ArmEndPlateThickness,RailBracketFields.ArmAnchorDiameter,RailBracketFields.ArmAnchorCount})Number(f);
     foreach(var f in RailBracketFields.Of(RailBracketFields.Car))Number(f);
     foreach(var f in RailBracketFields.Of(RailBracketFields.Cw))Number(f);
    },false);

@@ -21,6 +21,7 @@ namespace Elevator.Core.GuideRails
     ""ClipPushThroughN"": 1000, ""PushThroughMaxTravelM"": 40,
     ""CarDeflectionLimitMm"": 5, ""CwDeflectionLimitMm"": 10,
     ""MaxSlenderness"": 250, ""MinSlenderness"": 20,
+    ""Fixing"": { ""ReachMm"": 300, ""ArmProfile"": ""UPE 120"", ""ArmHeightMm"": 120, ""ArmWidthMm"": 60, ""ArmWebMm"": 5, ""ArmFlangeMm"": 8, ""ArmEndPlateMm"": 100, ""ArmEndPlateThicknessMm"": 10, ""ArmAnchorDiameterMm"": 12, ""ArmAnchorCount"": 2 },
     ""Profiles"": [
       { ""Name"": ""T50/50/5"", ""HeightMm"": 50, ""WidthMm"": 50, ""BladeMm"": 5, ""NeckMm"": 5, ""FootMm"": 5, ""AreaMm2"": 475, ""MassKgPerM"": 3.73,
         ""IxxMm4"": 112400, ""WxxMm3"": 3150, ""IxMm"": 15.4, ""IyyMm4"": 52500, ""WyyMm3"": 2100, ""IyMm"": 10.5,
