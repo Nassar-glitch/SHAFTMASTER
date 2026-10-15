@@ -80,7 +80,7 @@ namespace Elevator.AutoCAD.Sheet
             readonly SheetDetailSpec plan, brackets;
             readonly double[] oldPlan, oldBrackets;
             readonly List<ObjectId> made = new List<ObjectId>();
-            bool hidden;
+            bool hidden, planHidden;
             int planScale, bracketsScale;
 
             public Drawer(Database db, Dictionary<string, SheetDetailSpec> chosen)
@@ -134,6 +134,8 @@ namespace Elevator.AutoCAD.Sheet
                         hidden = true;
                     }
                     var before = Existing(db, tr);
+                    PlanSymbols(db, tr, ctx, !planHidden);
+                    planHidden = true;
                     Text = 2.5 * Math.Max(planScale, 1);
                     TitleWindow = (double[])plan.Window.Clone();
                     var box = DrawPlan(db, tr, ctx, oldPlan);
@@ -216,7 +218,7 @@ namespace Elevator.AutoCAD.Sheet
                         RearWallToRowMm = !car && dims.ContainsKey("Part017") ? dims["Part017"] : 0,
                         Steel = c.Steel
                     };
-                    r.Fixing = RailFixing.Decide(facts, RailBracketFields.FixingSetting(project, lib, r.Family), c.Arm.ReachMm);
+                    r.Fixing = RailFixing.Decide(facts, RailBracketFields.FixingSetting(project, lib, r.Family), car ? c.Arm.CarReachMm : c.Arm.CwSideReachMm);
                     // a wall bracket reaches the rail: its arm is the gap of the plan (the preset arm is the least)
                     if (r.Fixing.Type == RailFixingType.WallBracket && r.Fixing.ArmLengthMm > 0)
                         r.Bracket.AngleLegBMm = Math.Max(20, r.Fixing.ArmLengthMm - r.Bracket.PlateThicknessMm);
@@ -231,6 +233,73 @@ namespace Elevator.AutoCAD.Sheet
                     c.Beam = steel.Inputs.Beam;
             }
             return c;
+        }
+
+        // ---------- the main plan follows the detail ----------
+        // The template plan draws the car brackets as wall brackets and the counterweight brackets on the rear wall (a cross arm). When a
+        // group is fixed otherwise (a chosen or Auto wall bracket for the counterweight rails), the template's bracket block of that
+        // group is hidden and the program's own symbol (a named block on S-BRACKET, same type, arm and gap as the detail) is drawn.
+        static void PlanSymbols(Database db, Transaction tr, Context c, bool hide)
+        {
+            if (c.Cw == null || c.Cw.Fixing == null || c.Cw.CrossArm)
+                return;
+            Polyline shaft = null;
+            var model = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
+            var cwEntities = new List<Entity>();
+            foreach (ObjectId id in model)
+            {
+                var e = tr.GetObject(id, OpenMode.ForRead) as Entity;
+                if (e == null)
+                    continue;
+                var tag = SectionAADrawing.Tag(e);
+                if (tag == null || tag.Length < 2)
+                    continue;
+                if (tag[0] == "Plan.Shaft.InnerOutline.EntranceDatum")
+                    shaft = e as Polyline;
+                else if (tag[0].StartsWith("Plan.", StringComparison.Ordinal) && (tag[1] == "cwLeft" || tag[1] == "cwRight"))
+                    cwEntities.Add(e);
+            }
+            var dims = PlanDimensions(db, tr);
+            if (shaft == null || shaft.NumberOfVertices != 6 || !dims.ContainsKey("Part003") || !dims.ContainsKey("Part017"))
+                return;
+            Point3d origin = shaft.GetPoint3dAt(1);
+            Vector3d xv = shaft.GetPoint3dAt(4) - origin, yv = shaft.GetPoint3dAt(2) - origin;
+            double sw = xv.Length, sd = yv.Length;
+            var frame = new Elevator.AutoCAD.Plan.ShaftFrame { Origin = origin, XAxis = xv.GetNormal(), YAxis = yv.GetNormal(), ZAxis = Vector3d.ZAxis };
+            double dbg = dims["Part003"], row = sd - dims["Part017"];
+            double back = sw / 2 - dbg / 2 - c.Cw.Profile.HeightMm;   // the rail back of the left rail, from the left wall
+            if (hide)
+            {
+                foreach (var e in cwEntities)
+                {
+                    Extents3d b;
+                    try
+                    {
+                        b = e.GeometricExtents;
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                        continue;
+                    }
+                    var lo = frame.Local(b.MinPoint);
+                    var hi = frame.Local(b.MaxPoint);
+                    double minX = Math.Min(lo.X, hi.X), maxX = Math.Max(lo.X, hi.X);
+                    // the bracket block stands on the wall side of the rail back (left rail) or beyond it (right rail)
+                    bool left = maxX <= back + 3, right = minX >= sw - back - 3;
+                    if (!left && !right)
+                        continue;
+                    e.UpgradeOpen();
+                    e.Visible = false;
+                }
+            }
+            var block = BracketPlanBlock(db, tr, c.Cw, false, "SM_RAIL_FIXING_PLAN_");
+            foreach (int side in new[] { -1, 1 })
+            {
+                Func<double, double, Point3d> world = (u, v) => frame.World(new Point3d(side < 0 ? u : sw - u, row + v, 0));
+                var w = new SteelDrawing.Writer(db, tr, Prefix, "railFixing", world);
+                w.Layer = LayerBracket;
+                w.Insert(block, 0, 0, 1, 0);
+            }
         }
 
         // The measurements of the plan dimensions of the drawing by the last part of their key (Plan.Dimension.PartNNN).
@@ -412,9 +481,17 @@ namespace Elevator.AutoCAD.Sheet
 
         // The bracket in plan: wall face at x = 0, rail axis at y = 0. Two angles (leg A on the wall, leg B towards the rail), the plate across
         // the ends of the legs B, the two clips with their bolts. The rail foot sits on the plate: its back at x = legB + plate.
-        static ObjectId BracketPlanBlock(Database db, Transaction tr, Rail r)
+        // The name carries the rail group, the type of fixing and the gap (the plan symbol and the detail are checked by it).
+        static string FixingTag(Rail r)
         {
-            return SteelDrawing.Block(db, tr, "SM_RAIL_BRACKET_PLAN_" + Key(r), btr =>
+            string type = r.CrossArm ? "ARM" : "WALL";
+            double gap = r.CrossArm ? r.Fixing.ArmLengthMm : r.Bracket.AngleLegBMm + r.Bracket.PlateThicknessMm;
+            return "_" + (r.Family == RailBracketFields.Car ? "CAR" : "CW") + "_" + type + "_G" + Math.Round(gap).ToString(CultureInfo.InvariantCulture);
+        }
+
+        static ObjectId BracketPlanBlock(Database db, Transaction tr, Rail r, bool clips = true, string prefix = "SM_RAIL_BRACKET_PLAN_")
+        {
+            return SteelDrawing.Block(db, tr, prefix + Key(r) + FixingTag(r) + (clips ? "" : "_SYMBOL"), btr =>
             {
                 var b = r.Bracket;
                 double t = b.AngleThicknessMm, a = b.AngleLegAMm, lb = b.AngleLegBMm, pt = b.PlateThicknessMm, w = r.PlateWidth / 2;
@@ -427,6 +504,8 @@ namespace Elevator.AutoCAD.Sheet
                     {
                         new[] { 0.0, yo }, new[] { t, yo }, new[] { t, yi }, new[] { lb, yi }, new[] { lb, y0 }, new[] { 0.0, y0 }
                     }, true, LayerBracket);
+                    if (!clips)
+                        continue;
                     // the clip: a strap on the plate, a riser against the foot edge and a lip over its front face
                     double yf = s * bw, yc = s * (bw + b.ClipThicknessMm), yb = s * (bw + b.ClipWidthMm - 8), yl = s * (bw - 8);
                     double ct = b.ClipThicknessMm;

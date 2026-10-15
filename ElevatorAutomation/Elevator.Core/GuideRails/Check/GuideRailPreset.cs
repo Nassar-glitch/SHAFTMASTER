@@ -113,7 +113,8 @@ namespace Elevator.Core.GuideRails
             pos("MinSlenderness", MinSlenderness);
             if (Fixing != null)
             {
-                pos("Fixing.ReachMm", Fixing.ReachMm);
+                pos("Fixing.CarReachMm", Fixing.CarReachMm);
+                pos("Fixing.CwSideReachMm", Fixing.CwSideReachMm);
                 pos("Fixing.ArmHeightMm", Fixing.ArmHeightMm);
                 pos("Fixing.ArmWidthMm", Fixing.ArmWidthMm);
                 pos("Fixing.ArmWebMm", Fixing.ArmWebMm);

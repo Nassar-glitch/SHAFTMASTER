@@ -19,6 +19,9 @@ import sys
 import tempfile
 
 import ezdxf
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import fixing_check  # noqa: E402
 
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
 STANDARD = (5, 10, 20, 25, 50, 75, 100, 150, 200)  # 1:5: a reference detail may be enlarged (L2c)
@@ -65,6 +68,7 @@ def run_case(folder, case_id):
     dxf = os.path.join(folder, case_id + ".dxf")
     to_dxf(os.path.join(folder, case_id + ".dwg"), dxf)
     doc = ezdxf.readfile(dxf)
+    fixing_check.check_fixing(doc, case_id, check)
     names = [l.name for l in doc.layouts]
     check(expected["Layout"] in names, case_id + ": layout " + expected["Layout"] + " exists")
     # the master drawing already has Layout1 and Layout2; the sheet is the only layout the generation adds

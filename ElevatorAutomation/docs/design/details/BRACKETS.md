@@ -79,27 +79,34 @@ sheet `Layouts_Sec/01_Geared_MR_1-1_LAYOUT.dxf` (screenshots in `sets/`).
 The library's rail plan details (sets of 5-9-3 ... 16-16-2.0) show only the rail with its bracket, the rail section sizes (50 / 65 / 70 /
 75 / 90 and the blade 5 / 9 / 16) and no wall: they are the bracket, not the arrangement.
 
-**Conflict reported:** the template plan draws the CW bracket blocks on the rear wall for every RCW project, also when the rail back is
-only 180 from the side wall (SW 1500). The program's rule (below) gives a wall bracket from the side wall for that case. The block is a
-template entity (it is not drawn by the program for a concrete shaft), so the plan is left as it is and the difference is reported here.
-Only the steel plan (the program's own tower) can follow the rule; the plan blocks of the template do not move with the fixing type.
+**Decision (Planner, round 3b):** the template plan is right: in RCW the counterweight brackets stand on the rear wall (a small cross
+arm). The reach of 300 is for the car rails only; the counterweight rails take a wall bracket from the side wall only when the gap from
+the rail back to it is within a side reach of 100 mm.
 
 ### The rule (implemented)
 
 1. **Numbers from the plan:** the gap from the rail back to the side surface = (SW - DBG) / 2 - h1 of the profile (the plan dimension to
    the DBG point less the rail height); for the CW rails the arm to the rear surface = the plan dimension rear wall to the CW row less half
    the rail width. A wall, a slab edge or a UPN beam is the surface (steel: the UPN beam).
-2. **Fixing type** (RAILS page, Advanced, per rail group): Auto / Wall bracket / Cross arm; **reach** 300 mm (preset, editable).
-   Auto = wall bracket when the side gap is within the reach, otherwise a cross arm from the rear surface; a chosen value is kept.
+2. **Fixing type** (RAILS page, Advanced, per rail group): Auto / Wall bracket / Cross arm; two reach presets, both editable:
+   **car reach 300**, **CW side reach 100**. Car rails: Auto = wall bracket when the side gap is within 300. CW rails: Auto = **cross arm**
+   from the rear wall (rear beam), a wall bracket only when the side gap is at most 100. A chosen value is kept. In the default RCW
+   projects the CW gap is 180 (SW 1500) and more, so the CW rails are fixed on the cross arm; with the catalogue DBGs (largest 1040 for
+   SW >= 1450, allowance 205) the gap cannot be 100 or less, so a CW wall bracket comes from the choice or from edited presets.
 3. **Wall bracket:** the arm of the bracket is the gap (the preset leg 40 is the least); VP5 dimensions the gap.
 4. **Cross arm:** section **UPE 120** (h 120, b 60, web 5, flange 8: from the library separation-beam detail), end plate 100 x 100 x 10
    with 2 anchors M12 (steel: bolts through the beam), all editable presets (`GuideRails.Fixing`); the length is the plan number (100 for
    the CW rails at 125 from the rear wall). The bracket stands on a head plate at the arm end.
-5. **Details:** VP5 and VP6 draw the fixing of each rail group (car and CW can differ): wall or beam, arm and plates, bracket, rail.
+5. **The plan matches the detail:** the template plan draws the car brackets as wall brackets and the CW brackets on the rear wall. When
+   a group is fixed otherwise (a CW wall bracket by choice, or by the side reach), the template's bracket block of that group is hidden
+   and the program's own symbol is drawn: a named block `SM_RAIL_FIXING_PLAN_*_CW_WALL_G<gap>_SYMBOL` on S-BRACKET, the same type, arm
+   and gap as the detail (`SM_RAIL_BRACKET_PLAN_*_CW_WALL_G<gap>`). `verify_layouts.py` and `verify_steel.py` (`fixing_check.py`) fail when
+   the symbol and the detail differ, or when a group without a symbol is not fixed as the template plan draws it.
+6. **Details:** VP5 and VP6 draw the fixing of each rail group (car and CW can differ).
 
-Cases in the tests: `RailBracketTests` (Auto for the RCW default, CW far from the side walls giving a cross arm, chosen values, steel
-surfaces, no rear surface, lock / follow of the fixing presets); drawings `concrete-client` (wall brackets), `concrete-wide` and
-`steel-wide` (SW 1800: cross arm for the CW rails), the user's steel project (SW 1800, DBG 1040: cross arm).
+Cases: `RailBracketTests` (Auto for the RCW default, the CW side reach, chosen values, steel beams, no rear surface, lock / follow);
+drawings `concrete-client` (car wall brackets, CW cross arm = the template plan), `concrete-wide` / `steel-wide` (SW 1800), the user's
+steel project, `concrete-cw-wall` / `steel-cw-wall` (CW chosen as a wall bracket: own symbol in the plan, wall bracket in the detail).
 
 ## 7. How the details are drawn (G1)
 

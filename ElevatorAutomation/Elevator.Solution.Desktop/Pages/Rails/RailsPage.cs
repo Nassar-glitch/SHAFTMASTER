@@ -42,6 +42,7 @@ namespace Elevator.Solution.Desktop.Pages
     Choice(RailBracketFields.FixingCarKey,RailFixing.Choices,v=>v as string,id=>id);
     Choice(RailBracketFields.FixingCwKey,RailFixing.Choices,v=>v as string,id=>id);
     Number(RailBracketFields.Reach);
+    Number(RailBracketFields.CwReach);
     foreach(var f in new[]{RailBracketFields.ArmHeight,RailBracketFields.ArmWidth,RailBracketFields.ArmWeb,RailBracketFields.ArmFlange,RailBracketFields.ArmEndPlate,RailBracketFields.ArmEndPlateThickness,RailBracketFields.ArmAnchorDiameter,RailBracketFields.ArmAnchorCount})Number(f);
     foreach(var f in RailBracketFields.Of(RailBracketFields.Car))Number(f);
     foreach(var f in RailBracketFields.Of(RailBracketFields.Cw))Number(f);

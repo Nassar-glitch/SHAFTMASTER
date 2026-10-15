@@ -14,8 +14,11 @@ namespace Elevator.Core.GuideRails
     /// <summary>The preset library of the fixing (config/presets.json, GuideRails.Fixing).</summary>
     public sealed class RailFixingPreset
     {
-        /// <summary>Auto gives a wall bracket when a surface stands behind the rail back within this reach (mm).</summary>
-        public double ReachMm = 300;
+        /// <summary>Car rails: Auto gives a wall bracket when the side surface stands behind the rail back within this reach (mm).</summary>
+        public double CarReachMm = 300;
+        /// <summary>Counterweight rails (at the rear in RCW): Auto gives a wall bracket from the side wall only when the gap from the rail
+        /// back to it is at most this reach (mm); otherwise a cross arm from the rear wall, as the plan draws it.</summary>
+        public double CwSideReachMm = 100;
         /// <summary>The cross arm section: UPE 120 as drawn in the template library (the separation-beam detail, fixed at the wall with a
         /// 100 x 100 x 10 end plate and two M12 anchors).</summary>
         public string ArmProfile = "UPE 120";

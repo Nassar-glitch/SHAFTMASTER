@@ -82,6 +82,9 @@ public static class SteelNativeTests
                 new { Id = "concrete-client", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 // G1: the rail details follow the profile and the real spacing (car T50/50/5 at 3000, the counterweight follows)
                 // G1 round 3: CW rails far from the side walls (SW 1800, DBG 1040: 330 to the rail back) are fixed on a cross arm
+                // G1 round 3b: the CW rails chosen as wall brackets in the default RCW plan: the plan block is replaced by the program's symbol
+                new { Id = "concrete-cw-wall", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "steel-cw-wall", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-wide", Steel = false, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "steel-wide", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t89", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
@@ -95,6 +98,8 @@ public static class SteelNativeTests
             foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {
                 var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel, c.Door);
+                if (c.Id.EndsWith("-cw-wall"))
+                    Elevator.Core.GuideRails.RailBracketFields.FixingCw.Edit(p, Elevator.Core.GuideRails.RailFixing.WallBracketName);
                 if (c.Id == "concrete-t89")
                     ProjectPresets.Find(ProjectPresets.CarProfileKey).Edit(p, "T89/62/16");
                 if (c.Id == "concrete-t50-3000")

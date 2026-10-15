@@ -112,7 +112,8 @@ namespace Elevator.Core.GuideRails
         // ---------- the fixing of each rail group and the cross arm ----------
         public const string FixingCarKey = "Rails.Fixing.Car";
         public const string FixingCwKey = "Rails.Fixing.CW";
-        public const string ReachKey = "Rails.Fixing.ReachMm";
+        public const string ReachKey = "Rails.Fixing.CarReachMm";
+        public const string CwReachKey = "Rails.Fixing.CwSideReachMm";
 
         static PresetField TextField(string key, string label, Func<PresetContext, object> preset)
         {
@@ -152,7 +153,8 @@ namespace Elevator.Core.GuideRails
 
         public static readonly PresetField FixingCar = TextField(FixingCarKey, "Car rails fixing", c => RailFixing.Auto);
         public static readonly PresetField FixingCw = TextField(FixingCwKey, "Counterweight rails fixing", c => RailFixing.Auto);
-        public static readonly PresetField Reach = NumberField(ReachKey, "Wall bracket reach (mm)", f => f.ReachMm);
+        public static readonly PresetField Reach = NumberField(ReachKey, "Car rails: wall bracket reach (mm)", f => f.CarReachMm);
+        public static readonly PresetField CwReach = NumberField(CwReachKey, "Counterweight rails: side wall reach (mm)", f => f.CwSideReachMm);
         public static readonly PresetField ArmProfile = TextField("Rails.CrossArm.Profile", "Cross arm section",
             c => c.Library.GuideRailsOrDefault().FixingOrDefault().ArmProfile);
         public static readonly PresetField ArmHeight = NumberField("Rails.CrossArm.HeightMm", "Cross arm height (mm)", f => f.ArmHeightMm);
@@ -167,7 +169,7 @@ namespace Elevator.Core.GuideRails
         /// <summary>The fixing fields (type per group, reach, the cross arm), in the order of the page.</summary>
         public static readonly PresetField[] Fixing =
         {
-            FixingCar, FixingCw, Reach, ArmProfile, ArmHeight, ArmWidth, ArmWeb, ArmFlange, ArmEndPlate, ArmEndPlateThickness,
+            FixingCar, FixingCw, Reach, CwReach, ArmProfile, ArmHeight, ArmWidth, ArmWeb, ArmFlange, ArmEndPlate, ArmEndPlateThickness,
             ArmAnchorDiameter, ArmAnchorCount
         };
 
@@ -179,7 +181,8 @@ namespace Elevator.Core.GuideRails
         {
             var c = new PresetContext { Project = project, Library = library };
             var f = library.GuideRailsOrDefault().FixingOrDefault().Clone();
-            f.ReachMm = Convert.ToDouble(Reach.Effective(c), CultureInfo.InvariantCulture);
+            f.CarReachMm = Convert.ToDouble(Reach.Effective(c), CultureInfo.InvariantCulture);
+            f.CwSideReachMm = Convert.ToDouble(CwReach.Effective(c), CultureInfo.InvariantCulture);
             f.ArmProfile = (ArmProfile.Effective(c) as string) ?? f.ArmProfile;
             f.ArmHeightMm = Convert.ToDouble(ArmHeight.Effective(c), CultureInfo.InvariantCulture);
             f.ArmWidthMm = Convert.ToDouble(ArmWidth.Effective(c), CultureInfo.InvariantCulture);

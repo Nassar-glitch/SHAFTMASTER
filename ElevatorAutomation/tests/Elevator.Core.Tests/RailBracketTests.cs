@@ -105,52 +105,63 @@ namespace Elevator.Core.Tests
             return new RailFixingFacts { Family = family, ShaftWidthMm = sw, DbgMm = dbg, RailHeightMm = h1, RailWidthMm = b1, RearWallToRowMm = rear, Steel = steel };
         }
 
+        const double CarReach = 300, CwSideReach = 100;
+
         [Fact]
-        public void Auto_gives_wall_brackets_for_the_rcw_default()
+        public void Auto_gives_car_wall_brackets_and_a_cross_arm_for_the_cw_rails_of_the_rcw_default()
         {
-            // SW 1500: car DBG 1200 (T70/65/9), CW DBG 1040 (T50/50/5), rear wall to the CW row 125
-            var car = RailFixing.Decide(Facts("Car", 1500, 1200, 65, 70, 0), RailFixing.Auto, 300);
+            // SW 1500: car DBG 1200 (T70/65/9), CW DBG 1040 (T50/50/5), rear wall to the CW row 125, as the plan draws
+            var car = RailFixing.Decide(Facts("Car", 1500, 1200, 65, 70, 0), RailFixing.Auto, CarReach);
             Assert.Equal(RailFixingType.WallBracket, car.Type);
             Assert.Equal(85, car.ArmLengthMm, 6);
             Assert.Equal("side wall", car.Surface);
-            var cw = RailFixing.Decide(Facts("CW", 1500, 1040, 50, 50, 125), RailFixing.Auto, 300);
-            Assert.Equal(RailFixingType.WallBracket, cw.Type);
-            Assert.Equal(180, cw.ArmLengthMm, 6);
+            var cw = RailFixing.Decide(Facts("CW", 1500, 1040, 50, 50, 125), RailFixing.Auto, CwSideReach);
+            Assert.Equal(RailFixingType.CrossArm, cw.Type);
+            Assert.Equal("rear wall", cw.Surface);
+            Assert.Equal(100, cw.ArmLengthMm, 6);
+            Assert.Equal(180, cw.SideGapMm, 6);
             Assert.True(cw.Automatic);
         }
 
         [Fact]
-        public void Auto_gives_a_cross_arm_when_the_cw_rails_stand_far_from_the_side_walls()
+        public void The_cw_rails_take_a_wall_bracket_only_within_the_side_reach()
         {
-            // a narrow DBG in a wide shaft: SW 1800, DBG 1040: 380 to the DBG point, 330 to the rail back; the rear wall is 125 from the row
-            var cw = RailFixing.Decide(Facts("CW", 1800, 1040, 50, 50, 125), RailFixing.Auto, 300);
-            Assert.Equal(RailFixingType.CrossArm, cw.Type);
-            Assert.Equal("rear wall", cw.Surface);
-            Assert.Equal(100, cw.ArmLengthMm, 6);
-            Assert.Equal(330, cw.SideGapMm, 6);
-            // the reach is a preset: with 350 the same rail takes a wall bracket
-            Assert.Equal(RailFixingType.WallBracket, RailFixing.Decide(Facts("CW", 1800, 1040, 50, 50, 125), RailFixing.Auto, 350).Type);
+            // a gap of 100 (DBG 1200 in SW 1500 with a 50 mm rail) is within the reach of 100; 180 is not
+            var near = RailFixing.Decide(Facts("CW", 1500, 1200, 50, 50, 125), RailFixing.Auto, CwSideReach);
+            Assert.Equal(100, near.SideGapMm, 6);
+            Assert.Equal(RailFixingType.WallBracket, near.Type);
+            Assert.Equal("side wall", near.Surface);
+            Assert.Equal(100, near.ArmLengthMm, 6);
+            Assert.Equal(RailFixingType.CrossArm, RailFixing.Decide(Facts("CW", 1500, 1040, 50, 50, 125), RailFixing.Auto, CwSideReach).Type);
+            // a wide shaft: far from the side walls, a cross arm as well
+            var wide = RailFixing.Decide(Facts("CW", 1800, 1040, 50, 50, 125), RailFixing.Auto, CwSideReach);
+            Assert.Equal(RailFixingType.CrossArm, wide.Type);
+            Assert.Equal(330, wide.SideGapMm, 6);
+            // the reach is a preset
+            Assert.Equal(RailFixingType.WallBracket, RailFixing.Decide(Facts("CW", 1500, 1040, 50, 50, 125), RailFixing.Auto, 200).Type);
         }
 
         [Fact]
         public void A_chosen_fixing_is_kept_and_the_steel_surfaces_are_beams()
         {
             var f = Facts("CW", 1500, 1040, 50, 50, 125, true);
-            var arm = RailFixing.Decide(f, RailFixing.CrossArmName, 300);
+            var arm = RailFixing.Decide(f, RailFixing.CrossArmName, CwSideReach);
             Assert.Equal(RailFixingType.CrossArm, arm.Type);
             Assert.False(arm.Automatic);
             Assert.Equal("rear beam", arm.Surface);
-            var wall = RailFixing.Decide(Facts("CW", 1800, 1040, 50, 50, 125, true), RailFixing.WallBracketName, 300);
+            // Auto in a steel shaft: the same numbers, the rear beam
+            Assert.Equal("rear beam", RailFixing.Decide(f, RailFixing.Auto, CwSideReach).Surface);
+            var wall = RailFixing.Decide(Facts("CW", 1500, 1040, 50, 50, 125, true), RailFixing.WallBracketName, CwSideReach);
             Assert.Equal(RailFixingType.WallBracket, wall.Type);
             Assert.Equal("side beam", wall.Surface);
-            Assert.Equal(330, wall.ArmLengthMm, 6);
+            Assert.Equal(180, wall.ArmLengthMm, 6);
         }
 
         [Fact]
         public void A_rail_without_a_rear_surface_takes_the_side_surface_whatever_the_gap()
         {
             // the side counterweight (SCWL / SCWR) has no plan layout yet: no rear dimension, the rail takes what the plan gives
-            var d = RailFixing.Decide(Facts("CW", 2400, 1040, 50, 50, 0), RailFixing.Auto, 300);
+            var d = RailFixing.Decide(Facts("CW", 2400, 1040, 50, 50, 0), RailFixing.Auto, CwSideReach);
             Assert.Equal(RailFixingType.WallBracket, d.Type);
         }
 
@@ -158,14 +169,18 @@ namespace Elevator.Core.Tests
         public void The_fixing_presets_follow_the_library_until_edited()
         {
             var p = NewProject();
-            Assert.Equal(300.0, RailBracketFields.EffectiveFixing(p, Library).ReachMm);
+            Assert.Equal(300.0, RailBracketFields.EffectiveFixing(p, Library).CarReachMm);
+            Assert.Equal(100.0, RailBracketFields.EffectiveFixing(p, Library).CwSideReachMm);
             Assert.Equal(RailFixing.Auto, RailBracketFields.FixingSetting(p, Library, "CW"));
             RailBracketFields.Reach.Edit(p, 350.0);
-            RailBracketFields.FixingCw.Edit(p, RailFixing.CrossArmName);
-            Assert.Equal(350.0, RailBracketFields.EffectiveFixing(p, Library).ReachMm);
-            Assert.Equal(RailFixing.CrossArmName, RailBracketFields.FixingSetting(p, Library, "CW"));
+            RailBracketFields.CwReach.Edit(p, 200.0);
+            RailBracketFields.FixingCw.Edit(p, RailFixing.WallBracketName);
+            Assert.Equal(350.0, RailBracketFields.EffectiveFixing(p, Library).CarReachMm);
+            Assert.Equal(200.0, RailBracketFields.EffectiveFixing(p, Library).CwSideReachMm);
+            Assert.Equal(RailFixing.WallBracketName, RailBracketFields.FixingSetting(p, Library, "CW"));
             Assert.Equal(RailFixing.Auto, RailBracketFields.FixingSetting(p, Library, "Car"));
             RailBracketFields.Reach.Reset(p);
+            RailBracketFields.CwReach.Reset(p);
             RailBracketFields.FixingCw.Reset(p);
             Assert.False(RailBracketFields.AnyEdited(p));
             Assert.Equal("UPE 120", RailBracketFields.EffectiveFixing(p, Library).ArmProfile);
