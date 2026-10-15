@@ -202,6 +202,11 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - the steel versions (bracket on the beam, door frame on the beam);
   - the STEP rails;
   - making the template details editable (EDITABILITY.md section 3).
+- **Bracket sizes (decided 2026-10-15):** the user left the sizes to the Planner. The rule:
+  - each rail profile has a bracket preset: angle size and thickness, arm lengths, clip and anchor bolts;
+  - the values come from the user's own library sets in the template (rail combinations 5-9, 5-9-3, 5-16, 9-16, 9-16-2.0, 16-16-2.0);
+  - profiles with no library set take the nearest heavier set;
+  - the presets are editable under Advanced on the RAILS page, and the bracket detail draws the chosen values.
 
 ## Build stages (order)
 
