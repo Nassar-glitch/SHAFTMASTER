@@ -87,6 +87,7 @@ public static class SteelNativeTests
                 new { Id = "steel-cw-wall", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-wide", Steel = false, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "steel-wide", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "steel-t89", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t89", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t50-3000", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
             }.ToList();
@@ -100,7 +101,7 @@ public static class SteelNativeTests
                 var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel, c.Door);
                 if (c.Id.EndsWith("-cw-wall"))
                     Elevator.Core.GuideRails.RailBracketFields.FixingCw.Edit(p, Elevator.Core.GuideRails.RailFixing.WallBracketName);
-                if (c.Id == "concrete-t89")
+                if (c.Id == "concrete-t89" || c.Id == "steel-t89")
                     ProjectPresets.Find(ProjectPresets.CarProfileKey).Edit(p, "T89/62/16");
                 if (c.Id == "concrete-t50-3000")
                 {

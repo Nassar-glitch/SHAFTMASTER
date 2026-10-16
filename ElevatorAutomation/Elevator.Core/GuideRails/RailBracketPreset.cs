@@ -23,6 +23,9 @@ namespace Elevator.Core.GuideRails
         /// <summary>Bolts that join the arms and the plate (the library: 4 x M10x40).</summary>
         public double AssemblyBoltDiameterMm = 10;
         public double AssemblyBoltLengthMm = 40;
+        /// <summary>How far the two arm legs overlap face to face (the slotted holes of the assembly bolts). The legs are the preset length
+        /// (leg B); when the gap needs more, both grow so that the overlap stays this value.</summary>
+        public double AssemblyOverlapMm = 30;
         public double ClipLengthMm = 50;
         public double ClipWidthMm = 30;
         public double ClipThicknessMm = 6;

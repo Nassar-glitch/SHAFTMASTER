@@ -33,9 +33,9 @@ All sizes in mm.
 
 | Blade (mm) | Rail section b1 x h1 | Angle arm | Plate | Assembly bolts | Clip L x W x t | Rail-to-bracket bolt | Anchor | Source of the row |
 |---|---|---|---|---|---|---|---|---|
-| **5** | 50 x 50 (T50/50/5) | L50x40x4, 270 | 270x50x4 | 4 x M10x40 | 40 x 25 x 5 | 2 x M8 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from the foot c = 5, f = 5 |
-| **9** | 70 x 65 (T70/65/9) | L50x40x4, 270 | 270x50x4 | 4 x M10x40 | 50 x 30 x 6 | 2 x M10 per clip | Ø12 x 150 | arm, plate, bolts, anchor, 2 bolts per clip: library (VP5 T70 set); clip and rail bolt: proposed from c = 6, f = 8 |
-| **16** | 89 x 62 (T89/62/16), 90 x 75 (T90/75/16) | L50x40x4, 270 | 270x50x4 | 4 x M10x40 | 60 x 35 x 8 | 2 x M12 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from c = 10, f = 10 / 11. The set "car 16 brackets at 1500" differs only in the spacing 1500, which is the project's spacing, so it adds no bracket geometry |
+| **5** | 50 x 50 (T50/50/5) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 40 x 25 x 5 | 2 x M8 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from the foot c = 5, f = 5 |
+| **9** | 70 x 65 (T70/65/9) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 50 x 30 x 6 | 2 x M10 per clip | Ø12 x 150 | arm, plate, bolts, anchor, 2 bolts per clip: library (VP5 T70 set); clip and rail bolt: proposed from c = 6, f = 8 |
+| **16** | 89 x 62 (T89/62/16), 90 x 75 (T90/75/16) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 60 x 35 x 8 | 2 x M12 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from c = 10, f = 10 / 11. The set "car 16 brackets at 1500" differs only in the spacing 1500, which is the project's spacing, so it adds no bracket geometry |
 
 Each row is `GuideRails.Profiles[].Bracket` in `config/presets.json` (and the shipped defaults in `GuideRailDefaults.cs`).
 
@@ -126,3 +126,34 @@ are kept (the scale is appended as before).
   together with a break of the rail between them; its spacing DIMENSION carries the real value (2000 / 3000) as text. Plan 1:5 or 1:10,
   elevation 1:10 or 1:20.
 - The plate width is computed: the rail foot width plus the two clips (library: 270 x 50 x 4 for the 50 mm rail).
+
+## 8. The bracket assembly (round 4: the user's own assembly)
+
+The generated bracket is the one of the user's library (the anchor sheets, `sets/set-anchor-sheet-3m.png`; the user's crops are in
+`g1/user-feedback/`): **two right-angle pieces mounted opposite each other**, drawn in VP5 and VP6 and in the plan symbol from one
+definition (`Rail.Gap`, `Rail.ArmLeg`, the blocks `SM_RAIL_BRACKET_PLAN_*`, `SM_RAIL_BRACKET_ELEV_*`, `SM_RAIL_FIXING_PLAN_*`):
+
+| Part | Name on the drawing | Where it is |
+|---|---|---|
+| Fixing angle | BRACKET L 270x50x40 (x2) | its wall leg on the wall (anchored), on the UPN beam (bolted through the web) or on the head plate of a cross arm; its arm leg points to the rail |
+| Rail angle | (the second of the two) | its base leg carries the rail; its arm leg points to the wall and lies face to face with the arm leg of the fixing angle |
+| Plate | PLATE 270x50x4 | between the base leg of the rail angle and the rail foot |
+| Joint | ASSEMBLY BOLTS 4 x M10x40 | two bolts in each of two rows through slotted holes in the overlapped arm legs (the slots run along the arm) |
+| Clips | CLIPS 2 x 40x25x5 (per blade row) | over the two edges of the rail foot, on the base leg |
+| Clip bolts | CLIP BOLTS 2 x M8 EACH | through the clip and the base leg |
+| Fixing | ANCHOR BOLTS D12x150 (concrete) / BOLTS M12 (steel beam, cross arm head plate) | through the wall leg |
+
+**The distance wall to rail** is made by the overlap of the two arm legs: the gap of the plan (rail foot back to the wall, or to the
+beam) = the leg of the fixing angle + the leg of the rail angle - the overlap + the plate and the two leg thicknesses. **Rule (presets):**
+the arm legs are the preset leg B (40) and the overlap is a preset (`RailBracketPreset.AssemblyOverlapMm`, 30). When the gap needs more
+(gap + overlap > 2 x leg + plate + 2 thicknesses) **both legs grow together so that the overlap stays 30**: a gap of 85 gives legs of
+57.5; a gap of 62 (the nominal assembly, used on a cross arm) gives the preset 40. A gap below plate + 2 thicknesses + 4 is raised to that.
+
+Widths: the nominal section is 50 x 40 as in the library notes; the base leg is as wide as the foot with its two clips needs
+(`b1 + 2 x clip width`), which the library draws wider than 50 as well (the T70 detail is about twice 50 across).
+
+**Interpretation to confirm with the user:** the library crop shows the assembly face on (slotted legs, four bolts, two anchors) with
+the rail section beside it. VP6 draws this face-on side view (270 high, slots along the arm, 4 assembly bolts, anchors or beam bolts, the
+rail broken between two brackets with the real spacing); VP5 draws the horizontal section through the pieces (the legs edge on, the
+bolts across them). The slots run along the arm so that the overlap sets the gap, as the Planner described; in the crop the slots look
+longer in the 270 direction, which may be the actual slot direction.
