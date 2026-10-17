@@ -14,8 +14,56 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 - **Status:** **Stage S3 (steel shaft drawings and Shaft page) done on `feature/steel-s3`, awaiting the Planner merge decision (see Completed first entry).** **Stage R2 merged into main, goldens re-approved (see Completed first entry).** **v06 released** (2026-10-13): `ElevatorAutomation/bin-shaftmaster-v06/ShaftMaster.exe` (SHA-256 starts 9BF91B70), tiers 1-3 PASS, 23 suites (`20261013-105231`, incl. layouts-native, layouts-pdf, output-set-ui), 50 files verified against SHA256SUMS.txt; v02-v05 checksums unchanged (v01 has none). PdfSharp.dll (MIT licence, mentioned in RELEASE-NOTES.md) is in the folder; PdfSharp.Charting.dll is not shipped (removed in `tools/build.ps1`). `main` has the A0 geared sheet (generated arrangement, titles with the sheet scale, title block, Arabic in xarab), one company / report settings screen, revision NN, the output set (DWG, PDF, project file; overwrite / next-revision prompt), the PDF with the logo and no remark texts in B-B. Not pushed (the user pushes). Next stage: R (guide rails): **Part B (research, Core, Reporting) done on `cloud/rails-r1` (see Cloud R1), to be merged locally, then the UI**; Part A done (`docs/calculations/GUIDE-RAILS.md`, section 12 = questions Q1-Q14 for the user); Part B (catalog, code, sheet, UI) waits for the answers and is for a cloud session. Awaiting Planner.
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
-- **Last updated:** 2026-10-17 (Claude Code, Executor role; G1 merged into main)
+- **Last updated:** 2026-10-17 (Claude Code, Executor role; G2 master doors implemented on feature/details-g2, not merged)
 - **Completed:**
+- **G2: the user's 4 master doors, implemented on `feature/details-g2`.** Not merged, not pushed.
+  - **What it does:** the door detail (VIEW at D-D, SEC. C-C) is the user's master door stretched to the project's door size and mirrored for its side.
+    - The masters are swing with a vision window, swing with a glass panel, automatic solid and automatic glass.
+    - `tools/door_masters.py` extracts them from `docs/design/details/g2/source` (PDF imports) into `Templates/DoorMasters.json`.
+    - `Elevator.AutoCAD/Sheet/DoorDetails.cs` stretches and mirrors them into named blocks `SM_DOOR_*`. Dimensions, linetypes, hatches and labels are native.
+  - **Presets** (CAR & DOORS > Landing door detail, lock / follow):
+    - Door panel: automatic Solid / Glass, default Solid; swing Vision window / Glass, default Vision window;
+    - Hinge side: Right by default;
+    - Entrance height: 2000;
+    - Structural margin: 150 beyond the clear opening. STR is taken from the plan's wall opening when the plan has one.
+  - **Checks** (`fixing_check.check_door`, `check_door_annotation`): the detail's opening, height and STR equal the plan's; no text overlaps; no axis, mark or leader crosses a text.
+  - **Hatch fix:** the pattern scale is now set before the pattern; AutoCAD ignored the earlier order. This also fixes the G1 rail detail hatches. `SteelDrawing.Fill` is unchanged.
+  - **Rules and findings:** `docs/design/details/DOORS-G2.md`. Evidence: `docs/design/details/g2/evidence/`.
+  - **Tests:**
+    - DoorDetailTests net8.0: 4 PASS;
+    - steel-native: 362 PASS, with the door cases (4 doors x 2 sides, 2S 700, 2C 1100, user-edit, user-project);
+    - layouts-native: 328 PASS;
+    - layouts-pdf: 20 PASS;
+    - earlier on this branch: doors-native 63 PASS, doors-ui 52 PASS.
+  - **Not run:**
+    - the full tier 1, which waits until before the merge, per the Planner;
+    - core-net48 has one failure, `GuideRailTests.Library_has_the_four_profiles...`. It is pre-existing: the same failure on a clean main worktree.
+  - **Fixtures waiting for the user's typed approval:** the two l3 images `docs/design/layouts/l3/2S-4-stops-no-logo-pdf.png` and `6-stops-arabic-logo-pdf.png`. They change in the door detail area and in the G1 hatch spacing. The new versions are in `g2/evidence/l3-pending/`; the committed ones are unchanged.
+  - **Open points:**
+    - The plan of a Manual door has no swing leaf, so there is no plan hinge side to check.
+    - The master labels 160 / 60 / 700 / 1000 do not match their geometry; the detail follows the geometry and the project values.
+  - Root `UPN STEEL SHAFT.dxf` and the two master DXFs were left untouched.
+- **G2 restarted (2026-10-17).** The user rejected the generic generated door detail. That work is parked as one commit `a6b7a7b` on `feature/details-g2-generic-wip`; leave that branch alone. It contains:
+  - `DoorDetails.cs`;
+  - `DoorDetailFields.cs`: lock / follow presets for the entrance height and the other door detail sizes;
+  - `check_door`: the plan-detail check;
+  - `DOORS-G2.md`: the inventory;
+  - the test cases concrete-2s-700 and concrete-2c-1100.
+  
+  It was not re-verified after the last hatch and left-margin edits. `feature/details-g2` was reset to main (24041b8).
+  
+  **Next:** the user will provide a file with their 4 master doors:
+  - swing with a full glass panel;
+  - swing with a small vision window;
+  - automatic with a full glass panel;
+  - automatic with a small vision window.
+  
+  Wait for its path, then:
+  1. copy it to `docs/design/details/g2/source/`;
+  2. inventory each door: its views, the parts that stretch and the parts of fixed size, and its dimensions and labels;
+  3. write the stretch / mirror rules in DOORS-G2.md (handing L/R; stacking L/R for automatic doors) and show them to the Planner before any coding.
+  
+  Reuse from the WIP only the entrance-height presets and the plan-detail check. Root `UPN STEEL SHAFT.dxf` is left alone.
 - **G1 MERGED into main (2026-10-17, --no-ff, c3987ca); not pushed, not released.** Last fix before the merge: cross arm uses one L angle (rail bracket) + a FLAT BRACKET {length}x50x4 on the arm top with ASSEMBLY BOLTS 2 X M10X40 (0d7602c). The user typed the approval of the two l3 images (`docs/design/layouts/l3/2S-4-stops-no-logo-pdf.png`, `6-stops-arabic-logo-pdf.png`), re-approved in 75435b0. Full tiers 1-3 on `artifacts/work-g1-full`: 26 suites PASS (`artifacts/test-results/20261017-135837`). CHANGELOG [Unreleased] has the G1 entry. Next: G2 / G3 (door elevation and section, STEP rails, other template details) per the Planner. Root `UPN STEEL SHAFT.dxf` left alone.
 - **G1 round 6 (final user corrections), same branch `feature/details-g1`; not merged, not pushed.**
   - User edit 12:23 copied to `ElevatorAutomation/docs/design/details/g1/user-edit-2/` (`user-edit-2.dwg`, `previous-11-33.dwg` = the .bak); originals untouched.

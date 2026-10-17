@@ -70,6 +70,8 @@ def run_case(folder, case_id):
     doc = ezdxf.readfile(dxf)
     fixing_check.check_fixing(doc, case_id, check)
     fixing_check.check_detail_overlap(doc, case_id, check)
+    fixing_check.check_door(doc, case_id, check)
+    fixing_check.check_door_annotation(doc, case_id, check)
     names = [l.name for l in doc.layouts]
     check(expected["Layout"] in names, case_id + ": layout " + expected["Layout"] + " exists")
     # the master drawing already has Layout1 and Layout2; the sheet is the only layout the generation adds

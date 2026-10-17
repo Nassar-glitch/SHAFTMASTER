@@ -32,6 +32,7 @@ namespace Elevator.Solution.Desktop.Pages
    typeBox.SelectionChanged+=(s,e)=>{var id=typeBox.SelectedValue as string;if(id==null||id==DoorFlow.TypeOf(Session.Project))return;DoorFlow.SetType(Session.Project,id);Changed();Shell.ShowPage(Key);};
    Content.Children.Add(Form.FormRow("Door type",typePanel));
    if(DoorTypes.IsAutomatic(type))BuildAutomatic(type);
+   BuildDetail(type);
    Heading("Car display landing");var select=new ComboBox{ItemsSource=CarDoorsViewModel.DisplayFloors(Session.Project),DisplayMemberPath="Name",SelectedValuePath="Id",SelectedValue=Session.Project.Car.DisplayFloorId,Padding=new Thickness(8),Margin=new Thickness(0,0,0,14)};
    select.SelectionChanged+=(s,e)=>{Session.Project.Car.DisplayFloorId=select.SelectedValue as string;Session.Dirty=true;Live.Design=null;};Content.Children.Add(select);
    Heading("Calculated geometry");derived=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,4,0,15),Foreground=Brushes.SlateGray};Content.Children.Add(derived);
@@ -103,6 +104,43 @@ namespace Elevator.Solution.Desktop.Pages
    var stackLayout=CarDoorsViewModel.Layout(Session,Live,Context);string label=CarDoorsViewModel.Label(type,key,stackLayout==null||stackLayout.StackingSide!=DoorTypes.Left);var panel=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Left};
    var box=Box(key,label);box.Width=130;panel.Children.Add(box);panel.Children.Add(ResetButton(key,label));
    Content.Children.Add(Form.FormRow(label,panel));
+  }
+  // The landing door detail (G2): the door panel, the hinge side of a swing door, and the entrance height and structural margin.
+  void BuildDetail(string type)
+  {
+   Heading("Landing door detail");
+   DetailChoice(Elevator.Core.Doors.DoorDetailFields.DoorPanel,Elevator.Core.Doors.DoorDetailFields.PanelChoices(type).Select(id=>new Choice{Id=id,Name=Elevator.Core.Doors.DoorDetailFields.PanelName(id)}).ToList());
+   if(!DoorTypes.IsAutomatic(type))DetailChoice(Elevator.Core.Doors.DoorDetailFields.HingeSide,new List<Choice>{new Choice{Id="Left",Name="Left"},new Choice{Id="Right",Name="Right"}});
+   foreach(var f in Elevator.Core.Doors.DoorDetailFields.Numbers)DetailNumber(f);
+  }
+  // A choice of the landing door detail: the preset until chosen, locked when chosen, Reset to preset.
+  void DetailChoice(Elevator.Core.Presets.PresetField field,List<Choice> choices)
+  {
+   var box=new ComboBox{ItemsSource=choices,DisplayMemberPath="Name",SelectedValuePath="Id",Padding=new Thickness(8),Width=180};AutomationProperties.SetName(box,field.Label);Form.PresetChoices[field.Key]=box;
+   bool prog=false;
+   Action show=()=>{prog=true;var v=field.Effective(Presets.Context(Session.Project)) as string;box.SelectedValue=choices.Any(c=>c.Id==v)?v:choices[0].Id;prog=false;};
+   box.SelectionChanged+=(s,e)=>{if(prog)return;var id=box.SelectedValue as string;if(id==null)return;field.Edit(Session.Project,id);Session.Dirty=true;Shell.Live.Design=null;Shell.RefreshProjectStatus();};
+   box.ContextMenu=Shell.PresetEditing.ResetMenu(field);
+   Form.PresetRefreshers.Add(()=>{if(!field.IsEdited(Session.Project))show();});
+   show();var sp=new StackPanel{HorizontalAlignment=HorizontalAlignment.Left};sp.Children.Add(box);Content.Children.Add(Form.FormRow(field.Label,sp));
+  }
+  // A size of the landing door detail (G2): the preset of the door type until typed, locked when edited, Reset to preset.
+  void DetailNumber(Elevator.Core.Presets.PresetField field)
+  {
+   var inv=CultureInfo.InvariantCulture;
+   var box=new TextBox{Width=130};AutomationProperties.SetName(box,field.Label);Form.Editors[field.Key]=box;
+   bool prog=false;
+   Action show=()=>{prog=true;var v=field.Effective(Presets.Context(Session.Project));box.Text=v==null?"":Convert.ToDouble(v,inv).ToString("0.###",inv);prog=false;};
+   box.TextChanged+=(s,e)=>{
+    if(prog)return;double v;
+    if(String.IsNullOrWhiteSpace(box.Text))field.Reset(Session.Project);
+    else if(Double.TryParse(box.Text,NumberStyles.Float,inv,out v)&&!Double.IsNaN(v)&&!Double.IsInfinity(v)&&v>=0)field.Edit(Session.Project,v);
+    else return;
+    Session.Dirty=true;Shell.Live.Design=null;Shell.RefreshProjectStatus();
+   };
+   box.ContextMenu=Shell.PresetEditing.ResetMenu(field);
+   Form.PresetRefreshers.Add(()=>{if(!field.IsEdited(Session.Project))show();});
+   show();var sp=new StackPanel{HorizontalAlignment=HorizontalAlignment.Left};sp.Children.Add(box);Content.Children.Add(Form.FormRow(field.Label,sp));
   }
   // A typed value locks the field; an empty or unreadable text resets (empty) or is ignored (unreadable) until it parses.
   void Typed(string key,string text)

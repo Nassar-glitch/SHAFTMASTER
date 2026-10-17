@@ -87,6 +87,17 @@ public static class SteelNativeTests
                 new { Id = "steel-cw-wall", Steel = true, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-wide", Steel = false, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "steel-wide", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                // G2: the door detail follows the door: a 2S side-opening door at 700 and a wide 2C centre-opening door at 1100
+                new { Id = "concrete-2s-700", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2S },
+                new { Id = "concrete-2c-1100", Steel = false, Stops = 4, Floor = 3750.0, W = 2000.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2C },
+                // G2: the user's four master doors on both sides (swing: hinge side; 2S: stacking side)
+                new { Id = "concrete-swing-window-hl", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "concrete-swing-glass-hr", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "concrete-swing-glass-hl", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
+                new { Id = "concrete-2s-solid-l", Steel = false, Stops = 4, Floor = 3750.0, W = 1600.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2S },
+                new { Id = "concrete-2s-solid-r", Steel = false, Stops = 4, Floor = 3750.0, W = 1600.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2S },
+                new { Id = "concrete-2s-glass-l", Steel = false, Stops = 4, Floor = 3750.0, W = 1600.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2S },
+                new { Id = "concrete-2s-glass-r", Steel = false, Stops = 4, Floor = 3750.0, W = 1600.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = DoorTypes.Automatic2S },
                 new { Id = "steel-t89", Steel = true, Stops = 4, Floor = 3750.0, W = 1800.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t89", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null },
                 new { Id = "concrete-t50-3000", Steel = false, Stops = 4, Floor = 3750.0, W = 1500.0, D = 2000.0, Pit = 1150.0, OH = 4100.0, File = (string)null, Door = (string)null }
@@ -103,6 +114,16 @@ public static class SteelNativeTests
             foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {
                 var p = c.File != null ? ProjectJson.Deserialize(File.ReadAllText(c.File)) : Project(lib, ctx, "Villa 34 - " + c.Id, c.Stops, c.Floor, c.W, c.D, c.Pit, c.OH, c.Steel, c.Door);
+                if (c.Id == "concrete-2s-700")
+                    DoorFlow.SetNumber(p, DoorSettings.OpeningKey, 700);
+                if (c.Id == "concrete-2c-1100")
+                    DoorFlow.SetNumber(p, DoorSettings.OpeningKey, 1100);
+                if (c.Id.Contains("-glass-"))
+                    DoorDetailFields.DoorPanel.Edit(p, DoorDetailFields.Glass);
+                if (c.Id.EndsWith("-hl"))
+                    DoorDetailFields.HingeSide.Edit(p, DoorDetailFields.Left);
+                if (c.Id.StartsWith("concrete-2s-") && (c.Id.EndsWith("-l") || c.Id.EndsWith("-r")))
+                    DoorFlow.SetHanding(p, c.Id.EndsWith("-r") ? DoorTypes.Right : DoorTypes.Left);
                 if (c.Id.EndsWith("-cw-wall"))
                     Elevator.Core.GuideRails.RailBracketFields.FixingCw.Edit(p, Elevator.Core.GuideRails.RailFixing.WallBracketName);
                 if (c.Id == "concrete-t89" || c.Id == "steel-t89")

@@ -82,3 +82,95 @@ def check_detail_overlap(doc, case, check):
             if leaders[i][2] != leaders[j][2] and _cross(leaders[i][0], leaders[i][1], leaders[j][0], leaders[j][1]):
                 crossing.append(i)
     check(not crossing, case + ": no two leaders of the rail details cross (" + str(len(crossing)) + ")")
+
+
+DOOR = re.compile(r"^SM_DOOR_(2S|2C|SWING)_(SOLID|GLASS|WINDOW)_W(\d+)_H(\d+)_S(\d+)")
+
+
+def check_door(doc, case, check):
+    """G2: the door detail and the plan agree: the elevation block's opening, height and structural opening equal the plan's OPENING,
+    DOOR WxH and wall opening (the jambs either side of OPENING)."""
+    names = [e.dxf.name for e in doc.modelspace() if e.dxftype() == "INSERT" and DOOR.match(e.dxf.name)]
+    check(len(names) == 1, case + ": the door detail is generated (" + str(names) + ")")
+    if not names:
+        return
+    m = DOOR.match(names[0])
+    w, h, strw = int(m.group(3)), int(m.group(4)), int(m.group(5))
+    opening = door_text = None
+    jambs = {}
+    for e in doc.modelspace():
+        if e.dxftype() != "DIMENSION":
+            continue
+        try:
+            x = [v.value for v in e.get_xdata("ELEVATOR_AUTOMATION")]
+        except Exception:
+            continue
+        if x and x[0] == "Plan.Dimension.Part010":
+            opening = e.get_measurement()
+        if x and x[0] == "Plan.Dimension.Part008":
+            door_text = e.dxf.get("text", "")
+        if x and x[0] in ("Plan.Dimension.Part009", "Plan.Dimension.Part011"):
+            jambs[x[0]] = e.get_measurement()
+    check(opening is not None and abs(opening - w) < 0.6, case + ": the door detail opening " + str(w) + " equals the plan OPENING " + str(opening))
+    mh = re.search(r"X(\d+)", door_text or "")
+    if len(jambs) == 2 and opening is not None:
+        plan_str = opening + sum(jambs.values())
+        check(abs(plan_str - strw) < 1.1, case + ": the door detail STR. " + str(strw) + " equals the plan wall opening " + str(round(plan_str)))
+    check(mh is not None and int(mh.group(1)) == h, case + ": the door detail height " + str(h) + " equals the plan DOOR text " + str(door_text))
+
+
+def check_door_annotation(doc, case, check):
+    """G2: in the door detail no two texts overlap, and no line of the axis, the C marks or the floor (layer A-ANNO) and no leader
+    crosses a text (multileader, dimension text, MTEXT)."""
+    from ezdxf import bbox
+    ins = [e for e in doc.modelspace() if e.dxftype() == "INSERT" and DOOR.match(e.dxf.name)]
+    if not ins:
+        return
+    ox, oy = ins[0].dxf.insert.x, ins[0].dxf.insert.y
+    win = (ox - 4000, oy - 1500, ox + 7000, oy + 4500)
+    inside = lambda x, y: win[0] < x < win[2] and win[1] < y < win[3]
+    boxes, segs = [], []
+    for e in doc.modelspace():
+        t = e.dxftype()
+        if e.dxf.get("invisible", 0):
+            continue
+        if t in ("MULTILEADER", "DIMENSION", "MTEXT"):
+            try:
+                parts = list(e.virtual_entities()) if t != "MTEXT" else [e]
+            except Exception:
+                continue
+            for v in parts:
+                vt = v.dxftype()
+                try:
+                    b = bbox.extents([v], fast=True)
+                except Exception:
+                    continue
+                if not b.has_data or not inside(b.extmin.x, b.extmin.y):
+                    continue
+                if vt in ("MTEXT", "TEXT"):
+                    boxes.append((b.extmin.x, b.extmin.y, b.extmax.x, b.extmax.y, (v.plain_text() if vt == "MTEXT" else v.dxf.text)[:20], id(e)))
+                elif t == "MULTILEADER" and vt == "LINE":
+                    segs.append(((v.dxf.start.x, v.dxf.start.y), (v.dxf.end.x, v.dxf.end.y), "leader", id(e)))
+        elif t in ("LINE", "LWPOLYLINE") and e.dxf.layer == "A-ANNO":
+            pts = [(e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)] if t == "LINE" else [(p[0], p[1]) for p in e.get_points("xy")]
+            if all(inside(x, y) for x, y in pts):
+                for i in range(len(pts) - 1):
+                    segs.append((pts[i], pts[i + 1], "line", id(e)))
+    bad = []
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            a, b = boxes[i], boxes[j]
+            if a[5] != b[5] and a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]:
+                bad.append((a[4], b[4]))
+    check(not bad, case + ": no two texts of the door detail overlap " + str(bad[:4]))
+    hits = []
+    for p, q, kind, owner in segs:
+        for b in boxes:
+            if b[5] == owner:
+                continue
+            # shrink the box a little: a leader may end at its own text, a line may touch a box corner
+            x0, y0, x1, y1 = b[0] + 0.1 * (b[2] - b[0]), b[1] + 0.2 * (b[3] - b[1]), b[2] - 0.1 * (b[2] - b[0]), b[3] - 0.2 * (b[3] - b[1])
+            edges = [((x0, y0), (x1, y0)), ((x1, y0), (x1, y1)), ((x1, y1), (x0, y1)), ((x0, y1), (x0, y0))]
+            if any(_cross(p, q, a, c) for a, c in edges) or (x0 < p[0] < x1 and y0 < p[1] < y1):
+                hits.append((kind, b[4]))
+    check(not hits, case + ": no axis, mark, floor line or leader of the door detail crosses a text " + str(hits[:4]))

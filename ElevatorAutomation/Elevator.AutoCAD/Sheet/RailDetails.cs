@@ -25,7 +25,7 @@ namespace Elevator.AutoCAD.Sheet
     /// the brackets, S- and A- layers, multileaders and real dimensions. The new entities carry no key (they are details of the sheet).
     /// A concrete shaft shows the anchors in the concrete wall; a steel shaft shows the bracket bolted to the UPN beam.
     /// </summary>
-    static class RailDetails
+    static partial class RailDetails
     {
         public const string PlanDetail = "RAILS_PLAN_CW5_CAR9";
         public const string BracketsDetail = "RAIL_BRACKETS_CW5_CAR9";
@@ -868,14 +868,14 @@ namespace Elevator.AutoCAD.Sheet
                 depth = c.Arm.ArmWidthMm;
                 w.Layer = SteelDrawing.LayerBeam;
                 var arm = w.Rect(-depth, -span, 0, span);
-                w.Fill(arm, "ANSI32", 1.2 * Text);
+                Hatched(w, arm, "ANSI32");
                 return;
             }
             depth = c.Steel ? c.Beam.WidthMm : Wall(r);
             w.Layer = c.Steel ? SteelDrawing.LayerBeam : LayerWall;
             var box = w.Rect(-depth, -span, 0, span);
             if (c.Steel)
-                w.Fill(box, "ANSI32", 1.2 * Text);
+                Hatched(w, box, "ANSI32");
         }
 
         static void DrawPlanCrossArm(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
@@ -950,6 +950,22 @@ namespace Elevator.AutoCAD.Sheet
                     d.UsingDefaultTextPosition = false;
                 }
             }
+        }
+
+        /// <summary>An associative hatch of a closed outline at the sheet scale (acadiso ANSI31 / ANSI32: about 3 mm apart on paper). The
+        /// scale is set before the pattern: AutoCAD builds the pattern lines when the pattern is set, a scale set afterwards is ignored.</summary>
+        static void Hatched(SteelDrawing.Writer w, Polyline boundary, string pattern)
+        {
+            var h = new Hatch();
+            h.SetDatabaseDefaults(w.Database);
+            w.Adopt(h);
+            h.Normal = Vector3d.ZAxis;
+            h.Elevation = boundary.Elevation;
+            h.PatternScale = Text / 2.5;
+            h.SetHatchPattern(HatchPatternType.PreDefined, pattern);
+            h.Associative = true;
+            h.AppendLoop(HatchLoopTypes.Default, new ObjectIdCollection(new[] { boundary.ObjectId }));
+            h.EvaluateHatch(true);
         }
 
         static Point3d WorldOf(SteelDrawing.Writer w, double u, double v)
@@ -1092,7 +1108,7 @@ namespace Elevator.AutoCAD.Sheet
                 new[] { xFace, z + h }, new[] { xFace - b, z + h }, new[] { xFace - b, z + h - tf }, new[] { xFace - tw, z + h - tf },
                 new[] { xFace - tw, z - h + tf }, new[] { xFace - b, z - h + tf }, new[] { xFace - b, z - h }, new[] { xFace, z - h }
             }, true);
-            w.Fill(pl, "ANSI32", 1.2 * Text);
+            Hatched(w, pl, "ANSI32");
         }
 
         static void DrawElevationOf(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
@@ -1113,7 +1129,7 @@ namespace Elevator.AutoCAD.Sheet
                 foreach (double z in new[] { zLow, zHigh })
                 {
                     var arm = w.Rect(-depth, z - t - c.Arm.ArmHeightMm, 0, z - t);
-                    w.Fill(arm, "ANSI32", 1.2 * Text);
+                    Hatched(w, arm, "ANSI32");
                 }
             }
             else if (c.Steel)
