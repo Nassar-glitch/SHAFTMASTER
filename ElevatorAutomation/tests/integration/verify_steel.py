@@ -21,6 +21,7 @@ import ezdxf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import steel_overlap  # noqa: E402
+import fixing_check  # noqa: E402
 
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
 LAYOUT = "SM_Geared_A0"
@@ -78,6 +79,8 @@ def main():
         to_dxf(dwg, dxf)
         doc = ezdxf.readfile(dxf)
         ms = doc.modelspace()
+        fixing_check.check_fixing(doc, case, check)
+        fixing_check.check_detail_overlap(doc, case, check)
         # the insertions of the steel blocks are read through their parts (principle 11: named blocks), a label is a multileader
         tagged = steel_overlap.expand(ms)
         steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]

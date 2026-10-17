@@ -1,0 +1,174 @@
+# Guide-rail bracket sizes (stage G1)
+
+The bracket presets of the RAILS page (Advanced) and the details VP5 / VP6 of the sheet come from this table. One row per rail blade
+width (5 / 9 / 16 mm). Every value is an editable preset: it follows the rail profile until the user edits it.
+
+## 1. What the template library shows
+
+Measured in `Layouts_Sec/01_Geared_MR_1-1_LAYOUT.dxf` (the rail-combination sets 5-9-3, 5-9, 5-16, 9-16, 9-16-2.0, 16-16-2.0 and the
+anchor-bolt sheets, LAYOUTS.md) and in the reduced template `Templates/Layout_Geared_A0.dxf` (VP5 `RAILS_PLAN_CW5_CAR9`, VP6
+`RAIL_BRACKETS_*`). Screenshots of every measured set are in [sets/](sets/).
+
+The library draws **one bracket family** for every rail. The dimensions it states:
+
+| Item | Value | Where |
+|---|---|---|
+| Angle arm | L 50 x 40, length 270, two arms per bracket (the angle section is `270x50x40`) | anchor sheets [set-anchor-sheet-3m](sets/set-anchor-sheet-3m.png), [set-anchor-sheet-2m](sets/set-anchor-sheet-2m.png) |
+| Connecting plate | 270 x 50 x 4 | the same sheets |
+| Assembly bolts | 4 x M10 x 40 | the same sheets |
+| Anchors | Ø12 x 150 into the concrete | the same sheets |
+| Bracket spacing | 3000 (sheet "3 m") and 2000 (sheet "2 m"); note "BRACKETS ARE FIXED AT 3000mm / 2000mm" | the same sheets, [set-5-9](sets/set-5-9.png), [set-9-16](sets/set-9-16.png) |
+| Clips | two clips per rail on each bracket, **two bolts per clip**, slotted plate | VP5 plan [template-RAILS_PLAN_CW5_CAR9](sets/template-RAILS_PLAN_CW5_CAR9.png) |
+| Rail sections | T50/50/5 (blade 5), T70/65/9 (blade 9) with their blade, height and width dimensions; 16 mm rails: "Car Guide Rail 16mm", bracket at 1500 | VP5, [set-5-16](sets/set-5-16.png), [set-car-16-brackets-at-1500](sets/set-car-16-brackets-at-1500.png) |
+| Steel shaft fixing | bracket bolted to the steel member | [set-steel-shaft-fixing](sets/set-steel-shaft-fixing.png) |
+
+The set drawings are PDF-import outlines. They do not state a clip size or a rail-bolt size, and the plan details are schematic (a
+dimension text such as "65" is a label, not a measured length). The values that follow the blade width are therefore **proposed**
+here, from the catalogue rail foot (GUIDE-RAILS.md section 8: neck c = 5 / 6 / 10, foot depth f = 5 / 8 / 11); they are the
+only part of the bracket that changes between rows.
+
+## 2. The table
+
+All sizes in mm.
+
+| Blade (mm) | Rail section b1 x h1 | Angle arm | Plate | Assembly bolts | Clip L x W x t | Rail-to-bracket bolt | Anchor | Source of the row |
+|---|---|---|---|---|---|---|---|---|
+| **5** | 50 x 50 (T50/50/5) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 40 x 25 x 5 | 2 x M8 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from the foot c = 5, f = 5 |
+| **9** | 70 x 65 (T70/65/9) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 50 x 30 x 6 | 2 x M10 per clip | Ø12 x 150 | arm, plate, bolts, anchor, 2 bolts per clip: library (VP5 T70 set); clip and rail bolt: proposed from c = 6, f = 8 |
+| **16** | 89 x 62 (T89/62/16), 90 x 75 (T90/75/16) | 2 x L 270x50x40 | 270x50x4 | 4 x M10x40 | 60 x 35 x 8 | 2 x M12 per clip | Ø12 x 150 | arm, plate, bolts, anchor: library; clip and rail bolt: proposed from c = 10, f = 10 / 11. The set "car 16 brackets at 1500" differs only in the spacing 1500, which is the project's spacing, so it adds no bracket geometry |
+
+Each row is `GuideRails.Profiles[].Bracket` in `config/presets.json` (and the shipped defaults in `GuideRailDefaults.cs`).
+
+## 3. Catalogue profile to row
+
+| Catalogue profile (GUIDE-RAILS.md section 8) | Blade k | Row |
+|---|---|---|
+| T50/50/5 | 5 | 5 |
+| T70/65/9 | 9 | 9 |
+| T89/62/16 | 16 | 16 |
+| T90/75/16 | 16 | 16 |
+
+A profile that is added to the catalogue without a `Bracket` takes the row of its blade width, or the next heavier row when it has no
+set of its own (`RailBracketPreset.ForBlade`: up to 5 mm the 5 row, up to 9 mm the 9 row, above that the 16 row).
+
+## 4. Spacing
+
+The bracket spacing is not part of the bracket preset. The car spacing is the RAILS value (recommended by the check, 3000 or 2000 in the
+library sheets); the counterweight spacing follows the car spacing until the user types it. The detail dimensions the real value.
+
+## 5. Questions for the Planner
+
+1. The clip and rail-bolt sizes are proposed from the rail foot because the library does not dimension them. Confirm or give the
+   sizes of the supplier's clips.
+2. The library shows the same arm and plate for 5 and 16 mm rails. If a heavier 16 mm rail needs a stronger bracket, the arm and plate rows
+   are editable per profile and only the preset values change.
+
+## 6. How the rails are fixed in each arrangement (inventory, G1 round 3)
+
+Read from the main plan of the generated drawings (the template plan, `docs/design/details/sets/set-inv-plan-*.png`), the plan
+dimensions of `DrawingUpdater` (Part003 CW DBG, Part016 shaft width, Part017 rear wall to the CW row, Part024 car DBG) and the library
+sheet `Layouts_Sec/01_Geared_MR_1-1_LAYOUT.dxf` (screenshots in `sets/`).
+
+| Arrangement | Car rails | CW rails | Source |
+|---|---|---|---|
+| **RCW** (the only plan geometry the program has) | at the side walls: a bracket block from the wall to the rail back (gap (SW - DBG) / 2 - h1: 85 for T70 at DBG 1200 in SW 1500) | at the rear: the template draws the CW bracket blocks on the **rear wall** (125 from the rear wall to the CW row, 75 / 100 / 75 across the rail band), 230 from the side wall to the DBG point | [set-inv-plan-concrete-client](sets/set-inv-plan-concrete-client.png) |
+| **RCW, steel** | the same, the bracket on the side UPN beam | the same, on the rear UPN beam; with the user's numbers 380 side, 125 rear, 75 / 100 / 75 | [set-inv-plan-steel-user](sets/set-inv-plan-steel-user.png) |
+| **SCWL / SCWR** | at the side walls | not in the program: `DrawingFileName` returns RCW for every project and the plan geometry places the counterweight at the rear (DesignRules). No template plan for it in the library file | `Elevator.Core/Layouts/DrawingFileName.cs` |
+| **Cross arm in the library** | | the sheet "GUIDE RAILS AND BRACKETS FIXATION AT THE SEPARATION BEAM": the rails fixed with brackets on a steel beam **UPE 120** that reaches from the shaft wall, fixed with an end plate "100 x 100 x 100 - 10 mm" and two anchor bolts M12 | [set-inv-separation-beam](sets/set-inv-separation-beam.png) |
+
+The library's rail plan details (sets of 5-9-3 ... 16-16-2.0) show only the rail with its bracket, the rail section sizes (50 / 65 / 70 /
+75 / 90 and the blade 5 / 9 / 16) and no wall: they are the bracket, not the arrangement.
+
+**Decision (Planner, round 3b):** the template plan is right: in RCW the counterweight brackets stand on the rear wall (a small cross
+arm). The reach of 300 is for the car rails only; the counterweight rails take a wall bracket from the side wall only when the gap from
+the rail back to it is within a side reach of 100 mm.
+
+### The rule (implemented)
+
+1. **Numbers from the plan:** the gap from the rail back to the side surface = (SW - DBG) / 2 - h1 of the profile (the plan dimension to
+   the DBG point less the rail height); for the CW rails the arm to the rear surface = the plan dimension rear wall to the CW row less half
+   the rail width. A wall, a slab edge or a UPN beam is the surface (steel: the UPN beam).
+2. **Fixing type** (RAILS page, Advanced, per rail group): Auto / Wall bracket / Cross arm; two reach presets, both editable:
+   **car reach 300**, **CW side reach 100**. Car rails: Auto = wall bracket when the side gap is within 300. CW rails: Auto = **cross arm**
+   from the rear wall (rear beam), a wall bracket only when the side gap is at most 100. A chosen value is kept. In the default RCW
+   projects the CW gap is 180 (SW 1500) and more, so the CW rails are fixed on the cross arm; with the catalogue DBGs (largest 1040 for
+   SW >= 1450, allowance 205) the gap cannot be 100 or less, so a CW wall bracket comes from the choice or from edited presets.
+3. **Wall bracket:** the arm of the bracket is the gap (the preset leg 40 is the least); VP5 dimensions the gap.
+4. **Cross arm:** section **UPE 120** (h 120, b 60, web 5, flange 8: from the library separation-beam detail), end plate 100 x 100 x 10
+   with 2 anchors M12 (steel: bolts through the beam), all editable presets (`GuideRails.Fixing`); the length is the plan number (100 for
+   the CW rails at 125 from the rear wall). The bracket stands on a head plate at the arm end.
+5. **The plan matches the detail:** the template plan draws the car brackets as wall brackets and the CW brackets on the rear wall. When
+   a group is fixed otherwise (a CW wall bracket by choice, or by the side reach), the template's bracket block of that group is hidden
+   and the program's own symbol is drawn: a named block `SM_RAIL_FIXING_PLAN_*_CW_WALL_G<gap>_SYMBOL` on S-BRACKET, the same type, arm
+   and gap as the detail (`SM_RAIL_BRACKET_PLAN_*_CW_WALL_G<gap>`). `verify_layouts.py` and `verify_steel.py` (`fixing_check.py`) fail when
+   the symbol and the detail differ, or when a group without a symbol is not fixed as the template plan draws it.
+6. **Details:** VP5 and VP6 draw the fixing of each rail group (car and CW can differ).
+
+Cases: `RailBracketTests` (Auto for the RCW default, the CW side reach, chosen values, steel beams, no rear surface, lock / follow);
+drawings `concrete-client` (car wall brackets, CW cross arm = the template plan), `concrete-wide` / `steel-wide` (SW 1800), the user's
+steel project, `concrete-cw-wall` / `steel-cw-wall` (CW chosen as a wall bracket: own symbol in the plan, wall bracket in the detail).
+
+## 7. How the details are drawn (G1)
+
+Both details are generated at full size from the project; the template's static details VP5 and VP6 are hidden and only their titles
+are kept (the scale is appended as before).
+
+- **Plan (VP5, "CAR / C.W. GUIDES AND BRACKETS")**: the wall (concrete: hatched wall, the anchors shown; steel: the UPN beam, the bolts
+  through its web), the two angles (leg A on the wall, leg B towards the rail), the plate across the ends of the legs, the rail section
+  of the effective profile (flange, neck, head), the two clips with their bolts. One named block per bracket and per rail section
+  (`SM_RAIL_BRACKET_PLAN_*`, `SM_RAIL_*`).
+- **Elevation (VP6)**: the car rail and the counterweight rail, each with two brackets at the **real spacing** of the project (a
+  DIMENSION between the bracket centres: 3000 for a 3000 spacing), the bracket length and the width chain; the clips, their bolts and
+  the anchors (or the bolts through the beam of a steel shaft, with the beam behind the bracket). Block `SM_RAIL_BRACKET_ELEV_*`.
+- Layers `S-RAIL`, `S-BRACKET`, `S-CLIP`, `S-ANCHOR`, `A-WALL`, `S-BEAM`, `A-DIMS`, `A-ANNO`; labels are MULTILEADERs placed with the
+  same no-overlap rule as the steel drawing (PlaceLabel with obstacles), the dimension texts of a chain by `DimensionLayout`.
+- The text height is 2.5 mm printed at the scale the detail takes on the sheet. The elevation draws the two brackets close
+  together with a break of the rail between them; its spacing DIMENSION carries the real value (2000 / 3000) as text. Plan 1:5 or 1:10,
+  elevation 1:10 or 1:20.
+- The plate width is computed: the rail foot width plus the two clips (library: 270 x 50 x 4 for the 50 mm rail).
+
+## 8. The bracket assembly (round 4: the user's own assembly)
+
+The generated bracket is the one of the user's library (the anchor sheets, `sets/set-anchor-sheet-3m.png`; the user's crops are in
+`g1/user-feedback/`): **two right-angle pieces mounted opposite each other**, drawn in VP5 and VP6 and in the plan symbol from one
+definition (`Rail.Gap`, `Rail.ArmLeg`, the blocks `SM_RAIL_BRACKET_PLAN_*`, `SM_RAIL_BRACKET_ELEV_*`, `SM_RAIL_FIXING_PLAN_*`):
+
+| Part | Name on the drawing | Where it is |
+|---|---|---|
+| Fixing angle | BRACKET L 270x50x40 (x2) | its wall leg on the wall (anchored), on the UPN beam (bolted through the web) or on the head plate of a cross arm; its arm leg points to the rail |
+| Rail angle | (the second of the two) | its base leg carries the rail; its arm leg points to the wall and lies face to face with the arm leg of the fixing angle |
+| Plate | PLATE 270x50x4 | between the base leg of the rail angle and the rail foot |
+| Joint | ASSEMBLY BOLTS 4 x M10x40 | two bolts in each of two rows through slotted holes in the overlapped arm legs (the slots run along the arm) |
+| Clips | CLIPS 2 x 40x25x5 (per blade row) | over the two edges of the rail foot, on the base leg |
+| Clip bolts | CLIP BOLTS 2 x M8 EACH | through the clip and the base leg |
+| Fixing | ANCHOR BOLTS D12x150 (concrete) / BOLTS M12 (steel beam, cross arm head plate) | through the wall leg |
+
+**The distance wall to rail** is made by the overlap of the two arm legs: the gap of the plan (rail foot back to the wall, or to the
+beam) = the leg of the fixing angle + the leg of the rail angle - the overlap + the plate and the two leg thicknesses. **Rule (presets):**
+the arm legs are the preset leg B (40) and the overlap is a preset (`RailBracketPreset.AssemblyOverlapMm`, 30). When the gap needs more
+(gap + overlap > 2 x leg + plate + 2 thicknesses) **both legs grow together so that the overlap stays 30**: a gap of 85 gives legs of
+57.5; a gap of 62 (the nominal assembly, used on a cross arm) gives the preset 40. A gap below plate + 2 thicknesses + 4 is raised to that.
+
+Widths: the nominal section is 50 x 40 as in the library notes; the base leg is as wide as the foot with its two clips needs
+(`b1 + 2 x clip width`), which the library draws wider than 50 as well (the T70 detail is about twice 50 across).
+
+**Interpretation to confirm with the user:** the library crop shows the assembly face on (slotted legs, four bolts, two anchors) with
+the rail section beside it. VP6 draws this face-on side view (270 high, slots along the arm, 4 assembly bolts, anchors or beam bolts, the
+rail broken between two brackets with the real spacing); VP5 draws the horizontal section through the pieces (the legs edge on, the
+bolts across them). The slots run along the arm so that the overlap sets the gap, as the Planner described; in the crop the slots look
+longer in the 270 direction, which may be the actual slot direction.
+
+## 9. Round 6 (final user corrections)
+
+- **Bracket length along the wall follows the rail foot:** length = b1 + 2 x 37 (clip margin), rounded up to 10 mm
+  (`RailBracketPreset.LengthFor`; the user's T70 bracket is about 144 for a foot of 70). T50/50/5: 130, T70/65/9: 150, T89/62/16: 170,
+  T90/75/16: 170. It is the preset of each profile (Advanced on the RAILS page, "Bracket length along the wall", lock / follow); the plate is
+  as long. Labels show the computed sizes: BRACKET L 150x50x40 (x2), PLATE 150x50x4. The leg projection follows the gap as before.
+- **Cross arm:** label "ST CROSS ARM" only. The wall angle's horizontal leg lies on the top face of the arm and reaches back over it,
+  held by ASSEMBLY BOLTS 2 X M10X40 (vertical through the leg and the top flange); never anchor bolts. VP5 from above (arm hatched, the leg
+  over it, 2 bolts in slots), VP6 in section (the arm end on under the leg, the bolt vertical).
+- **Anchor bolts:** the user's block "ANCHOR BOLT" (user-edit-2) is stored as data (`Elevator.AutoCAD/Sheet/AnchorBoltGeometry.cs`) and
+  generated as the named block `SM_ANCHOR_BOLT`, scaled so its thread is the anchor diameter, used for every anchor bolt in VP5 and VP6.
+- **VP6 at 1:10.**
+- **Checks:** `fixing_check.py` checks plan symbol = VP5 = VP6 for type, gap and bracket length (block names carry `_G<gap>_L<length>`),
+  and that no two texts (labels, dimension texts) of the rail details overlap and no two leaders cross.

@@ -44,6 +44,14 @@ namespace Elevator.Core.GuideRails
         /// <summary>The catalog, in the order of the recommendation (smallest first).</summary>
         public List<RailProfile> Profiles;
 
+        /// <summary>The fixing presets (reach of a wall bracket, the cross arm section); null in an older library: the shipped defaults.</summary>
+        public RailFixingPreset Fixing;
+
+        public RailFixingPreset FixingOrDefault()
+        {
+            return Fixing ?? new RailFixingPreset();
+        }
+
         public GuideRailPreset Clone()
         {
             return (GuideRailPreset)MemberwiseClone();
@@ -103,6 +111,15 @@ namespace Elevator.Core.GuideRails
             pos("CwDeflectionLimitMm", CwDeflectionLimitMm);
             pos("MaxSlenderness", MaxSlenderness);
             pos("MinSlenderness", MinSlenderness);
+            if (Fixing != null)
+            {
+                pos("Fixing.CarReachMm", Fixing.CarReachMm);
+                pos("Fixing.CwSideReachMm", Fixing.CwSideReachMm);
+                pos("Fixing.ArmHeightMm", Fixing.ArmHeightMm);
+                pos("Fixing.ArmWidthMm", Fixing.ArmWidthMm);
+                pos("Fixing.ArmWebMm", Fixing.ArmWebMm);
+                pos("Fixing.ArmFlangeMm", Fixing.ArmFlangeMm);
+            }
             if (MinSpacingMm > MaxSpacingMm)
                 p.Add("GuideRails.MinSpacingMm must not exceed MaxSpacingMm");
             if (Profiles == null || Profiles.Count == 0 || Profiles.Any(x => x == null))

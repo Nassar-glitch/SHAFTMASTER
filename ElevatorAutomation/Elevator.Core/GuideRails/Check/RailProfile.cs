@@ -44,6 +44,18 @@ namespace Elevator.Core.GuideRails
         public double ShoeLiningLengthMm;
         /// <summary>b: half the width of the guide-shoe lining.</summary>
         public double ShoeHalfWidthMm;
+        /// <summary>The bracket of this profile (BRACKETS.md); null in an older library: the row of the blade width applies.</summary>
+        public RailBracketPreset Bracket;
+
+        /// <summary>The bracket preset of the profile, or the row of its blade width.</summary>
+        public RailBracketPreset BracketOrDefault()
+        {
+            if (Bracket != null)
+                return Bracket;
+            var b = RailBracketPreset.ForBlade(BladeMm);
+            b.AngleLengthMm = RailBracketPreset.LengthFor(WidthMm);
+            return b;
+        }
 
         public RailProfile Clone()
         {
@@ -88,6 +100,8 @@ namespace Elevator.Core.GuideRails
                 p.Add(n + "ShoeType must be " + Sliding + " or " + Roller);
             if (!P(ShoeLiningLengthMm) || !P(ShoeHalfWidthMm))
                 p.Add(n + "ShoeLiningLengthMm and ShoeHalfWidthMm must be positive");
+            if (Bracket != null)
+                p.AddRange(Bracket.Validate("GuideRails.Profiles " + (Name ?? "?")));
             return p;
         }
 

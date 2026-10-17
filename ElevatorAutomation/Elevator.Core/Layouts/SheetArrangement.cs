@@ -525,6 +525,9 @@ namespace Elevator.Core.Layouts
                 if (aa != null && fishScale == 0 && !fishToGroup)
                 {
                     double right = Math.Min(xr, Math.Min(bb != null ? bbLeft - g : xr, stack.Count > 0 ? stackLeft - g : xr));
+                    // the band under B-B (above) and this one must not overlap: where they share rows this one stops left of it
+                    if (stackBottom - yb > 0 && stackBottom > fishCellBottom)
+                        right = Math.Min(right, left3 - g);
                     if (yt - fishCellBottom > 0 && right - x2 > 0)
                         free.Add(Shelf.Of(new SheetRect(x2, fishCellBottom, right - x2, yt - fishCellBottom), 2));
                 }

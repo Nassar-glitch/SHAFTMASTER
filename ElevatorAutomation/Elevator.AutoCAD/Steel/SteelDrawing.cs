@@ -176,7 +176,7 @@ namespace Elevator.AutoCAD.Steel
         public const string LayerDims = "A-DIMS";
         public const string LayerEquip = "A-EQUIP";
 
-        static void EnsureLayer(Database db, Transaction tr, string name)
+        internal static void EnsureLayer(Database db, Transaction tr, string name)
         {
             var lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
             if (lt.Has(name))
@@ -191,7 +191,7 @@ namespace Elevator.AutoCAD.Steel
         const string LeaderStyleName = "SM_LEADER";
 
         // The multileader style of every pointing label: no arrow head, no landing, the text beside the end of the leader.
-        static ObjectId LeaderStyle(Database db, Transaction tr)
+        internal static ObjectId LeaderStyle(Database db, Transaction tr)
         {
             var dict = (DBDictionary)tr.GetObject(db.MLeaderStyleDictionaryId, OpenMode.ForRead);
             if (dict.Contains(LeaderStyleName))
@@ -213,7 +213,7 @@ namespace Elevator.AutoCAD.Steel
         }
 
         // A named block, created once from the geometry the callback puts into it (local coordinates, origin at the insertion point).
-        static ObjectId Block(Database db, Transaction tr, string name, Action<BlockTableRecord> fill)
+        internal static ObjectId Block(Database db, Transaction tr, string name, Action<BlockTableRecord> fill)
         {
             var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
             if (bt.Has(name))
@@ -226,7 +226,7 @@ namespace Elevator.AutoCAD.Steel
             return id;
         }
 
-        static T Put<T>(BlockTableRecord btr, Transaction tr, T e, string layer) where T : Entity
+        internal static T Put<T>(BlockTableRecord btr, Transaction tr, T e, string layer) where T : Entity
         {
             EnsureLayer(btr.Database, tr, layer);
             e.Layer = layer;
@@ -235,7 +235,7 @@ namespace Elevator.AutoCAD.Steel
             return e;
         }
 
-        static string Clean(string name)
+        internal static string Clean(string name)
         {
             return new string(name.Select(c => Char.IsLetterOrDigit(c) ? c : '_').ToArray());
         }
@@ -504,7 +504,7 @@ namespace Elevator.AutoCAD.Steel
         }
 
         // Width of a character of the steel labels as a fraction of their height (measured on the generated sheets: about 0.97).
-        const double CharFactor = 1.0;
+        internal const double CharFactor = 1.0;
 
         // ---------- label placement (no text on text) ----------
         /// <summary>
@@ -513,8 +513,13 @@ namespace Elevator.AutoCAD.Steel
         /// nearest position (leader length and offset) whose text box is clear of every text and outline by a gap and whose leader crosses
         /// no text.
         /// </summary>
-        sealed class Obstacles
+        internal sealed class Obstacles
         {
+            /// <summary>An empty set of obstacles (a detail that is not a view of the shaft): the caller adds its own texts and outlines.</summary>
+            internal Obstacles()
+            {
+            }
+
             readonly List<double[]> texts = new List<double[]>();
             readonly List<string> names = new List<string>();
             string current = "";
@@ -522,6 +527,8 @@ namespace Elevator.AutoCAD.Steel
             // the dimension lines, extension lines and the axes of the view: a label text box may not touch one (its leader may cross)
             readonly List<double[]> segments = new List<double[]>();
             readonly ShaftFrame frame;
+            // the leaders already placed (a new leader may not cross one of them)
+            readonly List<double[]> leaders = new List<double[]>();
 
             // Only the entities of the view the labels belong to (the views stand on top of each other until they are arranged).
             public Obstacles(Database db, Transaction tr, ShaftFrame frame, params string[] viewPrefixes)
@@ -566,6 +573,11 @@ namespace Elevator.AutoCAD.Steel
                         AddDimensionLines(d);
                     }
                 }
+            }
+
+            internal void AddSegment(double x0, double y0, double x1, double y1)
+            {
+                segments.Add(new[] { x0, y0, x1, y1 });
             }
 
             void AddSegment(Point3d a, Point3d b)
@@ -674,6 +686,18 @@ namespace Elevator.AutoCAD.Steel
                 return sb.ToString();
             }
 
+            internal void AddLeader(double x0, double y0, double x1, double y1)
+            {
+                leaders.Add(new[] { x0, y0, x1, y1 });
+            }
+
+            static bool SegmentsCross(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy)
+            {
+                double d1 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), d2 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+                double d3 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx), d4 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+                return d1 * d2 < 0 && d3 * d4 < 0;
+            }
+
             public void AddText(double[] box)
             {
                 names.Add("label");
@@ -703,6 +727,11 @@ namespace Elevator.AutoCAD.Steel
             /// <summary>True when the segment crosses no text.</summary>
             public bool LeaderClear(double x0, double y0, double x1, double y1)
             {
+                foreach (var l in leaders)
+                {
+                    if (SegmentsCross(x0, y0, x1, y1, l[0], l[1], l[2], l[3]))
+                        return false;
+                }
                 foreach (var t in texts)
                 {
                     if (SegmentHits(x0, y0, x1, y1, t[0], t[1], t[2], t[3]))
@@ -748,7 +777,7 @@ namespace Elevator.AutoCAD.Steel
         // each, the candidate positions are leader lengths from len0 and offsets across from dy0; the cheapest candidate whose text
         // box is clear of every text and outline and whose leader crosses no text wins. The text stands at the end of the leader (to its
         // left for toLeft, otherwise to its right).
-        static void PlaceLabel(Writer w, Obstacles ob, IList<double[]> anchors, bool toLeft, double h, string text, double len0, double dy0)
+        internal static void PlaceLabel(Writer w, Obstacles ob, IList<double[]> anchors, bool toLeft, double h, string text, double len0, double dy0)
         {
             double width = text.Length * CharFactor * h, height = 1.4 * h, gap = 0.25 * h;
             var steps = new List<double[]>();
@@ -801,6 +830,7 @@ namespace Elevator.AutoCAD.Steel
                 bay = anchors[0][1];
             }
             double endX = toLeft ? bax - best[1] : bax + best[1], endY = bay + best[2];
+            ob.AddLeader(bax, bay, endX, endY);
             if (toLeft)
             {
                 w.LabelLeft(bax, bay, endX, endY, h, text);
@@ -984,7 +1014,7 @@ namespace Elevator.AutoCAD.Steel
             }
         }
 
-        static string L(double v)
+        internal static string L(double v)
         {
             return v.ToString("0.###", CultureInfo.InvariantCulture);
         }

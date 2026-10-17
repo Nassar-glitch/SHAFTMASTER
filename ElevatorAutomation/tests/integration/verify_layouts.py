@@ -19,6 +19,9 @@ import sys
 import tempfile
 
 import ezdxf
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import fixing_check  # noqa: E402
 
 CORE_CONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2023\accoreconsole.exe"
 STANDARD = (5, 10, 20, 25, 50, 75, 100, 150, 200)  # 1:5: a reference detail may be enlarged (L2c)
@@ -65,6 +68,8 @@ def run_case(folder, case_id):
     dxf = os.path.join(folder, case_id + ".dxf")
     to_dxf(os.path.join(folder, case_id + ".dwg"), dxf)
     doc = ezdxf.readfile(dxf)
+    fixing_check.check_fixing(doc, case_id, check)
+    fixing_check.check_detail_overlap(doc, case_id, check)
     names = [l.name for l in doc.layouts]
     check(expected["Layout"] in names, case_id + ": layout " + expected["Layout"] + " exists")
     # the master drawing already has Layout1 and Layout2; the sheet is the only layout the generation adds
@@ -92,9 +97,24 @@ def run_case(folder, case_id):
         for j in range(i + 1, len(rects)):
             check(not overlaps(rects[i], rects[j]), case_id + ": viewports %d and %d do not overlap" % (i, j))
     # the host's own report matches the DWG
-    exp = sorted((round(v["PaperX"], 1), round(v["PaperY"], 1), v["ScaleDenominator"]) for v in expected["Viewports"])
-    got = sorted((round(r[0], 1), round(r[1], 1), round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
-    check(exp == got, case_id + ": viewport positions and scales equal the arrangement")
+    # positions to 0.06 mm (a position such as 736.45 rounds to 736.4 in one place and 736.5 in the other), the scales exactly
+    exp = sorted((v["PaperX"], v["PaperY"], v["ScaleDenominator"]) for v in expected["Viewports"])
+    got = sorted((r[0], r[1], round(1.0 * v.dxf.view_height / v.dxf.height + 1e-9)) for r, v in zip(rects, vps))
+    check(len(exp) == len(got) and all(any(abs(e[0] - g[0]) < 0.06 and abs(e[1] - g[1]) < 0.06 and e[2] == g[2] for g in got) for e in exp),
+          case_id + ": viewport positions and scales equal the arrangement")
+    # no viewport shows another detail's drawing: the model areas of the detail viewports (x > 900000) do not overlap
+    areas = []
+    for v in vps:
+        d = v.dxf
+        cx, cy = d.view_center_point.x, d.view_center_point.y
+        if cx < 900000 or d.height <= 0:
+            continue
+        hh = d.view_height / 2
+        hw = hh * d.width / d.height
+        areas.append((cx - hw, cy - hh, cx + hw, cy + hh))
+    for i in range(len(areas)):
+        for j in range(i + 1, len(areas)):
+            check(not overlaps(areas[i], areas[j]), case_id + ": detail viewports %d and %d show different model areas" % (i, j))
 
     # scale labels: only under a view that has no title of its own stating the scale
     labels = [e.dxf.text for e in lay if e.dxftype() == "TEXT" and e.dxf.text.startswith("1:")]
