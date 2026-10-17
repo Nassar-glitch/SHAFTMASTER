@@ -208,6 +208,36 @@ Agreed between the user and the Planner on 2026-10-08. This is the reference for
   - profiles with no library set take the nearest heavier set;
   - the presets are editable under Advanced on the RAILS page, and the bracket detail draws the chosen values.
 
+## Lift systems roadmap (user, 2026-10-17; order proposed by the Planner, awaiting the user's OK)
+
+- **Demand order (user):**
+  1. geared 1:1, rear CW (the current system, done);
+  2. gearless 2:1, side CW;
+  3. 2:1 forklift;
+  4. geared 1:1, side CW;
+  5. hydraulic, rear and side;
+  6. freight, 2:1, side CW, geared.
+- **No duplicate work:** a system is a combination of independent axes:
+  - roping 1:1 / 2:1;
+  - drive geared / gearless;
+  - machine room or MRL;
+  - CW rear / left / right;
+  - suspension (centre, forklift).
+  
+  The car, doors, rails, brackets, steel shaft, sheet, PDF and Design Notes are shared modules that read the system. Only what really differs per axis is new: calculation rules, machine geometry, the A-A / machine-area templates.
+- **Proposed order:**
+  - **Stage 0:** a LiftSystem descriptor in Core (the axes above), with the current system as the first value. No output changes.
+  - **Then gearless 2:1 side CW:** it builds both new axes at once: 2:1 roping, and the side CW plan.
+  - **Geared 1:1 side CW then comes almost free** from the side-CW axis.
+  - **Forklift and freight reuse 2:1;** hydraulic is last.
+- **Adding a system (workflow):**
+  1. The user gives a real project DWG, its layout sheet, and the calculation note or method of that system.
+  2. A diff against the shared modules, listing what is new.
+  3. Cloud: the Core calculation rules and the sheet / notes text.
+  4. Local: the plan, A-A and machine-area drawings from the user's templates, and the sheet.
+  5. User test, then merge.
+- **Future, after the systems are stable:** door positions as the first input (one entrance; through car (OTC) with opposite doors; adjacent doors on two walls in an L).
+
 ## Build stages (order)
 
 Status 2026-10-09: stages 1 and 2 are done. After the heavy-load selection (joint β / q / Dt search; heavier car masses), 1:1 passes Q 320–1000 on every tested shaft, and 1275 on the default survey. The remaining 1275/1600 cases get a "2:1 roping is recommended" Design Notes recommendation and wait for the 2:1 stage. Next come release v03, then the repository and architecture cleanup and a push to the private GitHub repo (legacy ElevatorPlanGenerator under legacy/). Feature stages 3+ resume after that.
