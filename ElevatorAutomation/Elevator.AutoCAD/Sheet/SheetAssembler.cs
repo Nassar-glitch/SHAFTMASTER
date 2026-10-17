@@ -129,7 +129,7 @@ namespace Elevator.AutoCAD.Sheet
                         MarginMm = SheetLayout.DetailMarginMm,
                         AllowedScales = SheetLayout.DetailScales,
                         MinScaleDenominator = 0,
-                        MaxScaleDenominator = d.Kind == "RailBrackets" ? 20 : d.TemplateScale
+                        MaxScaleDenominator = d.TemplateScale
                     });
                 }
                 arrangement = SheetArrangement.Arrange(area, views, request.SteelStructure ? SheetArrangement.SteelScales : null, request.SteelStructure ? 50 : 0);

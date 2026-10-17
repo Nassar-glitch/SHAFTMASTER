@@ -33,7 +33,7 @@ namespace Elevator.Core.Tests
             Assert.Equal(clipLength, row.Bracket.ClipLengthMm);
             Assert.Equal(boltDiameter, row.Bracket.ClipBoltDiameterMm);
             // the family common to every rail (the template library shows one)
-            Assert.Equal(270, row.Bracket.AngleLengthMm);
+            Assert.Equal(RailBracketPreset.LengthFor(row.WidthMm), row.Bracket.AngleLengthMm);
             Assert.Equal(50, row.Bracket.AngleLegAMm);
             Assert.Equal(40, row.Bracket.AngleLegBMm);
             Assert.Equal(10, row.Bracket.AssemblyBoltDiameterMm);

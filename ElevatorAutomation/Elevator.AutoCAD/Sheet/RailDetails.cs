@@ -312,6 +312,7 @@ namespace Elevator.AutoCAD.Sheet
                     e.Visible = false;
                 }
             }
+            ArmBack = 0;
             var block = BracketPlanBlock(db, tr, c.Cw, false, "SM_RAIL_FIXING_PLAN_");
             foreach (int side in new[] { -1, 1 })
             {
@@ -509,7 +510,35 @@ namespace Elevator.AutoCAD.Sheet
         {
             string type = r.CrossArm ? "ARM" : "WALL";
             double gap = r.CrossArm ? r.Fixing.ArmLengthMm : r.Gap;
-            return "_" + (r.Family == RailBracketFields.Car ? "CAR" : "CW") + "_" + type + "_G" + Math.Round(gap).ToString(CultureInfo.InvariantCulture);
+            return "_" + (r.Family == RailBracketFields.Car ? "CAR" : "CW") + "_" + type + "_G" + Math.Round(gap).ToString(CultureInfo.InvariantCulture)
+                + "_L" + Math.Round(r.Bracket.AngleLengthMm).ToString(CultureInfo.InvariantCulture);
+        }
+
+        // The anchor bolt of the user's drawing (SM_ANCHOR_BOLT), scaled so that its thread is the anchor diameter, its washer and nut on
+        // the leg at xFace (the leg outside face), pointing into the support (-x).
+        static BlockReference AnchorRef(Database db, Transaction tr, Point3d at, double dia, string layer)
+        {
+            double k = dia / (2 * AnchorBoltGeometry.ThreadRadius);
+            var br = new BlockReference(at, AnchorBoltGeometry.Block(db, tr, layer));
+            br.ScaleFactors = new Scale3d(k, k, 1);
+            return br;
+        }
+
+        static double AnchorShift(double dia)
+        {
+            return AnchorBoltGeometry.WallFaceX * dia / (2 * AnchorBoltGeometry.ThreadRadius);
+        }
+
+        static void AnchorIn(Database db, Transaction tr, BlockTableRecord btr, double xFace, double y, double dia)
+        {
+            var br = AnchorRef(db, tr, new Point3d(xFace - AnchorShift(dia), y, 0), dia, LayerAnchor);
+            SteelDrawing.Put(btr, tr, br, LayerAnchor);
+        }
+
+        static void Anchor(SteelDrawing.Writer w, Database db, Transaction tr, double xFace, double y, double dia)
+        {
+            w.Layer = LayerAnchor;
+            w.Adopt(AnchorRef(db, tr, WorldOf(w, xFace - AnchorShift(dia), y), dia, LayerAnchor));
         }
 
         // the x of the assembly bolts: the middle of the overlap of the two horizontal legs
@@ -526,16 +555,35 @@ namespace Elevator.AutoCAD.Sheet
             return new[] { -e, -e + 40, e - 40, e };
         }
 
+        static double ArmBack = 0;   // the arm width in a cross-arm plan block (set by the caller)
+
         static ObjectId BracketPlanBlock(Database db, Transaction tr, Rail r, bool clips = true, string prefix = "SM_RAIL_BRACKET_PLAN_")
         {
+            double armBack = r.CrossArm ? ArmBack : 0;
             return SteelDrawing.Block(db, tr, prefix + Key(r) + FixingTag(r) + (clips ? "" : "_SYMBOL"), btr =>
             {
                 var b = r.Bracket;
                 double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, half = b.AngleLengthMm / 2;
                 double d = b.AssemblyBoltDiameterMm;
-                // the wall angle: its vertical leg on the support (edge on) and its horizontal leg seen from above
-                RectIn(db, tr, btr, 0, -half, t, half, LayerBracket);
-                RectIn(db, tr, btr, t, -half, la, half, LayerBracket);
+                if (armBack > 0)
+                {
+                    // on a cross arm: the wall angle's horizontal leg lies on the arm top and reaches back over it; 2 assembly bolts
+                    // through it and the top flange of the arm, near the two ends
+                    RectIn(db, tr, btr, -armBack, -half, la, half, LayerBracket);
+                    foreach (int k in new[] { -1, 1 })
+                    {
+                        double yb = k * (half - 20);
+                        SlotIn(db, tr, btr, -armBack / 2 - 12, -armBack / 2 + 12, yb, d + 2, LayerBracket);
+                        SteelDrawing.Put(btr, tr, new Circle(new Point3d(-armBack / 2, yb, 0), Vector3d.ZAxis, 0.85 * d), LayerClip);
+                        SteelDrawing.Put(btr, tr, new Circle(new Point3d(-armBack / 2, yb, 0), Vector3d.ZAxis, d / 2), LayerClip);
+                    }
+                }
+                else
+                {
+                    // the wall angle: its vertical leg on the support (edge on) and its horizontal leg seen from above
+                    RectIn(db, tr, btr, 0, -half, t, half, LayerBracket);
+                    RectIn(db, tr, btr, t, -half, la, half, LayerBracket);
+                }
                 // the rail angle: its horizontal leg on top (seen from above) and its vertical leg (edge on); the plate behind that leg
                 RectIn(db, tr, btr, g - t - la, -half, g - t, half, LayerBracket);
                 RectIn(db, tr, btr, g - t, -half, g, half, LayerBracket);
@@ -624,13 +672,13 @@ namespace Elevator.AutoCAD.Sheet
         static string FixName(Context c, Rail r)
         {
             if (r.CrossArm)
-                return "BOLTS M" + N(r.Bracket.AnchorDiameterMm);
+                return "ASSEMBLY BOLTS 2 X M" + N(r.Bracket.AssemblyBoltDiameterMm) + "X" + N(r.Bracket.AssemblyBoltLengthMm);
             return c.Steel ? "BOLTS M" + N(r.Bracket.AnchorDiameterMm) : "ANCHOR BOLTS D" + N(r.Bracket.AnchorDiameterMm) + "x" + N(r.Bracket.AnchorLengthMm);
         }
 
         static string ArmName(Context c)
         {
-            return "CROSS ARM " + c.Arm.ArmProfile;
+            return "ST CROSS ARM";
         }
 
         static string RailName(Rail r)
@@ -681,7 +729,7 @@ namespace Elevator.AutoCAD.Sheet
             {
                 if (pos == n)
                 {
-                    int cross = 0;
+                    int cross = 0, order = 0;
                     double len = 0;
                     for (int i = 0; i < n; i++)
                     {
@@ -690,9 +738,12 @@ namespace Elevator.AutoCAD.Sheet
                         {
                             if (Cross(items[perm[i]].Ax, items[perm[i]].Ay, xCol, slots[i], items[perm[j]].Ax, items[perm[j]].Ay, xCol, slots[j]))
                                 cross++;
+                            // the column keeps the vertical order of what the labels point to (slots go down with i)
+                            if (items[perm[i]].Ay < items[perm[j]].Ay - 1e-6)
+                                order++;
                         }
                     }
-                    double score = cross * 1e9 + len;
+                    double score = cross * 1e9 + order * 1e5 + len;
                     if (score < bestScore)
                     {
                         bestScore = score;
@@ -796,7 +847,7 @@ namespace Elevator.AutoCAD.Sheet
             {
                 new Call { Ax = r.ArmLeg / 2, Ay = half - 6, Text = AngleName(r) },
                 new Call { Ax = g - t - tp / 2, Ay = half - 10, Text = PlateName(r) },
-                new Call { Ax = AssemblyBoltX(r), Ay = by[2], Text = AssemblyName(r) },
+                new Call { Ax = AssemblyBoltX(r), Ay = by[3], Text = AssemblyName(r) },
                 new Call { Ax = g + ct / 2, Ay = -(bw + ct + (b.ClipWidthMm - 8 - ct) / 2), Text = ClipName(r) },
                 new Call { Ax = g + ct + 0.3 * b.ClipBoltDiameterMm, Ay = bw + (ct + b.ClipWidthMm - 8) / 2, Text = BoltsName(r) },
                 new Call { Ax = g + r.Profile.HeightMm, Ay = 0, Text = RailName(r) }
@@ -835,6 +886,7 @@ namespace Elevator.AutoCAD.Sheet
             double span = half + 2 * Text;
             double depth;
             PlanSupport(w, c, r, span, out depth);
+            ArmBack = r.CrossArm ? depth : 0;
             // the assembly and the rail as blocks
             w.Layer = LayerBracket;
             w.Insert(BracketPlanBlock(db, tr, r), 0, 0, 1, 0);
@@ -847,22 +899,27 @@ namespace Elevator.AutoCAD.Sheet
             bool anchors = !c.Steel && !r.CrossArm;
             foreach (int s in new[] { -1, 1 })
             {
-                double xFar = anchors ? -b.AnchorLengthMm : -depth;
-                w.Rect(xFar, s * yfix - fixA / 2, b.AngleThicknessMm, s * yfix + fixA / 2);
+                if (r.CrossArm)
+                    break;
+                if (anchors)
+                {
+                    Anchor(w, db, tr, 0, s * yfix, fixA);
+                    continue;
+                }
+                w.Rect(-depth, s * yfix - fixA / 2, b.AngleThicknessMm, s * yfix + fixA / 2);
                 w.Rect(b.AngleThicknessMm, s * yfix - fixA * 0.8, b.AngleThicknessMm + 0.8 * fixA, s * yfix + fixA * 0.8);
-                if (!anchors)
-                    w.Rect(-depth - 0.65 * fixA, s * yfix - fixA * 0.8, -depth, s * yfix + fixA * 0.8);
+                w.Rect(-depth - 0.65 * fixA, s * yfix - fixA * 0.8, -depth, s * yfix + fixA * 0.8);
             }
             // dimensions: the gap (support to rail back, the plan's number), the rail height, the bracket length
             var ob = new SteelDrawing.Obstacles();
-            Chain(w, ob, new[] { 0.0, g, g + r.Profile.HeightMm }, new[] { N(g), N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
+            Chain(w, ob, new[] { 0.0, g }, new[] { N(g) }, span + 2 * Text, 0, span, true);
             double xDim = g + r.Profile.HeightMm + 1.5 * Text;
             Single(w, ob, -half, half, xDim, N(b.AngleLengthMm), false, 0);
             Column(w, PlanAssemblyCalls(r), xDim + 3.5 * Text, false);
             var left = new List<Call>
             {
                 new Call { Ax = -depth / 2, Ay = -span, Text = r.CrossArm ? ArmName(c) : SupportName(c) },
-                new Call { Ax = anchors ? -b.AnchorLengthMm / 2 : -depth / 2, Ay = -yfix, Text = FixName(c, r) }
+                new Call { Ax = anchors ? -40 : -depth / 2, Ay = -yfix, Text = FixName(c, r) }
             };
             Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
@@ -956,11 +1013,24 @@ namespace Elevator.AutoCAD.Sheet
                 RectIn(db, tr, btr, g - t - tp - 0.8 * cd, zc - cd / 2, g + f + ct + 0.65 * cd, zc + cd / 2, LayerClip);
                 RectIn(db, tr, btr, g + f + ct, zc - 0.8 * cd, g + f + ct + 0.65 * cd, zc + 0.8 * cd, LayerClip);
                 RectIn(db, tr, btr, g - t - tp - 0.8 * cd, zc - 0.8 * cd, g - t - tp, zc + 0.8 * cd, LayerClip);
-                // the fixing through the vertical leg of the wall angle
+                // the fixing: anchors through the vertical leg (concrete), bolts through it and the beam web (steel), or on a cross arm
+                // the horizontal leg lies on the arm top (it reaches back over the arm), bolted vertically through the top flange
                 double fd = b.AnchorDiameterMm, fz = -up / 2;
-                double far = r.CrossArm ? -c.Arm.ArmWidthMm : (c.Steel ? -c.Beam.WebMm - 2 : -b.AnchorLengthMm);
-                RectIn(db, tr, btr, far, fz - fd / 2, t + 0.8 * fd, fz + fd / 2, LayerAnchor);
-                RectIn(db, tr, btr, t, fz - fd * 0.8, t + 0.8 * fd, fz + fd * 0.8, LayerAnchor);
+                if (r.CrossArm)
+                {
+                    double aw = c.Arm.ArmWidthMm, xa = -aw / 2;
+                    RectIn(db, tr, btr, -aw, -t, 0, 0, LayerBracket);
+                    RectIn(db, tr, btr, xa - d / 2, -t - c.Arm.ArmFlangeMm - 0.8 * d, xa + d / 2, 0.65 * d, LayerClip);
+                    RectIn(db, tr, btr, xa - 0.85 * d, 0, xa + 0.85 * d, 0.65 * d, LayerClip);
+                    RectIn(db, tr, btr, xa - 0.85 * d, -t - c.Arm.ArmFlangeMm - 0.8 * d, xa + 0.85 * d, -t - c.Arm.ArmFlangeMm, LayerClip);
+                }
+                else if (c.Steel)
+                {
+                    RectIn(db, tr, btr, -c.Beam.WebMm - 2, fz - fd / 2, t + 0.8 * fd, fz + fd / 2, LayerAnchor);
+                    RectIn(db, tr, btr, t, fz - fd * 0.8, t + 0.8 * fd, fz + fd * 0.8, LayerAnchor);
+                }
+                else
+                    AnchorIn(db, tr, btr, 0, fz, fd);
             });
         }
 
@@ -1032,7 +1102,7 @@ namespace Elevator.AutoCAD.Sheet
                 w.Layer = SteelDrawing.LayerBeam;
                 foreach (double z in new[] { zLow, zHigh })
                 {
-                    var arm = w.Rect(-depth, z - c.Arm.ArmHeightMm + t, 0, z + t);
+                    var arm = w.Rect(-depth, z - t - c.Arm.ArmHeightMm, 0, z - t);
                     w.Fill(arm, "ANSI32", 1.2 * Text);
                 }
             }
@@ -1083,8 +1153,8 @@ namespace Elevator.AutoCAD.Sheet
             bool anchors = !c.Steel && !r.CrossArm;
             var left = new List<Call>
             {
-                new Call { Ax = -depth / 2, Ay = r.CrossArm || c.Steel ? zLow - up / 2 - 30 : zLow - up - over / 2, Text = r.CrossArm ? ArmName(c) : SupportName(c) },
-                new Call { Ax = anchors ? -b.AnchorLengthMm / 2 : -depth / 2, Ay = zLow - up / 2, Text = FixName(c, r) }
+                new Call { Ax = -depth / 2, Ay = r.CrossArm ? zLow - c.Arm.ArmHeightMm / 2 : (c.Steel ? zLow - up / 2 - 30 : zLow - up - over / 2), Text = r.CrossArm ? ArmName(c) : SupportName(c) },
+                new Call { Ax = r.CrossArm ? -depth / 2 : (anchors ? -40 : -depth / 2), Ay = r.CrossArm ? zLow + 2 : zLow - up / 2, Text = FixName(c, r) }
             };
             Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;

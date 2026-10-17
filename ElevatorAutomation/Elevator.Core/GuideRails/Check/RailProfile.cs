@@ -50,7 +50,11 @@ namespace Elevator.Core.GuideRails
         /// <summary>The bracket preset of the profile, or the row of its blade width.</summary>
         public RailBracketPreset BracketOrDefault()
         {
-            return Bracket ?? RailBracketPreset.ForBlade(BladeMm);
+            if (Bracket != null)
+                return Bracket;
+            var b = RailBracketPreset.ForBlade(BladeMm);
+            b.AngleLengthMm = RailBracketPreset.LengthFor(WidthMm);
+            return b;
         }
 
         public RailProfile Clone()

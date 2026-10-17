@@ -30,7 +30,7 @@ namespace Elevator.Core.GuideRails
             new Member { Name = "AngleLegAMm", Label = "Angle leg on the wall (mm)", Get = b => b.AngleLegAMm },
             new Member { Name = "AngleLegBMm", Label = "Angle leg at the plate (mm)", Get = b => b.AngleLegBMm },
             new Member { Name = "AngleThicknessMm", Label = "Angle thickness (mm)", Get = b => b.AngleThicknessMm },
-            new Member { Name = "AngleLengthMm", Label = "Bracket arm length (mm)", Get = b => b.AngleLengthMm },
+            new Member { Name = "AngleLengthMm", Label = "Bracket length along the wall (mm)", Get = b => b.AngleLengthMm },
             new Member { Name = "PlateThicknessMm", Label = "Bracket plate thickness (mm)", Get = b => b.PlateThicknessMm },
             new Member { Name = "AssemblyBoltDiameterMm", Label = "Assembly bolt diameter (mm)", Get = b => b.AssemblyBoltDiameterMm },
             new Member { Name = "AssemblyBoltLengthMm", Label = "Assembly bolt length (mm)", Get = b => b.AssemblyBoltLengthMm },

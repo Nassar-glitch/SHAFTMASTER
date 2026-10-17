@@ -157,3 +157,18 @@ the rail section beside it. VP6 draws this face-on side view (270 high, slots al
 rail broken between two brackets with the real spacing); VP5 draws the horizontal section through the pieces (the legs edge on, the
 bolts across them). The slots run along the arm so that the overlap sets the gap, as the Planner described; in the crop the slots look
 longer in the 270 direction, which may be the actual slot direction.
+
+## 9. Round 6 (final user corrections)
+
+- **Bracket length along the wall follows the rail foot:** length = b1 + 2 x 37 (clip margin), rounded up to 10 mm
+  (`RailBracketPreset.LengthFor`; the user's T70 bracket is about 144 for a foot of 70). T50/50/5: 130, T70/65/9: 150, T89/62/16: 170,
+  T90/75/16: 170. It is the preset of each profile (Advanced on the RAILS page, "Bracket length along the wall", lock / follow); the plate is
+  as long. Labels show the computed sizes: BRACKET L 150x50x40 (x2), PLATE 150x50x4. The leg projection follows the gap as before.
+- **Cross arm:** label "ST CROSS ARM" only. The wall angle's horizontal leg lies on the top face of the arm and reaches back over it,
+  held by ASSEMBLY BOLTS 2 X M10X40 (vertical through the leg and the top flange); never anchor bolts. VP5 from above (arm hatched, the leg
+  over it, 2 bolts in slots), VP6 in section (the arm end on under the leg, the bolt vertical).
+- **Anchor bolts:** the user's block "ANCHOR BOLT" (user-edit-2) is stored as data (`Elevator.AutoCAD/Sheet/AnchorBoltGeometry.cs`) and
+  generated as the named block `SM_ANCHOR_BOLT`, scaled so its thread is the anchor diameter, used for every anchor bolt in VP5 and VP6.
+- **VP6 at 1:10.**
+- **Checks:** `fixing_check.py` checks plan symbol = VP5 = VP6 for type, gap and bracket length (block names carry `_G<gap>_L<length>`),
+  and that no two texts (labels, dimension texts) of the rail details overlap and no two leaders cross.

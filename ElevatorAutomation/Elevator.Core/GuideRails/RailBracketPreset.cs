@@ -17,7 +17,7 @@ namespace Elevator.Core.GuideRails
         public double AngleLegBMm = 40;
         public double AngleThicknessMm = 4;
         /// <summary>Length of one angle arm, from the wall to the rail.</summary>
-        public double AngleLengthMm = 270;
+        public double AngleLengthMm = 150;
         /// <summary>Connecting plate between the two arms (length = the arm length, width = the long leg).</summary>
         public double PlateThicknessMm = 4;
         /// <summary>Bolts that join the arms and the plate (the library: 4 x M10x40).</summary>
@@ -58,6 +58,15 @@ namespace Elevator.Core.GuideRails
                 p.ClipLengthMm = 60; p.ClipWidthMm = 35; p.ClipThicknessMm = 8; p.ClipBoltDiameterMm = 12;
             }
             return p;
+        }
+
+        /// <summary>The clip margin of the bracket length rule: length = rail foot + 2 x margin, rounded up to 10 mm (the user's T70 bracket
+        /// is about 144 for a foot of 70: margin 37). T50 130, T70 150, T89 / T90 170.</summary>
+        public const double LengthMarginMm = 37;
+
+        public static double LengthFor(double footWidthMm)
+        {
+            return Math.Ceiling((footWidthMm + 2 * LengthMarginMm) / 10.0) * 10.0;
         }
 
         public List<string> Validate(string owner)

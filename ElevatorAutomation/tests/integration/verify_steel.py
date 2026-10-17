@@ -80,6 +80,7 @@ def main():
         doc = ezdxf.readfile(dxf)
         ms = doc.modelspace()
         fixing_check.check_fixing(doc, case, check)
+        fixing_check.check_detail_overlap(doc, case, check)
         # the insertions of the steel blocks are read through their parts (principle 11: named blocks), a label is a multileader
         tagged = steel_overlap.expand(ms)
         steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
