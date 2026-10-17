@@ -646,7 +646,13 @@ namespace Elevator.AutoCAD.Sheet
         // ---------- names of the parts, as the library names them; the same in the plan and in the elevation ----------
         static string AngleName(Rail r)
         {
-            return "BRACKET L " + N(r.Bracket.AngleLengthMm) + "x" + N(r.Bracket.AngleLegAMm) + "x" + N(r.Bracket.AngleLegBMm) + " (x2)";
+            return "BRACKET L " + N(r.Bracket.AngleLengthMm) + "x" + N(r.Bracket.AngleLegAMm) + "x" + N(r.Bracket.AngleLegBMm) + (r.CrossArm ? "" : " (x2)");
+        }
+
+        // on a cross arm the fixing part is a flat bracket lying on the arm top
+        static string FlatName(Rail r)
+        {
+            return "FLAT BRACKET " + N(r.Bracket.AngleLengthMm) + "x" + N(r.Bracket.AngleLegAMm) + "x" + N(r.Bracket.AngleThicknessMm);
         }
 
         static string PlateName(Rail r)
@@ -845,7 +851,7 @@ namespace Elevator.AutoCAD.Sheet
             var by = AssemblyBoltY(r);
             return new List<Call>
             {
-                new Call { Ax = r.ArmLeg / 2, Ay = half - 6, Text = AngleName(r) },
+                new Call { Ax = r.CrossArm ? g - t - r.ArmLeg / 3 : r.ArmLeg / 2, Ay = half - 6, Text = AngleName(r) },
                 new Call { Ax = g - t - tp / 2, Ay = half - 10, Text = PlateName(r) },
                 new Call { Ax = AssemblyBoltX(r), Ay = by[3], Text = AssemblyName(r) },
                 new Call { Ax = g + ct / 2, Ay = -(bw + ct + (b.ClipWidthMm - 8 - ct) / 2), Text = ClipName(r) },
@@ -921,6 +927,8 @@ namespace Elevator.AutoCAD.Sheet
                 new Call { Ax = -depth / 2, Ay = -span, Text = r.CrossArm ? ArmName(c) : SupportName(c) },
                 new Call { Ax = anchors ? -40 : -depth / 2, Ay = -yfix, Text = FixName(c, r) }
             };
+            if (r.CrossArm)
+                left.Add(new Call { Ax = -depth / 4, Ay = half - 8, Text = FlatName(r) });
             Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
         }
@@ -997,7 +1005,9 @@ namespace Elevator.AutoCAD.Sheet
                 double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, up = LegUp(r);
                 double d = b.AssemblyBoltDiameterMm, f = r.Profile.FootMm, ct = b.ClipThicknessMm, cd = b.ClipBoltDiameterMm;
                 // the wall angle (L section): vertical leg on the support, horizontal leg out (top at z = 0)
-                Poly(db, tr, btr, new[] { new[] { 0.0, -up }, new[] { t, -up }, new[] { t, -t }, new[] { la, -t }, new[] { la, 0.0 }, new[] { 0.0, 0.0 } }, true, LayerBracket);
+                // the wall angle (L section): vertical leg on the support, horizontal leg out; on a cross arm a flat bracket instead
+                if (!r.CrossArm)
+                    Poly(db, tr, btr, new[] { new[] { 0.0, -up }, new[] { t, -up }, new[] { t, -t }, new[] { la, -t }, new[] { la, 0.0 }, new[] { 0.0, 0.0 } }, true, LayerBracket);
                 // the rail angle (L section): horizontal leg on top of the other, vertical leg up at the rail
                 Poly(db, tr, btr, new[] { new[] { g - t - la, 0.0 }, new[] { g, 0.0 }, new[] { g, up }, new[] { g - t, up }, new[] { g - t, t }, new[] { g - t - la, t } }, true, LayerBracket);
                 // the plate behind the vertical leg
@@ -1019,7 +1029,7 @@ namespace Elevator.AutoCAD.Sheet
                 if (r.CrossArm)
                 {
                     double aw = c.Arm.ArmWidthMm, xa = -aw / 2;
-                    RectIn(db, tr, btr, -aw, -t, 0, 0, LayerBracket);
+                    RectIn(db, tr, btr, -aw, -t, la, 0, LayerBracket);
                     RectIn(db, tr, btr, xa - d / 2, -t - c.Arm.ArmFlangeMm - 0.8 * d, xa + d / 2, 0.65 * d, LayerClip);
                     RectIn(db, tr, btr, xa - 0.85 * d, 0, xa + 0.85 * d, 0.65 * d, LayerClip);
                     RectIn(db, tr, btr, xa - 0.85 * d, -t - c.Arm.ArmFlangeMm - 0.8 * d, xa + 0.85 * d, -t - c.Arm.ArmFlangeMm, LayerClip);
@@ -1156,6 +1166,8 @@ namespace Elevator.AutoCAD.Sheet
                 new Call { Ax = -depth / 2, Ay = r.CrossArm ? zLow - c.Arm.ArmHeightMm / 2 : (c.Steel ? zLow - up / 2 - 30 : zLow - up - over / 2), Text = r.CrossArm ? ArmName(c) : SupportName(c) },
                 new Call { Ax = r.CrossArm ? -depth / 2 : (anchors ? -40 : -depth / 2), Ay = r.CrossArm ? zLow + 2 : zLow - up / 2, Text = FixName(c, r) }
             };
+            if (r.CrossArm)
+                left.Add(new Call { Ax = -depth / 4, Ay = zLow - b.AngleThicknessMm / 2, Text = FlatName(r) });
             Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
         }
