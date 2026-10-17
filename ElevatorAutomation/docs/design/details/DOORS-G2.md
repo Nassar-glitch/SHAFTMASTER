@@ -1,6 +1,6 @@
 # Landing door detail (stage G2): the user's master doors
 
-Status: inventory and rules for the Planner's review. No code yet.
+Status: implemented on `feature/details-g2` after the Planner's review (answers in section 6).
 
 ## 1. Sources
 
@@ -55,7 +55,7 @@ So the program takes the shapes and the fixed offsets from the drawing, and ever
 | Frame (jamb) | 120 each side (outer frame 1039 = 800 + 2 × 120) | **fixed** |
 | Frame header | 170 above the opening | **fixed** |
 | Inner jamb line | 50 inside the frame edge (swing) | **fixed** |
-| Structural opening (dashed) | 150 beyond the frame each side (1100 = 800 + 2 × 150), top 50 above the frame | **width follows**: opening + 2 × margin. The margin is a lock / follow preset; the default is taken from the drawing, see question Q1 |
+| Structural opening (dashed) | 150 beyond the clear opening each side (1100 = 800 + 2 × 150, 30 beyond the frame), top 50 above the frame | **width follows**: opening + 2 × margin. The margin is a lock / follow preset; the default is taken from the drawing, see question Q1 |
 | Section | wall above (header 200 automatic / 160 swing), frame, panel, sill 60, slab with the sill recess | header and sill are **fixed** presets; the panel height **stretches** with the entrance height |
 
 ### Automatic door (2 panels, centre opening)
@@ -103,10 +103,66 @@ So the program takes the shapes and the fixed offsets from the drawing, and ever
   - checks: no overlaps or crossing leaders, and the opening and height must equal the plan (the plan-detail check of the parked work).
 - **Template:** the template windows DOOR_AUTOMATIC and DOOR_SWING are replaced by the generated detail for the project's door.
 
-## 5. Questions for the Planner / user
+## 5. Questions (answered by the Planner, see section 6)
 
-1. **Q1 Structural margin:** this drawing has 150 each side beyond the frame (1100 for an 800 opening). The old template had 200 beyond the clear opening (1100 for 700). Which is the default? (It is a lock / follow preset either way.)
-2. **Q2 Automatic types:** 2S and 2C share the same elevation (two equal panels) and differ only in the arrows. Is that correct? The file shows one arrow set (both left).
-3. **Q3 Indicator side:** for 2C, which side does the indicator go on (the drawing: right)? For 2S: away from the stacking side?
-4. **Q4 Swing handle:** is the handle on the left in the drawing a left-hand or a right-hand door in the project's terms?
-5. **Q5 Variant choice:** glass or solid (automatic), and glass or window (swing). Is this a new preset on the CAR & DOORS page? (The default would be glass / glass? or solid / window?)
+## 6. Implementation
+
+- **Masters as data.** `tools/door_masters.py` extracts the four doors from `g2/source` into `Templates/DoorMasters.json`
+  (render: [g2/masters-clean.png](g2/masters-clean.png)). The extraction:
+  - removes duplicates;
+  - merges dash runs into one line, marked HIDDEN, or CENTER for dot-dash runs;
+  - drops hatch strokes, glyphs, the fake dimensions, the opening arrows and the INDICATOR leader;
+  - chains the pieces into polylines.
+  
+  Coordinates are in mm. The elevation is relative to the opening centre and the section to its landing edge; the floor is 0.
+- **Stretch** (`Elevator.AutoCAD/Sheet/DoorDetails.cs`, class `Stretch`):
+  - **Width:** a point with |x| > 45 (automatic) or 150 (swing) moves by ±(W − 800)/2. So the frame, the glass outer edges, the handle and the indicator move with the opening edge; the centre joint and the vision window stay.
+  - **Height:** a point above 1500 moves by H − 2000. So the handle (1006), vision window (793–1443), indicator (907–1207) and sill keep their height; the header, the glass top and the wall above move.
+  - **Section:** only the height rule applies.
+- **Mirror:**
+  - swing, hinge side Left;
+  - 2S, stacking right;
+  - 2C is never mirrored, and its indicator stays on the right jamb.
+  
+  The block is mirrored in its geometry, so texts are never mirrored.
+- **Blocks:**
+  - the elevation is `SM_DOOR_<2S|2C|SWING>_<SOLID|GLASS|WINDOW>_W<w>_H<h>_S<str>[_L|_R|_HL|_HR]`;
+  - the section is `SM_DOOR_SEC_<master>_H<h>[_STEEL]`.
+- **Native items:**
+  - glass is HATCH GOST_GLASS on A-GLAZ;
+  - the structural opening is a DASHED polyline;
+  - the axis and the crosshairs are CENTER;
+  - the section break lines are HIDDEN;
+  - dimensions are real DIMENSIONs: the opening, "STR. <S>" (automatic) or "<S>" (swing, the masters' wording), ENTRANCE HEIGHT, the header and the sill;
+  - labels are multileaders: INDICATOR, FINISH FLOOR LEVEL;
+  - the opening arrows are redrawn per type: 2C outward; 2S toward the stacking side;
+  - the C-C marks are drawn natively.
+- **Structural opening.** It is the plan's wall opening (Part009 + OPENING + Part011) when the plan has it. Otherwise it is opening + 2 × margin (preset 150, measured from the clear opening: the master's 800 gives 1100, 30 beyond the 120 frame; the inventory's "150 beyond the frame" was a mistake).
+- **Steel.** The frame sits between two jamb posts under the door-head beam (elevation). In the section, the beam replaces the wall above the header, and the master's wall-above outline is left out.
+- **Presets** (CAR & DOORS → Landing door detail, lock / follow):
+  - Door panel: automatic Solid / Glass, default Solid; swing Vision window / Glass, default Vision window;
+  - Hinge side (swing): Left / Right, default Right;
+  - Entrance height: 2000;
+  - Structural opening beyond the clear opening: 150.
+- **Check** (`fixing_check.check_door`): the block's opening, height and STR equal the plan's OPENING, "DOOR WxH" and wall opening.
+
+## 7. Findings to note
+
+- **Section header labels:** the swing master labels the header "160", but its geometry is 200 (as in the automatic master). The detail follows the geometry, so it shows 200.
+- **Sill labels:** the masters' sill "60" is drawn about 58–59; the detail shows the measured value.
+- **Plan hinge side:** the plan of a Manual door (template) has no swing leaf or arc, so there is no hinge side on the plan to compare with. The hinge-side check waits for a plan swing door, if one is wanted.
+- **Plan wall opening:** the plan's wall opening is OPENING + 2 × 100. That is narrower than the masters' frame (OPENING + 2 × 120), so on concrete the dashed STR line lies just inside the frame outline. It is still the plan's value, as agreed.
+
+## 8. Review fixes (Planner, 17:48 to 18:30)
+
+- **Section C-C:** the wall above the header and the floor slab are associative ANSI31 hatches. Their pattern scale equals the sheet scale (acadiso, about 3 mm apart on paper, as in the master). Each cut ends in a break line: the slab end, the slab bottom and the top of the wall.
+- **Pattern scale rule:** the scale is set before the pattern. AutoCAD ignores a scale set after the pattern, which is why the earlier hatches printed solid. The G1 rail details (`RailDetails.Hatched`) now use the same order and rule. `SteelDrawing.Fill` (AR-CONC in the steel drawings) is unchanged.
+- **Glass:** GOST_GLASS at 0.75 × the sheet scale (15 at 1:20, the master's value).
+- **Axis and marks:** the axis is CENTER and stops below the dimension rows. The C marks sit above the dimension rows and below the floor, and the dimension texts are to the left of the axis. `fixing_check.check_door_annotation` checks that no texts overlap and that no axis, mark, floor line or leader crosses a text.
+- **Steel C-C:** the UPN is drawn at its real size as a C profile, at the beam level of A-A, on the frame header and hanger box. Its label leader starts from the beam's top edge. There is no wall above, so the landing-side lines stop at the header.
+- **Header dimension:** rounded to 10 (the masters' 200). The sill dimension shows 60.
+- **Evidence:** in `g2/evidence/`:
+  - `compare-*.png`: the master next to both sides of each of the 4 doors;
+  - the project cases (user-edit, user-project, steel-t89, concrete-2s-700, concrete-2c-1100);
+  - `g1-hatch/`: VP5 / VP6 after the hatch fix;
+  - `l3-pending/`: the two changed l3 images, waiting for the user's typed approval.

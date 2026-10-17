@@ -81,6 +81,8 @@ def main():
         ms = doc.modelspace()
         fixing_check.check_fixing(doc, case, check)
         fixing_check.check_detail_overlap(doc, case, check)
+        fixing_check.check_door(doc, case, check)
+        fixing_check.check_door_annotation(doc, case, check)
         # the insertions of the steel blocks are read through their parts (principle 11: named blocks), a label is a multileader
         tagged = steel_overlap.expand(ms)
         steel_keys = [t[0] for e, t in tagged if t[0].startswith(("Plan.Steel.", "Steel.", "SectionAA.Steel."))]
@@ -90,7 +92,9 @@ def main():
         if not expected["Steel"]:
             check(len(steel_keys) == 0, case + ": a concrete project has no steel entity")
             walls = [e for e, t in tagged if t[1] == "wall" and t[0].startswith("Plan.")]
-            check(len(walls) > 0 and all(not invisible(e) for e in walls), case + ": the template walls are visible")
+            # an automatic door opens the front wall of the plan (D3): there, only the walls besides the opening stay visible
+            automatic = "-2s-" in case or "-2c-" in case
+            check(len(walls) > 0 and (any(not invisible(e) for e in walls) if automatic else all(not invisible(e) for e in walls)), case + ": the template walls are visible")
             slabs = [e for e, t in tagged if t[0].startswith("SectionAA.Floor.") and ".Slab." in t[0]]
             check(len(slabs) > 0 and all(not invisible(e) for e in slabs), case + ": the A-A slabs are visible")
             continue

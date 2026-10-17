@@ -75,6 +75,9 @@ namespace Elevator.AutoCAD.Sheet
             var rails = new RailDetails.Drawer(db, chosen);
             HostApplicationServices.WorkingDatabase = db;
             rails.Draw(5, 10);
+            // the landing door detail is drawn from the project's door (G2)
+            var doors = new RailDetails.DoorDrawer(db, chosen);
+            doors.Draw(20);
             SheetArrangementResult arrangement = null;
             Dictionary<string, List<string>> titles = null;
             string last = null;
@@ -144,6 +147,12 @@ namespace Elevator.AutoCAD.Sheet
                     var bv = arrangement.Viewports.FirstOrDefault(v => v.Name == RailDetails.BracketsDetail);
                     if (pv != null && bv != null && rails.Draw(pv.ScaleDenominator, bv.ScaleDenominator))
                         key += ";rails=" + rails.Key;
+                }
+                if (doors.Active && pass < 4)
+                {
+                    var dv = arrangement.Viewports.FirstOrDefault(v => v.Name == doors.Name);
+                    if (dv != null && doors.Draw(dv.ScaleDenominator))
+                        key += ";doors=" + dv.ScaleDenominator;
                 }
                 if (key == last)
                     break;
