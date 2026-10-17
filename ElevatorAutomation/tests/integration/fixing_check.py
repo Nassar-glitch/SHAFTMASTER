@@ -82,3 +82,38 @@ def check_detail_overlap(doc, case, check):
             if leaders[i][2] != leaders[j][2] and _cross(leaders[i][0], leaders[i][1], leaders[j][0], leaders[j][1]):
                 crossing.append(i)
     check(not crossing, case + ": no two leaders of the rail details cross (" + str(len(crossing)) + ")")
+
+
+DOOR = re.compile(r"^SM_DOOR_(2S|2C|SWING)_(SOLID|GLASS|WINDOW)_W(\d+)_H(\d+)_S(\d+)")
+
+
+def check_door(doc, case, check):
+    """G2: the door detail and the plan agree: the elevation block's opening, height and structural opening equal the plan's OPENING,
+    DOOR WxH and wall opening (the jambs either side of OPENING)."""
+    names = [e.dxf.name for e in doc.modelspace() if e.dxftype() == "INSERT" and DOOR.match(e.dxf.name)]
+    check(len(names) == 1, case + ": the door detail is generated (" + str(names) + ")")
+    if not names:
+        return
+    m = DOOR.match(names[0])
+    w, h, strw = int(m.group(3)), int(m.group(4)), int(m.group(5))
+    opening = door_text = None
+    jambs = {}
+    for e in doc.modelspace():
+        if e.dxftype() != "DIMENSION":
+            continue
+        try:
+            x = [v.value for v in e.get_xdata("ELEVATOR_AUTOMATION")]
+        except Exception:
+            continue
+        if x and x[0] == "Plan.Dimension.Part010":
+            opening = e.get_measurement()
+        if x and x[0] == "Plan.Dimension.Part008":
+            door_text = e.dxf.get("text", "")
+        if x and x[0] in ("Plan.Dimension.Part009", "Plan.Dimension.Part011"):
+            jambs[x[0]] = e.get_measurement()
+    check(opening is not None and abs(opening - w) < 0.6, case + ": the door detail opening " + str(w) + " equals the plan OPENING " + str(opening))
+    mh = re.search(r"X(\d+)", door_text or "")
+    if len(jambs) == 2 and opening is not None:
+        plan_str = opening + sum(jambs.values())
+        check(abs(plan_str - strw) < 1.1, case + ": the door detail STR. " + str(strw) + " equals the plan wall opening " + str(round(plan_str)))
+    check(mh is not None and int(mh.group(1)) == h, case + ": the door detail height " + str(h) + " equals the plan DOOR text " + str(door_text))

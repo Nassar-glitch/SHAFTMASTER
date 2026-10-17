@@ -25,7 +25,7 @@ namespace Elevator.AutoCAD.Sheet
     /// the brackets, S- and A- layers, multileaders and real dimensions. The new entities carry no key (they are details of the sheet).
     /// A concrete shaft shows the anchors in the concrete wall; a steel shaft shows the bracket bolted to the UPN beam.
     /// </summary>
-    static class RailDetails
+    static partial class RailDetails
     {
         public const string PlanDetail = "RAILS_PLAN_CW5_CAR9";
         public const string BracketsDetail = "RAIL_BRACKETS_CW5_CAR9";
