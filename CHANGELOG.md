@@ -6,6 +6,18 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Generated rail details (G1):** the sheet's "CAR / C.W. GUIDES AND BRACKETS" plan details and the "Guide Rail Support Bracket And
+  Anchor Details" are drawn from the project instead of the static template: the rail profiles, the bracket assembly of the user's
+  library (two angles 50x40 with the overlap setting the gap, plate 50x4, 4 assembly bolts M10x40, 2 clips with 2 bolts each, anchor bolts
+  D12x150 as the user's anchor block), and the real bracket spacing. The bracket length along the wall follows the rail foot (T50 130,
+  T70 150, T89 / T90 170); the gap comes from the plan. The plan detail is at 1:5 or 1:10, the section at 1:10.
+- **Rail fixing from the plan:** car rails on a wall bracket (side wall or side UPN beam); counterweight rails at the rear on a steel
+  cross arm with a flat bracket on its top face, or on a wall bracket within the side reach. Fixing type (Auto / Wall bracket / Cross
+  arm), reaches, cross-arm section and every bracket size are presets under Advanced on the RAILS page, following the rail and the gap
+  until edited. When the fixing differs from the template plan, the main plan shows the program's own bracket symbol.
+- **Checks:** the plan symbol, the plan detail and the section agree (type, gap, length); no texts overlap and no leaders cross in the
+  details; no viewport shows another detail's drawing. BRACKETS.md documents the library measurement and the rules.
+
 ## [v07] — 2026-10-15
 
 v07 adds the guide-rail check with its RAILS page, the steel shaft structure (UPN columns, beams and bracing) in all four views and on the
