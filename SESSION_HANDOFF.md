@@ -16,6 +16,27 @@ This file is the shared status channel between the user's Planner chat and Execu
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
 - **Last updated:** 2026-10-17 (Claude Code, Executor role; G1 merged into main)
 - **Completed:**
+- **G2 restarted (2026-10-17).** The user rejected the generic generated door detail. That work is parked as one commit `a6b7a7b` on `feature/details-g2-generic-wip`; leave that branch alone. It contains:
+  - `DoorDetails.cs`;
+  - `DoorDetailFields.cs`: lock / follow presets for the entrance height and the other door detail sizes;
+  - `check_door`: the plan-detail check;
+  - `DOORS-G2.md`: the inventory;
+  - the test cases concrete-2s-700 and concrete-2c-1100.
+  
+  It was not re-verified after the last hatch and left-margin edits. `feature/details-g2` was reset to main (24041b8).
+  
+  **Next:** the user will provide a file with their 4 master doors:
+  - swing with a full glass panel;
+  - swing with a small vision window;
+  - automatic with a full glass panel;
+  - automatic with a small vision window.
+  
+  Wait for its path, then:
+  1. copy it to `docs/design/details/g2/source/`;
+  2. inventory each door: its views, the parts that stretch and the parts of fixed size, and its dimensions and labels;
+  3. write the stretch / mirror rules in DOORS-G2.md (handing L/R; stacking L/R for automatic doors) and show them to the Planner before any coding.
+  
+  Reuse from the WIP only the entrance-height presets and the plan-detail check. Root `UPN STEEL SHAFT.dxf` is left alone.
 - **G1 MERGED into main (2026-10-17, --no-ff, c3987ca); not pushed, not released.** Last fix before the merge: cross arm uses one L angle (rail bracket) + a FLAT BRACKET {length}x50x4 on the arm top with ASSEMBLY BOLTS 2 X M10X40 (0d7602c). The user typed the approval of the two l3 images (`docs/design/layouts/l3/2S-4-stops-no-logo-pdf.png`, `6-stops-arabic-logo-pdf.png`), re-approved in 75435b0. Full tiers 1-3 on `artifacts/work-g1-full`: 26 suites PASS (`artifacts/test-results/20261017-135837`). CHANGELOG [Unreleased] has the G1 entry. Next: G2 / G3 (door elevation and section, STEP rails, other template details) per the Planner. Root `UPN STEEL SHAFT.dxf` left alone.
 - **G1 round 6 (final user corrections), same branch `feature/details-g1`; not merged, not pushed.**
   - User edit 12:23 copied to `ElevatorAutomation/docs/design/details/g1/user-edit-2/` (`user-edit-2.dwg`, `previous-11-33.dwg` = the .bak); originals untouched.
