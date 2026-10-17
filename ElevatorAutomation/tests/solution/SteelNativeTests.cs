@@ -95,6 +95,10 @@ public static class SteelNativeTests
             string userFile = Environment.GetEnvironmentVariable("STEEL_USER_PROJECT");
             if (!String.IsNullOrEmpty(userFile))
                 cases.Add(new { Id = "user-project", Steel = true, Stops = 0, Floor = 0.0, W = 0.0, D = 0.0, Pit = 0.0, OH = 0.0, File = userFile, Door = (string)null });
+            // the concrete project the user edited by hand (G1 round 5): USER_EDIT_PROJECT=<file> generates it as the case "user-edit"
+            string editFile = Environment.GetEnvironmentVariable("USER_EDIT_PROJECT");
+            if (!String.IsNullOrEmpty(editFile))
+                cases.Add(new { Id = "user-edit", Steel = false, Stops = 0, Floor = 0.0, W = 0.0, D = 0.0, Pit = 0.0, OH = 0.0, File = editFile, Door = (string)null });
             string only = Environment.GetEnvironmentVariable("STEEL_CASES");
             foreach (var c in cases.Where(x => String.IsNullOrEmpty(only) || only.Split(',').Any(o => x.Id.Contains(o))))
             {

@@ -58,11 +58,12 @@ namespace Elevator.AutoCAD.Sheet
             {
                 get
                 {
-                    double t = Bracket.AngleThicknessMm, tp = Bracket.PlateThicknessMm;
-                    double nominal = 2 * Bracket.AngleLegBMm - Bracket.AssemblyOverlapMm + tp + 2 * t;
+                    double t = Bracket.AngleThicknessMm;
+                    // the two horizontal legs (leg B each) overlapped by the preset overlap, plus the vertical leg of the rail angle
+                    double nominal = 2 * Bracket.AngleLegBMm - Bracket.AssemblyOverlapMm + t;
                     if (Fixing == null || CrossArm)
                         return nominal;
-                    return Math.Max(tp + 2 * t + 4, Fixing.ArmLengthMm);
+                    return Math.Max(2 * t + 10, Fixing.ArmLengthMm);
                 }
             }
             /// <summary>The length of the two arm legs: the preset leg, longer when the gap needs it (the legs grow so that they still
@@ -71,8 +72,8 @@ namespace Elevator.AutoCAD.Sheet
             {
                 get
                 {
-                    double t = Bracket.AngleThicknessMm, tp = Bracket.PlateThicknessMm;
-                    return Math.Max(Bracket.AngleLegBMm, (Gap - tp - 2 * t + Bracket.AssemblyOverlapMm) / 2);
+                    double t = Bracket.AngleThicknessMm;
+                    return Math.Max(Bracket.AngleLegBMm, (Gap - t + Bracket.AssemblyOverlapMm) / 2);
                 }
             }
             public bool CrossArm
@@ -498,12 +499,12 @@ namespace Elevator.AutoCAD.Sheet
             });
         }
 
-        // The bracket assembly of the user's library (the anchor sheets, "2 brackets 270 x 50 x 40, plate 270 x 50 x 4, 4 assembly bolts
-        // M10 x 40"): two right-angle pieces mounted opposite each other. The fixing angle stands on the wall (or the beam, or the head plate
-        // of a cross arm) with its wall leg; the rail angle carries the rail on its base leg, the foot on the plate, held by two clips with
-        // two bolts each. The two arm legs overlap face to face and are joined by 4 assembly bolts through slotted holes: the overlap sets the
-        // distance from the wall to the rail. Plan frame: x from the support face to the rail, y along the support; the arms are on the +y side.
-        // The name carries the rail group, the type of fixing and the gap (the plan symbol and the detail are checked by it).
+        // The bracket assembly as the user drew it (round 5, g1/user-edit) and as the photos show it: two L angles 270 long, lying
+        // horizontally along the wall. The wall angle has its vertical leg (50) flat on the support (anchors, beam bolts or arm bolts) and
+        // its horizontal leg (40) out from the wall; the rail angle has its horizontal leg (40) lying on the wall angle's leg, joined by the
+        // 4 assembly bolts through crossed slots (the overlap sets the gap), and its vertical leg (50) parallel to the wall, carrying the
+        // rail foot with the 2 clips; the plate 270x50x4 backs the vertical leg on the wall side, the clip bolts go through clip, leg and
+        // plate. Plan frame: x from the support face to the rail, y along the wall (the 270), the rail axis at y = 0.
         static string FixingTag(Rail r)
         {
             string type = r.CrossArm ? "ARM" : "WALL";
@@ -511,12 +512,18 @@ namespace Elevator.AutoCAD.Sheet
             return "_" + (r.Family == RailBracketFields.Car ? "CAR" : "CW") + "_" + type + "_G" + Math.Round(gap).ToString(CultureInfo.InvariantCulture);
         }
 
-        // the x positions of the two assembly bolts of a row, inside the overlap of the arm legs
-        static double[] AssemblyBoltX(Rail r)
+        // the x of the assembly bolts: the middle of the overlap of the two horizontal legs
+        static double AssemblyBoltX(Rail r)
         {
-            double t = r.Bracket.AngleThicknessMm, tp = r.Bracket.PlateThicknessMm, g = r.Gap;
-            double from = g - tp - t - r.ArmLeg, to = t + r.ArmLeg;      // the overlap: [from, to]
-            return new[] { from + 0.3 * (to - from), from + 0.7 * (to - from) };
+            double t = r.Bracket.AngleThicknessMm, g = r.Gap, la = r.ArmLeg;
+            return ((g - t - la) + la) / 2;
+        }
+
+        // the y of the 4 assembly bolts along the 270
+        static double[] AssemblyBoltY(Rail r)
+        {
+            double e = r.Bracket.AngleLengthMm / 2 - 31;
+            return new[] { -e, -e + 40, e - 40, e };
         }
 
         static ObjectId BracketPlanBlock(Database db, Transaction tr, Rail r, bool clips = true, string prefix = "SM_RAIL_BRACKET_PLAN_")
@@ -524,42 +531,68 @@ namespace Elevator.AutoCAD.Sheet
             return SteelDrawing.Block(db, tr, prefix + Key(r) + FixingTag(r) + (clips ? "" : "_SYMBOL"), btr =>
             {
                 var b = r.Bracket;
-                double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, half = r.PlateWidth / 2;
+                double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, half = b.AngleLengthMm / 2;
                 double d = b.AssemblyBoltDiameterMm;
-                // the fixing angle: the wall leg on the support and its arm leg
+                // the wall angle: its vertical leg on the support (edge on) and its horizontal leg seen from above
                 RectIn(db, tr, btr, 0, -half, t, half, LayerBracket);
-                RectIn(db, tr, btr, t, half - t, t + la, half, LayerBracket);
-                // the rail angle: the base leg behind the plate and its arm leg, inside the arm of the fixing angle
-                RectIn(db, tr, btr, g - tp - t, -half, g - tp, half, LayerBracket);
-                RectIn(db, tr, btr, g - tp - t - la, half - 2 * t, g - tp - t, half - t, LayerBracket);
-                // the plate the rail foot sits on (270 x 50 x 4: 50 across)
-                RectIn(db, tr, btr, g - tp, -b.AngleLegAMm / 2, g, b.AngleLegAMm / 2, LayerBracket);
-                // the assembly bolts through the two arm legs (axis along y): shank, head outside, nut inside
-                foreach (double x in AssemblyBoltX(r))
+                RectIn(db, tr, btr, t, -half, la, half, LayerBracket);
+                // the rail angle: its horizontal leg on top (seen from above) and its vertical leg (edge on); the plate behind that leg
+                RectIn(db, tr, btr, g - t - la, -half, g - t, half, LayerBracket);
+                RectIn(db, tr, btr, g - t, -half, g, half, LayerBracket);
+                RectIn(db, tr, btr, g - t - tp, -half, g - t, half, LayerBracket);
+                // the assembly bolts in crossed slots: a slot along x in the rail angle, a slot along y in the wall angle
+                double xb = AssemblyBoltX(r);
+                foreach (double y in AssemblyBoltY(r))
                 {
-                    RectIn(db, tr, btr, x - d / 2, half - 2 * t - 0.8 * d, x + d / 2, half + 0.65 * d, LayerClip);
-                    RectIn(db, tr, btr, x - 0.8 * d, half, x + 0.8 * d, half + 0.65 * d, LayerClip);
-                    RectIn(db, tr, btr, x - 0.8 * d, half - 2 * t - 0.8 * d, x + 0.8 * d, half - 2 * t, LayerClip);
+                    SlotIn(db, tr, btr, xb - 15, xb + 15, y, d + 2, LayerBracket);
+                    SlotYIn(db, tr, btr, xb, y - 15, y + 15, d + 2, LayerBracket);
+                    SteelDrawing.Put(btr, tr, new Circle(new Point3d(xb, y, 0), Vector3d.ZAxis, 0.85 * d), LayerClip);
+                    SteelDrawing.Put(btr, tr, new Circle(new Point3d(xb, y, 0), Vector3d.ZAxis, d / 2), LayerClip);
                 }
                 if (!clips)
                     return;
-                double bw = r.Profile.WidthMm / 2, f = r.Profile.FootMm, ct = b.ClipThicknessMm, xb = g - tp;
+                double bw = r.Profile.WidthMm / 2, f = r.Profile.FootMm, ct = b.ClipThicknessMm, cd = b.ClipBoltDiameterMm;
                 foreach (int s in new[] { -1, 1 })
                 {
-                    // the clip: a strap on the base leg, a riser against the foot edge and a lip over its front face
+                    // the clip: a strap on the vertical leg, a riser against the foot edge and a lip over its front face
                     double yf = s * bw, yc = s * (bw + ct), yb = s * (bw + b.ClipWidthMm - 8), yl = s * (bw - 8);
                     Poly(db, tr, btr, new[]
                     {
-                        new[] { xb, yf }, new[] { xb, yb }, new[] { xb + ct, yb }, new[] { xb + ct, yc }, new[] { g + f + ct, yc },
+                        new[] { g, yf }, new[] { g, yb }, new[] { g + ct, yb }, new[] { g + ct, yc }, new[] { g + f + ct, yc },
                         new[] { g + f + ct, yl }, new[] { g + f, yl }, new[] { g + f, yf }
                     }, true, LayerClip);
-                    // the clip bolt through the strap and the base leg: head on the strap, nut behind the base leg
-                    double ybolt = s * ((bw + ct + (bw + b.ClipWidthMm - 8)) / 2), cd = b.ClipBoltDiameterMm;
-                    RectIn(db, tr, btr, xb + ct, ybolt - cd * 0.8, xb + ct + 0.65 * cd, ybolt + cd * 0.8, LayerClip);
-                    RectIn(db, tr, btr, xb - t - 0.8 * cd, ybolt - cd * 0.8, xb - t, ybolt + cd * 0.8, LayerClip);
-                    RectIn(db, tr, btr, xb - t - 0.8 * cd, ybolt - cd / 2, xb + ct + 0.65 * cd, ybolt + cd / 2, LayerClip);
+                    // the clip bolt through clip, leg and plate: head on the clip, nut behind the plate
+                    double ybolt = s * ((bw + ct + (bw + b.ClipWidthMm - 8)) / 2);
+                    RectIn(db, tr, btr, g + ct, ybolt - cd * 0.8, g + ct + 0.65 * cd, ybolt + cd * 0.8, LayerClip);
+                    RectIn(db, tr, btr, g - t - tp - 0.8 * cd, ybolt - cd * 0.8, g - t - tp, ybolt + cd * 0.8, LayerClip);
+                    RectIn(db, tr, btr, g - t - tp - 0.8 * cd, ybolt - cd / 2, g + ct + 0.65 * cd, ybolt + cd / 2, LayerClip);
                 }
             });
+        }
+
+        // a slot along y (the slot of the wall angle)
+        static void SlotYIn(Database db, Transaction tr, BlockTableRecord btr, double xc, double y0, double y1, double w, string layer)
+        {
+            double r = w / 2;
+            var pl = new Polyline();
+            pl.AddVertexAt(0, new Point2d(xc + r, y0 + r), 1, 0, 0);
+            pl.AddVertexAt(1, new Point2d(xc - r, y0 + r), 0, 0, 0);
+            pl.AddVertexAt(2, new Point2d(xc - r, y1 - r), 1, 0, 0);
+            pl.AddVertexAt(3, new Point2d(xc + r, y1 - r), 0, 0, 0);
+            pl.Closed = true;
+            SteelDrawing.Put(btr, tr, pl, layer);
+        }
+
+        static void SlotIn(Database db, Transaction tr, BlockTableRecord btr, double x0, double x1, double zc, double h, string layer)
+        {
+            double r = h / 2;
+            var pl = new Polyline();
+            pl.AddVertexAt(0, new Point2d(x0 + r, zc - r), 0, 0, 0);
+            pl.AddVertexAt(1, new Point2d(x1 - r, zc - r), 1, 0, 0);
+            pl.AddVertexAt(2, new Point2d(x1 - r, zc + r), 0, 0, 0);
+            pl.AddVertexAt(3, new Point2d(x0 + r, zc + r), 1, 0, 0);
+            pl.Closed = true;
+            SteelDrawing.Put(btr, tr, pl, layer);
         }
 
         // ---------- names of the parts, as the library names them; the same in the plan and in the elevation ----------
@@ -756,125 +789,80 @@ namespace Elevator.AutoCAD.Sheet
         static List<Call> PlanAssemblyCalls(Rail r)
         {
             var b = r.Bracket;
-            double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, half = r.PlateWidth / 2;
-            double ct = b.ClipThicknessMm, bw = r.Profile.WidthMm / 2, xb = g - tp;
-            double[] bx = AssemblyBoltX(r);
+            double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, half = b.AngleLengthMm / 2;
+            double ct = b.ClipThicknessMm, bw = r.Profile.WidthMm / 2;
+            var by = AssemblyBoltY(r);
             return new List<Call>
             {
-                new Call { Ax = t / 2, Ay = half / 2, Text = AngleName(r) },
-                new Call { Ax = g - tp / 2, Ay = b.AngleLegAMm / 4, Text = PlateName(r) },
-                new Call { Ax = bx[1], Ay = half + 0.3 * b.AssemblyBoltDiameterMm, Text = AssemblyName(r) },
-                new Call { Ax = xb + ct / 2, Ay = -(bw + ct + (b.ClipWidthMm - 8 - ct) / 2), Text = ClipName(r) },
-                new Call { Ax = xb + ct + 0.3 * b.ClipBoltDiameterMm, Ay = bw + (ct + b.ClipWidthMm - 8) / 2, Text = BoltsName(r) },
+                new Call { Ax = r.ArmLeg / 2, Ay = half - 6, Text = AngleName(r) },
+                new Call { Ax = g - t - tp / 2, Ay = half - 10, Text = PlateName(r) },
+                new Call { Ax = AssemblyBoltX(r), Ay = by[2], Text = AssemblyName(r) },
+                new Call { Ax = g + ct / 2, Ay = -(bw + ct + (b.ClipWidthMm - 8 - ct) / 2), Text = ClipName(r) },
+                new Call { Ax = g + ct + 0.3 * b.ClipBoltDiameterMm, Ay = bw + (ct + b.ClipWidthMm - 8) / 2, Text = BoltsName(r) },
                 new Call { Ax = g + r.Profile.HeightMm, Ay = 0, Text = RailName(r) }
             };
         }
 
-        // A rail fixed on a cross arm: the surface (rear wall or beam) at the left, the end plate with its anchors, the arm (a section of
-        // the library: UPE 120), the head plate, then the two-angle assembly (the fixing angle on the head plate) and the rail.
-        static void DrawPlanCrossArm(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
-        {
-            var b = r.Bracket;
-            var a = c.Arm;
-            var w = WriterAt(db, tr, ox, oy);
-            double half = r.PlateWidth / 2;
-            double g = r.Gap;
-            double len = Math.Max(r.Fixing.ArmLengthMm, 2 * a.ArmEndPlateThicknessMm + 20);
-            double xw = -len;
-            double et = a.ArmEndPlateThicknessMm;
-            double span = Math.Max(half, a.ArmEndPlateMm / 2) + 2 * Text;
-            double depth = c.Steel ? c.Beam.WidthMm : Wall(r);
-            w.Layer = c.Steel ? SteelDrawing.LayerBeam : LayerWall;
-            var box = w.Rect(xw - depth, -span, xw, span);
-            if (c.Steel)
-                w.Fill(box, "ANSI32", 1.2 * Text);
-            w.Layer = LayerBracket;
-            w.Rect(xw, -a.ArmEndPlateMm / 2, xw + et, a.ArmEndPlateMm / 2);
-            w.Rect(-et, -half, 0, half);
-            w.Layer = SteelDrawing.LayerBeam;
-            w.Rect(xw + et, -a.ArmWidthMm / 2, -et, a.ArmWidthMm / 2);
-            w.Layer = LayerAnchor;
-            double yAnchor = a.ArmEndPlateMm / 2 - 20, d = a.ArmAnchorDiameterMm;
-            double far = c.Steel ? xw - depth : xw - Math.Min(depth - 10, r.Bracket.AnchorLengthMm);
-            foreach (int s in new[] { -1, 1 })
-                w.Rect(far, s * yAnchor - d / 2, xw + et, s * yAnchor + d / 2);
-            // the assembly and the rail
-            w.Layer = LayerBracket;
-            w.Insert(BracketPlanBlock(db, tr, r), 0, 0, 1, 0);
-            w.Layer = LayerRail;
-            w.Insert(RailBlock(db, tr, r.Profile), g, 0, 1, 0);
-            // the fixing angle is bolted to the head plate
-            w.Layer = LayerAnchor;
-            double fixA = b.AnchorDiameterMm, yfix = half - b.AngleLegAMm / 2;
-            foreach (int s in new[] { -1, 1 })
-                w.Rect(-et, s * yfix - fixA / 2, b.AngleThicknessMm, s * yfix + fixA / 2);
-            var ob = new SteelDrawing.Obstacles();
-            Chain(w, ob, new[] { xw, 0.0 }, new[] { N(len) }, span + 2 * Text, 0, span, true);
-            Chain(w, ob, new[] { 0.0, g }, new[] { N(g) }, span + 2 * Text, 0, span, true);
-            Chain(w, ob, new[] { g, g + r.Profile.HeightMm }, new[] { N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
-            double xDim = g + r.Profile.HeightMm + 1.5 * Text;
-            Single(w, ob, -half, half, xDim, N(r.PlateWidth), false, 0);
-            Column(w, PlanAssemblyCalls(r), xDim + 3.5 * Text, false);
-            var left = new List<Call>
-            {
-                new Call { Ax = xw - depth / 2, Ay = -span, Text = SupportName(c, true) },
-                new Call { Ax = xw - depth / 2, Ay = -yAnchor, Text = c.Steel ? "BOLTS M" + N(d) : "ANCHOR BOLTS D" + N(d) + "x" + N(r.Bracket.AnchorLengthMm) },
-                new Call { Ax = xw / 2, Ay = a.ArmWidthMm / 2, Text = ArmName(c) }
-            };
-            Column(w, left, xw - depth - 3 * Text, true);
-            w.Layer = SteelDrawing.LayerAnno;
-        }
-
-        static void DrawPlanOf(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
+        // the support face drawn in plan: the wall, the UPN beam, or the cross arm (seen from above, running along the wall leg)
+        static void PlanSupport(SteelDrawing.Writer w, Context c, Rail r, double span, out double depth)
         {
             if (r.CrossArm)
             {
-                DrawPlanCrossArm(db, tr, c, r, ox, oy);
+                depth = c.Arm.ArmWidthMm;
+                w.Layer = SteelDrawing.LayerBeam;
+                var arm = w.Rect(-depth, -span, 0, span);
+                w.Fill(arm, "ANSI32", 1.2 * Text);
                 return;
             }
-            var b = r.Bracket;
-            var w = WriterAt(db, tr, ox, oy);
-            double half = r.PlateWidth / 2;
-            double wall = Wall(r);
-            double g = r.Gap;
-            double span = half + 2 * Text;
-            double depth = c.Steel ? c.Beam.WidthMm : wall;
-            // the support: the concrete wall, or the UPN beam in plan (outline with the steel hatch of the legend)
+            depth = c.Steel ? c.Beam.WidthMm : Wall(r);
             w.Layer = c.Steel ? SteelDrawing.LayerBeam : LayerWall;
             var box = w.Rect(-depth, -span, 0, span);
             if (c.Steel)
                 w.Fill(box, "ANSI32", 1.2 * Text);
+        }
+
+        static void DrawPlanCrossArm(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
+        {
+            DrawPlanOf(db, tr, c, r, ox, oy);
+        }
+
+        static void DrawPlanOf(Database db, Transaction tr, Context c, Rail r, double ox, double oy)
+        {
+            var b = r.Bracket;
+            var w = WriterAt(db, tr, ox, oy);
+            double half = b.AngleLengthMm / 2;
+            double g = r.Gap;
+            double span = half + 2 * Text;
+            double depth;
+            PlanSupport(w, c, r, span, out depth);
             // the assembly and the rail as blocks
             w.Layer = LayerBracket;
             w.Insert(BracketPlanBlock(db, tr, r), 0, 0, 1, 0);
             w.Layer = LayerRail;
             w.Insert(RailBlock(db, tr, r.Profile), g, 0, 1, 0);
-            // the fixing of the wall leg: anchors into the wall, or bolts through the beam
+            // the fixing of the wall leg near its two ends: anchors into the wall, bolts through the beam or the arm
             double fixA = b.AnchorDiameterMm;
             w.Layer = LayerAnchor;
-            double yfix = half - b.AngleLegAMm / 2;
+            double yfix = half - 20;
+            bool anchors = !c.Steel && !r.CrossArm;
             foreach (int s in new[] { -1, 1 })
             {
-                double xFar = c.Steel ? -depth : -b.AnchorLengthMm;
+                double xFar = anchors ? -b.AnchorLengthMm : -depth;
                 w.Rect(xFar, s * yfix - fixA / 2, b.AngleThicknessMm, s * yfix + fixA / 2);
-                if (c.Steel)
-                {
-                    double head = 0.65 * fixA;
-                    w.Rect(-depth - head, s * yfix - fixA * 0.8, -depth, s * yfix + fixA * 0.8);
-                    w.Rect(b.AngleThicknessMm, s * yfix - fixA * 0.8, b.AngleThicknessMm + head, s * yfix + fixA * 0.8);
-                }
+                w.Rect(b.AngleThicknessMm, s * yfix - fixA * 0.8, b.AngleThicknessMm + 0.8 * fixA, s * yfix + fixA * 0.8);
+                if (!anchors)
+                    w.Rect(-depth - 0.65 * fixA, s * yfix - fixA * 0.8, -depth, s * yfix + fixA * 0.8);
             }
-            // dimensions: the gap (wall to rail back, the plan's number), the rail height, the width of the bracket
+            // dimensions: the gap (support to rail back, the plan's number), the rail height, the bracket length
             var ob = new SteelDrawing.Obstacles();
-            Chain(w, ob, new[] { 0.0, g }, new[] { N(g) }, span + 2 * Text, 0, span, true);
-            Chain(w, ob, new[] { g, g + r.Profile.HeightMm }, new[] { N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
+            Chain(w, ob, new[] { 0.0, g, g + r.Profile.HeightMm }, new[] { N(g), N(r.Profile.HeightMm) }, span + 2 * Text, 0, span, true);
             double xDim = g + r.Profile.HeightMm + 1.5 * Text;
-            Single(w, ob, -half, half, xDim, N(r.PlateWidth), false, 0);
+            Single(w, ob, -half, half, xDim, N(b.AngleLengthMm), false, 0);
             Column(w, PlanAssemblyCalls(r), xDim + 3.5 * Text, false);
             var left = new List<Call>
             {
-                new Call { Ax = -depth / 2, Ay = -span, Text = SupportName(c) },
-                new Call { Ax = c.Steel ? -depth / 2 : -b.AnchorLengthMm / 2, Ay = -yfix, Text = FixName(c, r) }
+                new Call { Ax = -depth / 2, Ay = -span, Text = r.CrossArm ? ArmName(c) : SupportName(c) },
+                new Call { Ax = anchors ? -b.AnchorLengthMm / 2 : -depth / 2, Ay = -yfix, Text = FixName(c, r) }
             };
             Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
@@ -936,67 +924,54 @@ namespace Elevator.AutoCAD.Sheet
             return d;
         }
 
-        // ---------- the elevations (RailBrackets): the side view of the assembly, as the library draws it (x from the support, z up) ----------
-        static void SlotIn(Database db, Transaction tr, BlockTableRecord btr, double x0, double x1, double zc, double h, string layer)
+        // ---------- the elevations (RailBrackets): the section perpendicular to the wall, looking along it (x from the support, z up) ----------
+        // The same assembly as VP5: every x equals the plan (gap, legs, overlap, rail). At a bracket level zc the horizontal legs meet at zc:
+        // the wall angle's leg below (its vertical leg down the support), the rail angle's leg above (its vertical leg up, carrying the rail).
+        static double LegUp(Rail r)
         {
-            double r = h / 2;
-            var pl = new Polyline();
-            pl.AddVertexAt(0, new Point2d(x0 + r, zc - r), 1, 0, 0);
-            pl.AddVertexAt(1, new Point2d(x1 - r, zc - r), 0, 0, 0);
-            pl.AddVertexAt(2, new Point2d(x1 - r, zc + r), 1, 0, 0);
-            pl.AddVertexAt(3, new Point2d(x0 + r, zc + r), 0, 0, 0);
-            pl.Closed = true;
-            SteelDrawing.Put(btr, tr, pl, layer);
+            return r.Bracket.AngleLegAMm;
         }
 
         static ObjectId BracketElevationBlock(Database db, Transaction tr, Context c, Rail r)
         {
-            return SteelDrawing.Block(db, tr, "SM_RAIL_BRACKET_ELEV_" + Key(r) + FixingTag(r) + (c.Steel ? "_BOLT" : "_ANCHOR"), btr =>
+            return SteelDrawing.Block(db, tr, "SM_RAIL_BRACKET_SECTION_" + Key(r) + FixingTag(r) + (r.CrossArm ? "_ARMBOLT" : c.Steel ? "_BOLT" : "_ANCHOR"), btr =>
             {
                 var b = r.Bracket;
-                double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, h = b.AngleLengthMm / 2;
+                double t = b.AngleThicknessMm, tp = b.PlateThicknessMm, g = r.Gap, la = r.ArmLeg, up = LegUp(r);
                 double d = b.AssemblyBoltDiameterMm, f = r.Profile.FootMm, ct = b.ClipThicknessMm, cd = b.ClipBoltDiameterMm;
-                double[] bx = AssemblyBoltX(r);
-                double zb = h - 45;
-                // the fixing angle: its wall leg (edge on) and its arm leg (face on, with the slots of the assembly bolts)
-                RectIn(db, tr, btr, 0, -h, t, h, LayerBracket);
-                RectIn(db, tr, btr, t, -h, t + la, h, LayerBracket);
-                // the rail angle: the part of its arm leg beyond the fixing angle, the base leg and the plate
-                if (g - tp - t > t + la)
-                    RectIn(db, tr, btr, t + la, -h, g - tp - t, h, LayerBracket);
-                RectIn(db, tr, btr, g - tp - t, -h, g - tp, h, LayerBracket);
-                RectIn(db, tr, btr, g - tp, -h, g, h, LayerBracket);
-                foreach (int k in new[] { -1, 1 })
-                {
-                    SlotIn(db, tr, btr, bx[0] - 0.9 * d, bx[1] + 0.9 * d, k * zb, d + 3, LayerBracket);
-                    foreach (double x in bx)
-                    {
-                        SteelDrawing.Put(btr, tr, new Circle(new Point3d(x, k * zb, 0), Vector3d.ZAxis, 0.85 * d), LayerClip);
-                        SteelDrawing.Put(btr, tr, new Circle(new Point3d(x, k * zb, 0), Vector3d.ZAxis, d / 2), LayerClip);
-                    }
-                    // the clips (seen from the side) and the heads of their bolts
-                    double zc = k * b.ClipLengthMm / 4;
-                    RectIn(db, tr, btr, g - tp, k * b.ClipLengthMm / 4 - cd * 0.8, g + f + ct + 0.65 * cd, k * b.ClipLengthMm / 4 + cd * 0.8, LayerClip);
-                    // the fixing of the wall leg
-                    double fz = FixZ(c, r);
-                    double fd = b.AnchorDiameterMm;
-                    double far = r.CrossArm ? -c.Arm.ArmEndPlateThicknessMm : (c.Steel ? -(c.Beam.WidthMm) : -b.AnchorLengthMm);
-                    RectIn(db, tr, btr, far, k * fz - fd / 2, t, k * fz + fd / 2, LayerAnchor);
-                    RectIn(db, tr, btr, t, k * fz - fd * 0.8, t + 0.8 * fd, k * fz + fd * 0.8, LayerAnchor);
-                }
-                RectIn(db, tr, btr, g, -b.ClipLengthMm / 2, g + f + ct, b.ClipLengthMm / 2, LayerClip);
+                // the wall angle (L section): vertical leg on the support, horizontal leg out (top at z = 0)
+                Poly(db, tr, btr, new[] { new[] { 0.0, -up }, new[] { t, -up }, new[] { t, -t }, new[] { la, -t }, new[] { la, 0.0 }, new[] { 0.0, 0.0 } }, true, LayerBracket);
+                // the rail angle (L section): horizontal leg on top of the other, vertical leg up at the rail
+                Poly(db, tr, btr, new[] { new[] { g - t - la, 0.0 }, new[] { g, 0.0 }, new[] { g, up }, new[] { g - t, up }, new[] { g - t, t }, new[] { g - t - la, t } }, true, LayerBracket);
+                // the plate behind the vertical leg
+                RectIn(db, tr, btr, g - t - tp, t, g - t, up, LayerBracket);
+                // an assembly bolt (cut): vertical through the two horizontal legs, head on top, nut below
+                double xb = AssemblyBoltX(r);
+                RectIn(db, tr, btr, xb - d / 2, -t - 0.8 * d, xb + d / 2, t + 0.65 * d, LayerClip);
+                RectIn(db, tr, btr, xb - 0.85 * d, t, xb + 0.85 * d, t + 0.65 * d, LayerClip);
+                RectIn(db, tr, btr, xb - 0.85 * d, -t - 0.8 * d, xb + 0.85 * d, -t, LayerClip);
+                // the clip on the foot and its bolt through clip, leg and plate
+                double zc = (t + up) / 2;
+                RectIn(db, tr, btr, g + f, zc - b.ClipLengthMm / 2 * 0.5, g + f + ct, zc + b.ClipLengthMm / 2 * 0.5, LayerClip);
+                RectIn(db, tr, btr, g - t - tp - 0.8 * cd, zc - cd / 2, g + f + ct + 0.65 * cd, zc + cd / 2, LayerClip);
+                RectIn(db, tr, btr, g + f + ct, zc - 0.8 * cd, g + f + ct + 0.65 * cd, zc + 0.8 * cd, LayerClip);
+                RectIn(db, tr, btr, g - t - tp - 0.8 * cd, zc - 0.8 * cd, g - t - tp, zc + 0.8 * cd, LayerClip);
+                // the fixing through the vertical leg of the wall angle
+                double fd = b.AnchorDiameterMm, fz = -up / 2;
+                double far = r.CrossArm ? -c.Arm.ArmWidthMm : (c.Steel ? -c.Beam.WebMm - 2 : -b.AnchorLengthMm);
+                RectIn(db, tr, btr, far, fz - fd / 2, t + 0.8 * fd, fz + fd / 2, LayerAnchor);
+                RectIn(db, tr, btr, t, fz - fd * 0.8, t + 0.8 * fd, fz + fd * 0.8, LayerAnchor);
             });
         }
 
         static double FixZ(Context c, Rail r)
         {
-            double len = r.Bracket.AngleLengthMm / 2;
-            return c.Steel ? Math.Min(len - 30, c.Beam.HeightMm / 2 - 25) : len - 35;
+            return LegUp(r) / 2;
         }
 
         static double ElevationLeftRoom(Context c, Rail r)
         {
-            return (r.CrossArm ? r.Fixing.ArmLengthMm : 0) + (c.Steel ? c.Beam.WidthMm : Wall(r)) + 3 * Text + 26 * Text;
+            return (r.CrossArm ? c.Arm.ArmWidthMm : (c.Steel ? c.Beam.WidthMm : Wall(r))) + 3 * Text + 26 * Text;
         }
 
         static double ElevationRightRoom(Rail r)
@@ -1044,44 +1019,35 @@ namespace Elevator.AutoCAD.Sheet
         {
             var b = r.Bracket;
             var w = WriterAt(db, tr, ox, oy);
-            double len = b.AngleLengthMm, h = len / 2;
-            double g = r.Gap, t = b.AngleThicknessMm, h1 = r.Profile.HeightMm, f = r.Profile.FootMm;
-            // the two brackets are drawn close together: the rail is broken between them and the dimension carries the real spacing
-            double zLow = 0, zHigh = 3 * len;
-            double over = 0.7 * len;
-            double bottom = zLow - h - over, top = zHigh + h + over;
-            double xs = r.CrossArm ? -Math.Max(r.Fixing.ArmLengthMm, 2 * c.Arm.ArmEndPlateThicknessMm + 20) : 0;   // the support face of the wall / beam
-            double depth = c.Steel ? c.Beam.WidthMm : Wall(r);
-            double et = c.Arm.ArmEndPlateThicknessMm;
-            // the support behind the assembly: the wall, or the UPN beam end on at each bracket
-            if (c.Steel)
+            double up = LegUp(r), t = b.AngleThicknessMm;
+            double g = r.Gap, h1 = r.Profile.HeightMm, f = r.Profile.FootMm;
+            // two levels drawn close together: the rail is broken between them and the dimension carries the real spacing
+            double zLow = 0, zHigh = 12 * up;
+            double over = 3 * up;
+            double bottom = zLow - up - over, top = zHigh + up + over;
+            double depth = r.CrossArm ? c.Arm.ArmWidthMm : (c.Steel ? c.Beam.WidthMm : Wall(r));
+            // the support: the wall band, the UPN beam end on, or the cross arm end on (it runs along the wall)
+            if (r.CrossArm)
             {
                 w.Layer = SteelDrawing.LayerBeam;
                 foreach (double z in new[] { zLow, zHigh })
-                    BeamSection(w, c.Beam, xs, z);
+                {
+                    var arm = w.Rect(-depth, z - c.Arm.ArmHeightMm + t, 0, z + t);
+                    w.Fill(arm, "ANSI32", 1.2 * Text);
+                }
+            }
+            else if (c.Steel)
+            {
+                w.Layer = SteelDrawing.LayerBeam;
+                foreach (double z in new[] { zLow, zHigh })
+                    BeamSection(w, c.Beam, 0, z - up / 2);
             }
             else
             {
                 w.Layer = LayerWall;
-                w.Rect(xs - depth, bottom, xs, top);
+                w.Rect(-depth, bottom, 0, top);
             }
-            // a cross arm: end plate on the support, the arm (side view), the head plate the fixing angle is bolted to
-            if (r.CrossArm)
-            {
-                foreach (double z in new[] { zLow, zHigh })
-                {
-                    w.Layer = LayerBracket;
-                    w.Rect(xs, z - c.Arm.ArmEndPlateMm / 2, xs + et, z + c.Arm.ArmEndPlateMm / 2);
-                    w.Rect(-et, z - h, 0, z + h);
-                    w.Layer = SteelDrawing.LayerBeam;
-                    w.Rect(xs + et, z - c.Arm.ArmHeightMm / 2, -et, z + c.Arm.ArmHeightMm / 2);
-                    w.Layer = LayerAnchor;
-                    double ad = c.Arm.ArmAnchorDiameterMm, farA = c.Steel ? xs - depth : xs - Math.Min(depth - 10, b.AnchorLengthMm);
-                    foreach (int k in new[] { -1, 1 })
-                        w.Rect(farA, z + k * (c.Arm.ArmEndPlateMm / 2 - 20) - ad / 2, xs + et, z + k * (c.Arm.ArmEndPlateMm / 2 - 20) + ad / 2);
-                }
-            }
-            // the rail in side view (its foot back at x = g, blade tip at g + h1) with its break marks
+            // the rail in side view (foot back at x = g, blade tip at g + h1) with its break marks
             w.Layer = LayerRail;
             double zm = (zLow + zHigh) / 2, gap = 0.9 * Text;
             foreach (double xx in new[] { g, g + f, g + h1 })
@@ -1091,40 +1057,36 @@ namespace Elevator.AutoCAD.Sheet
             }
             foreach (double z in new[] { zm - gap / 2, zm + gap / 2 })
                 w.Poly(new[] { new[] { g - 0.5 * Text, z }, new[] { g + h1 / 3, z + 0.35 * gap }, new[] { g + 2 * h1 / 3, z - 0.35 * gap }, new[] { g + h1 + 0.5 * Text, z } }, false);
-            // the brackets: one named block at each level
             var block = BracketElevationBlock(db, tr, c, r);
             foreach (double z in new[] { zLow, zHigh })
             {
                 w.Layer = LayerBracket;
                 w.Insert(block, 0, z, 1, 0);
             }
-            // dimensions: the real spacing (text = the spacing of the project), the bracket length
-            double x1 = g + h1 + 2.5 * Text, x2 = x1 + 3.5 * Text;
+            // dimensions: the real spacing, the gap and the rail height at the lower level (the same numbers as VP5)
+            double x1 = g + h1 + 3.5 * Text;
             Dim(w, g + h1 + 0.3 * Text, zLow, g + h1 + 0.3 * Text, zHigh, x1, 90, N(r.SpacingMm));
-            Dim(w, g + h1 + 0.3 * Text, zHigh - h, g + h1 + 0.3 * Text, zHigh + h, x2, 90, "");
+            Chain(w, null, new[] { 0.0, g }, new[] { N(g) }, zLow - up - 2.5 * Text, 0, zLow - up, false);
             w.Layer = SteelDrawing.LayerAnno;
-            w.Text(xs - depth, top + 3 * Text, Text * 1.2, r.Title + " RAIL " + r.Profile.Name);
-            // labels of the lower assembly in one column right of the dimensions; the support, the fixing and the arm left
-            double fz = FixZ(c, r), ct = b.ClipThicknessMm, d = b.AssemblyBoltDiameterMm;
-            double[] bx = AssemblyBoltX(r);
+            w.Text(-depth, top + 3 * Text, Text * 1.2, r.Title + " RAIL " + r.Profile.Name);
+            double ct = b.ClipThicknessMm, d = b.AssemblyBoltDiameterMm;
             var right = new List<Call>
             {
-                new Call { Ax = t + r.ArmLeg / 2, Ay = zLow + h - 4, Text = AngleName(r) },
-                new Call { Ax = g - b.PlateThicknessMm / 2, Ay = zLow - h / 2, Text = PlateName(r) },
-                new Call { Ax = bx[1], Ay = zLow - (h - 45), Text = AssemblyName(r) },
-                new Call { Ax = g + f / 2, Ay = zLow + b.ClipLengthMm / 2 - 2, Text = ClipName(r) },
-                new Call { Ax = g + f + ct + 0.3 * b.ClipBoltDiameterMm, Ay = zLow - b.ClipLengthMm / 4, Text = BoltsName(r) },
-                new Call { Ax = g + h1, Ay = zLow + h + over / 2, Text = RailName(r) }
+                new Call { Ax = g - t / 2, Ay = zLow + up - 3, Text = AngleName(r) },
+                new Call { Ax = g - t - b.PlateThicknessMm / 2, Ay = zLow + up * 0.75, Text = PlateName(r) },
+                new Call { Ax = AssemblyBoltX(r), Ay = zLow + t + 0.65 * d, Text = AssemblyName(r) },
+                new Call { Ax = g + f + ct / 2, Ay = zLow + (t + up) / 2 + b.ClipLengthMm / 4 - 1, Text = ClipName(r) },
+                new Call { Ax = g + f + ct + 0.3 * b.ClipBoltDiameterMm, Ay = zLow + (t + up) / 2, Text = BoltsName(r) },
+                new Call { Ax = g + h1, Ay = zLow + up + over / 2, Text = RailName(r) }
             };
-            Column(w, right, x2 + 1.5 * Text, false);
+            Column(w, right, x1 + 3 * Text, false);
+            bool anchors = !c.Steel && !r.CrossArm;
             var left = new List<Call>
             {
-                new Call { Ax = xs - depth / 2, Ay = zLow - h - over / 2, Text = SupportName(c, r.CrossArm) },
-                new Call { Ax = (r.CrossArm ? -c.Arm.ArmEndPlateThicknessMm : (c.Steel ? -c.Beam.WidthMm : -b.AnchorLengthMm)) / 2, Ay = zLow - fz, Text = FixName(c, r) }
+                new Call { Ax = -depth / 2, Ay = r.CrossArm || c.Steel ? zLow - up / 2 - 30 : zLow - up - over / 2, Text = r.CrossArm ? ArmName(c) : SupportName(c) },
+                new Call { Ax = anchors ? -b.AnchorLengthMm / 2 : -depth / 2, Ay = zLow - up / 2, Text = FixName(c, r) }
             };
-            if (r.CrossArm)
-                left.Add(new Call { Ax = xs / 2, Ay = zLow + c.Arm.ArmHeightMm / 2, Text = ArmName(c) });
-            Column(w, left, xs - depth - 3 * Text, true);
+            Column(w, left, -depth - 3 * Text, true);
             w.Layer = SteelDrawing.LayerAnno;
         }
     }
