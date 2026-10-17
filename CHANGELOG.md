@@ -6,6 +6,29 @@ is prepared, the entries of "Unreleased" move to a new `## [vNN]` section.
 
 ## [Unreleased]
 
+- **Landing door detail (G2):** the sheet's "VIEW at D-D" and "SEC. C-C" are now drawn from the user's own four master doors, in place of the static template detail:
+  - swing with a vision window, swing with a glass panel, automatic solid, automatic glass;
+  - extracted from the PDF-import drawings into `Templates/DoorMasters.json` by `tools/door_masters.py`;
+  - stretched to the project's opening and entrance height, with the fixed parts kept at their size (frame, handle, vision window, indicator, sill);
+  - mirrored for the hinge side (swing) or the stacking side (2S).
+  
+  In the drawing:
+  - each door is a named block `SM_DOOR_<type>_<panel>_W_H_S_<side>`;
+  - dimensions are real (opening, STR. from the plan's wall opening, ENTRANCE HEIGHT, header, sill);
+  - CENTER axis, DASHED structural opening, C-C marks;
+  - associative ANSI31 hatches with break lines on the wall and the slab, and GOST_GLASS for the glass;
+  - multileader labels in the user's wording;
+  - on steel, the frame hangs from the door-head beam (UPN at its real size and level).
+  
+  New presets on CAR & DOORS (lock / follow):
+  - Door panel: automatic Solid / Glass, swing Vision window / Glass;
+  - Hinge side;
+  - Entrance height;
+  - Structural opening margin.
+  
+  New checks: the detail agrees with the plan (opening, height, STR), and no text overlaps and no axis, mark or leader crosses a text.
+- **Hatch scale fix:** the rail detail hatches (G1) and the door hatches set the pattern scale before the pattern. AutoCAD ignored a scale set after it, so they printed solid. ANSI31 / ANSI32 now follow the sheet scale.
+
 - **Generated rail details (G1):** the sheet's "CAR / C.W. GUIDES AND BRACKETS" plan details and the "Guide Rail Support Bracket And
   Anchor Details" are drawn from the project instead of the static template: the rail profiles, the bracket assembly of the user's
   library (two angles 50x40 with the overlap setting the gap, plate 50x4, 4 assembly bolts M10x40, 2 clips with 2 bolts each, anchor bolts

@@ -14,8 +14,15 @@ This file is the shared status channel between the user's Planner chat and Execu
 
 - **Status:** **Stage S3 (steel shaft drawings and Shaft page) done on `feature/steel-s3`, awaiting the Planner merge decision (see Completed first entry).** **Stage R2 merged into main, goldens re-approved (see Completed first entry).** **v06 released** (2026-10-13): `ElevatorAutomation/bin-shaftmaster-v06/ShaftMaster.exe` (SHA-256 starts 9BF91B70), tiers 1-3 PASS, 23 suites (`20261013-105231`, incl. layouts-native, layouts-pdf, output-set-ui), 50 files verified against SHA256SUMS.txt; v02-v05 checksums unchanged (v01 has none). PdfSharp.dll (MIT licence, mentioned in RELEASE-NOTES.md) is in the folder; PdfSharp.Charting.dll is not shipped (removed in `tools/build.ps1`). `main` has the A0 geared sheet (generated arrangement, titles with the sheet scale, title block, Arabic in xarab), one company / report settings screen, revision NN, the output set (DWG, PDF, project file; overwrite / next-revision prompt), the PDF with the logo and no remark texts in B-B. Not pushed (the user pushes). Next stage: R (guide rails): **Part B (research, Core, Reporting) done on `cloud/rails-r1` (see Cloud R1), to be merged locally, then the UI**; Part A done (`docs/calculations/GUIDE-RAILS.md`, section 12 = questions Q1-Q14 for the user); Part B (catalog, code, sheet, UI) waits for the answers and is for a cloud session. Awaiting Planner.
 - **Goal:** (done) D1: automatic doors, Core + UI, no drawing changes. Earlier: ARCHITECTURE-PLAN P0-P8, then release v04.
-- **Last updated:** 2026-10-17 (Claude Code, Executor role; G2 master doors implemented on feature/details-g2, not merged)
+- **Last updated:** 2026-10-17 (Claude Code, Executor role; G2 merged into main)
 - **Completed:**
+- **G2 MERGED into main** (2026-10-17, --no-ff, 97868af). Not pushed, not released.
+  - The user typed the approval of the two l3 images; they were re-approved in 7827c83.
+  - Full tiers 1–3 on `artifacts/work-g2-full`: 26 suites PASS (`artifacts/test-results/20261017-191642`). This includes core-net48 (1047): with a fresh build the GuideRailTests failure did not occur, so it looks like a stale-build effect.
+  - CHANGELOG [Unreleased] has the G2 entry and the hatch-scale fix.
+  - Test build: `artifacts/bin-try-g2`.
+  - `DESIGN-FLOW.md` has an uncommitted change not made by the Executor; it is left as is.
+  - Next: per the Planner (G3 and the open points in DOORS-G2.md section 7).
 - **G2: the user's 4 master doors, implemented on `feature/details-g2`.** Not merged, not pushed.
   - **What it does:** the door detail (VIEW at D-D, SEC. C-C) is the user's master door stretched to the project's door size and mirrored for its side.
     - The masters are swing with a vision window, swing with a glass panel, automatic solid and automatic glass.
